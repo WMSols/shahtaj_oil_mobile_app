@@ -112,8 +112,7 @@ class ApiClient extends GetxService {
     final message = switch (e.type) {
       DioExceptionType.connectionTimeout ||
       DioExceptionType.receiveTimeout ||
-      DioExceptionType.sendTimeout =>
-        'Connection timed out',
+      DioExceptionType.sendTimeout => 'Connection timed out',
       DioExceptionType.connectionError => 'No internet connection',
       _ => _extractMessage(data) ?? e.message ?? 'Request failed',
     };

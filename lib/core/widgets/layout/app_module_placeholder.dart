@@ -14,10 +14,7 @@ class AppModulePlaceholder extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppScaffold(
       body: Center(
-        child: AppEmptyState(
-          title: title,
-          subtitle: AppTexts.comingSoon,
-        ),
+        child: AppEmptyState(title: title, subtitle: AppTexts.comingSoon),
       ),
     );
   }

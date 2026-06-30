@@ -6,7 +6,7 @@ class AppColors {
   // Light theme — Shahtaj Oil
   static const Color backgroundTop = Color(0xFFFFFFFF);
   static const Color backgroundBottom = Color(0xFFF5F7FA);
-  static const Color scaffoldBackground = Color(0xFFF8F9FC);
+  static const Color scaffoldBackground = Color(0xFFFFFFFF);
   static const Color primary = Color(0xFF3832F3);
   static const Color accentBlue = Color(0xFF036CF7);
   static const Color white = Color(0xFFFFFFFF);
@@ -28,4 +28,5 @@ class AppColors {
   static const Color statGrey = Color(0xFF595959);
   static const Color dashboardDealCard = Color(0xFFF0F4F8);
   static const Color textPrimary = Color(0xFF1A1A2E);
+  static const Color authInputFill = Color(0xFF2C27D9);
 }

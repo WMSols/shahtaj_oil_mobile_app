@@ -202,7 +202,7 @@ class AppDateTimePickerSheetState extends State<AppDateTimePickerSheet> {
             ),
             const Divider(height: 1),
             SizedBox(
-              height: AppResponsive.scaleSize(context, 220),
+              height: AppSpacing.verticalValue(context, 0.25),
               child: Row(
                 children: [
                   if (showDate)

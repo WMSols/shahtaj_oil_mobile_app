@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/responsive/app_responsive.dart';
+import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 
 class DashboardStatCard extends StatelessWidget {
@@ -117,14 +118,12 @@ class _LargeCardBody extends StatelessWidget {
                 label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.statLabel(context).copyWith(
-                  color: textColor,
-                  fontSize: labelSize,
-                  height: 1.2,
-                ),
+                style: AppTextStyles.statLabel(
+                  context,
+                ).copyWith(color: textColor, fontSize: labelSize, height: 1.2),
               ),
             ),
-            SizedBox(width: AppResponsive.scaleSize(context, 6)),
+            AppSpacing.horizontal(context, 0.016),
             Image.asset(
               iconAsset,
               width: iconSize,
@@ -146,9 +145,7 @@ class _LargeCardBody extends StatelessWidget {
                     alignment: Alignment.bottomLeft,
                     child: Text(
                       value,
-                      style: AppTextStyles.statValue(
-                        context,
-                      ).copyWith(
+                      style: AppTextStyles.statValue(context).copyWith(
                         color: textColor,
                         fontSize: constraints.maxHeight,
                         height: 1,
@@ -208,7 +205,7 @@ class _CompactCardBody extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(width: AppResponsive.scaleSize(context, 6)),
+              AppSpacing.horizontal(context, 0.016),
               Image.asset(
                 iconAsset,
                 width: iconSize,

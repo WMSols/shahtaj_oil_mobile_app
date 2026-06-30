@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_background.dart';
+import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 
 class AppScaffold extends StatelessWidget {
   const AppScaffold({
@@ -16,13 +16,11 @@ class AppScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        resizeToAvoidBottomInset: resizeToAvoidBottomInset,
-        body: SafeArea(child: body),
-        bottomNavigationBar: bottomNavigationBar,
-      ),
+    return Scaffold(
+      backgroundColor: AppColors.scaffoldBackground,
+      resizeToAvoidBottomInset: resizeToAvoidBottomInset,
+      body: SafeArea(child: body),
+      bottomNavigationBar: bottomNavigationBar,
     );
   }
 }

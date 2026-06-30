@@ -20,10 +20,7 @@ class AppProfileAvatar extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: AppColors.inputFill,
-          border: Border.all(
-            color: AppColors.cardBorder,
-            width: 1.5,
-          ),
+          border: Border.all(color: AppColors.cardBorder, width: 1.5),
         ),
         alignment: Alignment.center,
         child: Icon(
