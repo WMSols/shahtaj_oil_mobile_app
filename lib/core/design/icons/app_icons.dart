@@ -24,7 +24,8 @@ class AppIcons {
   static const IconData arrowDown = Iconsax.arrow_down_1_copy;
 
   // Auth & profile
-  static const IconData person = Iconsax.user;
+  static const IconData email = Iconsax.sms;
+  static const IconData person = Iconsax.profile_tick;
   static const IconData personalCard = Iconsax.personalcard;
   static const IconData lock = Iconsax.lock;
   static const IconData eye = Iconsax.eye;
@@ -42,6 +43,7 @@ class AppIcons {
   static const IconData image = Iconsax.gallery;
   static const IconData inbox = Iconsax.direct_inbox;
   static const IconData location = Iconsax.location;
+  static const IconData map = Iconsax.map;
   static const IconData grid = Iconsax.element_3;
   static const IconData expand = Iconsax.maximize_4;
   static const IconData question = Iconsax.message_question;
