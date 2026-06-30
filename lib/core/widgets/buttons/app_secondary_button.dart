@@ -9,27 +9,41 @@ class AppSecondaryButton extends StatelessWidget {
     super.key,
     required this.label,
     required this.onPressed,
+    this.outlinedOnly = false,
+    this.textColor,
+    this.borderColor,
   });
 
   final String label;
   final VoidCallback? onPressed;
+  final bool outlinedOnly;
+  final Color? textColor;
+  final Color? borderColor;
 
   @override
   Widget build(BuildContext context) {
+    final resolvedBorderColor = borderColor ?? AppColors.primary;
+    final resolvedTextColor = textColor ?? AppColors.primary;
+
     return SizedBox(
       width: double.infinity,
-      height: AppResponsive.scaleSize(context, 52),
+      height: AppResponsive.scaleSize(context, 40),
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.secondaryButton,
+          backgroundColor: outlinedOnly ? Colors.transparent : AppColors.white,
+          shadowColor: Colors.transparent,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-              AppResponsive.scaleSize(context, 28),
-            ),
+            side: BorderSide(color: resolvedBorderColor, width: 1),
+            borderRadius: BorderRadius.circular(AppResponsive.radius(context)),
           ),
         ),
-        child: Text(label, style: AppTextStyles.buttonText(context)),
+        child: Text(
+          label,
+          style: AppTextStyles.buttonText(
+            context,
+          ).copyWith(color: resolvedTextColor),
+        ),
       ),
     );
   }

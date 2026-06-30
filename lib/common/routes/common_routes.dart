@@ -12,10 +12,11 @@ import 'package:shahtaj_oil_mobile_app/common/views/account/account_screen.dart'
 import 'package:shahtaj_oil_mobile_app/common/views/auth/login_screen.dart';
 import 'package:shahtaj_oil_mobile_app/common/views/onboarding/onboarding_screen.dart';
 import 'package:shahtaj_oil_mobile_app/common/views/select_role/select_role_screen.dart';
-import 'package:shahtaj_oil_mobile_app/common/views/shells/delivery_man_main_screen.dart';
-import 'package:shahtaj_oil_mobile_app/common/views/shells/order_booker_main_screen.dart';
-import 'package:shahtaj_oil_mobile_app/common/views/shells/recovery_man_main_screen.dart';
 import 'package:shahtaj_oil_mobile_app/common/views/splash/splash_screen.dart';
+import 'package:shahtaj_oil_mobile_app/common/controllers/delivery_man_shell_controller.dart';
+import 'package:shahtaj_oil_mobile_app/common/controllers/order_booker_shell_controller.dart';
+import 'package:shahtaj_oil_mobile_app/common/controllers/recovery_man_shell_controller.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_shell.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 
 class CommonRoutes {
@@ -49,17 +50,17 @@ class CommonRoutes {
     ),
     GetPage(
       name: AppRoutes.orderBooker,
-      page: OrderBookerMainScreen.new,
+      page: () => const AppShell<OrderBookerShellController>(),
       binding: OrderBookerShellBinding(),
     ),
     GetPage(
       name: AppRoutes.deliveryMan,
-      page: DeliveryManMainScreen.new,
+      page: () => const AppShell<DeliveryManShellController>(),
       binding: DeliveryManShellBinding(),
     ),
     GetPage(
       name: AppRoutes.recoveryMan,
-      page: RecoveryManMainScreen.new,
+      page: () => const AppShell<RecoveryManShellController>(),
       binding: RecoveryManShellBinding(),
     ),
   ];

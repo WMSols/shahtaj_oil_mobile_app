@@ -15,8 +15,7 @@ class AppTextStyles {
   static TextStyle headline(BuildContext context) => TextStyle(
     fontSize: AppResponsive.screenWidth(context) * 0.09,
     fontFamily: AppFonts.mainFont,
-    fontWeight: FontWeight.w500,
-    height: 1.1,
+    fontWeight: FontWeight.w600,
     color: AppColors.textPrimary,
   );
 
@@ -28,7 +27,7 @@ class AppTextStyles {
   );
 
   static TextStyle sectionTitle(BuildContext context) => TextStyle(
-    fontSize: AppResponsive.screenWidth(context) * 0.035,
+    fontSize: AppResponsive.screenWidth(context) * 0.04,
     fontFamily: AppFonts.mainFont,
     fontWeight: FontWeight.w600,
     color: AppColors.textPrimary,
@@ -68,7 +67,7 @@ class AppTextStyles {
   );
 
   static TextStyle caption(BuildContext context) => TextStyle(
-    fontSize: AppResponsive.screenWidth(context) * 0.025,
+    fontSize: AppResponsive.screenWidth(context) * 0.03,
     fontFamily: AppFonts.mainFont,
     color: AppColors.textMuted,
   );
