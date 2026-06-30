@@ -6,9 +6,16 @@ class AppIcons {
   AppIcons._();
 
   // Navigation
-  static const IconData home = Iconsax.home;
-  static const IconData clients = Iconsax.profile_2user;
-  static const IconData invoice = Iconsax.receipt;
+  static const IconData menu = Icons.menu_rounded;
+  static const IconData dashboard = Iconsax.home;
+  static const IconData routes = Iconsax.map;
+  static const IconData shops = Iconsax.shop;
+  static const IconData history = Iconsax.note_2;
+  static const IconData account = Iconsax.profile_tick;
+  static const IconData invoices = Iconsax.receipt;
+  static const IconData deliveries = Iconsax.document_text;
+  static const IconData collections = Iconsax.receipt;
+  static const IconData handover = Iconsax.document_upload;
 
   // Actions
   static const IconData back = Iconsax.arrow_left_2;
