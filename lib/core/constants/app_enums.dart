@@ -1,3 +1,4 @@
+import 'package:shahtaj_oil_mobile_app/core/design/images/app_images.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 
 enum UserRole { orderBooker, deliveryMan, recoveryMan }
@@ -17,6 +18,18 @@ extension UserRoleX on UserRole {
     UserRole.orderBooker => AppTexts.roleOrderBooker,
     UserRole.deliveryMan => AppTexts.roleDeliveryMan,
     UserRole.recoveryMan => AppTexts.roleRecoveryMan,
+  };
+
+  String get imageAsset => switch (this) {
+    UserRole.orderBooker => AppImages.selectRoleOrderBooker,
+    UserRole.deliveryMan => AppImages.selectRoleDeliveryMan,
+    UserRole.recoveryMan => AppImages.selectRoleRecoveryMan,
+  };
+
+  String get subtitle => switch (this) {
+    UserRole.orderBooker => AppTexts.roleOrderBookerSubtitle,
+    UserRole.deliveryMan => AppTexts.roleDeliveryManSubtitle,
+    UserRole.recoveryMan => AppTexts.roleRecoveryManSubtitle,
   };
 }
 
