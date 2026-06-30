@@ -4,5 +4,7 @@ import 'package:shahtaj_oil_mobile_app/common/controllers/select_role_controller
 
 class SelectRoleBinding extends Bindings {
   @override
-  void dependencies() => Get.lazyPut(SelectRoleController.new);
+  void dependencies() {
+    Get.put(SelectRoleController());
+  }
 }
