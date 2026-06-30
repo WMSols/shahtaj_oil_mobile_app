@@ -1,6 +1,8 @@
 class ApiEndpoints {
   ApiEndpoints._();
 
+  // Shared feature paths (role modules may prefix via UserRole.apiPrefix later).
+  // Role-specific auth paths live in role_api_endpoints.dart.
   static const authLogin = '/api/v1/auth/login';
   static const authLogout = '/api/v1/auth/logout';
   static const authMe = '/api/v1/auth/me';
