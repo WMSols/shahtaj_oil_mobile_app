@@ -28,6 +28,7 @@ class AppTexts {
   static String get filter => 'filter'.tr;
   static String get back => 'back'.tr;
   static String get next => 'next'.tr;
+  static String get continueLabel => 'continueLabel'.tr;
   static String get done => 'done'.tr;
   static String get add => 'add'.tr;
   static String get retry => 'retry'.tr;
@@ -36,6 +37,7 @@ class AppTexts {
   // Auth
   static String get signIn => 'signIn'.tr;
   static String get signInButton => 'signInButton'.tr;
+  static String get switchRole => 'switchRole'.tr;
   static String get signUp => 'signUp'.tr;
   static String get createAccount => 'createAccount'.tr;
   static String get register => 'register'.tr;
@@ -61,6 +63,7 @@ class AppTexts {
   static String get rememberMe => 'rememberMe'.tr;
   static String get authWelcomeTitle => 'authWelcomeTitle'.tr;
   static String get authWelcomeSubtitle => 'authWelcomeSubtitle'.tr;
+  static String get signingInAs => 'signingInAs'.tr;
   static String get authNoAccount => 'authNoAccount'.tr;
   static String get authHaveAccount => 'authHaveAccount'.tr;
   static String get generatePassword => 'generatePassword'.tr;
@@ -73,12 +76,15 @@ class AppTexts {
   static String get generatePasswordMiddle => 'generatePasswordMiddle'.tr;
   static String get copyrightsPrefix => 'copyrightsPrefix'.tr;
   static String get brandName => 'brandName'.tr;
+  static String get broughtByPrefix => 'broughtByPrefix'.tr;
+  static String get developerName => 'developerName'.tr;
   static String get allRightsReserved => 'allRightsReserved'.tr;
   static String get loginSuccessful => 'loginSuccessful'.tr;
   static String get accountCreatedSuccess => 'accountCreatedSuccess'.tr;
   static String get loginFailedTitle => 'loginFailedTitle'.tr;
   static String get signUpFailedTitle => 'signUpFailedTitle'.tr;
   static String get selectYourRole => 'selectYourRole'.tr;
+  static String get selectRoleBody => 'selectRoleBody'.tr;
   static String get defaultUserName => 'defaultUserName'.tr;
   static String get languageEnglish => 'languageEnglish'.tr;
   static String get languageUrdu => 'languageUrdu'.tr;
@@ -218,8 +224,11 @@ class AppTexts {
 
   // Roles
   static String get roleOrderBooker => 'roleOrderBooker'.tr;
+  static String get roleOrderBookerSubtitle => 'roleOrderBookerSubtitle'.tr;
   static String get roleDeliveryMan => 'roleDeliveryMan'.tr;
+  static String get roleDeliveryManSubtitle => 'roleDeliveryManSubtitle'.tr;
   static String get roleRecoveryMan => 'roleRecoveryMan'.tr;
+  static String get roleRecoveryManSubtitle => 'roleRecoveryManSubtitle'.tr;
 
   // Date/time
   static String get selectDateTime => 'selectDateTime'.tr;
