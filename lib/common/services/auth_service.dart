@@ -2,8 +2,8 @@ import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/common/models/user_model.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
+import 'package:shahtaj_oil_mobile_app/core/constants/role_api_endpoints.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
-import 'package:shahtaj_oil_mobile_app/core/constants/api_endpoints.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/storage_service.dart';
 
@@ -21,7 +21,7 @@ class AuthService extends GetxService {
   }) async {
     try {
       final response = await _api.post(
-        ApiEndpoints.authLogin,
+        role.authLoginPath,
         data: {'email': email, 'password': password},
       );
       final data = response.data as Map<String, dynamic>;
@@ -46,9 +46,12 @@ class AuthService extends GetxService {
   }
 
   Future<void> logout() async {
-    try {
-      await _api.post(ApiEndpoints.authLogout);
-    } catch (_) {}
+    final role = _session.role.value;
+    if (role != null) {
+      try {
+        await _api.post(role.authLogoutPath);
+      } catch (_) {}
+    }
     await _session.clearSession();
   }
 }
