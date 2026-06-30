@@ -1,11 +1,11 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+import 'package:shahtaj_oil_mobile_app/core/app/app.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/locale_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/storage_service.dart';
-import 'package:shahtaj_oil_mobile_app/main.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

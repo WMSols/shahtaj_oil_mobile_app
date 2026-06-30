@@ -23,19 +23,10 @@ class AccountScreen extends GetView<AccountController> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              AppTexts.myProfile,
-              style: AppTextStyles.headline(context),
-            ),
+            Text(AppTexts.myProfile, style: AppTextStyles.headline(context)),
             AppSpacing.vertical(context, 0.02),
-            Text(
-              controller.userName,
-              style: AppTextStyles.bodyText(context),
-            ),
-            Text(
-              controller.userEmail,
-              style: AppTextStyles.hintText(context),
-            ),
+            Text(controller.userName, style: AppTextStyles.bodyText(context)),
+            Text(controller.userEmail, style: AppTextStyles.hintText(context)),
             AppSpacing.vertical(context, 0.03),
             Text(
               AppTexts.changeLanguage,
@@ -48,8 +39,8 @@ class AccountScreen extends GetView<AccountController> {
                   Expanded(
                     child: AppSecondaryButton(
                       label: AppTexts.languageEnglish,
-                      onPressed: localeService.locale.value ==
-                              LocaleService.english
+                      onPressed:
+                          localeService.locale.value == LocaleService.english
                           ? null
                           : localeService.setEnglish,
                     ),
@@ -58,7 +49,8 @@ class AccountScreen extends GetView<AccountController> {
                   Expanded(
                     child: AppSecondaryButton(
                       label: AppTexts.languageUrdu,
-                      onPressed: localeService.locale.value == LocaleService.urdu
+                      onPressed:
+                          localeService.locale.value == LocaleService.urdu
                           ? null
                           : localeService.setUrdu,
                     ),

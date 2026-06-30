@@ -44,16 +44,16 @@ class DashboardHighlightCard extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: AppTextStyles.statLabel(context).copyWith(
-                    color: AppColors.white,
-                  ),
+                  style: AppTextStyles.statLabel(
+                    context,
+                  ).copyWith(color: AppColors.white),
                 ),
                 AppSpacing.vertical(context, 0.004),
                 Text(
                   amount,
-                  style: AppTextStyles.statValue(context).copyWith(
-                    color: AppColors.white,
-                  ),
+                  style: AppTextStyles.statValue(
+                    context,
+                  ).copyWith(color: AppColors.white),
                 ),
               ],
             ),

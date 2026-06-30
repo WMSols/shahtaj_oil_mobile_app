@@ -5,10 +5,16 @@ import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 
 class AppFormFieldLabel extends StatelessWidget {
-  const AppFormFieldLabel({super.key, this.label, this.required = false});
+  const AppFormFieldLabel({
+    super.key,
+    this.label,
+    this.required = false,
+    this.color,
+  });
 
   final String? label;
   final bool required;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +26,10 @@ class AppFormFieldLabel extends StatelessWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label!, style: AppTextStyles.sectionTitle(context)),
+            Text(
+              label!,
+              style: AppTextStyles.sectionTitle(context).copyWith(color: color),
+            ),
             if (required)
               Text(
                 ' *',

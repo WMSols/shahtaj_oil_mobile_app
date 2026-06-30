@@ -20,15 +20,13 @@ class AppPrimaryButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: AppResponsive.scaleSize(context, 52),
+      height: AppResponsive.scaleSize(context, 40),
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.accentBlue,
+          backgroundColor: AppColors.primary,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-              AppResponsive.scaleSize(context, 28),
-            ),
+            borderRadius: BorderRadius.circular(AppResponsive.radius(context)),
           ),
         ),
         child: isLoading

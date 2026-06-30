@@ -23,17 +23,11 @@ class AppInfoInlinePairRow extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
-          child: AppInfoInlineField(
-            label: firstLabel,
-            value: firstValue,
-          ),
+          child: AppInfoInlineField(label: firstLabel, value: firstValue),
         ),
         AppSpacing.horizontal(context, 0.02),
         Expanded(
-          child: AppInfoInlineField(
-            label: secondLabel,
-            value: secondValue,
-          ),
+          child: AppInfoInlineField(label: secondLabel, value: secondValue),
         ),
       ],
     );
