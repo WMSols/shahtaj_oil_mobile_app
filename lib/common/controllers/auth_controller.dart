@@ -3,12 +3,13 @@ import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/common/services/auth_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
-import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
+import 'package:shahtaj_oil_mobile_app/core/routes/role_route_resolver.dart';
 
 class AuthController extends GetxController {
   final AuthService _authService = Get.find<AuthService>();
 
   final RxBool isLoading = false.obs;
+  final RxBool obscurePassword = true.obs;
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   late final UserRole role;
@@ -26,6 +27,9 @@ class AuthController extends GetxController {
     super.onClose();
   }
 
+  void togglePasswordVisibility() =>
+      obscurePassword.value = !obscurePassword.value;
+
   Future<void> login() async {
     isLoading.value = true;
     try {
@@ -34,20 +38,9 @@ class AuthController extends GetxController {
         password: passwordController.text,
         role: role,
       );
-      _navigateToRoleHome(role);
+      RoleRouteResolver.goToRoleHome(role);
     } finally {
       isLoading.value = false;
-    }
-  }
-
-  void _navigateToRoleHome(UserRole role) {
-    switch (role) {
-      case UserRole.orderBooker:
-        Get.offAllNamed(AppRoutes.orderBooker);
-      case UserRole.deliveryMan:
-        Get.offAllNamed(AppRoutes.deliveryMan);
-      case UserRole.recoveryMan:
-        Get.offAllNamed(AppRoutes.recoveryMan);
     }
   }
 }

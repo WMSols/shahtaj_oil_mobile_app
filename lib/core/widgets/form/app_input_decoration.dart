@@ -15,19 +15,22 @@ class AppInputDecoration {
     Widget? suffixIcon,
     Color? fillColor,
     Color? borderColor,
+    TextStyle? hintStyle,
+    TextStyle? textStyle,
+    Color? focusedBorderColor,
   }) {
-    final radius = AppResponsive.radius(context, factor: 5);
+    final radius = AppResponsive.radius(context, factor: 1);
     final fill = fillColor ?? AppColors.inputFill;
     final border = borderColor ?? AppColors.cardBorder;
 
     return InputDecoration(
       hintText: hintText,
-      hintStyle: AppTextStyles.hintText(context),
+      hintStyle: hintStyle ?? AppTextStyles.hintText(context),
       prefixIcon: prefixIcon != null
           ? Icon(
               prefixIcon,
               size: AppResponsive.scaleSize(context, 20),
-              color: AppColors.grey,
+              color: AppColors.black,
             )
           : null,
       suffixIcon: suffixIcon,
@@ -43,13 +46,15 @@ class AppInputDecoration {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(radius),
-        borderSide: const BorderSide(color: AppColors.accentBlue),
+        borderSide: BorderSide(
+          color: focusedBorderColor ?? AppColors.accentBlue,
+        ),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(radius),
         borderSide: const BorderSide(color: AppColors.error),
       ),
-      contentPadding: AppSpacing.symmetric(context, h: 0.04, v: 0.014),
+      contentPadding: AppSpacing.symmetric(context, h: 0.04, v: 0.008),
     );
   }
 }

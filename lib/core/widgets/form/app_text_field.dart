@@ -33,6 +33,11 @@ class AppTextField extends StatelessWidget {
     this.readOnly = false,
     this.onTap,
     this.borderColor,
+    this.fillColor,
+    this.labelColor,
+    this.textColor,
+    this.hintColor,
+    this.focusedBorderColor,
   });
 
   final TextEditingController? controller;
@@ -57,13 +62,18 @@ class AppTextField extends StatelessWidget {
   final bool readOnly;
   final VoidCallback? onTap;
   final Color? borderColor;
+  final Color? fillColor;
+  final Color? labelColor;
+  final Color? textColor;
+  final Color? hintColor;
+  final Color? focusedBorderColor;
 
   Widget? _suffixWidget(BuildContext context) {
     if (suffixIcon == null) return null;
 
     final icon = Icon(
       suffixIcon,
-      color: AppColors.grey,
+      color: AppColors.black,
       size: AppResponsive.scaleSize(context, 20),
     );
 
@@ -80,9 +90,9 @@ class AppTextField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        AppFormFieldLabel(label: label, required: required),
+        AppFormFieldLabel(label: label, required: required, color: labelColor),
         if (label != null && label!.isNotEmpty)
-          AppSpacing.vertical(context, 0.01),
+          AppSpacing.vertical(context, 0.005),
         TextFormField(
           controller: controller,
           initialValue: controller == null ? initialValue : null,
@@ -103,13 +113,18 @@ class AppTextField extends StatelessWidget {
           inputFormatters: inputFormatters,
           readOnly: readOnly,
           onTap: onTap,
-          style: AppTextStyles.bodyText(context),
+          style: AppTextStyles.bodyText(context).copyWith(color: textColor),
           decoration: AppInputDecoration.decoration(
             context,
             hintText: hint,
             prefixIcon: prefixIcon,
             suffixIcon: suffixWidget ?? _suffixWidget(context),
+            fillColor: fillColor,
             borderColor: borderColor,
+            hintStyle: hintColor != null
+                ? AppTextStyles.hintText(context).copyWith(color: hintColor)
+                : null,
+            focusedBorderColor: focusedBorderColor,
           ),
         ),
       ],
