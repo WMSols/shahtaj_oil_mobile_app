@@ -7,11 +7,13 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_drawer_entry.dart
 import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_dashboard_binding.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_history_binding.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_my_shops_binding.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_route_detail_binding.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_routes_binding.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_shop_onboarding_binding.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_dashboard_screen.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_history_screen.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_my_shops_screen.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_route_detail_screen.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_routes_screen.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_shop_onboarding_screen.dart';
 
@@ -24,6 +26,13 @@ class OrderBookerShellController extends AppShellController {
       label: AppTexts.navDashboard,
       screen: const ObDashboardScreen(),
       initBinding: () => ObDashboardBinding().dependencies(),
+    )),
+    AppDrawerEntry.leaf((
+      id: 'ob_today_tasks',
+      icon: AppIcons.task,
+      label: AppTexts.navTodayTasks,
+      screen: const ObRouteDetailScreen(embeddedInShell: true),
+      initBinding: () => ObRouteDetailBinding().dependencies(),
     )),
     AppDrawerEntry.leaf((
       id: 'ob_routes',

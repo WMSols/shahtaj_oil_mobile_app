@@ -33,4 +33,11 @@ class ApiEndpoints {
 
   static const handovers = '/api/v1/handovers';
   static String handover(String id) => '/api/v1/handovers/$id';
+
+  // Order booker — Shahtaj v1
+  static const obTasksToday = '/api/shahtaj/v1/tasks/today';
+  static const obTasksCheckIn = '/api/shahtaj/v1/tasks/check-in';
+  static const obTasksSkip = '/api/shahtaj/v1/tasks/skip';
+  static const obTasksNotes = '/api/shahtaj/v1/tasks/notes';
+  static const obVisitsActive = '/api/shahtaj/v1/visits/active';
 }

@@ -3,14 +3,17 @@ import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/constants/app_map_tiles.dart';
+import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_shop_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/ob_shop_service.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/ob_task_service.dart';
 
 class ObShopDetailController extends GetxController {
-  ObShopDetailController(this._shopService);
+  ObShopDetailController(this._shopService, this._taskService);
 
   final ObShopService _shopService;
+  final ObTaskService _taskService;
 
   final RxBool isLoading = true.obs;
   final Rxn<ObShopModel> shop = Rxn<ObShopModel>();
@@ -68,7 +71,22 @@ class ObShopDetailController extends GetxController {
 
   void createOrder() => Get.toNamed(AppRoutes.obOrderCreate);
 
-  void checkInToShop() => Get.toNamed(AppRoutes.obCheckIn);
+  Future<void> checkInToShop() async {
+    final currentShopId = shopId;
+    if (currentShopId.isEmpty) return;
+
+    final task = await _taskService.findTaskByShopId(currentShopId);
+    if (task == null) {
+      Get.snackbar(
+        AppTexts.error,
+        AppTexts.obTaskNotFound,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    Get.toNamed(AppRoutes.obCheckIn, arguments: {'taskId': task.id});
+  }
 
   Future<void> _openMaps(double latitude, double longitude) async {
     final uris = [
