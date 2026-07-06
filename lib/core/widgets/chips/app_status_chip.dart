@@ -40,6 +40,9 @@ class AppStatusChip extends StatelessWidget {
   factory AppStatusChip.shop(ShopStatus status) =>
       AppStatusChip(label: status.label, color: status.chipColor);
 
+  factory AppStatusChip.task(TaskStatus status) =>
+      AppStatusChip(label: status.label, color: status.chipColor);
+
   factory AppStatusChip.lowStock() =>
       AppStatusChip(label: AppTexts.obLowStock, color: AppColors.warning);
 

@@ -6,6 +6,8 @@ import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_order_summary_mode
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_route_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_route_option.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_shop_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_active_visit_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_task_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_targets_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_zone_option.dart';
 import 'package:shahtaj_oil_mobile_app/recovery_man/models/rm_targets_model.dart';
@@ -23,9 +25,82 @@ class AppMockData {
   static ObRouteModel get obTodaysRoute => const ObRouteModel(
     id: 'route-ob-001',
     name: 'Gulberg Route A',
-    shopCount: 12,
+    shopCount: 5,
     distanceKm: 8.4,
     status: RouteStatus.inProgress,
+  );
+
+  // ---------- Order Booker Today's Tasks ----------
+  static List<ObTaskModel> get obTodayTasks => const [
+    ObTaskModel(
+      id: 1,
+      shopId: 'shop-001',
+      shopName: 'Al-Madina General Store',
+      ownerName: 'Muhammad Ahmed',
+      phone: '0300-1234567',
+      locationLabel: 'Zone B-12',
+      sequence: 1,
+      status: TaskStatus.completed,
+      shopLatitude: 31.5204,
+      shopLongitude: 74.3587,
+    ),
+    ObTaskModel(
+      id: 2,
+      shopId: 'shop-002',
+      shopName: 'Green Valley Grocery',
+      ownerName: 'Hassan Raza',
+      phone: '0321-9876543',
+      locationLabel: 'Model Town Market',
+      sequence: 2,
+      status: TaskStatus.inVisit,
+      shopLatitude: 31.4825,
+      shopLongitude: 74.3231,
+    ),
+    ObTaskModel(
+      id: 3,
+      shopId: 'shop-003',
+      shopName: 'Metro Daily Express',
+      ownerName: 'Ali Khan',
+      phone: '0333-5551212',
+      locationLabel: 'Route 7',
+      sequence: 3,
+      status: TaskStatus.pending,
+      shopLatitude: 31.5497,
+      shopLongitude: 74.3436,
+    ),
+    ObTaskModel(
+      id: 4,
+      shopId: 'shop-004',
+      shopName: 'City Mart & Co.',
+      ownerName: 'Usman Tariq',
+      phone: '0345-1112233',
+      locationLabel: 'Invalid Doc',
+      sequence: 4,
+      status: TaskStatus.skipped,
+      shopLatitude: 31.4697,
+      shopLongitude: 74.2728,
+    ),
+    ObTaskModel(
+      id: 5,
+      shopId: 'shop-005',
+      shopName: 'Sunrise Provision Store',
+      ownerName: 'Bilal Hussain',
+      phone: '0302-7788990',
+      locationLabel: 'DHA Phase 4',
+      sequence: 5,
+      status: TaskStatus.pending,
+      shopLatitude: 31.4590,
+      shopLongitude: 74.2663,
+    ),
+  ];
+
+  static ObActiveVisitModel? get obActiveVisit => const ObActiveVisitModel(
+    visitId: 9001,
+    taskId: 2,
+    shopId: 'shop-002',
+    shopName: 'Green Valley Grocery',
+    latitude: 31.4825,
+    longitude: 74.3231,
   );
 
   static ObTargetsModel get obTargets =>

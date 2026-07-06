@@ -39,6 +39,7 @@ class AppOutlineIconButton extends StatelessWidget {
             padding: AppSpacing.symmetric(context, h: 0.01, v: 0.01),
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Icon(
                   icon,

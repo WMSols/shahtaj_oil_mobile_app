@@ -127,6 +127,7 @@ class AppTexts {
   static String get navProfile => 'navProfile'.tr;
   static String get navNotifications => 'navNotifications'.tr;
   static String get navRoutes => 'navRoutes'.tr;
+  static String get navTodayTasks => 'navTodayTasks'.tr;
   static String get navShops => 'navShops'.tr;
   static String get navHistory => 'navHistory'.tr;
   static String get navOrders => 'navOrders'.tr;
@@ -165,6 +166,10 @@ class AppTexts {
   static String get routeStatusNotStarted => 'routeStatusNotStarted'.tr;
   static String get routeStatusInProgress => 'routeStatusInProgress'.tr;
   static String get routeStatusCompleted => 'routeStatusCompleted'.tr;
+  static String get taskStatusPending => 'taskStatusPending'.tr;
+  static String get taskStatusInVisit => 'taskStatusInVisit'.tr;
+  static String get taskStatusSkipped => 'taskStatusSkipped'.tr;
+  static String get taskStatusCompleted => 'taskStatusCompleted'.tr;
 
   static String totalCount(int count) =>
       'totalCount'.trParams({'count': '$count'});
@@ -173,6 +178,7 @@ class AppTexts {
       'userContact'.trParams({'phone': phone, 'email': email});
 
   // Order booker screens
+  static String get obTodayTasksTitle => 'obTodayTasksTitle'.tr;
   static String get obRouteDetailTitle => 'obRouteDetailTitle'.tr;
   static String get obShopOnboardingTitle => 'obShopOnboardingTitle'.tr;
   static String get obRegisterShopButton => 'obRegisterShopButton'.tr;
@@ -256,6 +262,28 @@ class AppTexts {
   static String get obShopExteriorLabel => 'obShopExteriorLabel'.tr;
   static String get obShopEditTitle => 'obShopEditTitle'.tr;
   static String get obCheckInTitle => 'obCheckInTitle'.tr;
+  static String get obTasksSection => 'obTasksSection'.tr;
+  static String get obTaskCheckIn => 'obTaskCheckIn'.tr;
+  static String get obTaskSkip => 'obTaskSkip'.tr;
+  static String get obTaskNotes => 'obTaskNotes'.tr;
+  static String get obSkipTaskTitle => 'obSkipTaskTitle'.tr;
+  static String get obSkipTaskMessage => 'obSkipTaskMessage'.tr;
+  static String get obTaskNotesHint => 'obTaskNotesHint'.tr;
+  static String get obActiveVisitTitle => 'obActiveVisitTitle'.tr;
+  static String get obResumeVisit => 'obResumeVisit'.tr;
+  static String get obNoTasksToday => 'obNoTasksToday'.tr;
+  static String get obCheckInSuccess => 'obCheckInSuccess'.tr;
+  static String get obTaskNotFound => 'obTaskNotFound'.tr;
+  static String get obCheckInShopContext => 'obCheckInShopContext'.tr;
+
+  static String obTasksProgress(int completed, int total) => 'obTasksProgress'
+      .trParams({'completed': '$completed', 'total': '$total'});
+
+  static String obActiveVisitAt(String shopName) =>
+      'obActiveVisitAt'.trParams({'shop': shopName});
+
+  static String obTaskSequence(int sequence) =>
+      'obTaskSequence'.trParams({'sequence': '$sequence'});
   static String get obOrderCreateTitle => 'obOrderCreateTitle'.tr;
   static String get obOrderDetailTitle => 'obOrderDetailTitle'.tr;
   static String get obVisitDetailTitle => 'obVisitDetailTitle'.tr;

@@ -20,6 +20,8 @@ enum ShopType { cash, credit }
 
 enum RouteStatus { notStarted, inProgress, completed }
 
+enum TaskStatus { pending, inVisit, skipped, completed }
+
 extension UserRoleX on UserRole {
   String get label => switch (this) {
     UserRole.orderBooker => AppTexts.roleOrderBooker,
@@ -135,5 +137,21 @@ extension RouteStatusX on RouteStatus {
     RouteStatus.notStarted => AppColors.textMuted,
     RouteStatus.inProgress => AppColors.primary,
     RouteStatus.completed => AppColors.success,
+  };
+}
+
+extension TaskStatusX on TaskStatus {
+  String get label => switch (this) {
+    TaskStatus.pending => AppTexts.taskStatusPending,
+    TaskStatus.inVisit => AppTexts.taskStatusInVisit,
+    TaskStatus.skipped => AppTexts.taskStatusSkipped,
+    TaskStatus.completed => AppTexts.taskStatusCompleted,
+  };
+
+  Color get chipColor => switch (this) {
+    TaskStatus.pending => AppColors.warning,
+    TaskStatus.inVisit => AppColors.primary,
+    TaskStatus.skipped => AppColors.textMuted,
+    TaskStatus.completed => AppColors.success,
   };
 }

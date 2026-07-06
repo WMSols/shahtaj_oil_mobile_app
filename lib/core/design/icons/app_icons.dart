@@ -49,8 +49,8 @@ class AppIcons {
   static const IconData view = Iconsax.eye;
   static const IconData view5 = Iconsax.eye4;
 
-  static const IconData check = Iconsax.check;
-  static const IconData check5 = Iconsax.check5;
+  static const IconData task = Iconsax.task_square;
+  static const IconData task5 = Iconsax.task_square5;
 
   static const IconData checkCircle = Iconsax.tick_circle;
   static const IconData checkCircle5 = Iconsax.tick_circle5;
@@ -169,7 +169,7 @@ class AppIcons {
       handover || upload => handover5,
       back => back5,
       view || eye => view5,
-      check => check5,
+      task => task5,
       checkCircle => checkCircle5,
       delete => delete5,
       notification => notification5,
