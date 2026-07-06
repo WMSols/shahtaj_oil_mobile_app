@@ -12,7 +12,6 @@ import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_routes_binding.d
 import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_shop_detail_binding.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_shop_edit_binding.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_shop_onboarding_binding.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_shops_binding.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_visit_detail_binding.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_check_in_screen.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_dashboard_screen.dart';
@@ -25,7 +24,6 @@ import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_routes_screen.dart'
 import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_shop_detail_screen.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_shop_edit_screen.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_shop_onboarding_screen.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_shops_screen.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_visit_detail_screen.dart';
 
 class OrderBookerRoutes {
@@ -49,8 +47,8 @@ class OrderBookerRoutes {
     ),
     GetPage(
       name: AppRoutes.obShops,
-      page: ObShopsScreen.new,
-      binding: ObShopsBinding(),
+      page: () => const ObMyShopsScreen(),
+      binding: ObMyShopsBinding(),
     ),
     GetPage(
       name: AppRoutes.obShopOnboarding,
