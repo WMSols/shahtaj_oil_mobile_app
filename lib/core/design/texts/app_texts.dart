@@ -88,6 +88,11 @@ class AppTexts {
   static String get defaultUserName => 'defaultUserName'.tr;
   static String get languageEnglish => 'languageEnglish'.tr;
   static String get languageUrdu => 'languageUrdu'.tr;
+
+  /// Fixed labels for language picker buttons (not locale-dependent).
+  static const String languageEnglishButton = 'English';
+  static const String languageUrduButton = 'اردو';
+
   static String get changeLanguage => 'changeLanguage'.tr;
   static String get getStarted => 'getStarted'.tr;
   static String get onboardingIntroTitle => 'onboardingIntroTitle'.tr;
@@ -105,6 +110,14 @@ class AppTexts {
 
   static String roleWithLabel(String role) =>
       'roleWithLabel'.trParams({'role': role});
+
+  static String obShopsDistance(int shops, String distanceKm) =>
+      'obShopsDistance'.trParams({'shops': '$shops', 'distance': distanceKm});
+
+  static String obVanStockSummary(int count) =>
+      'obVanStockSummary'.trParams({'count': '$count'});
+  static String dmVanStockSummary(int count) =>
+      'dmVanStockSummary'.trParams({'count': '$count'});
 
   // Splash
   static String get splashTagline => 'splashTagline'.tr;
@@ -132,6 +145,26 @@ class AppTexts {
   static String get greetingNight => 'greetingNight'.tr;
   static String get dashboardTitle => 'dashboardTitle'.tr;
   static String get welcome => 'welcome'.tr;
+  static String get obDashboardSubtitle => 'obDashboardSubtitle'.tr;
+  static String get obTodaysRoute => 'obTodaysRoute'.tr;
+  static String get obTodaysRoutes => 'obTodaysRoutes'.tr;
+  static String get obTargets => 'obTargets'.tr;
+  static String get obOrdersToday => 'obOrdersToday'.tr;
+  static String get obRecoveryTarget => 'obRecoveryTarget'.tr;
+  static String get rmRecoveryTarget => 'rmRecoveryTarget'.tr;
+  static String get rmTargets => 'rmTargets'.tr;
+  static String get obRecentOrders => 'obRecentOrders'.tr;
+  static String get dmStockItems => 'dmStockItems'.tr;
+  static String get obStockItems => 'obStockItems'.tr;
+  static String get obStartRoute => 'obStartRoute'.tr;
+  static String get obContinueRoute => 'obContinueRoute'.tr;
+  static String get obLowStock => 'obLowStock'.tr;
+  static String get obNoRouteAssigned => 'obNoRouteAssigned'.tr;
+  static String get obNoRoutesAssigned => 'obNoRoutesAssigned'.tr;
+  static String get obNoRecentOrders => 'obNoRecentOrders'.tr;
+  static String get routeStatusNotStarted => 'routeStatusNotStarted'.tr;
+  static String get routeStatusInProgress => 'routeStatusInProgress'.tr;
+  static String get routeStatusCompleted => 'routeStatusCompleted'.tr;
 
   static String totalCount(int count) =>
       'totalCount'.trParams({'count': '$count'});
@@ -142,8 +175,85 @@ class AppTexts {
   // Order booker screens
   static String get obRouteDetailTitle => 'obRouteDetailTitle'.tr;
   static String get obShopOnboardingTitle => 'obShopOnboardingTitle'.tr;
+  static String get obRegisterShopButton => 'obRegisterShopButton'.tr;
+  static String get obSectionShopInformation => 'obSectionShopInformation'.tr;
+  static String get obSectionOwnerDetails => 'obSectionOwnerDetails'.tr;
+  static String get obSectionLocation => 'obSectionLocation'.tr;
+  static String get obSectionRouteAssignment => 'obSectionRouteAssignment'.tr;
+  static String get obSectionCreditBalance => 'obSectionCreditBalance'.tr;
+  static String get obSectionDocumentsPhotos => 'obSectionDocumentsPhotos'.tr;
+  static String get obShopNameLabel => 'obShopNameLabel'.tr;
+  static String get obShopTypeLabel => 'obShopTypeLabel'.tr;
+  static String get obShopTypeHint => 'obShopTypeHint'.tr;
+  static String get shopTypeCash => 'shopTypeCash'.tr;
+  static String get shopTypeCredit => 'shopTypeCredit'.tr;
+  static String get obShopNameHint => 'obShopNameHint'.tr;
+  static String get obOwnerNameLabel => 'obOwnerNameLabel'.tr;
+  static String get obOwnerNameHint => 'obOwnerNameHint'.tr;
+  static String get obOwnerPhoneLabel => 'obOwnerPhoneLabel'.tr;
+  static String get obOwnerPhoneHint => 'obOwnerPhoneHint'.tr;
+  static String get obLatitudeLabel => 'obLatitudeLabel'.tr;
+  static String get obLongitudeLabel => 'obLongitudeLabel'.tr;
+  static String get obUseCurrentLocation => 'obUseCurrentLocation'.tr;
+  static String get obLocationNotCaptured => 'obLocationNotCaptured'.tr;
+  static String get obCoordinatesLabel => 'obCoordinatesLabel'.tr;
+  static String get obMapPreviewBadge => 'obMapPreviewBadge'.tr;
+  static String get obMapPreviewLocation => 'obMapPreviewLocation'.tr;
+  static String get obZoneLabel => 'obZoneLabel'.tr;
+  static String get obZoneHint => 'obZoneHint'.tr;
+  static String get obRouteLabel => 'obRouteLabel'.tr;
+  static String get obRouteHint => 'obRouteHint'.tr;
+  static String get obCreditLimitLabel => 'obCreditLimitLabel'.tr;
+  static String get obLegacyBalanceLabel => 'obLegacyBalanceLabel'.tr;
+  static String get obLatitudeHint => 'obLatitudeHint'.tr;
+  static String get obLongitudeHint => 'obLongitudeHint'.tr;
+  static String get obCreditLimitHint => 'obCreditLimitHint'.tr;
+  static String get obLegacyBalanceHint => 'obLegacyBalanceHint'.tr;
+  static String get obPickFromCamera => 'obPickFromCamera'.tr;
+  static String get obPickFromGallery => 'obPickFromGallery'.tr;
+  static String get obCnicFrontTitle => 'obCnicFrontTitle'.tr;
+  static String get obCnicBackTitle => 'obCnicBackTitle'.tr;
+  static String get obOwnerPhotoTitle => 'obOwnerPhotoTitle'.tr;
+  static String get obShopExteriorTitle => 'obShopExteriorTitle'.tr;
+  static String get obTakePortrait => 'obTakePortrait'.tr;
+  static String get obCaptureShop => 'obCaptureShop'.tr;
+  static String get obPhotoUploaded => 'obPhotoUploaded'.tr;
+  static String get obRequiredFieldsNote => 'obRequiredFieldsNote'.tr;
+  static String get obLocationDisabled => 'obLocationDisabled'.tr;
+  static String get obLocationPermissionDenied =>
+      'obLocationPermissionDenied'.tr;
+  static String get obLocationFetchFailed => 'obLocationFetchFailed'.tr;
+  static String get obCoordinateInvalid => 'obCoordinateInvalid'.tr;
+  static String get obShopRegisteredSuccess => 'obShopRegisteredSuccess'.tr;
+  static String get obRegisterShopHelpTitle => 'obRegisterShopHelpTitle'.tr;
+  static String get obRegisterShopHelpBody => 'obRegisterShopHelpBody'.tr;
+  static String get obRegisterShopResetTitle => 'obRegisterShopResetTitle'.tr;
+  static String get obRegisterShopResetMessage =>
+      'obRegisterShopResetMessage'.tr;
   static String get obMyShopsTitle => 'obMyShopsTitle'.tr;
+  static String get obRegisteredShopsTitle => 'obRegisteredShopsTitle'.tr;
+  static String get obSearchShopHint => 'obSearchShopHint'.tr;
+  static String get obShopsFilterAll => 'obShopsFilterAll'.tr;
+  static String obShopOwner(String name) =>
+      'obShopOwner'.trParams({'name': name});
+  static String get obNoShopsFound => 'obNoShopsFound'.tr;
   static String get obShopDetailTitle => 'obShopDetailTitle'.tr;
+  static String get obShopDetailsSection => 'obShopDetailsSection'.tr;
+  static String get obVerificationPhotosSection =>
+      'obVerificationPhotosSection'.tr;
+  static String get obPhoneNumberLabel => 'obPhoneNumberLabel'.tr;
+  static String get obLocationLabel => 'obLocationLabel'.tr;
+  static String get obViewOnMap => 'obViewOnMap'.tr;
+  static String get obCallOwner => 'obCallOwner'.tr;
+  static String get obDirections => 'obDirections'.tr;
+  static String get obEditShop => 'obEditShop'.tr;
+  static String get obCreateOrderButton => 'obCreateOrderButton'.tr;
+  static String get obCheckInToShop => 'obCheckInToShop'.tr;
+  static String get obShopNotFound => 'obShopNotFound'.tr;
+  static String get obCnicFrontLabel => 'obCnicFrontLabel'.tr;
+  static String get obCnicBackLabel => 'obCnicBackLabel'.tr;
+  static String get obOwnerPhotoLabel => 'obOwnerPhotoLabel'.tr;
+  static String get obShopExteriorLabel => 'obShopExteriorLabel'.tr;
   static String get obShopEditTitle => 'obShopEditTitle'.tr;
   static String get obCheckInTitle => 'obCheckInTitle'.tr;
   static String get obOrderCreateTitle => 'obOrderCreateTitle'.tr;

@@ -11,8 +11,9 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_input_decoration.da
 class AppDropdownField<T> extends StatelessWidget {
   const AppDropdownField({
     super.key,
+    this.fieldKey,
     this.label,
-    this.hint,
+    required this.hint,
     this.required = false,
     this.prefixIcon,
     this.value,
@@ -21,10 +22,12 @@ class AppDropdownField<T> extends StatelessWidget {
     this.validator,
     this.autovalidateMode = AutovalidateMode.onUserInteraction,
     this.getLabel,
+    this.borderless = true,
   });
 
+  final Key? fieldKey;
   final String? label;
-  final String? hint;
+  final String hint;
   final bool required;
   final IconData? prefixIcon;
   final T? value;
@@ -33,6 +36,7 @@ class AppDropdownField<T> extends StatelessWidget {
   final String? Function(T?)? validator;
   final AutovalidateMode autovalidateMode;
   final String Function(T)? getLabel;
+  final bool borderless;
 
   @override
   Widget build(BuildContext context) {
@@ -42,14 +46,13 @@ class AppDropdownField<T> extends StatelessWidget {
       children: [
         AppFormFieldLabel(label: label, required: required),
         if (label != null && label!.isNotEmpty)
-          AppSpacing.vertical(context, 0.01),
+          AppSpacing.vertical(context, 0.005),
         DropdownButtonFormField<T>(
+          key: fieldKey,
           isExpanded: true,
           autovalidateMode: autovalidateMode,
-          initialValue: value,
-          hint: hint != null
-              ? Text(hint!, style: AppTextStyles.hintText(context))
-              : null,
+          initialValue: items.contains(value) ? value : null,
+          hint: Text(hint, style: AppTextStyles.hintText(context)),
           items: items
               .map(
                 (e) => DropdownMenuItem<T>(
@@ -65,7 +68,9 @@ class AppDropdownField<T> extends StatelessWidget {
           validator: validator,
           decoration: AppInputDecoration.decoration(
             context,
+            hintText: hint,
             prefixIcon: prefixIcon,
+            borderless: borderless,
           ),
           icon: Icon(
             AppIcons.arrowDown,

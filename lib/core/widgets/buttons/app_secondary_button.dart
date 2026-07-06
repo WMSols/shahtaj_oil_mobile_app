@@ -12,6 +12,9 @@ class AppSecondaryButton extends StatelessWidget {
     this.outlinedOnly = false,
     this.textColor,
     this.borderColor,
+    this.icon,
+    this.isLoading = false,
+    this.labelStyle,
   });
 
   final String label;
@@ -19,6 +22,9 @@ class AppSecondaryButton extends StatelessWidget {
   final bool outlinedOnly;
   final Color? textColor;
   final Color? borderColor;
+  final IconData? icon;
+  final bool isLoading;
+  final TextStyle? labelStyle;
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +35,7 @@ class AppSecondaryButton extends StatelessWidget {
       width: double.infinity,
       height: AppResponsive.scaleSize(context, 40),
       child: ElevatedButton(
-        onPressed: onPressed,
+        onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: outlinedOnly ? Colors.transparent : AppColors.white,
           shadowColor: Colors.transparent,
@@ -38,12 +44,34 @@ class AppSecondaryButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppResponsive.radius(context)),
           ),
         ),
-        child: Text(
-          label,
-          style: AppTextStyles.buttonText(
-            context,
-          ).copyWith(color: resolvedTextColor),
-        ),
+        child: isLoading
+            ? SizedBox(
+                width: AppResponsive.buttonLoaderSize(context, factor: 0.3),
+                height: AppResponsive.buttonLoaderSize(context, factor: 0.3),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: resolvedTextColor,
+                ),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (icon != null) ...[
+                    Icon(
+                      icon,
+                      color: resolvedTextColor,
+                      size: AppResponsive.scaleSize(context, 18),
+                    ),
+                    SizedBox(width: AppResponsive.scaleSize(context, 8)),
+                  ],
+                  Text(
+                    label,
+                    style: (labelStyle ?? AppTextStyles.buttonText(context))
+                        .copyWith(color: resolvedTextColor),
+                  ),
+                ],
+              ),
       ),
     );
   }

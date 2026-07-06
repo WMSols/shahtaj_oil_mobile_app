@@ -38,7 +38,11 @@ class AccountScreen extends GetView<AccountController> {
                 children: [
                   Expanded(
                     child: AppSecondaryButton(
-                      label: AppTexts.languageEnglish,
+                      label: AppTexts.languageEnglishButton,
+                      labelStyle: AppTextStyles.languagePickerButtonText(
+                        context,
+                        urdu: false,
+                      ),
                       onPressed:
                           localeService.locale.value == LocaleService.english
                           ? null
@@ -48,7 +52,11 @@ class AccountScreen extends GetView<AccountController> {
                   AppSpacing.horizontal(context, 0.02),
                   Expanded(
                     child: AppSecondaryButton(
-                      label: AppTexts.languageUrdu,
+                      label: AppTexts.languageUrduButton,
+                      labelStyle: AppTextStyles.languagePickerButtonText(
+                        context,
+                        urdu: true,
+                      ),
                       onPressed:
                           localeService.locale.value == LocaleService.urdu
                           ? null

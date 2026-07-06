@@ -20,7 +20,7 @@ class AppLoader extends StatelessWidget {
             width: AppResponsive.scaleSize(context, 40),
             height: AppResponsive.scaleSize(context, 40),
             child: const CircularProgressIndicator(
-              strokeWidth: 2.5,
+              strokeWidth: 5,
               color: AppColors.primary,
             ),
           ),

@@ -145,6 +145,38 @@ class AppFormatter {
     return '$symbol${formatter.format(amount)}';
   }
 
+  /// Whole-number currency — e.g. 50000 → `Rs 50,000`.
+  static String currencyWhole(num amount, {String symbol = 'Rs '}) {
+    final formatter = NumberFormat('#,##0');
+    return '$symbol${formatter.format(amount)}';
+  }
+
+  static String coordinates(double latitude, double longitude) {
+    final latDir = latitude >= 0 ? 'N' : 'S';
+    final lngDir = longitude >= 0 ? 'E' : 'W';
+    return '${latitude.abs().toStringAsFixed(4)}° $latDir, '
+        '${longitude.abs().toStringAsFixed(4)}° $lngDir';
+  }
+
+  /// Compact currency for dashboards — e.g. 45000 → `Rs 45K`.
+  static String compactCurrency(num amount, {String symbol = 'Rs. '}) {
+    final value = amount.toDouble().abs();
+    final prefix = amount < 0 ? '-' : '';
+
+    if (value >= 1000000) {
+      return '$prefix$symbol${_compactNumber(value / 1000000)}M';
+    }
+    if (value >= 1000) {
+      return '$prefix$symbol${_compactNumber(value / 1000)}K';
+    }
+    return '$prefix$symbol${value.toInt()}';
+  }
+
+  static String _compactNumber(double value) {
+    if (value == value.roundToDouble()) return value.toInt().toString();
+    return value.toStringAsFixed(1);
+  }
+
   static String compactCount(int count) {
     if (count >= 1000000) return '${(count / 1000000).toStringAsFixed(1)}M';
     if (count >= 1000) return '${(count / 1000).toStringAsFixed(1)}K';

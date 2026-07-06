@@ -39,6 +39,7 @@ class AppDateDisplayField extends StatelessWidget {
           child: InputDecorator(
             decoration: AppInputDecoration.decoration(
               context,
+              hintText: placeholder,
               prefixIcon: icon ?? AppIcons.calendar,
             ),
             child: Text(

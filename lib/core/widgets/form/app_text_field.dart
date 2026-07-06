@@ -14,10 +14,12 @@ class AppTextField extends StatelessWidget {
     this.controller,
     this.initialValue,
     this.label,
-    this.hint,
+    required this.hint,
     this.required = false,
     this.prefixIcon,
+    this.pakistanPhonePrefix = false,
     this.suffixIcon,
+    this.borderless = false,
     this.suffixWidget,
     this.onSuffixTap,
     this.obscureText = false,
@@ -43,10 +45,12 @@ class AppTextField extends StatelessWidget {
   final TextEditingController? controller;
   final String? initialValue;
   final String? label;
-  final String? hint;
+  final String hint;
   final bool required;
   final IconData? prefixIcon;
+  final bool pakistanPhonePrefix;
   final IconData? suffixIcon;
+  final bool borderless;
   final Widget? suffixWidget;
   final VoidCallback? onSuffixTap;
   final bool obscureText;
@@ -118,6 +122,7 @@ class AppTextField extends StatelessWidget {
             context,
             hintText: hint,
             prefixIcon: prefixIcon,
+            prefixText: pakistanPhonePrefix ? '+92' : null,
             suffixIcon: suffixWidget ?? _suffixWidget(context),
             fillColor: fillColor,
             borderColor: borderColor,
@@ -125,6 +130,7 @@ class AppTextField extends StatelessWidget {
                 ? AppTextStyles.hintText(context).copyWith(color: hintColor)
                 : null,
             focusedBorderColor: focusedBorderColor,
+            borderless: borderless,
           ),
         ),
       ],
