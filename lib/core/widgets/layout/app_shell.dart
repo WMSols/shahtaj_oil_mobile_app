@@ -22,16 +22,17 @@ class AppShell<T extends AppShellController> extends GetView<T> {
     final roleLabel = session.role.value?.label ?? '';
 
     return Obx(() {
-      final index = controller.currentIndex.value;
-      final currentItem = controller.drawerItems[index];
+      final currentLeaf = controller.currentLeaf;
 
       return Scaffold(
         key: controller.scaffoldKey,
         backgroundColor: AppColors.scaffoldBackground,
         drawer: AppDrawer(
-          items: controller.drawerItems,
-          selectedIndex: index,
-          onItemTap: controller.selectIndex,
+          entries: controller.drawerEntries,
+          selectedLeafId: controller.selectedLeafId.value,
+          expandedGroupIds: controller.expandedGroupIds.toSet(),
+          onLeafTap: controller.selectLeaf,
+          onGroupToggle: controller.toggleGroup,
           roleLabel: roleLabel,
         ),
         appBar: AppBar(
@@ -40,7 +41,7 @@ class AppShell<T extends AppShellController> extends GetView<T> {
           elevation: 0,
           scrolledUnderElevation: 0,
           centerTitle: true,
-          title: Text(currentItem.label, style: AppTextStyles.heading(context)),
+          title: Text(currentLeaf.label, style: AppTextStyles.heading(context)),
           leading: IconButton(
             icon: Icon(
               AppIcons.menu,
@@ -73,8 +74,8 @@ class AppShell<T extends AppShellController> extends GetView<T> {
             );
           },
           child: KeyedSubtree(
-            key: ValueKey<int>(index),
-            child: currentItem.screen,
+            key: ValueKey<String>(currentLeaf.id),
+            child: currentLeaf.screen,
           ),
         ),
       );
