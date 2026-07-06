@@ -1,28 +1,78 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_drawer.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_drawer_entry.dart';
 
 abstract class AppShellController extends GetxController {
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
-  final RxInt currentIndex = 0.obs;
+  final RxString selectedLeafId = ''.obs;
+  final RxSet<String> expandedGroupIds = <String>{}.obs;
 
-  List<AppDrawerItem> get drawerItems;
+  List<AppDrawerEntry> get drawerEntries;
 
-  AppDrawerItem get currentItem => drawerItems[currentIndex.value];
+  List<AppDrawerLeaf> get allLeaves {
+    final leaves = <AppDrawerLeaf>[];
+    for (final entry in drawerEntries) {
+      if (entry.isGroup) {
+        leaves.addAll(entry.children!);
+      } else if (entry.leaf != null) {
+        leaves.add(entry.leaf!);
+      }
+    }
+    return leaves;
+  }
+
+  AppDrawerLeaf get currentLeaf => allLeaves.firstWhere(
+    (leaf) => leaf.id == selectedLeafId.value,
+    orElse: () => allLeaves.first,
+  );
 
   @override
   void onInit() {
     super.onInit();
-    for (final item in drawerItems) {
-      item.initBinding?.call();
+    final leaves = allLeaves;
+    if (leaves.isEmpty) return;
+
+    selectedLeafId.value = leaves.first.id;
+    _expandParentOf(leaves.first.id);
+
+    for (final leaf in leaves) {
+      leaf.initBinding?.call();
     }
   }
 
-  void selectIndex(int index) {
-    if (index < 0 || index >= drawerItems.length) return;
-    currentIndex.value = index;
+  void selectLeaf(String id) {
+    if (!allLeaves.any((leaf) => leaf.id == id)) return;
+
+    final leaf = allLeaves.firstWhere((item) => item.id == id);
+    leaf.initBinding?.call();
+
+    selectedLeafId.value = id;
+    _expandParentOf(id);
     scaffoldKey.currentState?.closeDrawer();
+  }
+
+  void toggleGroup(String groupId) {
+    if (expandedGroupIds.contains(groupId)) {
+      expandedGroupIds.remove(groupId);
+    } else {
+      expandedGroupIds.add(groupId);
+    }
+  }
+
+  bool isGroupExpanded(String groupId) => expandedGroupIds.contains(groupId);
+
+  bool isGroupActive(AppDrawerEntry entry) {
+    if (!entry.isGroup) return false;
+    return entry.children!.any((child) => child.id == selectedLeafId.value);
+  }
+
+  void _expandParentOf(String leafId) {
+    for (final entry in drawerEntries) {
+      if (entry.isGroup && entry.children!.any((child) => child.id == leafId)) {
+        expandedGroupIds.add(entry.id);
+      }
+    }
   }
 
   void openDrawer() => scaffoldKey.currentState?.openDrawer();
