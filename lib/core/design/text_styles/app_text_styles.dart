@@ -59,6 +59,16 @@ class AppTextStyles {
     color: AppColors.white,
   );
 
+  /// Button label style for language pickers — always uses the native font.
+  static TextStyle languagePickerButtonText(
+    BuildContext context, {
+    required bool urdu,
+  }) => TextStyle(
+    fontSize: AppResponsive.scaleSize(context, 16),
+    fontFamily: urdu ? AppFonts.urdu : AppFonts.inter,
+    fontWeight: FontWeight.w600,
+  );
+
   static TextStyle labelText(BuildContext context) => TextStyle(
     fontSize: AppResponsive.screenWidth(context) * 0.035,
     fontFamily: AppFonts.mainFont,

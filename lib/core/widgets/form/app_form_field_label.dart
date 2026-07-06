@@ -28,7 +28,10 @@ class AppFormFieldLabel extends StatelessWidget {
           children: [
             Text(
               label!,
-              style: AppTextStyles.sectionTitle(context).copyWith(color: color),
+              style: AppTextStyles.labelText(context).copyWith(
+                color: color ?? AppColors.black,
+                fontWeight: FontWeight.w500,
+              ),
             ),
             if (required)
               Text(

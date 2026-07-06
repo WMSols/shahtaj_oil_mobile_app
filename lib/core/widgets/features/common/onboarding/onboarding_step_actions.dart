@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:shahtaj_oil_mobile_app/common/controllers/onboarding_controller.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
+import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_primary_button.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_secondary_button.dart';
@@ -26,11 +27,19 @@ class OnboardingStepActions extends GetView<OnboardingController> {
           Expanded(
             child: isEnglish
                 ? AppPrimaryButton(
-                    label: AppTexts.languageEnglish,
+                    label: AppTexts.languageEnglishButton,
+                    labelStyle: AppTextStyles.languagePickerButtonText(
+                      context,
+                      urdu: false,
+                    ),
                     onPressed: controller.selectEnglish,
                   )
                 : AppSecondaryButton(
-                    label: AppTexts.languageEnglish,
+                    label: AppTexts.languageEnglishButton,
+                    labelStyle: AppTextStyles.languagePickerButtonText(
+                      context,
+                      urdu: false,
+                    ),
                     onPressed: controller.selectEnglish,
                   ),
           ),
@@ -38,11 +47,19 @@ class OnboardingStepActions extends GetView<OnboardingController> {
           Expanded(
             child: !isEnglish
                 ? AppPrimaryButton(
-                    label: AppTexts.languageUrdu,
+                    label: AppTexts.languageUrduButton,
+                    labelStyle: AppTextStyles.languagePickerButtonText(
+                      context,
+                      urdu: true,
+                    ),
                     onPressed: controller.selectUrdu,
                   )
                 : AppSecondaryButton(
-                    label: AppTexts.languageUrdu,
+                    label: AppTexts.languageUrduButton,
+                    labelStyle: AppTextStyles.languagePickerButtonText(
+                      context,
+                      urdu: true,
+                    ),
                     onPressed: controller.selectUrdu,
                   ),
           ),

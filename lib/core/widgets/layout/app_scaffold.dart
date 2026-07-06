@@ -6,12 +6,10 @@ class AppScaffold extends StatelessWidget {
   const AppScaffold({
     super.key,
     required this.body,
-    this.bottomNavigationBar,
     this.resizeToAvoidBottomInset = true,
   });
 
   final Widget body;
-  final Widget? bottomNavigationBar;
   final bool resizeToAvoidBottomInset;
 
   @override
@@ -20,7 +18,6 @@ class AppScaffold extends StatelessWidget {
       backgroundColor: AppColors.scaffoldBackground,
       resizeToAvoidBottomInset: resizeToAvoidBottomInset,
       body: SafeArea(child: body),
-      bottomNavigationBar: bottomNavigationBar,
     );
   }
 }

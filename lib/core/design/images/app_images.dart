@@ -23,4 +23,7 @@ class AppImages {
       'assets/images/common/select_role_dm.png';
   static const String selectRoleRecoveryMan =
       'assets/images/common/select_role_rm.png';
+
+  // Common
+  static const String empty = 'assets/images/common/empty.png';
 }

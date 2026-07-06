@@ -10,11 +10,15 @@ class AppPrimaryButton extends StatelessWidget {
     required this.label,
     required this.onPressed,
     this.isLoading = false,
+    this.icon,
+    this.labelStyle,
   });
 
   final String label;
   final VoidCallback? onPressed;
   final bool isLoading;
+  final IconData? icon;
+  final TextStyle? labelStyle;
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +42,25 @@ class AppPrimaryButton extends StatelessWidget {
                   color: AppColors.white,
                 ),
               )
-            : Text(label, style: AppTextStyles.buttonText(context)),
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (icon != null) ...[
+                    Icon(
+                      icon,
+                      color: AppColors.white,
+                      size: AppResponsive.scaleSize(context, 18),
+                    ),
+                    SizedBox(width: AppResponsive.scaleSize(context, 8)),
+                  ],
+                  Text(
+                    label,
+                    style: (labelStyle ?? AppTextStyles.buttonText(context))
+                        .copyWith(color: AppColors.white),
+                  ),
+                ],
+              ),
       ),
     );
   }
