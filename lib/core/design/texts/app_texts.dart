@@ -196,6 +196,8 @@ class AppTexts {
   static String get obShopNameHint => 'obShopNameHint'.tr;
   static String get obOwnerNameLabel => 'obOwnerNameLabel'.tr;
   static String get obOwnerNameHint => 'obOwnerNameHint'.tr;
+  static String get obOwnerCnicLabel => 'obOwnerCnicLabel'.tr;
+  static String get obOwnerCnicHint => 'obOwnerCnicHint'.tr;
   static String get obOwnerPhoneLabel => 'obOwnerPhoneLabel'.tr;
   static String get obOwnerPhoneHint => 'obOwnerPhoneHint'.tr;
   static String get obLatitudeLabel => 'obLatitudeLabel'.tr;
@@ -285,6 +287,35 @@ class AppTexts {
   static String obTaskSequence(int sequence) =>
       'obTaskSequence'.trParams({'sequence': '$sequence'});
   static String get obOrderCreateTitle => 'obOrderCreateTitle'.tr;
+  static String get obProductsSection => 'obProductsSection'.tr;
+  static String get obCartSection => 'obCartSection'.tr;
+  static String get obNoProductsFound => 'obNoProductsFound'.tr;
+  static String get obNoCartItems => 'obNoCartItems'.tr;
+  static String get obAddProductsToStart => 'obAddProductsToStart'.tr;
+  static String get obAddToCart => 'obAddToCart'.tr;
+  static String get obPlaceOrder => 'obPlaceOrder'.tr;
+  static String get obPlaceOrderConfirmMessage =>
+      'obPlaceOrderConfirmMessage'.tr;
+  static String get obEndVisitWithoutOrder => 'obEndVisitWithoutOrder'.tr;
+  static String get obSaveVisitNotes => 'obSaveVisitNotes'.tr;
+  static String get obVisitNotesHint => 'obVisitNotesHint'.tr;
+  static String get obEndVisitTitle => 'obEndVisitTitle'.tr;
+  static String get obEndVisitNotesHint => 'obEndVisitNotesHint'.tr;
+  static String get obActiveVisitMissing => 'obActiveVisitMissing'.tr;
+  static String get obOrderPlacedSuccess => 'obOrderPlacedSuccess'.tr;
+  static String get obVisitClosedSuccess => 'obVisitClosedSuccess'.tr;
+  static String get obSubtotal => 'obSubtotal'.tr;
+  static String get obCartQuantityHint => 'obCartQuantityHint'.tr;
+  static String get obCartPriceHint => 'obCartPriceHint'.tr;
+  static String get obTotalLabel => 'obTotalLabel'.tr;
+  static String get obNoMoreStockLeft => 'obNoMoreStockLeft'.tr;
+
+  static String obVisitLoadedFor(int visitId) =>
+      'obVisitLoadedFor'.trParams({'visitId': '$visitId'});
+
+  static String obQtyBookable(String qty, String unit) =>
+      'obQtyBookable'.trParams({'qty': qty, 'unit': unit});
+
   static String get obOrderDetailTitle => 'obOrderDetailTitle'.tr;
   static String get obVisitDetailTitle => 'obVisitDetailTitle'.tr;
 
@@ -474,5 +505,7 @@ class AppTexts {
   static String get passwordNoSpaces => 'passwordNoSpaces'.tr;
   static String get phoneRequired => 'phoneRequired'.tr;
   static String get phoneInvalid => 'phoneInvalid'.tr;
+  static String get obPhoneLength => 'obPhoneLength'.tr;
+  static String get cnicInvalid => 'cnicInvalid'.tr;
   static String get phoneLength => 'phoneLength'.tr;
 }

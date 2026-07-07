@@ -52,8 +52,7 @@ class AppIcons {
   static const IconData task = Iconsax.task_square;
   static const IconData task5 = Iconsax.task_square5;
 
-  static const IconData checkCircle = Iconsax.tick_circle;
-  static const IconData checkCircle5 = Iconsax.tick_circle5;
+  static const IconData check = Icons.check;
 
   static const IconData download = Icons.download;
   static const IconData delete = Iconsax.trash;
@@ -170,7 +169,6 @@ class AppIcons {
       back => back5,
       view || eye => view5,
       task => task5,
-      checkCircle => checkCircle5,
       delete => delete5,
       notification => notification5,
       email || sms => email5,

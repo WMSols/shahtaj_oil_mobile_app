@@ -69,7 +69,18 @@ class ObShopDetailController extends GetxController {
     Get.toNamed(AppRoutes.obShopEdit.replaceFirst(':id', shopId));
   }
 
-  void createOrder() => Get.toNamed(AppRoutes.obOrderCreate);
+  void createOrder() {
+    final visit = _taskService.activeVisitSync;
+    if (visit == null || visit.shopId != shopId) {
+      Get.snackbar(
+        AppTexts.error,
+        AppTexts.obActiveVisitMissing,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+    Get.toNamed(AppRoutes.obOrderCreate, arguments: {'visitId': visit.visitId});
+  }
 
   Future<void> checkInToShop() async {
     final currentShopId = shopId;

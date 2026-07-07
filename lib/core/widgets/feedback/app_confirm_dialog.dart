@@ -69,3 +69,82 @@ class AppConfirmDialog extends StatelessWidget {
     );
   }
 }
+
+class AppConfirmSheet extends StatelessWidget {
+  const AppConfirmSheet({
+    super.key,
+    required this.title,
+    required this.message,
+    this.confirmLabel,
+    this.cancelLabel,
+  });
+
+  final String title;
+  final String message;
+  final String? confirmLabel;
+  final String? cancelLabel;
+
+  static Future<bool?> show({
+    required String title,
+    required String message,
+    String? confirmLabel,
+    String? cancelLabel,
+  }) {
+    return Get.bottomSheet<bool>(
+      AppConfirmSheet(
+        title: title,
+        message: message,
+        confirmLabel: confirmLabel,
+        cancelLabel: cancelLabel,
+      ),
+      isScrollControlled: true,
+      backgroundColor: AppColors.white,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: AppSpacing.horizontalValue(context, 0.04),
+          right: AppSpacing.horizontalValue(context, 0.04),
+          top: AppSpacing.verticalValue(context, 0.02),
+          bottom:
+              MediaQuery.viewInsetsOf(context).bottom +
+              AppSpacing.verticalValue(context, 0.02),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              title,
+              style: AppTextStyles.heading(context),
+              textAlign: TextAlign.center,
+            ),
+            AppSpacing.vertical(context, 0.012),
+            Text(
+              message,
+              style: AppTextStyles.bodyText(
+                context,
+              ).copyWith(color: AppColors.grey),
+              textAlign: TextAlign.center,
+            ),
+            AppSpacing.vertical(context, 0.016),
+            AppPrimaryButton(
+              label: confirmLabel ?? AppTexts.confirm,
+              onPressed: () => Get.back(result: true),
+            ),
+            AppSpacing.vertical(context, 0.008),
+            AppSecondaryButton(
+              label: cancelLabel ?? AppTexts.cancel,
+              outlinedOnly: true,
+              onPressed: () => Get.back(result: false),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

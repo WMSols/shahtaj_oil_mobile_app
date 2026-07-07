@@ -1,9 +1,11 @@
 import 'package:intl/intl.dart';
+import 'package:flutter/services.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/helper/app_helper.dart';
 
-/// Display formatting only. For parsing use [AppHelper]; for validation use [AppValidator].
+/// Display formatting and shared input formatters.
+/// For parsing use [AppHelper]; for validation use [AppValidator].
 class AppFormatter {
   AppFormatter._();
 
@@ -146,7 +148,7 @@ class AppFormatter {
   }
 
   /// Whole-number currency — e.g. 50000 → `Rs 50,000`.
-  static String currencyWhole(num amount, {String symbol = 'Rs '}) {
+  static String currencyWhole(num amount, {String symbol = 'Rs. '}) {
     final formatter = NumberFormat('#,##0');
     return '$symbol${formatter.format(amount)}';
   }
@@ -221,5 +223,50 @@ class AppFormatter {
       AppTexts.monthDecember,
     ];
     return '${months[d.month - 1]} ${d.day}, ${d.year}';
+  }
+}
+
+/// Formats Pakistan CNIC as `#####-#######-#` while typing.
+class PakistanCnicInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final digits = newValue.text.replaceAll(RegExp(r'\D'), '');
+    final limited = digits.length > 13 ? digits.substring(0, 13) : digits;
+
+    final buffer = StringBuffer();
+    for (var i = 0; i < limited.length; i++) {
+      if (i == 5 || i == 12) buffer.write('-');
+      buffer.write(limited[i]);
+    }
+
+    final formatted = buffer.toString();
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+}
+
+/// Formats local Pakistan mobile as `300 XXXXXXX` (10 digits, space after first 3).
+class PakistanPhoneInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final digits = newValue.text.replaceAll(RegExp(r'\D'), '');
+    final limited = digits.length > 10 ? digits.substring(0, 10) : digits;
+
+    final formatted = limited.length <= 3
+        ? limited
+        : '${limited.substring(0, 3)} ${limited.substring(3)}';
+
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
   }
 }

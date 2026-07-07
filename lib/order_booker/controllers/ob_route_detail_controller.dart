@@ -29,8 +29,10 @@ class ObRouteDetailController extends GetxController {
     loadTasks();
   }
 
-  Future<void> loadTasks() async {
-    isLoading.value = true;
+  Future<void> loadTasks({bool silent = false}) async {
+    if (!silent) {
+      isLoading.value = true;
+    }
     error.value = null;
     try {
       final data = await _taskService.fetchTodayTasks();
@@ -46,15 +48,18 @@ class ObRouteDetailController extends GetxController {
     } catch (_) {
       error.value = AppTexts.error;
     } finally {
-      isLoading.value = false;
+      if (!silent) {
+        isLoading.value = false;
+      }
     }
   }
 
   void openCheckIn(ObTaskModel task) {
-    Get.toNamed(
+    final nav = Get.toNamed(
       AppRoutes.obCheckIn,
       arguments: {'taskId': task.id},
-    )?.then((_) => loadTasks());
+    );
+    nav?.then((_) => loadTasks());
   }
 
   Future<void> confirmSkipTask(ObTaskModel task) async {
@@ -79,15 +84,21 @@ class ObRouteDetailController extends GetxController {
     Get.bottomSheet(
       ObTaskNotesSheet(
         initialNotes: task.notes,
-        onSave: (notes) =>
-            _taskService.saveTaskNotes(taskId: task.id, notes: notes),
+        onSave: (notes) async {
+          await _taskService.saveTaskNotes(taskId: task.id, notes: notes);
+          await loadTasks(silent: true);
+        },
       ),
       isScrollControlled: true,
       backgroundColor: Colors.white,
-    ).then((_) => loadTasks());
+    );
   }
 
-  void resumeActiveVisit() => Get.toNamed(AppRoutes.obOrderCreate);
+  void resumeActiveVisit() {
+    final visit = activeVisit.value;
+    if (visit == null) return;
+    Get.toNamed(AppRoutes.obOrderCreate, arguments: {'visitId': visit.visitId});
+  }
 
   void _showMessage(String message) {
     Get.snackbar(AppTexts.error, message, snackPosition: SnackPosition.BOTTOM);

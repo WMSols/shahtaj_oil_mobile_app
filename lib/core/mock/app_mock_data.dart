@@ -10,6 +10,7 @@ import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_active_visit_model
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_task_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_targets_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_zone_option.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/visit/ob_product_model.dart';
 import 'package:shahtaj_oil_mobile_app/recovery_man/models/rm_targets_model.dart';
 
 class AppMockData {
@@ -102,6 +103,49 @@ class AppMockData {
     latitude: 31.4825,
     longitude: 74.3231,
   );
+
+  static List<ObProductModel> get obSellableProducts => const [
+    ObProductModel(
+      id: 101,
+      name: 'Premium Cooking Oil 1L',
+      unit: 'Bottle',
+      priceUnit: 510,
+      qtyBookable: 48,
+      sku: 'PO-1L',
+    ),
+    ObProductModel(
+      id: 102,
+      name: 'Premium Cooking Oil 5L',
+      unit: 'Can',
+      priceUnit: 2380,
+      qtyBookable: 24,
+      sku: 'PO-5L',
+    ),
+    ObProductModel(
+      id: 103,
+      name: 'Banaspati Ghee 16kg',
+      unit: 'Tin',
+      priceUnit: 8390,
+      qtyBookable: 16,
+      sku: 'BG-16',
+    ),
+    ObProductModel(
+      id: 104,
+      name: 'Vegetable Oil 1L',
+      unit: 'Bottle',
+      priceUnit: 460,
+      qtyBookable: 60,
+      sku: 'VO-1L',
+    ),
+    ObProductModel(
+      id: 105,
+      name: 'Canola Oil 3L',
+      unit: 'Can',
+      priceUnit: 1540,
+      qtyBookable: 30,
+      sku: 'CO-3L',
+    ),
+  ];
 
   static ObTargetsModel get obTargets =>
       const ObTargetsModel(ordersCurrent: 8, ordersTarget: 15);
