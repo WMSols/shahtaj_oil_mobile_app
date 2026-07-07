@@ -11,10 +11,18 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_text_field.dart';
 class ObTaskNotesSheet extends StatefulWidget {
   const ObTaskNotesSheet({
     super.key,
+    this.title,
+    this.hint,
+    this.confirmLabel,
+    this.required = false,
     required this.initialNotes,
     required this.onSave,
   });
 
+  final String? title;
+  final String? hint;
+  final String? confirmLabel;
+  final bool required;
   final String? initialNotes;
   final Future<void> Function(String notes) onSave;
 
@@ -39,9 +47,12 @@ class _ObTaskNotesSheetState extends State<ObTaskNotesSheet> {
   }
 
   Future<void> _save() async {
+    final value = _controller.text.trim();
+    if (widget.required && value.isEmpty) return;
+
     setState(() => _isSaving = true);
     try {
-      await widget.onSave(_controller.text);
+      await widget.onSave(value);
       if (mounted) Get.back();
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -64,17 +75,20 @@ class _ObTaskNotesSheetState extends State<ObTaskNotesSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(AppTexts.obTaskNotes, style: AppTextStyles.heading(context)),
+            Text(
+              widget.title ?? AppTexts.obTaskNotes,
+              style: AppTextStyles.heading(context),
+            ),
             AppSpacing.vertical(context, 0.012),
             AppTextField(
               controller: _controller,
-              hint: AppTexts.obTaskNotesHint,
+              hint: widget.hint ?? AppTexts.obTaskNotesHint,
               maxLines: 4,
               borderless: true,
             ),
             AppSpacing.vertical(context, 0.016),
             AppPrimaryButton(
-              label: AppTexts.save,
+              label: widget.confirmLabel ?? AppTexts.save,
               isLoading: _isSaving,
               onPressed: _isSaving ? null : _save,
             ),

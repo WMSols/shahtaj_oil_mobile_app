@@ -1,6 +1,7 @@
+// ignore_for_file: unused_field
+
 import 'package:get/get.dart';
 
-import 'package:shahtaj_oil_mobile_app/core/constants/api_endpoints.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/mock/app_mock_data.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
@@ -57,6 +58,8 @@ class ObTaskService extends GetxService {
     }
   }
 
+  ObActiveVisitModel? get activeVisitSync => _activeVisit;
+
   Future<ObActiveVisitModel> checkIn({
     required int taskId,
     required double latitude,
@@ -112,6 +115,28 @@ class ObTaskService extends GetxService {
     );
     _activeVisit = visit;
     return visit;
+  }
+
+  Future<void> completeActiveVisit({required int visitId}) async {
+    await Future<void>.delayed(const Duration(milliseconds: 250));
+    final current = _activeVisit;
+    if (current == null || current.visitId != visitId) return;
+
+    _tasks = _tasks
+        .map(
+          (task) => task.id == current.taskId
+              ? task.copyWith(status: TaskStatus.completed)
+              : task,
+        )
+        .toList();
+    _activeVisit = null;
+  }
+
+  Future<void> clearActiveVisit({required int visitId}) async {
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+    final current = _activeVisit;
+    if (current == null || current.visitId != visitId) return;
+    _activeVisit = null;
   }
 
   Future<void> skipTask(int taskId) async {

@@ -102,15 +102,16 @@ class ObCheckInController extends GetxController {
 
     isSubmitting.value = true;
     try {
-      await _taskService.checkIn(
+      final visit = await _taskService.checkIn(
         taskId: current.id,
         latitude: mapLatitude.value!,
         longitude: mapLongitude.value!,
       );
       _showMessage(AppTexts.obCheckInSuccess, isError: false);
-      if (Get.currentRoute == AppRoutes.obCheckIn) {
-        Get.back(result: true);
-      }
+      Get.offNamed(
+        AppRoutes.obOrderCreate,
+        arguments: {'visitId': visit.visitId},
+      );
     } catch (_) {
       _showMessage(AppTexts.error);
     } finally {

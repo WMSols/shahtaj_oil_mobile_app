@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/responsive/app_responsive.dart';
+import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 
 class AppOutlineCard extends StatelessWidget {
   const AppOutlineCard({
@@ -21,7 +22,7 @@ class AppOutlineCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       clipBehavior: clipBehavior,
-      padding: padding,
+      padding: padding ?? AppSpacing.symmetric(context, h: 0.02, v: 0.02),
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(AppResponsive.radius(context)),

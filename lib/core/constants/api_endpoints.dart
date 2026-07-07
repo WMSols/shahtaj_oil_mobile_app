@@ -40,4 +40,12 @@ class ApiEndpoints {
   static const obTasksSkip = '/api/shahtaj/v1/tasks/skip';
   static const obTasksNotes = '/api/shahtaj/v1/tasks/notes';
   static const obVisitsActive = '/api/shahtaj/v1/visits/active';
+  static const obProductsList = '/api/shahtaj/v1/products/list';
+  static const obVisitsLineAdd = '/api/shahtaj/v1/visits/line/add';
+  static const obVisitsLineUpdate = '/api/shahtaj/v1/visits/line/update';
+  static const obVisitsLineRemove = '/api/shahtaj/v1/visits/line/remove';
+  static const obVisitsPlaceOrder = '/api/shahtaj/v1/visits/place-order';
+  static const obVisitsEndWithoutOrder =
+      '/api/shahtaj/v1/visits/end-without-order';
+  static const obVisitsNotes = '/api/shahtaj/v1/visits/notes';
 }
