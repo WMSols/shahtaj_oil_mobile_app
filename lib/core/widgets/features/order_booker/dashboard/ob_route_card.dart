@@ -47,7 +47,7 @@ class ObRouteCard extends StatelessWidget {
             children: [
               Icon(
                 route.status == RouteStatus.completed
-                    ? AppIcons.checkCircle
+                    ? AppIcons.check
                     : AppIcons.shops,
                 color: route.status.chipColor,
                 size: AppResponsive.iconSize(context),

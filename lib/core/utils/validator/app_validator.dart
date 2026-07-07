@@ -47,6 +47,21 @@ class AppValidator {
     return null;
   }
 
+  static String? validatePakistanLocalPhone(String? value) {
+    if (AppHelper.isNullOrEmpty(value)) return AppTexts.phoneRequired;
+    final digits = value!.replaceAll(RegExp(r'\D'), '');
+    if (digits.length != 10) return AppTexts.obPhoneLength;
+    if (!digits.startsWith('3')) return AppTexts.phoneInvalid;
+    return null;
+  }
+
+  static String? validatePakistanCnic(String? value) {
+    if (AppHelper.isNullOrEmpty(value)) return AppTexts.fieldRequired;
+    final digits = value!.replaceAll(RegExp(r'\D'), '');
+    if (digits.length != 13) return AppTexts.cnicInvalid;
+    return null;
+  }
+
   static String? validateRequired(String? value, [String? fieldName]) {
     if (AppHelper.isNullOrEmpty(value)) {
       return fieldName != null

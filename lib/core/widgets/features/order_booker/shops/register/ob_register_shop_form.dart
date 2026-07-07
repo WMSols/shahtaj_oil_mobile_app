@@ -13,6 +13,7 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_form_section_header
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_map_preview.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_photo_upload_tile.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_text_field.dart';
+import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/controllers/ob_shop_onboarding_controller.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_route_option.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_zone_option.dart';
@@ -80,6 +81,19 @@ class ObRegisterShopForm extends StatelessWidget {
               ),
               AppSpacing.vertical(context, 0.01),
               AppTextField(
+                controller: controller.ownerCnicController,
+                label: AppTexts.obOwnerCnicLabel,
+                hint: AppTexts.obOwnerCnicHint,
+                prefixIcon: AppIcons.personalCard,
+                required: true,
+                borderless: true,
+                keyboardType: TextInputType.number,
+                inputFormatters: [PakistanCnicInputFormatter()],
+                validator: controller.validateCnic,
+                textInputAction: TextInputAction.next,
+              ),
+              AppSpacing.vertical(context, 0.01),
+              AppTextField(
                 controller: controller.ownerPhoneController,
                 label: AppTexts.obOwnerPhoneLabel,
                 hint: AppTexts.obOwnerPhoneHint,
@@ -88,6 +102,7 @@ class ObRegisterShopForm extends StatelessWidget {
                 required: true,
                 borderless: true,
                 keyboardType: TextInputType.phone,
+                inputFormatters: [PakistanPhoneInputFormatter()],
                 validator: controller.validatePhone,
                 textInputAction: TextInputAction.next,
               ),

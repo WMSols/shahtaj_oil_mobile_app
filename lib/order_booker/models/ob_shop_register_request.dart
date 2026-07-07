@@ -4,6 +4,7 @@ class ObShopRegisterRequest {
   const ObShopRegisterRequest({
     required this.name,
     required this.ownerName,
+    required this.ownerCnic,
     required this.ownerPhone,
     required this.latitude,
     required this.longitude,
@@ -20,6 +21,7 @@ class ObShopRegisterRequest {
 
   final String name;
   final String ownerName;
+  final String ownerCnic;
   final String ownerPhone;
   final double latitude;
   final double longitude;
@@ -36,6 +38,7 @@ class ObShopRegisterRequest {
   Map<String, dynamic> toJson() => {
     'name': name,
     'owner_name': ownerName,
+    'owner_cnic': ownerCnic,
     'owner_phone': ownerPhone,
     'latitude': latitude,
     'longitude': longitude,
