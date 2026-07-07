@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
+import 'package:shahtaj_oil_mobile_app/core/utils/validator/app_validator.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_confirm_dialog.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_route_option.dart';
@@ -27,6 +28,7 @@ class ObShopOnboardingController extends GetxController {
 
   final shopNameController = TextEditingController();
   final ownerNameController = TextEditingController();
+  final ownerCnicController = TextEditingController();
   final ownerPhoneController = TextEditingController();
   final creditLimitController = TextEditingController();
   final legacyBalanceController = TextEditingController();
@@ -73,6 +75,7 @@ class ObShopOnboardingController extends GetxController {
   void onClose() {
     shopNameController.dispose();
     ownerNameController.dispose();
+    ownerCnicController.dispose();
     ownerPhoneController.dispose();
     creditLimitController.dispose();
     legacyBalanceController.dispose();
@@ -215,6 +218,7 @@ class ObShopOnboardingController extends GetxController {
       final request = ObShopRegisterRequest(
         name: shopNameController.text.trim(),
         ownerName: ownerNameController.text.trim(),
+        ownerCnic: _normalizedCnic(),
         ownerPhone: _normalizedPhone(),
         latitude: mapLatitude.value!,
         longitude: mapLongitude.value!,
@@ -271,6 +275,7 @@ class ObShopOnboardingController extends GetxController {
   void clearForm() {
     shopNameController.clear();
     ownerNameController.clear();
+    ownerCnicController.clear();
     ownerPhoneController.clear();
     creditLimitController.clear();
     legacyBalanceController.clear();
@@ -296,22 +301,25 @@ class ObShopOnboardingController extends GetxController {
     return null;
   }
 
-  String? validatePhone(String? value) {
-    final requiredError = validateRequired(value);
-    if (requiredError != null) return requiredError;
+  String? validatePhone(String? value) =>
+      AppValidator.validatePakistanLocalPhone(value);
 
-    final digits = value!.replaceAll(RegExp(r'\D'), '');
-    if (digits.length < 10 || digits.length > 11) {
-      return AppTexts.phoneLength;
-    }
-    return null;
-  }
+  String? validateCnic(String? value) =>
+      AppValidator.validatePakistanCnic(value);
 
   String? validateOptionalAmount(String? value) {
     if (value == null || value.trim().isEmpty) return null;
     final normalized = value.replaceAll(',', '').trim();
     if (double.tryParse(normalized) == null) return AppTexts.amountInvalid;
     return null;
+  }
+
+  String _normalizedCnic() {
+    final digits = ownerCnicController.text.replaceAll(RegExp(r'\D'), '');
+    if (digits.length != 13) return digits;
+    return '${digits.substring(0, 5)}-'
+        '${digits.substring(5, 12)}-'
+        '${digits.substring(12)}';
   }
 
   String _normalizedPhone() {
