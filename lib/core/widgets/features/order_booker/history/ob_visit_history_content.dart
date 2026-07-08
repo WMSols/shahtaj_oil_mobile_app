@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
+import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
+import 'package:shahtaj_oil_mobile_app/core/design/responsive/app_responsive.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
+import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_secondary_button.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_filter_chip.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/history/ob_visit_history_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
@@ -24,20 +27,24 @@ class ObVisitHistoryContent extends GetView<ObHistoryController> {
             children: [
               Expanded(
                 child: Obx(
-                  () => AppSecondaryButton(
-                    label: controller.dateFromLabel,
-                    outlinedOnly: true,
-                    onPressed: () => controller.pickDateFrom(context),
+                  () => _DateFilterTile(
+                    label: AppTexts.obVisitFilterDateFrom,
+                    value: controller.dateFrom.value == null
+                        ? null
+                        : controller.dateFromLabel,
+                    onTap: () => controller.pickDateFrom(context),
                   ),
                 ),
               ),
               AppSpacing.horizontal(context, 0.02),
               Expanded(
                 child: Obx(
-                  () => AppSecondaryButton(
-                    label: controller.dateToLabel,
-                    outlinedOnly: true,
-                    onPressed: () => controller.pickDateTo(context),
+                  () => _DateFilterTile(
+                    label: AppTexts.obVisitFilterDateTo,
+                    value: controller.dateTo.value == null
+                        ? null
+                        : controller.dateToLabel,
+                    onTap: () => controller.pickDateTo(context),
                   ),
                 ),
               ),
@@ -47,20 +54,17 @@ class ObVisitHistoryContent extends GetView<ObHistoryController> {
         Obx(() {
           if (!controller.hasDateFilter) return const SizedBox.shrink();
           return Padding(
-            padding: AppSpacing.screenPadding(
-              context,
-            ).copyWith(top: 0, bottom: 0),
+            padding: AppSpacing.screenPadding(context).copyWith(
+              top: 0,
+              bottom: AppSpacing.verticalValue(context, 0.005),
+            ),
             child: Align(
               alignment: Alignment.centerLeft,
-              child: AppSecondaryButton(
-                label: AppTexts.obVisitClearDates,
-                outlinedOnly: true,
-                onPressed: controller.clearDateFilter,
-              ),
+              child: _ClearDatesChip(onTap: controller.clearDateFilter),
             ),
           );
         }),
-        AppSpacing.vertical(context, 0.01),
+        AppSpacing.vertical(context, 0.005),
         Obx(
           () => SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -140,6 +144,127 @@ class ObVisitHistoryContent extends GetView<ObHistoryController> {
           }),
         ),
       ],
+    );
+  }
+}
+
+class _DateFilterTile extends StatelessWidget {
+  const _DateFilterTile({required this.label, required this.onTap, this.value});
+
+  final String label;
+  final String? value;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasValue = value != null && value!.trim().isNotEmpty;
+    final radius = AppResponsive.radius(context);
+
+    return Material(
+      color: hasValue
+          ? AppColors.primary.withValues(alpha: 0.1)
+          : AppColors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(radius),
+        side: BorderSide(
+          color: hasValue
+              ? AppColors.primary.withValues(alpha: 0.45)
+              : AppColors.cardBorder,
+          width: hasValue ? 1.4 : 1,
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: AppSpacing.symmetric(context, h: 0.03, v: 0.012),
+          child: Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(AppResponsive.scaleSize(context, 7)),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(radius),
+                ),
+                child: Icon(
+                  AppIcons.calendar,
+                  color: AppColors.primary,
+                  size: AppResponsive.iconSize(context, factor: 0.85),
+                ),
+              ),
+              AppSpacing.horizontal(context, 0.02),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: AppTextStyles.caption(context).copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      hasValue ? value! : AppTexts.selectDate,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.bodyText(context).copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: hasValue
+                            ? AppColors.textPrimary
+                            : AppColors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ClearDatesChip extends StatelessWidget {
+  const _ClearDatesChip({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.error.withValues(alpha: 0.08),
+      shape: StadiumBorder(
+        side: BorderSide(color: AppColors.error.withValues(alpha: 0.35)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: AppSpacing.horizontalValue(context, 0.035),
+            vertical: AppSpacing.verticalValue(context, 0.007),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.close_rounded,
+                size: AppResponsive.scaleSize(context, 14),
+                color: AppColors.error,
+              ),
+              AppSpacing.horizontal(context, 0.012),
+              Text(
+                AppTexts.obVisitClearDates,
+                style: AppTextStyles.caption(
+                  context,
+                ).copyWith(color: AppColors.error, fontWeight: FontWeight.w700),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
