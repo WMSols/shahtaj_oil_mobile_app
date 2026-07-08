@@ -204,7 +204,6 @@ class AppTexts {
   static String get obLongitudeLabel => 'obLongitudeLabel'.tr;
   static String get obUseCurrentLocation => 'obUseCurrentLocation'.tr;
   static String get obLocationNotCaptured => 'obLocationNotCaptured'.tr;
-  static String get obCoordinatesLabel => 'obCoordinatesLabel'.tr;
   static String get obMapPreviewBadge => 'obMapPreviewBadge'.tr;
   static String get obMapPreviewLocation => 'obMapPreviewLocation'.tr;
   static String get obZoneLabel => 'obZoneLabel'.tr;
@@ -257,6 +256,13 @@ class AppTexts {
   static String get obEditShop => 'obEditShop'.tr;
   static String get obCreateOrderButton => 'obCreateOrderButton'.tr;
   static String get obCheckInToShop => 'obCheckInToShop'.tr;
+  static String get obShopCannotOrderUntilApproved =>
+      'obShopCannotOrderUntilApproved'.tr;
+  static String get obShopVisitActiveElsewhere =>
+      'obShopVisitActiveElsewhere'.tr;
+  static String get obShopNotOnRouteToday => 'obShopNotOnRouteToday'.tr;
+  static String get obShopCheckInBeforeOrder => 'obShopCheckInBeforeOrder'.tr;
+  static String get backOnline => 'backOnline'.tr;
   static String get obShopNotFound => 'obShopNotFound'.tr;
   static String get obCnicFrontLabel => 'obCnicFrontLabel'.tr;
   static String get obCnicBackLabel => 'obCnicBackLabel'.tr;
@@ -318,6 +324,22 @@ class AppTexts {
 
   static String get obOrderDetailTitle => 'obOrderDetailTitle'.tr;
   static String get obVisitDetailTitle => 'obVisitDetailTitle'.tr;
+  static String get obNoVisitsFound => 'obNoVisitsFound'.tr;
+  static String get obVisitNotFound => 'obVisitNotFound'.tr;
+  static String get obVisitsFilterAll => 'obVisitsFilterAll'.tr;
+  static String get obVisitFilterDateFrom => 'obVisitFilterDateFrom'.tr;
+  static String get obVisitFilterDateTo => 'obVisitFilterDateTo'.tr;
+  static String get obVisitClearDates => 'obVisitClearDates'.tr;
+  static String get obVisitInfoSection => 'obVisitInfoSection'.tr;
+  static String get obVisitLinesSection => 'obVisitLinesSection'.tr;
+  static String get obVisitOutcomeLabel => 'obVisitOutcomeLabel'.tr;
+  static String get obVisitCheckInAt => 'obVisitCheckInAt'.tr;
+  static String get obVisitCheckOutAt => 'obVisitCheckOutAt'.tr;
+  static String get obVisitOutcomeOrder => 'obVisitOutcomeOrder'.tr;
+  static String get obVisitOutcomeNoOrder => 'obVisitOutcomeNoOrder'.tr;
+  static String get obVisitOutcomeSkipped => 'obVisitOutcomeSkipped'.tr;
+  static String get obViewOrder => 'obViewOrder'.tr;
+  static String get obOrderNumberLabel => 'obOrderNumberLabel'.tr;
 
   // Delivery man screens
   static String get dmPickupTitle => 'dmPickupTitle'.tr;

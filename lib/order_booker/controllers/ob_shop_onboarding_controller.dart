@@ -11,6 +11,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/validator/app_validator.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_confirm_dialog.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_route_option.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_shop_register_request.dart';
@@ -338,10 +339,10 @@ class ObShopOnboardingController extends GetxController {
       bytes == null ? null : base64Encode(bytes);
 
   void _showMessage(String message, {bool isError = true}) {
-    Get.snackbar(
-      isError ? AppTexts.error : AppTexts.success,
-      message,
-      snackPosition: SnackPosition.BOTTOM,
-    );
+    if (isError) {
+      AppToast.showError(message);
+    } else {
+      AppToast.showSuccess(message);
+    }
   }
 }

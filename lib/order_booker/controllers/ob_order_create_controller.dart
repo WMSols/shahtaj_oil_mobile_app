@@ -6,6 +6,7 @@ import 'package:shahtaj_oil_mobile_app/common/controllers/order_booker_shell_con
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_confirm_dialog.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/tasks/ob_task_notes_sheet.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/controllers/ob_route_detail_controller.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_active_visit_model.dart';
@@ -107,10 +108,10 @@ class ObOrderCreateController extends GetxController {
     try {
       await _cartService.placeOrder(visitId: active.visitId);
       await _taskService.completeActiveVisit(visitId: active.visitId);
-      Get.snackbar(AppTexts.success, AppTexts.obOrderPlacedSuccess);
+      AppToast.showSuccess(AppTexts.obOrderPlacedSuccess);
       _navigateToTodayTasks();
     } catch (_) {
-      Get.snackbar(AppTexts.error, AppTexts.error);
+      AppToast.showError(AppTexts.error);
     } finally {
       isPlacingOrder.value = false;
     }
@@ -121,7 +122,7 @@ class ObOrderCreateController extends GetxController {
     if (active == null) return;
     await _cartService.endWithoutOrder(visitId: active.visitId, notes: notes);
     await _taskService.clearActiveVisit(visitId: active.visitId);
-    Get.snackbar(AppTexts.success, AppTexts.obVisitClosedSuccess);
+    AppToast.showSuccess(AppTexts.obVisitClosedSuccess);
     _navigateToTodayTasks();
   }
 
@@ -129,7 +130,7 @@ class ObOrderCreateController extends GetxController {
     final active = activeVisit.value;
     if (active == null) return;
     await _cartService.saveVisitNotes(visitId: active.visitId, notes: notes);
-    Get.snackbar(AppTexts.success, AppTexts.save);
+    AppToast.showSuccess(AppTexts.save);
   }
 
   int maxQuantityForLine(ObVisitCartLineModel line) {
