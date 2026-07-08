@@ -58,6 +58,8 @@ class ObDashboardController extends GetxController {
     Get.toNamed(_routeWithId(AppRoutes.obRouteDetail, route.id));
   }
 
+  void goToRouteDetail() => Get.toNamed(AppRoutes.obRouteDetail);
+  void goToTargets() => Get.toNamed(AppRoutes.obTargets);
   void goToOrderHistory() => Get.toNamed(AppRoutes.obHistory);
   void openOrder(ObOrderSummaryModel order) =>
       Get.toNamed(_routeWithId(AppRoutes.obOrderDetail, order.id));

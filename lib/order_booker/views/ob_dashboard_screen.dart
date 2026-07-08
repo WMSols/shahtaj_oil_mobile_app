@@ -43,7 +43,10 @@ class ObDashboardScreen extends GetView<ObDashboardController> {
                 userName: controller.userName,
               ),
               AppSpacing.vertical(context, 0.02),
-              ObDashboardSectionHeader(title: AppTexts.obTodaysRoute),
+              ObDashboardSectionHeader(
+                title: AppTexts.obTodaysRoute,
+                onViewAll: controller.goToRouteDetail,
+              ),
               if (route == null)
                 AppEmptyState(
                   title: AppTexts.obTodaysRoute,
@@ -55,7 +58,10 @@ class ObDashboardScreen extends GetView<ObDashboardController> {
                   onActionTap: controller.onRouteAction,
                 ),
               AppSpacing.vertical(context, 0.01),
-              ObDashboardSectionHeader(title: AppTexts.obTargets),
+              ObDashboardSectionHeader(
+                title: AppTexts.obTargets,
+                onViewAll: controller.goToTargets,
+              ),
               ObOrdersTargetCard(targets: controller.targets),
               AppSpacing.vertical(context, 0.01),
               ObDashboardSectionHeader(

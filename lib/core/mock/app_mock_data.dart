@@ -5,13 +5,17 @@ import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_dashboard_model.da
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_order_summary_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_route_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_route_option.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_order_detail_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_order_line_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_shop_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_active_visit_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_task_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_target_item_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_targets_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_zone_option.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_visit_detail_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_visit_summary_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_weekly_schedule_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/visit/ob_product_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/visit/ob_visit_cart_line_model.dart';
 import 'package:shahtaj_oil_mobile_app/recovery_man/models/rm_targets_model.dart';
@@ -338,6 +342,144 @@ class AppMockData {
 
   static ObTargetsModel get obTargets =>
       const ObTargetsModel(ordersCurrent: 8, ordersTarget: 15);
+
+  static ObWeeklyScheduleModel get obWeeklySchedule =>
+      const ObWeeklyScheduleModel(
+        days: [
+          ObWeeklyScheduleDayModel(
+            weekday: DateTime.monday,
+            label: 'Monday',
+            routeId: 1,
+            routeName: 'I-10 Wholesale Market Route A',
+            zoneId: 1,
+            zoneName: 'Islamabad Capital Zone',
+            shopCount: 12,
+            distanceKm: 18.6,
+          ),
+          ObWeeklyScheduleDayModel(
+            weekday: DateTime.tuesday,
+            label: 'Tuesday',
+            routeId: 2,
+            routeName: 'F-10 / G-11 Retail Route B',
+            zoneId: 1,
+            zoneName: 'Islamabad Capital Zone',
+            shopCount: 10,
+            distanceKm: 14.2,
+          ),
+          ObWeeklyScheduleDayModel(
+            weekday: DateTime.wednesday,
+            label: 'Wednesday',
+            routeId: 3,
+            routeName: 'PWD Residential Route B',
+            zoneId: 2,
+            zoneName: 'Rawalpindi Zone',
+            shopCount: 9,
+            distanceKm: 21.0,
+          ),
+          ObWeeklyScheduleDayModel(
+            weekday: DateTime.thursday,
+            label: 'Thursday',
+            routeId: 1,
+            routeName: 'I-10 Wholesale Market Route A',
+            zoneId: 1,
+            zoneName: 'Islamabad Capital Zone',
+            shopCount: 13,
+            distanceKm: 19.3,
+          ),
+          ObWeeklyScheduleDayModel(
+            weekday: DateTime.friday,
+            label: 'Friday',
+            routeId: 4,
+            routeName: 'Raja Bazar Bulk Route A',
+            zoneId: 3,
+            zoneName: 'Saddar Wholesale Zone',
+            shopCount: 7,
+            distanceKm: 16.5,
+          ),
+          ObWeeklyScheduleDayModel(
+            weekday: DateTime.saturday,
+            label: 'Saturday',
+            isOffDay: true,
+          ),
+        ],
+      );
+
+  static List<ObTargetItemModel> get obTargetsList => const [
+    ObTargetItemModel(
+      id: 'orders',
+      title: 'Orders',
+      subtitle: 'Monthly order booking target',
+      current: 48,
+      target: 70,
+      unit: 'orders',
+    ),
+    ObTargetItemModel(
+      id: 'volume',
+      title: 'Volume',
+      subtitle: 'Total sell-out quantity',
+      current: 1320,
+      target: 1800,
+      unit: 'units',
+    ),
+    ObTargetItemModel(
+      id: 'revenue',
+      title: 'Revenue',
+      subtitle: 'Monthly billed amount',
+      current: 2250000,
+      target: 3000000,
+      unit: 'PKR',
+    ),
+  ];
+
+  static ObOrderDetailModel? obOrderDetail(String orderId) {
+    switch (orderId) {
+      case '5001':
+      case 'ord-5521':
+        return const ObOrderDetailModel(
+          id: '5001',
+          orderNumber: 'SO-5001',
+          shopId: 'shop-001',
+          shopName: 'Bismillah Ghee & Oil Traders',
+          status: OrderStatus.submitted,
+          lines: [
+            ObOrderLineModel(
+              productId: '101',
+              productName: 'Shahtaj Cooking Oil 1L Pouch',
+              quantity: 4,
+              unitPrice: 5880,
+            ),
+            ObOrderLineModel(
+              productId: '102',
+              productName: 'Shahtaj Cooking Oil 5L Bottle',
+              quantity: 1,
+              unitPrice: 9800,
+            ),
+          ],
+          subtotal: 33320,
+          visitId: 8801,
+        );
+      case '4988':
+        return const ObOrderDetailModel(
+          id: '4988',
+          orderNumber: 'SO-4988',
+          shopId: 'shop-004',
+          shopName: 'Islamabad Cash & Carry',
+          status: OrderStatus.delivered,
+          lines: [
+            ObOrderLineModel(
+              productId: '103',
+              productName: 'Shahtaj Banaspati Ghee 16kg Tin',
+              quantity: 5,
+              unitPrice: 7920,
+            ),
+          ],
+          subtotal: 39600,
+          visitId: 8772,
+        );
+      default:
+        return null;
+    }
+  }
 
   // ---------- Delivery Man Dashboard ----------
   static List<DmStockItemModel> get dmStockItems => const [
