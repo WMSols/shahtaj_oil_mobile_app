@@ -75,6 +75,7 @@ class DmStockItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppOutlineCard(
+      statusColor: item.isLowStock ? AppColors.warning : null,
       padding: AppSpacing.symmetric(context, h: 0.03, v: 0.012),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

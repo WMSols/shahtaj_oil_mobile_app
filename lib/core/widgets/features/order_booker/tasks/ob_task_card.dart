@@ -8,6 +8,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_outline_icon_button.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_task_model.dart';
 
@@ -34,14 +35,14 @@ class ObTaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final radius = AppResponsive.radius(context);
-    final stripeWidth = AppSpacing.horizontalValue(context, 0.012);
     final mutedStyle = AppTextStyles.bodyText(context).copyWith(
       color: AppColors.black,
       fontSize: AppResponsive.scaleSize(context, 13),
     );
 
-    final content = Padding(
+    return AppOutlineCard(
+      onTap: onTap,
+      statusColor: task.status.chipColor,
       padding: AppSpacing.symmetric(context, h: 0.035, v: 0.016),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -157,35 +158,6 @@ class ObTaskCard extends StatelessWidget {
             ),
           ],
         ],
-      ),
-    );
-
-    return Material(
-      color: AppColors.white,
-      borderRadius: BorderRadius.circular(radius),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: AppColors.cardBorder),
-            borderRadius: BorderRadius.circular(radius),
-          ),
-          child: Stack(
-            children: [
-              Positioned(
-                left: 0,
-                top: 0,
-                bottom: 0,
-                child: Container(
-                  width: stripeWidth,
-                  color: task.status.chipColor,
-                ),
-              ),
-              content,
-            ],
-          ),
-        ),
       ),
     );
   }
