@@ -50,4 +50,7 @@ class ApiEndpoints {
   static const obVisitsNotes = '/api/shahtaj/v1/visits/notes';
   static const obVisitsMine = '/api/shahtaj/v1/visits/mine';
   static const obVisitsGet = '/api/shahtaj/v1/visits/get';
+  static const obScheduleWeekly = '/api/shahtaj/v1/schedule/weekly';
+  static const obTargetsMine = '/api/shahtaj/v1/targets/mine';
+  static const obShopsGet = '/api/shahtaj/v1/shops/get';
 }
