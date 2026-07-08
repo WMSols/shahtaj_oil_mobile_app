@@ -4,6 +4,7 @@ import 'package:get/get.dart' hide Response;
 
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/connectivity_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/storage_service.dart';
 
@@ -52,6 +53,7 @@ class ApiClient extends GetxService {
     Map<String, dynamic>? queryParameters,
   }) async {
     try {
+      _ensureConnectivity();
       return await _dio.get<T>(path, queryParameters: queryParameters);
     } on DioException catch (e) {
       throw _mapException(e);
@@ -64,6 +66,7 @@ class ApiClient extends GetxService {
     Map<String, dynamic>? queryParameters,
   }) async {
     try {
+      _ensureConnectivity();
       return await _dio.post<T>(
         path,
         data: data,
@@ -80,6 +83,7 @@ class ApiClient extends GetxService {
     Map<String, dynamic>? queryParameters,
   }) async {
     try {
+      _ensureConnectivity();
       return await _dio.put<T>(
         path,
         data: data,
@@ -96,6 +100,7 @@ class ApiClient extends GetxService {
     Map<String, dynamic>? queryParameters,
   }) async {
     try {
+      _ensureConnectivity();
       return await _dio.delete<T>(
         path,
         data: data,
@@ -104,6 +109,11 @@ class ApiClient extends GetxService {
     } on DioException catch (e) {
       throw _mapException(e);
     }
+  }
+
+  void _ensureConnectivity() {
+    if (!Get.isRegistered<ConnectivityService>()) return;
+    Get.find<ConnectivityService>().ensureOnline();
   }
 
   ApiException _mapException(DioException e) {

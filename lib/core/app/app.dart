@@ -8,6 +8,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/system/app_system_ui.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/theme/app_theme.dart';
 import 'package:shahtaj_oil_mobile_app/core/localization/app_translations.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_connectivity_banner.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_pages.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/locale_service.dart';
@@ -38,7 +39,13 @@ class ShahtajOilApp extends StatelessWidget {
           value: AppSystemUi.overlayStyle,
           child: Directionality(
             textDirection: direction,
-            child: child ?? const SizedBox.shrink(),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                child ?? const SizedBox.shrink(),
+                const AppConnectivityBanner(),
+              ],
+            ),
           ),
         );
       },

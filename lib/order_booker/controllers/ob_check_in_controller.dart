@@ -5,6 +5,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_confirm_dialog.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_task_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/ob_task_service.dart';
 
@@ -146,10 +147,10 @@ class ObCheckInController extends GetxController {
   }
 
   void _showMessage(String message, {bool isError = true}) {
-    Get.snackbar(
-      isError ? AppTexts.error : AppTexts.done,
-      message,
-      snackPosition: SnackPosition.BOTTOM,
-    );
+    if (isError) {
+      AppToast.showError(message);
+    } else {
+      AppToast.showSuccess(message);
+    }
   }
 }
