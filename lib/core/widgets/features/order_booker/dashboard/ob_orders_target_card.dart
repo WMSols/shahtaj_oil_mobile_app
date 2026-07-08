@@ -21,7 +21,6 @@ class ObOrdersTargetCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: AppSpacing.symmetric(context, h: 0.04, v: 0.02),
-      margin: EdgeInsets.only(top: AppSpacing.verticalValue(context, 0.01)),
       decoration: BoxDecoration(
         color: AppColors.primary,
         borderRadius: BorderRadius.circular(AppResponsive.radius(context)),

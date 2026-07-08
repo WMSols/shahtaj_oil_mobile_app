@@ -6,6 +6,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
 import 'package:shahtaj_oil_mobile_app/recovery_man/models/rm_targets_model.dart';
 
 class RmRecoveryTargetCard extends StatelessWidget {
@@ -19,14 +20,9 @@ class RmRecoveryTargetCard extends StatelessWidget {
         ? 0.0
         : targets.recoveryCurrent / targets.recoveryTarget;
 
-    return Container(
+    return AppOutlineCard(
       width: double.infinity,
       padding: AppSpacing.symmetric(context, h: 0.04, v: 0.02),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(AppResponsive.radius(context)),
-        border: Border.all(color: AppColors.cardBorder),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

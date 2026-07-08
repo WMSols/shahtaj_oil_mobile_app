@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/responsive/app_responsive.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_status_stripe.dart';
 
 class AppOutlineCard extends StatelessWidget {
   const AppOutlineCard({
@@ -10,25 +11,66 @@ class AppOutlineCard extends StatelessWidget {
     required this.child,
     this.padding,
     this.color = AppColors.white,
-    this.clipBehavior = Clip.none,
+    this.borderColor = AppColors.cardBorder,
+    this.clipBehavior = Clip.antiAlias,
+    this.statusColor,
+    this.onTap,
+    this.width,
   });
 
   final Widget child;
   final EdgeInsetsGeometry? padding;
   final Color color;
+  final Color borderColor;
   final Clip clipBehavior;
+  final Color? statusColor;
+  final VoidCallback? onTap;
+  final double? width;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final radius = BorderRadius.circular(AppResponsive.radius(context));
+    final resolvedPadding =
+        padding ?? AppSpacing.symmetric(context, h: 0.02, v: 0.02);
+
+    final body = statusColor == null
+        ? Padding(padding: resolvedPadding, child: child)
+        : Stack(
+            children: [
+              AppStatusStripe(color: statusColor!),
+              Padding(padding: resolvedPadding, child: child),
+            ],
+          );
+
+    if (onTap == null) {
+      return Container(
+        width: width,
+        clipBehavior: clipBehavior,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: radius,
+          border: Border.all(color: borderColor),
+        ),
+        child: body,
+      );
+    }
+
+    return Material(
+      color: color,
+      borderRadius: radius,
       clipBehavior: clipBehavior,
-      padding: padding ?? AppSpacing.symmetric(context, h: 0.02, v: 0.02),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(AppResponsive.radius(context)),
-        border: Border.all(color: AppColors.cardBorder),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: radius,
+        child: Ink(
+          width: width,
+          decoration: BoxDecoration(
+            borderRadius: radius,
+            border: Border.all(color: borderColor),
+          ),
+          child: body,
+        ),
       ),
-      child: child,
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
@@ -34,6 +35,7 @@ class ObVisitDetailInfoSection extends StatelessWidget {
         ),
         AppSpacing.vertical(context, 0.01),
         AppOutlineCard(
+          statusColor: visit.outcome.chipColor,
           clipBehavior: Clip.antiAlias,
           padding: EdgeInsets.zero,
           child: Column(

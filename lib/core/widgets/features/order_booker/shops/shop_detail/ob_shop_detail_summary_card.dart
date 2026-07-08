@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/responsive/app_responsive.dart';
@@ -30,6 +31,7 @@ class ObShopDetailSummaryCard extends StatelessWidget {
     final mutedStyle = AppTextStyles.bodyText(context);
 
     return AppOutlineCard(
+      statusColor: shop.status.chipColor,
       padding: AppSpacing.symmetric(context, h: 0.035, v: 0.018),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
