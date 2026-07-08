@@ -17,7 +17,7 @@ class ObShopDetailSummaryCard extends StatelessWidget {
     required this.shop,
     required this.onCallOwner,
     required this.onDirections,
-    required this.onEditShop,
+    this.onEditShop,
   });
 
   final ObShopModel shop;
@@ -104,13 +104,14 @@ class ObShopDetailSummaryCard extends StatelessWidget {
                 onTap: onDirections,
               ),
               AppSpacing.horizontal(context, 0.015),
-              AppOutlineIconButton(
-                backgroundColor: AppColors.primary,
-                foregroundColor: AppColors.white,
-                icon: AppIcons.edit,
-                label: AppTexts.obEditShop,
-                onTap: onEditShop,
-              ),
+              if (onEditShop != null)
+                AppOutlineIconButton(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.white,
+                  icon: AppIcons.edit,
+                  label: AppTexts.obEditShop,
+                  onTap: onEditShop,
+                ),
             ],
           ),
         ],

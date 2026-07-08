@@ -6,6 +6,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_confirm_dialog.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/tasks/ob_task_notes_sheet.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_active_visit_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_task_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_today_tasks_model.dart';
@@ -101,6 +102,6 @@ class ObRouteDetailController extends GetxController {
   }
 
   void _showMessage(String message) {
-    Get.snackbar(AppTexts.error, message, snackPosition: SnackPosition.BOTTOM);
+    AppToast.showError(message);
   }
 }

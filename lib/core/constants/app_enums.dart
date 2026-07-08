@@ -14,6 +14,8 @@ enum CollectionStatus { pending, collected, handedOver }
 
 enum VisitStatus { checkedIn, checkedOut }
 
+enum VisitOutcome { orderPlaced, endedWithoutOrder, skipped }
+
 enum ShopStatus { pending, approved, rejected, active }
 
 enum ShopType { cash, credit }
@@ -100,6 +102,20 @@ extension VisitStatusX on VisitStatus {
   Color get chipColor => switch (this) {
     VisitStatus.checkedOut => AppColors.success,
     VisitStatus.checkedIn => AppColors.primary,
+  };
+}
+
+extension VisitOutcomeX on VisitOutcome {
+  String get label => switch (this) {
+    VisitOutcome.orderPlaced => AppTexts.obVisitOutcomeOrder,
+    VisitOutcome.endedWithoutOrder => AppTexts.obVisitOutcomeNoOrder,
+    VisitOutcome.skipped => AppTexts.obVisitOutcomeSkipped,
+  };
+
+  Color get chipColor => switch (this) {
+    VisitOutcome.orderPlaced => AppColors.success,
+    VisitOutcome.endedWithoutOrder => AppColors.warning,
+    VisitOutcome.skipped => AppColors.textMuted,
   };
 }
 

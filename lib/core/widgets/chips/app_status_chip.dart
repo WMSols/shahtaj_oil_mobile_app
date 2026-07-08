@@ -37,6 +37,9 @@ class AppStatusChip extends StatelessWidget {
   factory AppStatusChip.visit(VisitStatus status) =>
       AppStatusChip(label: status.label, color: status.chipColor);
 
+  factory AppStatusChip.visitOutcome(VisitOutcome outcome) =>
+      AppStatusChip(label: outcome.label, color: outcome.chipColor);
+
   factory AppStatusChip.shop(ShopStatus status) =>
       AppStatusChip(label: status.label, color: status.chipColor);
 
