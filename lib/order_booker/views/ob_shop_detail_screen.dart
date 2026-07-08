@@ -51,7 +51,9 @@ class ObShopDetailScreen extends GetView<ObShopDetailController> {
                             shop: shop,
                             onCallOwner: controller.callOwner,
                             onDirections: controller.openDirections,
-                            onEditShop: controller.editShop,
+                            onEditShop: controller.canEditShop
+                                ? controller.editShop
+                                : null,
                           ),
                           AppSpacing.vertical(context, 0.025),
                           ObShopDetailInfoSection(shop: shop),
@@ -65,9 +67,14 @@ class ObShopDetailScreen extends GetView<ObShopDetailController> {
                 ),
               ),
             ),
-            ObShopDetailBottomActions(
-              onCreateOrder: controller.createOrder,
-              onCheckIn: controller.checkInToShop,
+            Obx(
+              () => ObShopDetailBottomActions(
+                showCreateOrder: controller.showResumeOrder,
+                showCheckIn: controller.showCheckIn,
+                createOrderLabel: controller.createOrderLabel,
+                onCreateOrder: controller.createOrder,
+                onCheckIn: controller.checkInToShop,
+              ),
             ),
           ],
         );

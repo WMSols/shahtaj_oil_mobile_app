@@ -48,4 +48,6 @@ class ApiEndpoints {
   static const obVisitsEndWithoutOrder =
       '/api/shahtaj/v1/visits/end-without-order';
   static const obVisitsNotes = '/api/shahtaj/v1/visits/notes';
+  static const obVisitsMine = '/api/shahtaj/v1/visits/mine';
+  static const obVisitsGet = '/api/shahtaj/v1/visits/get';
 }

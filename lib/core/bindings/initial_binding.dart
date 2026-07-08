@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 
+import 'package:shahtaj_oil_mobile_app/core/bindings/order_booker_services_binding.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/connectivity_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/locale_service.dart';
@@ -31,13 +32,11 @@ class InitialBinding extends Bindings {
       }, permanent: true);
     }
     if (!Get.isRegistered<ApiClient>()) {
-      Get.putAsync<ApiClient>(() async {
-        final client = ApiClient(
-          Get.find<StorageService>(),
-          Get.find<SessionService>(),
-        );
-        return client.init();
-      }, permanent: true);
+      Get.put<ApiClient>(
+        ApiClient(Get.find<StorageService>(), Get.find<SessionService>()),
+        permanent: true,
+      );
     }
+    OrderBookerServicesBinding.ensureRegistered();
   }
 }

@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/app_map_tiles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_active_visit_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_shop_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_task_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/ob_shop_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/ob_task_service.dart';
 
@@ -17,8 +21,41 @@ class ObShopDetailController extends GetxController {
 
   final RxBool isLoading = true.obs;
   final Rxn<ObShopModel> shop = Rxn<ObShopModel>();
+  final Rxn<ObActiveVisitModel> activeVisit = Rxn<ObActiveVisitModel>();
+  final Rxn<ObTaskModel> todaysTask = Rxn<ObTaskModel>();
 
   String get shopId => Get.parameters['id'] ?? '';
+
+  bool get canSellFromShop {
+    final status = shop.value?.status;
+    return status == ShopStatus.approved || status == ShopStatus.active;
+  }
+
+  bool get canEditShop => shop.value?.status == ShopStatus.pending;
+
+  bool get hasActiveVisitHere =>
+      activeVisit.value != null && activeVisit.value!.shopId == shopId;
+
+  bool get hasActiveVisitElsewhere {
+    final visit = activeVisit.value;
+    return visit != null && visit.shopId != shopId;
+  }
+
+  bool get canCheckIn {
+    if (!canSellFromShop) return false;
+    if (hasActiveVisitHere) return false;
+    if (hasActiveVisitElsewhere) return false;
+    final task = todaysTask.value;
+    return task != null && task.status == TaskStatus.pending;
+  }
+
+  bool get showResumeOrder => canSellFromShop && hasActiveVisitHere;
+
+  bool get showCheckIn => canCheckIn;
+
+  String get createOrderLabel => hasActiveVisitHere
+      ? AppTexts.obResumeVisit
+      : AppTexts.obCreateOrderButton;
 
   @override
   void onInit() {
@@ -35,11 +72,17 @@ class ObShopDetailController extends GetxController {
     isLoading.value = true;
     try {
       shop.value = await _shopService.fetchShop(shopId);
+      await refreshVisitState();
     } catch (_) {
       shop.value = null;
     } finally {
       isLoading.value = false;
     }
+  }
+
+  Future<void> refreshVisitState() async {
+    activeVisit.value = await _taskService.fetchActiveVisit();
+    todaysTask.value = await _taskService.findTaskByShopId(shopId);
   }
 
   Future<void> callOwner() async {
@@ -65,38 +108,68 @@ class ObShopDetailController extends GetxController {
   Future<void> viewOnMap() => openDirections();
 
   void editShop() {
-    if (shopId.isEmpty) return;
+    if (!canEditShop || shopId.isEmpty) return;
     Get.toNamed(AppRoutes.obShopEdit.replaceFirst(':id', shopId));
   }
 
-  void createOrder() {
-    final visit = _taskService.activeVisitSync;
-    if (visit == null || visit.shopId != shopId) {
-      Get.snackbar(
-        AppTexts.error,
-        AppTexts.obActiveVisitMissing,
-        snackPosition: SnackPosition.BOTTOM,
-      );
+  Future<void> createOrder() async {
+    await refreshVisitState();
+
+    if (!canSellFromShop) {
+      AppToast.showWarning(AppTexts.obShopCannotOrderUntilApproved);
       return;
     }
-    Get.toNamed(AppRoutes.obOrderCreate, arguments: {'visitId': visit.visitId});
+
+    if (hasActiveVisitElsewhere) {
+      AppToast.showWarning(AppTexts.obShopVisitActiveElsewhere);
+      return;
+    }
+
+    final visit = activeVisit.value;
+    if (visit == null || visit.shopId != shopId) {
+      if (canCheckIn) {
+        AppToast.showInformation(AppTexts.obShopCheckInBeforeOrder);
+        await checkInToShop();
+        return;
+      }
+      AppToast.showWarning(AppTexts.obShopNotOnRouteToday);
+      return;
+    }
+
+    await Get.toNamed(
+      AppRoutes.obOrderCreate,
+      arguments: {'visitId': visit.visitId},
+    );
+    await refreshVisitState();
   }
 
   Future<void> checkInToShop() async {
-    final currentShopId = shopId;
-    if (currentShopId.isEmpty) return;
-
-    final task = await _taskService.findTaskByShopId(currentShopId);
-    if (task == null) {
-      Get.snackbar(
-        AppTexts.error,
-        AppTexts.obTaskNotFound,
-        snackPosition: SnackPosition.BOTTOM,
-      );
+    if (!canSellFromShop) {
+      AppToast.showWarning(AppTexts.obShopCannotOrderUntilApproved);
       return;
     }
 
-    Get.toNamed(AppRoutes.obCheckIn, arguments: {'taskId': task.id});
+    if (hasActiveVisitElsewhere) {
+      AppToast.showWarning(AppTexts.obShopVisitActiveElsewhere);
+      return;
+    }
+
+    if (hasActiveVisitHere) {
+      await createOrder();
+      return;
+    }
+
+    final task = todaysTask.value;
+    if (task == null || task.status != TaskStatus.pending) {
+      AppToast.showWarning(AppTexts.obShopNotOnRouteToday);
+      return;
+    }
+
+    await Get.toNamed(
+      AppRoutes.obCheckIn,
+      arguments: {'shopId': shopId, 'taskId': task.id},
+    );
+    await refreshVisitState();
   }
 
   Future<void> _openMaps(double latitude, double longitude) async {

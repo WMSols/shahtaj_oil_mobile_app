@@ -9,33 +9,46 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_secondary_button
 class ObShopDetailBottomActions extends StatelessWidget {
   const ObShopDetailBottomActions({
     super.key,
+    this.showCreateOrder = false,
+    this.showCheckIn = false,
+    this.createOrderLabel,
     required this.onCreateOrder,
     required this.onCheckIn,
   });
 
+  final bool showCreateOrder;
+  final bool showCheckIn;
+  final String? createOrderLabel;
   final VoidCallback onCreateOrder;
   final VoidCallback onCheckIn;
 
   @override
   Widget build(BuildContext context) {
+    if (!showCreateOrder && !showCheckIn) {
+      return const SizedBox.shrink();
+    }
+
     return SafeArea(
       child: Padding(
         padding: AppSpacing.screenPadding(context).copyWith(top: 0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            AppPrimaryButton(
-              label: AppTexts.obCreateOrderButton,
-              icon: AppIcons.myshops5,
-              onPressed: onCreateOrder,
-            ),
-            AppSpacing.vertical(context, 0.01),
-            AppSecondaryButton(
-              label: AppTexts.obCheckInToShop,
-              icon: AppIcons.location5,
-              outlinedOnly: true,
-              onPressed: onCheckIn,
-            ),
+            if (showCreateOrder) ...[
+              AppPrimaryButton(
+                label: createOrderLabel ?? AppTexts.obCreateOrderButton,
+                icon: AppIcons.myshops5,
+                onPressed: onCreateOrder,
+              ),
+              if (showCheckIn) AppSpacing.vertical(context, 0.01),
+            ],
+            if (showCheckIn)
+              AppSecondaryButton(
+                label: AppTexts.obCheckInToShop,
+                icon: AppIcons.location5,
+                outlinedOnly: true,
+                onPressed: onCheckIn,
+              ),
           ],
         ),
       ),
