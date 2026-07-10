@@ -31,6 +31,9 @@ class LocaleService extends GetxService {
 
   Future<void> setUrdu() => _apply(urdu);
 
+  Future<void> toggleLocale() =>
+      locale.value == english ? setUrdu() : setEnglish();
+
   Future<void> _apply(Locale value) async {
     locale.value = value;
     await _storage.saveLocale(value.languageCode);

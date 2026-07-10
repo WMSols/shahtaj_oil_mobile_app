@@ -9,13 +9,7 @@ import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/storage_service.dart';
 
 class ApiClient extends GetxService {
-  ApiClient(this._storage, this._session);
-
-  final StorageService _storage;
-  final SessionService _session;
-  late final Dio _dio;
-
-  Future<ApiClient> init() async {
+  ApiClient(this._storage, this._session) {
     _dio = Dio(
       BaseOptions(
         baseUrl: dotenv.env['API_BASE_URL'] ?? '',
@@ -45,8 +39,11 @@ class ApiClient extends GetxService {
         },
       ),
     );
-    return this;
   }
+
+  final StorageService _storage;
+  final SessionService _session;
+  late final Dio _dio;
 
   Future<Response<T>> get<T>(
     String path, {

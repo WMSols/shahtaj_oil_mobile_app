@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'package:shahtaj_oil_mobile_app/common/services/profile_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_drawer_entry.dart';
 
 abstract class AppShellController extends GetxController {
@@ -39,6 +41,19 @@ abstract class AppShellController extends GetxController {
     for (final leaf in leaves) {
       leaf.initBinding?.call();
     }
+
+    _loadUserProfile();
+  }
+
+  Future<void> _loadUserProfile() async {
+    if (!Get.isRegistered<ProfileService>()) return;
+
+    final session = Get.find<SessionService>();
+    if (session.role.value == null) return;
+
+    try {
+      await Get.find<ProfileService>().fetchCurrentUser();
+    } catch (_) {}
   }
 
   void selectLeaf(String id) {

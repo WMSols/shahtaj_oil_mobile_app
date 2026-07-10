@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/common/models/user_model.dart';
@@ -23,12 +25,33 @@ class SessionService extends GetxService {
         orElse: () => UserRole.orderBooker,
       );
     }
+
+    final userJson = await _storage.getUser();
+    if (userJson != null) {
+      try {
+        user.value = UserModel.fromJson(
+          jsonDecode(userJson) as Map<String, dynamic>,
+        );
+      } catch (_) {
+        user.value = null;
+      }
+    }
+
     return this;
   }
 
-  void setSession({required UserModel userModel, required UserRole userRole}) {
+  Future<void> setSession({
+    required UserModel userModel,
+    required UserRole userRole,
+  }) async {
     user.value = userModel;
     role.value = userRole;
+    await _storage.saveUser(jsonEncode(userModel.toJson()));
+  }
+
+  Future<void> updateUser(UserModel userModel) async {
+    user.value = userModel;
+    await _storage.saveUser(jsonEncode(userModel.toJson()));
   }
 
   Future<void> clearSession() async {

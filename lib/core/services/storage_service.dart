@@ -3,12 +3,16 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 class StorageService {
   static const _tokenKey = 'auth_token';
   static const _roleKey = 'user_role';
+  static const _userKey = 'user_profile';
   static const _localeKey = 'app_locale';
   static const _onboardingCompletedKey = 'onboarding_completed';
   static const _readTimeout = Duration(seconds: 5);
 
   final FlutterSecureStorage _storage = const FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    aOptions: AndroidOptions(
+      encryptedSharedPreferences: true,
+      resetOnError: true,
+    ),
     wOptions: WindowsOptions(useBackwardCompatibility: false),
   );
 
@@ -25,6 +29,13 @@ class StorageService {
       _storage.write(key: _roleKey, value: role);
 
   Future<void> clearRole() => _storage.delete(key: _roleKey);
+
+  Future<String?> getUser() => _read(_userKey);
+
+  Future<void> saveUser(String userJson) =>
+      _storage.write(key: _userKey, value: userJson);
+
+  Future<void> clearUser() => _storage.delete(key: _userKey);
 
   Future<String?> getLocale() => _read(_localeKey);
 

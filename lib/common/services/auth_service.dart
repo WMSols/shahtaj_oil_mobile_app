@@ -29,7 +29,7 @@ class AuthService extends GetxService {
       final user = UserModel.fromJson(data['user'] as Map<String, dynamic>);
       await _storage.saveToken(token);
       await _storage.saveRole(role.name);
-      _session.setSession(userModel: user, userRole: role);
+      await _session.setSession(userModel: user, userRole: role);
       return user;
     } catch (_) {
       final user = UserModel(
@@ -40,7 +40,7 @@ class AuthService extends GetxService {
       );
       await _storage.saveToken('mock-token');
       await _storage.saveRole(role.name);
-      _session.setSession(userModel: user, userRole: role);
+      await _session.setSession(userModel: user, userRole: role);
       return user;
     }
   }
