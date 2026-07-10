@@ -15,14 +15,15 @@ class AppRoutes {
 
   // Order booker
   static const obDashboard = '/order-booker/dashboard';
-  static const obRoutes = '/order-booker/routes';
+  static const obWeeklySchedule = '/order-booker/schedule/weekly';
   static const obRouteDetail = '/order-booker/routes/:id';
-  static const obShops = '/order-booker/shops';
   static const obShopOnboarding = '/order-booker/shops/onboarding';
   static const obMyShops = '/order-booker/my-shops';
   static const obShopDetail = '/order-booker/shops/:id';
   static const obShopEdit = '/order-booker/shops/:id/edit';
   static const obCheckIn = '/order-booker/check-in';
+  static const obActiveVisit = '/order-booker/visits/active';
+  static const obTargets = '/order-booker/targets';
   static const obOrderCreate = '/order-booker/orders/create';
   static const obOrderDetail = '/order-booker/orders/:id';
   static const obHistory = '/order-booker/history';

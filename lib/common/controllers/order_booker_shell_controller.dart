@@ -7,15 +7,19 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_drawer_entry.dart
 import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_dashboard_binding.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_history_binding.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_my_shops_binding.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_active_visit_binding.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_route_detail_binding.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_routes_binding.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_shop_onboarding_binding.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_targets_binding.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_weekly_schedule_binding.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_active_visit_screen.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_dashboard_screen.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_history_screen.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_my_shops_screen.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_route_detail_screen.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_routes_screen.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_shop_onboarding_screen.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_targets_screen.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_weekly_schedule_screen.dart';
 
 class OrderBookerShellController extends AppShellController {
   @override
@@ -27,20 +31,36 @@ class OrderBookerShellController extends AppShellController {
       screen: const ObDashboardScreen(),
       initBinding: () => ObDashboardBinding().dependencies(),
     )),
-    AppDrawerEntry.leaf((
-      id: 'ob_today_tasks',
-      icon: AppIcons.task,
-      label: AppTexts.navTodayTasks,
-      screen: const ObRouteDetailScreen(embeddedInShell: true),
-      initBinding: () => ObRouteDetailBinding().dependencies(),
-    )),
-    AppDrawerEntry.leaf((
-      id: 'ob_routes',
-      icon: AppIcons.routes,
-      label: AppTexts.navRoutes,
-      screen: const ObRoutesScreen(),
-      initBinding: () => ObRoutesBinding().dependencies(),
-    )),
+    AppDrawerEntry.group(
+      AppDrawerGroup(
+        id: 'ob_field_work',
+        icon: AppIcons.fieldWork,
+        label: AppTexts.obFieldWorkTitle,
+        children: [
+          (
+            id: 'ob_weekly_schedule',
+            icon: AppIcons.calendar,
+            label: AppTexts.navWeeklySchedule,
+            screen: const ObWeeklyScheduleScreen(embeddedInShell: true),
+            initBinding: () => ObWeeklyScheduleBinding().dependencies(),
+          ),
+          (
+            id: 'ob_today_tasks',
+            icon: AppIcons.task,
+            label: AppTexts.navTodayTasks,
+            screen: const ObRouteDetailScreen(embeddedInShell: true),
+            initBinding: () => ObRouteDetailBinding().dependencies(),
+          ),
+          (
+            id: 'ob_active_visit',
+            icon: AppIcons.data,
+            label: AppTexts.obActiveVisitTitle,
+            screen: const ObActiveVisitScreen(embeddedInShell: true),
+            initBinding: () => ObActiveVisitBinding().dependencies(),
+          ),
+        ],
+      ),
+    ),
     AppDrawerEntry.group(
       AppDrawerGroup(
         id: 'ob_shops',
@@ -64,13 +84,29 @@ class OrderBookerShellController extends AppShellController {
         ],
       ),
     ),
-    AppDrawerEntry.leaf((
-      id: 'ob_history',
-      icon: AppIcons.history,
-      label: AppTexts.navHistory,
-      screen: const ObHistoryScreen(),
-      initBinding: () => ObHistoryBinding().dependencies(),
-    )),
+    AppDrawerEntry.group(
+      AppDrawerGroup(
+        id: 'ob_performance',
+        icon: AppIcons.invoices,
+        label: AppTexts.navOrders,
+        children: [
+          (
+            id: 'ob_targets',
+            icon: AppIcons.dashboard,
+            label: AppTexts.obTargets,
+            screen: const ObTargetsScreen(embeddedInShell: true),
+            initBinding: () => ObTargetsBinding().dependencies(),
+          ),
+          (
+            id: 'ob_history',
+            icon: AppIcons.history,
+            label: AppTexts.navHistory,
+            screen: const ObHistoryScreen(embeddedInShell: true),
+            initBinding: () => ObHistoryBinding().dependencies(),
+          ),
+        ],
+      ),
+    ),
     AppDrawerEntry.leaf((
       id: 'ob_account',
       icon: AppIcons.account,

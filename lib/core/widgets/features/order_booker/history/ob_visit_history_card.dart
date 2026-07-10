@@ -93,7 +93,7 @@ class ObVisitHistoryCard extends StatelessWidget {
             ),
           ),
           Icon(
-            Icons.chevron_right_rounded,
+            AppIcons.chevronRight,
             color: AppColors.black,
             size: AppResponsive.scaleSize(context, 22),
           ),

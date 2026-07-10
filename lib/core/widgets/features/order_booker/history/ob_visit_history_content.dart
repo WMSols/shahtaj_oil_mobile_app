@@ -250,7 +250,7 @@ class _ClearDatesChip extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                Icons.close_rounded,
+                AppIcons.close,
                 size: AppResponsive.scaleSize(context, 14),
                 color: AppColors.error,
               ),
