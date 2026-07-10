@@ -49,6 +49,9 @@ class AppStatusChip extends StatelessWidget {
   factory AppStatusChip.lowStock() =>
       AppStatusChip(label: AppTexts.obLowStock, color: AppColors.warning);
 
+  factory AppStatusChip.role(UserRole role) =>
+      AppStatusChip(label: role.label, color: AppColors.primary);
+
   @override
   Widget build(BuildContext context) {
     final displayLabel = uppercase ? label.toUpperCase() : label;

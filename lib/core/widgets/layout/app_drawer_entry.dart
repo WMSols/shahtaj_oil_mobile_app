@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
+
 typedef AppDrawerLeaf = ({
   String id,
   IconData? icon,
@@ -33,7 +35,7 @@ class AppDrawerEntry {
 
   factory AppDrawerEntry.leaf(AppDrawerLeaf leaf) => AppDrawerEntry._(
     id: leaf.id,
-    icon: leaf.icon ?? Icons.circle,
+    icon: leaf.icon ?? AppIcons.circle,
     label: leaf.label,
     leaf: leaf,
   );

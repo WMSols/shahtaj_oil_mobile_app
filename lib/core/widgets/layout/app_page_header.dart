@@ -24,6 +24,7 @@ class AppPageHeader extends StatelessWidget {
     this.onProfileTap,
     this.onNotificationTap,
     this.notificationBadge,
+    this.userName = '',
   });
 
   final String title;
@@ -37,6 +38,7 @@ class AppPageHeader extends StatelessWidget {
   final VoidCallback? onProfileTap;
   final VoidCallback? onNotificationTap;
   final String? notificationBadge;
+  final String userName;
 
   bool get _showTimestamps =>
       createdAtLabel != null &&
@@ -56,6 +58,7 @@ class AppPageHeader extends StatelessWidget {
               AppProfileAvatar(
                 size: AppResponsive.scaleSize(context, 34),
                 onTap: onProfileTap,
+                name: userName,
               ),
               const Spacer(),
               AppIconButton(

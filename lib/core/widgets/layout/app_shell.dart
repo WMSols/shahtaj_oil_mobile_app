@@ -8,7 +8,9 @@ import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/responsive/app_responsive.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/locale_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_icon_button.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_drawer.dart';
 
 class AppShell<T extends AppShellController> extends GetView<T> {
@@ -19,7 +21,9 @@ class AppShell<T extends AppShellController> extends GetView<T> {
   @override
   Widget build(BuildContext context) {
     final session = Get.find<SessionService>();
+    final localeService = Get.find<LocaleService>();
     final roleLabel = session.role.value?.label ?? '';
+    final iconSize = AppResponsive.iconSize(context, factor: 1.5);
 
     return Obx(() {
       final currentLeaf = controller.currentLeaf;
@@ -42,15 +46,27 @@ class AppShell<T extends AppShellController> extends GetView<T> {
           scrolledUnderElevation: 0,
           centerTitle: true,
           title: Text(currentLeaf.label, style: AppTextStyles.heading(context)),
-          leading: IconButton(
-            icon: Icon(
-              AppIcons.menu,
-              color: AppColors.primary,
-              size: AppResponsive.iconSize(context, factor: 1.5),
+          leadingWidth: AppResponsive.screenWidth(context) * 0.1,
+          leading: SizedBox(
+            width: AppResponsive.screenWidth(context) * 0.1,
+            child: Center(
+              child: AppIconButton(
+                icon: AppIcons.menu,
+                iconColor: AppColors.primary,
+                iconSize: iconSize,
+                onTap: controller.openDrawer,
+              ),
             ),
-            onPressed: controller.openDrawer,
           ),
-          actions: [AppSpacing.horizontal(context, 0.2)],
+          actions: [
+            AppIconButton(
+              icon: AppIcons.language,
+              iconColor: AppColors.primary,
+              iconSize: iconSize,
+              onTap: localeService.toggleLocale,
+            ),
+            AppSpacing.horizontal(context, 0.02),
+          ],
         ),
         body: AnimatedSwitcher(
           duration: _transitionDuration,

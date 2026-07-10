@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/images/app_images.dart';
@@ -10,7 +11,9 @@ import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.d
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/locale_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_drawer_entry.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_profile_avatar.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({
@@ -64,22 +67,50 @@ class AppDrawer extends StatelessWidget {
                     ),
                   ),
                   AppSpacing.vertical(context, 0.015),
-                  Obx(
-                    () => Text(
-                      session.user.value?.name ?? AppTexts.defaultUserName,
-                      style: AppTextStyles.sectionTitle(context).copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.black,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    roleLabel,
-                    style: AppTextStyles.bodyText(context).copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
+                  Obx(() {
+                    final currentRole =
+                        session.role.value ?? UserRole.orderBooker;
+                    final currentName =
+                        session.user.value?.displayName(
+                          AppTexts.defaultUserName,
+                        ) ??
+                        AppTexts.defaultUserName;
+                    final chipRole = session.role.value == null
+                        ? roleLabel
+                        : currentRole.label;
+
+                    return Row(
+                      children: [
+                        AppProfileAvatar(size: 48, name: currentName),
+                        AppSpacing.horizontal(context, 0.02),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                currentName,
+                                style: AppTextStyles.sectionTitle(context)
+                                    .copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.black,
+                                    ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              AppSpacing.vertical(context, 0.004),
+                              if (session.role.value == null)
+                                AppStatusChip(
+                                  label: chipRole,
+                                  color: AppColors.primary,
+                                )
+                              else
+                                AppStatusChip.role(currentRole),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                  }),
                 ],
               ),
             ),
@@ -226,7 +257,6 @@ class _DrawerLeafTile extends StatelessWidget {
       child: Material(
         color: isSelected ? AppColors.primary : Colors.transparent,
         borderRadius: itemRadius,
-        elevation: isSelected ? 10 : 0,
         child: ListTile(
           leading: leaf.icon == null
               ? null

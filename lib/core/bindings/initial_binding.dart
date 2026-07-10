@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 
+import 'package:shahtaj_oil_mobile_app/common/services/profile_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/bindings/order_booker_services_binding.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/connectivity_service.dart';
@@ -34,6 +35,12 @@ class InitialBinding extends Bindings {
     if (!Get.isRegistered<ApiClient>()) {
       Get.put<ApiClient>(
         ApiClient(Get.find<StorageService>(), Get.find<SessionService>()),
+        permanent: true,
+      );
+    }
+    if (!Get.isRegistered<ProfileService>()) {
+      Get.put<ProfileService>(
+        ProfileService(Get.find<ApiClient>(), Get.find<SessionService>()),
         permanent: true,
       );
     }

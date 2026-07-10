@@ -36,10 +36,21 @@ class AppHelper {
   static bool isSameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
 
+  /// Returns up to two uppercase initials from [name].
+  /// Example: "Mubeen Bhatti" → "MB", "Ali" → "A".
   static String initialsFromName(String name) {
-    final parts = name.trim().split(RegExp(r'\s+'));
-    if (parts.isEmpty || parts.first.isEmpty) return '?';
-    if (parts.length == 1) return parts.first[0].toUpperCase();
+    final parts = name
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .toList();
+    if (parts.isEmpty) return '?';
+    if (parts.length == 1) {
+      final word = parts.first;
+      return word.length == 1
+          ? word.toUpperCase()
+          : word.substring(0, 1).toUpperCase();
+    }
     return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
   }
 
