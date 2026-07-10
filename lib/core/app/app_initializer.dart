@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 
@@ -11,7 +12,7 @@ class AppInitializer {
 
   static Future<void> setup() async {
     await AppSystemUi.apply();
-    await dotenv.load(fileName: '.env');
+    await _loadEnv();
 
     final storage = StorageService();
     Get.put(storage, permanent: true);
@@ -21,7 +22,19 @@ class AppInitializer {
     Get.put(localeService, permanent: true);
 
     final sessionService = SessionService(storage);
-    await sessionService.init();
+    try {
+      await sessionService.init();
+    } catch (error, stackTrace) {
+      debugPrint('Session restore failed: $error\n$stackTrace');
+    }
     Get.put(sessionService, permanent: true);
+  }
+
+  static Future<void> _loadEnv() async {
+    try {
+      await dotenv.load(fileName: '.env');
+    } catch (error, stackTrace) {
+      debugPrint('Env load skipped: $error\n$stackTrace');
+    }
   }
 }
