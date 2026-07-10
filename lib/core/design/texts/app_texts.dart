@@ -126,7 +126,7 @@ class AppTexts {
   static String get navDashboard => 'navDashboard'.tr;
   static String get navProfile => 'navProfile'.tr;
   static String get navNotifications => 'navNotifications'.tr;
-  static String get navRoutes => 'navRoutes'.tr;
+  static String get navWeeklySchedule => 'navWeeklySchedule'.tr;
   static String get navTodayTasks => 'navTodayTasks'.tr;
   static String get navShops => 'navShops'.tr;
   static String get navHistory => 'navHistory'.tr;
@@ -148,7 +148,7 @@ class AppTexts {
   static String get welcome => 'welcome'.tr;
   static String get obDashboardSubtitle => 'obDashboardSubtitle'.tr;
   static String get obTodaysRoute => 'obTodaysRoute'.tr;
-  static String get obTodaysRoutes => 'obTodaysRoutes'.tr;
+  static String get obWeeklyScheduleTitle => 'obWeeklyScheduleTitle'.tr;
   static String get obTargets => 'obTargets'.tr;
   static String get obOrdersToday => 'obOrdersToday'.tr;
   static String get obRecoveryTarget => 'obRecoveryTarget'.tr;
@@ -232,6 +232,7 @@ class AppTexts {
   static String get obLocationFetchFailed => 'obLocationFetchFailed'.tr;
   static String get obCoordinateInvalid => 'obCoordinateInvalid'.tr;
   static String get obShopRegisteredSuccess => 'obShopRegisteredSuccess'.tr;
+  static String get obShopUpdatedSuccess => 'obShopUpdatedSuccess'.tr;
   static String get obRegisterShopHelpTitle => 'obRegisterShopHelpTitle'.tr;
   static String get obRegisterShopHelpBody => 'obRegisterShopHelpBody'.tr;
   static String get obRegisterShopResetTitle => 'obRegisterShopResetTitle'.tr;
@@ -278,6 +279,7 @@ class AppTexts {
   static String get obSkipTaskMessage => 'obSkipTaskMessage'.tr;
   static String get obTaskNotesHint => 'obTaskNotesHint'.tr;
   static String get obActiveVisitTitle => 'obActiveVisitTitle'.tr;
+  static String get obFieldWorkTitle => 'obFieldWorkTitle'.tr;
   static String get obResumeVisit => 'obResumeVisit'.tr;
   static String get obNoTasksToday => 'obNoTasksToday'.tr;
   static String get obCheckInSuccess => 'obCheckInSuccess'.tr;
@@ -409,6 +411,9 @@ class AppTexts {
   // Profile
   static String get myProfile => 'myProfile'.tr;
   static String get editProfile => 'editProfile'.tr;
+  static String get accountDetails => 'accountDetails'.tr;
+  static String get accountPreferences => 'accountPreferences'.tr;
+  static String get accountAppInfo => 'accountAppInfo'.tr;
   static String get role => 'role'.tr;
   static String get memberSince => 'memberSince'.tr;
   static String get profileUpdated => 'profileUpdated'.tr;

@@ -10,11 +10,22 @@ class AppIcons {
 
   // Navigation
   static const IconData menu = Icons.menu_rounded;
+  static const IconData chevronRight = Icons.chevron_right_rounded;
+  static const IconData close = Icons.close_rounded;
+  static const IconData cameraOutlined = Icons.camera_alt_outlined;
+  static const IconData photoLibraryOutlined = Icons.photo_library_outlined;
+  static const IconData circle = Icons.circle;
   static const IconData dashboard = Iconsax.home_2;
   static const IconData dashboard5 = Iconsax.home_25;
 
   static const IconData routes = Iconsax.map;
   static const IconData routes5 = Iconsax.map5;
+
+  static const IconData fieldWork = Iconsax.people;
+  static const IconData fieldWork5 = Iconsax.people5;
+
+  static const IconData data = Iconsax.data;
+  static const IconData data5 = Iconsax.data5;
 
   static const IconData shops = Iconsax.shop;
   static const IconData shops5 = Iconsax.shop5;
@@ -151,6 +162,9 @@ class AppIcons {
   static const IconData gallery = Iconsax.gallery_add;
   static const IconData gallery5 = Iconsax.gallery_add5;
 
+  static const IconData language = Iconsax.translate;
+  static const IconData language5 = Iconsax.translate5;
+
   /// Returns the filled variant when [active] is true, otherwise [icon].
   static IconData filled(IconData icon, {bool active = true}) {
     if (!active) return icon;
@@ -158,6 +172,8 @@ class AppIcons {
     return switch (icon) {
       dashboard => dashboard5,
       routes => routes5,
+      fieldWork => fieldWork5,
+      data => data5,
       shops => shops5,
       addshop => addshop5,
       myshops => myshops5,
@@ -191,6 +207,7 @@ class AppIcons {
       userAdd => userAdd5,
       cameraAdd => cameraAdd5,
       gallery => gallery5,
+      language => language5,
       block => block5,
       empty => empty5,
       _ => icon,
