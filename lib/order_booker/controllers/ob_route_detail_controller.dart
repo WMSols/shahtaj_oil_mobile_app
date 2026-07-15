@@ -1,11 +1,10 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
+import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_confirm_dialog.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/tasks/ob_task_notes_sheet.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_active_visit_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_task_model.dart';
@@ -30,11 +29,16 @@ class ObRouteDetailController extends GetxController {
     loadTasks();
   }
 
-  Future<void> loadTasks({bool silent = false}) async {
-    if (!silent) {
+  Future<void> loadTasks({bool silent = false, bool force = false}) async {
+    final hasCache = todayTasks.value != null;
+    if (!force && hasCache && !silent) {
+      isLoading.value = false;
+      return;
+    }
+
+    if (!silent && !hasCache) {
       isLoading.value = true;
     }
-    error.value = null;
     try {
       final data = await _taskService.fetchTodayTasks();
       todayTasks.value = data;
@@ -46,8 +50,11 @@ class ObRouteDetailController extends GetxController {
         await _taskService.startRoute(routeId);
         todayTasks.value = await _taskService.fetchTodayTasks();
       }
+      error.value = null;
     } catch (_) {
-      error.value = AppTexts.error;
+      if (!hasCache) {
+        error.value = AppTexts.error;
+      }
     } finally {
       if (!silent) {
         isLoading.value = false;
@@ -56,11 +63,19 @@ class ObRouteDetailController extends GetxController {
   }
 
   void openCheckIn(ObTaskModel task) {
+    final active = activeVisit.value;
+    if (active != null &&
+        active.taskId != task.id &&
+        active.shopId != task.shopId) {
+      AppToast.showError(AppTexts.obShopVisitActiveElsewhere);
+      return;
+    }
+
     final nav = Get.toNamed(
       AppRoutes.obCheckIn,
       arguments: {'taskId': task.id},
     );
-    nav?.then((_) => loadTasks());
+    nav?.then((_) => loadTasks(force: true));
   }
 
   Future<void> confirmSkipTask(ObTaskModel task) async {
@@ -75,23 +90,22 @@ class ObRouteDetailController extends GetxController {
 
     try {
       await _taskService.skipTask(task.id);
-      await loadTasks();
+      await loadTasks(force: true);
+    } on ApiException catch (e) {
+      _showMessage(e.message);
     } catch (_) {
       _showMessage(AppTexts.error);
     }
   }
 
   void openTaskNotes(ObTaskModel task) {
-    Get.bottomSheet(
-      ObTaskNotesSheet(
-        initialNotes: task.notes,
-        onSave: (notes) async {
-          await _taskService.saveTaskNotes(taskId: task.id, notes: notes);
-          await loadTasks(silent: true);
-        },
-      ),
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
+    Get.toNamed(
+      AppRoutes.obNotes,
+      arguments: {
+        'purpose': ObNotesPurpose.taskNotes,
+        'taskId': task.id,
+        'initialNotes': task.notes,
+      },
     );
   }
 

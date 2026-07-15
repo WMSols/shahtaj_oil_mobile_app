@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'package:shahtaj_oil_mobile_app/core/design/images/app_images.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/visit/ob_product_card.dart';
@@ -22,8 +23,10 @@ class ObOrderCreateScreen extends GetView<ObOrderCreateController> {
         if (controller.isLoading.value) return const AppLoader();
         if (controller.error.value != null) {
           return AppEmptyState(
-            title: AppTexts.obOrderCreateTitle,
+            title: AppTexts.emptyLoadFailedTitle,
             subtitle: controller.error.value,
+            image: AppImages.emptyError,
+            onRefresh: controller.load,
           );
         }
 
@@ -31,8 +34,10 @@ class ObOrderCreateScreen extends GetView<ObOrderCreateController> {
         final cart = controller.cart.value;
         if (visit == null || cart == null) {
           return AppEmptyState(
-            title: AppTexts.obOrderCreateTitle,
+            title: AppTexts.emptyNoActiveVisitTitle,
             subtitle: AppTexts.obActiveVisitMissing,
+            image: AppImages.emptyNoVisit,
+            onRefresh: controller.load,
           );
         }
 
@@ -51,8 +56,9 @@ class ObOrderCreateScreen extends GetView<ObOrderCreateController> {
               AppSpacing.vertical(context, 0.008),
               if (products.isEmpty)
                 AppEmptyState(
-                  title: AppTexts.obNoProductsFound,
+                  title: AppTexts.emptyNoProductsTitle,
                   subtitle: AppTexts.obNoProductsFound,
+                  image: AppImages.emptyNoProducts,
                 )
               else
                 ...products.map(
@@ -62,21 +68,13 @@ class ObOrderCreateScreen extends GetView<ObOrderCreateController> {
                     ),
                     child: ObProductCard(
                       product: product,
+                      isInCart: controller.isProductInCart(product.id),
                       onAdd: () => controller.addProduct(product),
                     ),
                   ),
                 ),
               AppSpacing.vertical(context, 0.012),
-              ObVisitCartPanel(
-                cart: cart,
-                onUpdateQuantity: controller.updateQuantity,
-                maxQuantityForLine: controller.maxQuantityForLine,
-                onRemoveLine: controller.removeLine,
-                onPlaceOrder: controller.promptPlaceOrder,
-                onEndWithoutOrder: controller.promptEndVisitWithoutOrder,
-                onSaveNotes: controller.promptSaveVisitNotes,
-                isPlacingOrder: controller.isPlacingOrder.value,
-              ),
+              ObVisitCartPanel(controller: controller, cart: cart),
             ],
           ),
         );

@@ -10,8 +10,11 @@ import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.d
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/locale_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/connectivity_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_icon_button.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_drawer.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_profile_avatar.dart';
 
 class AppShell<T extends AppShellController> extends GetView<T> {
   const AppShell({super.key});
@@ -65,7 +68,28 @@ class AppShell<T extends AppShellController> extends GetView<T> {
               iconSize: iconSize,
               onTap: localeService.toggleLocale,
             ),
-            AppSpacing.horizontal(context, 0.02),
+            AppSpacing.horizontal(context, 0.01),
+            Center(
+              child: Obx(() {
+                final connectivity = Get.find<ConnectivityService>();
+                final user = session.user.value;
+                final name =
+                    user?.displayName(AppTexts.defaultUserName) ??
+                    AppTexts.defaultUserName;
+                final presence = !connectivity.isOnline.value
+                    ? PresenceStatus.offline
+                    : (user?.presenceStatus ?? PresenceStatus.away);
+
+                return AppProfileAvatar(
+                  size: 34,
+                  name: name,
+                  presenceStatus: presence,
+                  showPresenceDot: true,
+                  onTap: controller.openAccount,
+                );
+              }),
+            ),
+            AppSpacing.horizontal(context, 0.03),
           ],
         ),
         body: AnimatedSwitcher(

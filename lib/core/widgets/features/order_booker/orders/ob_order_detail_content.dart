@@ -6,7 +6,6 @@ import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_secondary_button.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/orders/ob_order_line_tile.dart';
@@ -65,14 +64,6 @@ class ObOrderDetailContent extends GetView<ObOrderDetailController> {
             value: AppFormatter.currencyWhole(order.subtotal),
             showDivider: false,
           ),
-          if (order.visitId != null) ...[
-            AppSpacing.vertical(context, 0.02),
-            AppSecondaryButton(
-              label: AppTexts.obVisitDetailTitle,
-              outlinedOnly: true,
-              onPressed: controller.openVisit,
-            ),
-          ],
         ],
       ),
     );

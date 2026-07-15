@@ -10,10 +10,12 @@ class AppFormSectionHeader extends StatelessWidget {
     super.key,
     required this.icon,
     required this.title,
+    this.required = false,
   });
 
   final IconData icon;
   final String title;
+  final bool required;
 
   @override
   Widget build(BuildContext context) {
@@ -26,11 +28,26 @@ class AppFormSectionHeader extends StatelessWidget {
         ),
         AppSpacing.horizontal(context, 0.015),
         Expanded(
-          child: Text(
-            title.toUpperCase(),
-            style: AppTextStyles.sectionTitleAccent(
-              context,
-            ).copyWith(color: AppColors.primary, fontWeight: FontWeight.w700),
+          child: Row(
+            children: [
+              Flexible(
+                child: Text(
+                  title.toUpperCase(),
+                  style: AppTextStyles.sectionTitleAccent(context).copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              if (required)
+                Text(
+                  ' *',
+                  style: AppTextStyles.sectionTitleAccent(context).copyWith(
+                    color: AppColors.error,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+            ],
           ),
         ),
       ],

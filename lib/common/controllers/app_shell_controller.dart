@@ -67,6 +67,12 @@ abstract class AppShellController extends GetxController {
     scaffoldKey.currentState?.closeDrawer();
   }
 
+  void openAccount() {
+    final accountLeaf = allLeaves.where((leaf) => leaf.id.endsWith('_account'));
+    if (accountLeaf.isEmpty) return;
+    selectLeaf(accountLeaf.first.id);
+  }
+
   void toggleGroup(String groupId) {
     if (expandedGroupIds.contains(groupId)) {
       expandedGroupIds.remove(groupId);

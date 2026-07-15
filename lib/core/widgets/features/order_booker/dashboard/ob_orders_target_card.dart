@@ -29,23 +29,24 @@ class ObOrdersTargetCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            AppTexts.obOrdersToday,
-            style: AppTextStyles.bodyText(
-              context,
-            ).copyWith(color: AppColors.white.withValues(alpha: 0.75)),
-          ),
-          AppSpacing.vertical(context, 0.006),
-          Text(
             '${targets.ordersCurrent} / ${targets.ordersTarget}',
+            style: AppTextStyles.headline(
+              context,
+            ).copyWith(color: AppColors.white, fontWeight: FontWeight.w600),
+          ),
+          Text(
+            AppTexts.obTargetsProgressPercent(
+              ((progress.clamp(0, 1)) * 100).round(),
+            ),
             style: AppTextStyles.heading(
               context,
-            ).copyWith(color: AppColors.white, fontWeight: FontWeight.w700),
+            ).copyWith(color: AppColors.white, fontWeight: FontWeight.w500),
           ),
-          AppSpacing.vertical(context, 0.012),
+          AppSpacing.vertical(context, 0.01),
           ClipRRect(
             borderRadius: BorderRadius.circular(AppResponsive.radius(context)),
             child: LinearProgressIndicator(
-              minHeight: AppSpacing.verticalValue(context, 0.005),
+              minHeight: AppSpacing.verticalValue(context, 0.01),
               value: progress.clamp(0, 1),
               backgroundColor: AppColors.white.withValues(alpha: 0.18),
               valueColor: const AlwaysStoppedAnimation<Color>(AppColors.white),

@@ -5,7 +5,7 @@ import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_check_in_binding
 import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_dashboard_binding.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_history_binding.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_my_shops_binding.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_active_visit_binding.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_notes_binding.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_order_create_binding.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_order_detail_binding.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_route_detail_binding.dart';
@@ -14,11 +14,11 @@ import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_shop_onboarding_
 import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_targets_binding.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_visit_detail_binding.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_weekly_schedule_binding.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_active_visit_screen.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_check_in_screen.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_dashboard_screen.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_history_screen.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_my_shops_screen.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_notes_screen.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_order_create_screen.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_order_detail_screen.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_route_detail_screen.dart';
@@ -63,19 +63,9 @@ class OrderBookerRoutes {
       binding: ObShopDetailBinding(),
     ),
     GetPage(
-      name: AppRoutes.obShopEdit,
-      page: ObShopOnboardingScreen.new,
-      binding: ObShopOnboardingBinding(),
-    ),
-    GetPage(
       name: AppRoutes.obCheckIn,
       page: ObCheckInScreen.new,
       binding: ObCheckInBinding(),
-    ),
-    GetPage(
-      name: AppRoutes.obActiveVisit,
-      page: ObActiveVisitScreen.new,
-      binding: ObActiveVisitBinding(),
     ),
     GetPage(
       name: AppRoutes.obTargets,
@@ -86,6 +76,11 @@ class OrderBookerRoutes {
       name: AppRoutes.obOrderCreate,
       page: ObOrderCreateScreen.new,
       binding: ObOrderCreateBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.obNotes,
+      page: ObNotesScreen.new,
+      binding: ObNotesBinding(),
     ),
     GetPage(
       name: AppRoutes.obOrderDetail,
