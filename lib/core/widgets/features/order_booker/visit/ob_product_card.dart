@@ -11,10 +11,16 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart'
 import 'package:shahtaj_oil_mobile_app/order_booker/models/visit/ob_product_model.dart';
 
 class ObProductCard extends StatelessWidget {
-  const ObProductCard({super.key, required this.product, required this.onAdd});
+  const ObProductCard({
+    super.key,
+    required this.product,
+    required this.onAdd,
+    this.isInCart = false,
+  });
 
   final ObProductModel product;
   final VoidCallback onAdd;
+  final bool isInCart;
 
   @override
   Widget build(BuildContext context) {
@@ -53,12 +59,14 @@ class ObProductCard extends StatelessWidget {
               context,
             ).copyWith(color: outOfStock ? AppColors.warning : AppColors.grey),
           ),
-          AppSpacing.vertical(context, 0.01),
-          AppPrimaryButton(
-            label: AppTexts.obAddToCart,
-            icon: AppIcons.add,
-            onPressed: outOfStock ? null : onAdd,
-          ),
+          if (!isInCart) ...[
+            AppSpacing.vertical(context, 0.01),
+            AppPrimaryButton(
+              label: AppTexts.obAddToCart,
+              icon: AppIcons.add,
+              onPressed: outOfStock ? null : onAdd,
+            ),
+          ],
         ],
       ),
     );

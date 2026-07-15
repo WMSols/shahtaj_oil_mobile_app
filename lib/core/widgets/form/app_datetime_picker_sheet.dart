@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
@@ -51,18 +49,17 @@ class AppDateTimePickerSheetState extends State<AppDateTimePickerSheet> {
   @override
   void initState() {
     super.initState();
-    selected = widget.initial;
-    final start =
-        widget.minDate ?? DateTime.now().subtract(const Duration(days: 365));
-    final d0 = DateTime(selected.year, selected.month, selected.day);
-    final s0 = DateTime(start.year, start.month, start.day);
-    final dateIndex = d0
-        .difference(s0)
-        .inDays
-        .clamp(0, AppDateTimePickerUtils.daysToShow - 1);
-    dateController = FixedExtentScrollController(
-      initialItem: math.min(dateIndex, AppDateTimePickerUtils.daysToShow - 1),
-    );
+    selected = _clampToBounds(widget.initial);
+    final list = dates;
+    var dateIndex = 0;
+    if (list.isNotEmpty) {
+      final d0 = DateTime(selected.year, selected.month, selected.day);
+      dateIndex = list.indexWhere(
+        (d) => d.year == d0.year && d.month == d0.month && d.day == d0.day,
+      );
+      if (dateIndex < 0) dateIndex = 0;
+    }
+    dateController = FixedExtentScrollController(initialItem: dateIndex);
     hourController = FixedExtentScrollController(
       initialItem: AppDateTimePickerUtils.hour24ToDisplayIndex(
         selected.hour.clamp(0, 23),
@@ -76,11 +73,45 @@ class AppDateTimePickerSheetState extends State<AppDateTimePickerSheet> {
     );
   }
 
-  DateTime resultForMode() {
-    if (widget.mode == AppDateTimePickerMode.dateOnly) {
-      return DateTime(selected.year, selected.month, selected.day);
+  DateTime _clampToBounds(DateTime value) {
+    var next = value;
+    final min = widget.minDate;
+    final max = widget.maxDate;
+    if (min != null) {
+      final minDay = DateTime(min.year, min.month, min.day);
+      final day = DateTime(next.year, next.month, next.day);
+      if (day.isBefore(minDay)) {
+        next = DateTime(
+          minDay.year,
+          minDay.month,
+          minDay.day,
+          next.hour,
+          next.minute,
+        );
+      }
     }
-    return selected;
+    if (max != null) {
+      final maxDay = DateTime(max.year, max.month, max.day);
+      final day = DateTime(next.year, next.month, next.day);
+      if (day.isAfter(maxDay)) {
+        next = DateTime(
+          maxDay.year,
+          maxDay.month,
+          maxDay.day,
+          next.hour,
+          next.minute,
+        );
+      }
+    }
+    return next;
+  }
+
+  DateTime resultForMode() {
+    final clamped = _clampToBounds(selected);
+    if (widget.mode == AppDateTimePickerMode.dateOnly) {
+      return DateTime(clamped.year, clamped.month, clamped.day);
+    }
+    return clamped;
   }
 
   @override
@@ -93,12 +124,24 @@ class AppDateTimePickerSheetState extends State<AppDateTimePickerSheet> {
   }
 
   List<DateTime> get dates {
-    final start =
-        widget.minDate ?? DateTime.now().subtract(const Duration(days: 365));
-    return List.generate(
-      AppDateTimePickerUtils.daysToShow,
-      (i) => start.add(Duration(days: i)),
+    final now = DateTime.now();
+    final defaultStart = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).subtract(const Duration(days: 365));
+    final startRaw = widget.minDate ?? defaultStart;
+    final start = DateTime(startRaw.year, startRaw.month, startRaw.day);
+
+    final defaultEnd = start.add(
+      Duration(days: AppDateTimePickerUtils.daysToShow - 1),
     );
+    final endRaw = widget.maxDate ?? defaultEnd;
+    var end = DateTime(endRaw.year, endRaw.month, endRaw.day);
+    if (end.isBefore(start)) end = start;
+
+    final count = end.difference(start).inDays + 1;
+    return List.generate(count, (i) => start.add(Duration(days: i)));
   }
 
   void onDateIndexChanged(int index) {

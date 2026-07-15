@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
+import 'package:shahtaj_oil_mobile_app/core/design/images/app_images.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/responsive/app_responsive.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
@@ -11,30 +12,18 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_secondary_button
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/visit/ob_cart_line_tile.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/controllers/ob_order_create_controller.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/visit/ob_visit_cart_model.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/visit/ob_visit_cart_line_model.dart';
 
 class ObVisitCartPanel extends StatelessWidget {
   const ObVisitCartPanel({
     super.key,
+    required this.controller,
     required this.cart,
-    required this.onUpdateQuantity,
-    required this.onRemoveLine,
-    required this.onPlaceOrder,
-    required this.onEndWithoutOrder,
-    required this.onSaveNotes,
-    required this.maxQuantityForLine,
-    this.isPlacingOrder = false,
   });
 
+  final ObOrderCreateController controller;
   final ObVisitCartModel cart;
-  final void Function(int lineId, double quantity) onUpdateQuantity;
-  final void Function(int lineId) onRemoveLine;
-  final VoidCallback onPlaceOrder;
-  final VoidCallback onEndWithoutOrder;
-  final VoidCallback onSaveNotes;
-  final int Function(ObVisitCartLineModel line) maxQuantityForLine;
-  final bool isPlacingOrder;
 
   @override
   Widget build(BuildContext context) {
@@ -60,8 +49,9 @@ class ObVisitCartPanel extends StatelessWidget {
           AppSpacing.vertical(context, 0.01),
           if (!hasLines)
             AppEmptyState(
-              title: AppTexts.obNoCartItems,
+              title: AppTexts.emptyCartTitle,
               subtitle: AppTexts.obAddProductsToStart,
+              image: AppImages.emptyEmptyCart,
             )
           else ...[
             ...cart.lines.map((line) {
@@ -69,12 +59,7 @@ class ObVisitCartPanel extends StatelessWidget {
                 padding: EdgeInsets.only(
                   bottom: AppSpacing.verticalValue(context, 0.01),
                 ),
-                child: ObCartLineTile(
-                  line: line,
-                  maxQuantity: maxQuantityForLine(line),
-                  onUpdateQuantity: (qty) => onUpdateQuantity(line.lineId, qty),
-                  onRemove: () => onRemoveLine(line.lineId),
-                ),
+                child: ObCartLineTile(controller: controller, line: line),
               );
             }),
           ],
@@ -114,20 +99,20 @@ class ObVisitCartPanel extends StatelessWidget {
           AppSpacing.vertical(context, 0.02),
           AppPrimaryButton(
             label: AppTexts.obPlaceOrder,
-            isLoading: isPlacingOrder,
-            onPressed: hasLines ? onPlaceOrder : null,
+            isLoading: controller.isPlacingOrder.value,
+            onPressed: hasLines ? controller.promptPlaceOrder : null,
           ),
           AppSpacing.vertical(context, 0.008),
           AppSecondaryButton(
             label: AppTexts.obEndVisitWithoutOrder,
             outlinedOnly: true,
-            onPressed: onEndWithoutOrder,
+            onPressed: hasLines ? null : controller.promptEndVisitWithoutOrder,
           ),
           AppSpacing.vertical(context, 0.008),
           AppSecondaryButton(
             label: AppTexts.obSaveVisitNotes,
             outlinedOnly: true,
-            onPressed: onSaveNotes,
+            onPressed: controller.promptSaveVisitNotes,
           ),
         ],
       ),

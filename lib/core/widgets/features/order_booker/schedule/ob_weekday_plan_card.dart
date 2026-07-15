@@ -37,7 +37,7 @@ class ObWeekdayPlanCard extends StatelessWidget {
             ),
             AppSpacing.vertical(context, 0.003),
             Text(
-              '${day.shopCount} shops • ${day.distanceKm.toStringAsFixed(1)} km',
+              AppTexts.obShopsCount(day.shopCount),
               style: AppTextStyles.caption(
                 context,
               ).copyWith(color: AppColors.textMuted),

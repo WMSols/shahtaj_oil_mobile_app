@@ -32,71 +32,83 @@ class AppAuthPrimaryPanel extends GetView<AuthController> {
             bottomRight: Radius.circular(radius),
           ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            AppTextField(
-              controller: controller.emailController,
-              prefixIcon: AppIcons.email,
-              label: AppTexts.email,
-              hint: AppTexts.emailHint,
-              keyboardType: TextInputType.emailAddress,
-              textInputAction: TextInputAction.next,
-              labelColor: AppColors.white,
-              textColor: AppColors.textPrimary,
-              hintColor: AppColors.textMuted,
-              fillColor: AppColors.white,
-              borderColor: AppColors.cardBorder,
-              focusedBorderColor: AppColors.white,
-            ),
-            AppSpacing.vertical(context, 0.02),
-            Obx(
-              () => AppTextField(
-                controller: controller.passwordController,
-                prefixIcon: AppIcons.lock,
-                label: AppTexts.password,
-                hint: AppTexts.passwordHint,
-                obscureText: controller.obscurePassword.value,
-                textInputAction: TextInputAction.done,
-                suffixIcon: controller.obscurePassword.value
-                    ? AppIcons.eyeSlash
-                    : AppIcons.eye,
-                onSuffixTap: controller.togglePasswordVisibility,
-                onSubmitted: (_) => controller.login(),
-                labelColor: AppColors.white,
-                textColor: AppColors.textPrimary,
-                hintColor: AppColors.textMuted,
-                fillColor: AppColors.white,
-                borderColor: AppColors.cardBorder,
-                focusedBorderColor: AppColors.white,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: IntrinsicHeight(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      AppTextField(
+                        controller: controller.emailController,
+                        prefixIcon: AppIcons.email,
+                        label: AppTexts.email,
+                        hint: AppTexts.emailHint,
+                        keyboardType: TextInputType.emailAddress,
+                        textInputAction: TextInputAction.next,
+                        labelColor: AppColors.white,
+                        textColor: AppColors.textPrimary,
+                        hintColor: AppColors.textMuted,
+                        fillColor: AppColors.white,
+                        borderColor: AppColors.cardBorder,
+                        focusedBorderColor: AppColors.white,
+                      ),
+                      AppSpacing.vertical(context, 0.02),
+                      Obx(
+                        () => AppTextField(
+                          controller: controller.passwordController,
+                          prefixIcon: AppIcons.lock,
+                          label: AppTexts.password,
+                          hint: AppTexts.passwordHint,
+                          obscureText: controller.obscurePassword.value,
+                          textInputAction: TextInputAction.done,
+                          suffixIcon: controller.obscurePassword.value
+                              ? AppIcons.eyeSlash
+                              : AppIcons.eye,
+                          onSuffixTap: controller.togglePasswordVisibility,
+                          onSubmitted: (_) => controller.login(),
+                          labelColor: AppColors.white,
+                          textColor: AppColors.textPrimary,
+                          hintColor: AppColors.textMuted,
+                          fillColor: AppColors.white,
+                          borderColor: AppColors.cardBorder,
+                          focusedBorderColor: AppColors.white,
+                        ),
+                      ),
+                      AppSpacing.vertical(context, 0.02),
+                      Obx(
+                        () => AppSecondaryButton(
+                          label: AppTexts.signInButton,
+                          isLoading: controller.isLoading.value,
+                          onPressed: controller.login,
+                        ),
+                      ),
+                      AppSpacing.vertical(context, 0.01),
+                      Obx(
+                        () => AppSecondaryButton(
+                          label: AppTexts.switchRole,
+                          outlinedOnly: true,
+                          textColor: AppColors.white,
+                          borderColor: AppColors.white,
+                          onPressed: controller.isLoading.value
+                              ? null
+                              : () => Get.offAllNamed(AppRoutes.selectRole),
+                        ),
+                      ),
+                      const Spacer(),
+                      AppBroughtByFooter(
+                        textColor: AppColors.white.withValues(alpha: 0.75),
+                        accentColor: AppColors.white,
+                        dividerColor: AppColors.white.withValues(alpha: 0.25),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
-            AppSpacing.vertical(context, 0.02),
-            Obx(
-              () => AppSecondaryButton(
-                label: AppTexts.signInButton,
-                onPressed: controller.isLoading.value ? null : controller.login,
-              ),
-            ),
-            AppSpacing.vertical(context, 0.01),
-            Obx(
-              () => AppSecondaryButton(
-                label: AppTexts.switchRole,
-                outlinedOnly: true,
-                textColor: AppColors.white,
-                borderColor: AppColors.white,
-                onPressed: controller.isLoading.value
-                    ? null
-                    : () => Get.offAllNamed(AppRoutes.selectRole),
-              ),
-            ),
-            const Spacer(),
-            AppBroughtByFooter(
-              textColor: AppColors.white.withValues(alpha: 0.75),
-              accentColor: AppColors.white,
-              dividerColor: AppColors.white.withValues(alpha: 0.25),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );

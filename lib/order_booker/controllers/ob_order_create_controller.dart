@@ -1,13 +1,13 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/common/controllers/order_booker_shell_controller.dart';
+import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
+import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_confirm_dialog.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/tasks/ob_task_notes_sheet.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/controllers/ob_route_detail_controller.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_active_visit_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/visit/ob_product_model.dart';
@@ -29,8 +29,21 @@ class ObOrderCreateController extends GetxController {
   final RxList<ObProductModel> products = <ObProductModel>[].obs;
   final Rxn<ObVisitCartModel> cart = Rxn<ObVisitCartModel>();
 
+  /// Typed qty drafts / field errors keyed by cart line id.
+  final RxMap<int, String> qtyDrafts = <int, String>{}.obs;
+  final RxMap<int, String?> qtyErrors = <int, String?>{}.obs;
+  final RxMap<int, double?> qtyPreviews = <int, double?>{}.obs;
+
   int? get visitId =>
       Get.arguments is Map ? (Get.arguments as Map)['visitId'] as int? : null;
+
+  bool get hasCartLines => (cart.value?.lines.isNotEmpty ?? false);
+
+  bool isProductInCart(int productId) {
+    final lines = cart.value?.lines;
+    if (lines == null) return false;
+    return lines.any((line) => line.productId == productId);
+  }
 
   @override
   void onInit() {
@@ -51,6 +64,8 @@ class ObOrderCreateController extends GetxController {
       }
       activeVisit.value = active;
       await _loadProductsAndCart(active, resolvedVisitId);
+    } on ApiException catch (e) {
+      error.value = e.message;
     } catch (_) {
       error.value = AppTexts.error;
     } finally {
@@ -64,34 +79,257 @@ class ObOrderCreateController extends GetxController {
       visitId: id,
       shopName: active.shopName,
     );
+    _pruneQtyStateToCurrentLines();
+  }
+
+  void _pruneQtyStateToCurrentLines() {
+    final lines = cart.value?.lines ?? const <ObVisitCartLineModel>[];
+    final ids = lines.map((l) => l.lineId).toSet();
+
+    qtyDrafts.removeWhere((id, _) => !ids.contains(id));
+    qtyErrors.removeWhere((id, _) => !ids.contains(id));
+    qtyPreviews.removeWhere((id, _) => !ids.contains(id));
+
+    for (final line in lines) {
+      final draft = qtyDrafts[line.lineId];
+      if (draft == null) continue;
+      final parsed = double.tryParse(draft.trim());
+      final maxQty = maxQuantityForLine(line);
+      // Keep over-max drafts/errors; clear drafts that match server qty.
+      if (parsed != null && parsed > maxQty) continue;
+      if (parsed != null && parsed == line.quantity) {
+        qtyDrafts.remove(line.lineId);
+        qtyErrors.remove(line.lineId);
+        qtyPreviews.remove(line.lineId);
+      }
+    }
+    qtyDrafts.refresh();
+    qtyErrors.refresh();
+    qtyPreviews.refresh();
   }
 
   Future<void> addProduct(ObProductModel product) async {
     final active = activeVisit.value;
     if (active == null) return;
-    await _cartService.addLine(visitId: active.visitId, productId: product.id);
-    await _reloadCart();
+    if (isProductInCart(product.id)) return;
+    try {
+      await _cartService.addLine(
+        visitId: active.visitId,
+        productId: product.id,
+      );
+      await _reloadCart();
+    } on ApiException catch (e) {
+      AppToast.showError(e.message);
+    } catch (_) {
+      AppToast.showError(AppTexts.error);
+    }
+  }
+
+  ObVisitCartLineModel? lineById(int lineId) {
+    final lines = cart.value?.lines;
+    if (lines == null) return null;
+    for (final line in lines) {
+      if (line.lineId == lineId) return line;
+    }
+    return null;
+  }
+
+  String formatQuantity(double qty) {
+    if (qty == qty.roundToDouble()) return qty.round().toString();
+    return qty.toStringAsFixed(1);
+  }
+
+  String quantityFieldText(ObVisitCartLineModel line) {
+    return qtyDrafts[line.lineId] ?? formatQuantity(line.quantity);
+  }
+
+  String? quantityError(int lineId) => qtyErrors[lineId];
+
+  double displayQuantity(ObVisitCartLineModel line) {
+    return qtyPreviews[line.lineId] ?? line.quantity;
+  }
+
+  double displayLineTotal(ObVisitCartLineModel line) {
+    return displayQuantity(line) * line.priceUnit;
+  }
+
+  String bookableLabel(ObVisitCartLineModel line) {
+    final remaining = bookableRemainingForLine(line);
+    if (remaining <= 0) return '0';
+    if (remaining == remaining.roundToDouble()) {
+      return remaining.toInt().toString();
+    }
+    return remaining.toStringAsFixed(1);
+  }
+
+  /// Live validation while typing. Does not call the API.
+  void onQuantityInputChanged(int lineId, String raw) {
+    final line = lineById(lineId);
+    if (line == null) return;
+
+    qtyDrafts[lineId] = raw;
+    final parsed = double.tryParse(raw.trim());
+    if (parsed == null || parsed < 1) {
+      qtyErrors[lineId] = null;
+      qtyPreviews[lineId] = null;
+      qtyDrafts.refresh();
+      qtyErrors.refresh();
+      qtyPreviews.refresh();
+      return;
+    }
+
+    final maxQty = maxQuantityForLine(line);
+    if (parsed > maxQty) {
+      qtyErrors[lineId] = AppTexts.obNotEnoughStock(maxQty.toString());
+      qtyPreviews[lineId] = null;
+      qtyDrafts.refresh();
+      qtyErrors.refresh();
+      qtyPreviews.refresh();
+      return;
+    }
+
+    qtyErrors[lineId] = null;
+    qtyPreviews[lineId] = parsed;
+    qtyDrafts.refresh();
+    qtyErrors.refresh();
+    qtyPreviews.refresh();
+  }
+
+  /// Commit on blur / done. Over-max keeps typed value and blocks API.
+  Future<void> commitQuantityInput(int lineId) async {
+    final line = lineById(lineId);
+    if (line == null) return;
+
+    final raw = (qtyDrafts[lineId] ?? formatQuantity(line.quantity)).trim();
+    final parsed = double.tryParse(raw);
+
+    if (parsed == null || parsed < 1) {
+      qtyDrafts.remove(lineId);
+      qtyErrors[lineId] = null;
+      qtyPreviews[lineId] = null;
+      qtyDrafts.refresh();
+      qtyErrors.refresh();
+      qtyPreviews.refresh();
+      return;
+    }
+
+    final maxQty = maxQuantityForLine(line);
+    if (parsed > maxQty) {
+      qtyDrafts[lineId] = raw;
+      qtyErrors[lineId] = AppTexts.obNotEnoughStock(maxQty.toString());
+      qtyPreviews[lineId] = null;
+      qtyDrafts.refresh();
+      qtyErrors.refresh();
+      qtyPreviews.refresh();
+      return;
+    }
+
+    qtyErrors[lineId] = null;
+    qtyPreviews[lineId] = parsed;
+    qtyDrafts[lineId] = formatQuantity(parsed);
+    qtyDrafts.refresh();
+    qtyErrors.refresh();
+    qtyPreviews.refresh();
+
+    if (parsed != line.quantity) {
+      await updateQuantity(lineId, parsed);
+    }
   }
 
   Future<void> updateQuantity(int lineId, double quantity) async {
     final active = activeVisit.value;
-    if (active == null) return;
-    await _cartService.updateLine(
-      visitId: active.visitId,
-      lineId: lineId,
-      quantity: quantity <= 0 ? 1 : quantity,
-    );
-    await _reloadCart();
+    final currentCart = cart.value;
+    if (active == null || currentCart == null) return;
+
+    final oldLine = lineById(lineId);
+    if (oldLine == null) return;
+
+    final maxQty = maxQuantityForLine(oldLine);
+    if (quantity < 1 || quantity > maxQty) {
+      AppToast.showError(AppTexts.obNotEnoughStock(maxQty.toString()));
+      return;
+    }
+
+    if (quantity == oldLine.quantity) return;
+
+    final optimisticLines = currentCart.lines
+        .map(
+          (line) =>
+              line.lineId == lineId ? line.copyWith(quantity: quantity) : line,
+        )
+        .toList(growable: false);
+    cart.value = currentCart.copyWith(lines: optimisticLines);
+
+    try {
+      await _cartService.updateLine(
+        visitId: active.visitId,
+        lineId: lineId,
+        quantity: quantity,
+      );
+      await _reloadCart();
+    } on ApiException catch (e) {
+      await _reloadCart();
+      AppToast.showError(e.message);
+    } catch (_) {
+      await _reloadCart();
+      AppToast.showError(AppTexts.error);
+    }
   }
 
   Future<void> removeLine(int lineId) async {
     final active = activeVisit.value;
     if (active == null) return;
-    await _cartService.removeLine(visitId: active.visitId, lineId: lineId);
-    await _reloadCart();
+    qtyDrafts.remove(lineId);
+    qtyErrors.remove(lineId);
+    qtyPreviews.remove(lineId);
+    try {
+      await _cartService.removeLine(visitId: active.visitId, lineId: lineId);
+      await _reloadCart();
+    } on ApiException catch (e) {
+      AppToast.showError(e.message);
+    } catch (_) {
+      AppToast.showError(AppTexts.error);
+    }
+  }
+
+  bool _hasQuantityInputIssues() {
+    final lines = cart.value?.lines ?? const <ObVisitCartLineModel>[];
+    for (final line in lines) {
+      final maxQty = maxQuantityForLine(line);
+      if (line.quantity < 1 || line.quantity > maxQty) return true;
+
+      final error = qtyErrors[line.lineId];
+      if (error != null && error.isNotEmpty) return true;
+
+      final draft = qtyDrafts[line.lineId];
+      if (draft == null) continue;
+      final parsed = double.tryParse(draft.trim());
+      if (parsed != null && parsed > maxQty) return true;
+    }
+    return false;
   }
 
   Future<void> promptPlaceOrder() async {
+    final currentCart = cart.value;
+    if (currentCart == null || currentCart.lines.isEmpty) return;
+
+    if (_hasQuantityInputIssues()) {
+      // Prefer a concrete line error when present.
+      for (final line in currentCart.lines) {
+        final maxQty = maxQuantityForLine(line);
+        final draft = qtyDrafts[line.lineId];
+        final parsed = draft == null ? null : double.tryParse(draft.trim());
+        if ((parsed != null && parsed > maxQty) ||
+            (qtyErrors[line.lineId]?.isNotEmpty ?? false) ||
+            line.quantity > maxQty) {
+          AppToast.showError(AppTexts.obNotEnoughStock(maxQty.toString()));
+          return;
+        }
+      }
+      AppToast.showError(AppTexts.error);
+      return;
+    }
+
     final confirmed = await AppConfirmSheet.show(
       title: AppTexts.obPlaceOrder,
       message: AppTexts.obPlaceOrderConfirmMessage,
@@ -110,6 +348,8 @@ class ObOrderCreateController extends GetxController {
       await _taskService.completeActiveVisit(visitId: active.visitId);
       AppToast.showSuccess(AppTexts.obOrderPlacedSuccess);
       _navigateToTodayTasks();
+    } on ApiException catch (e) {
+      AppToast.showError(e.message);
     } catch (_) {
       AppToast.showError(AppTexts.error);
     } finally {
@@ -117,60 +357,46 @@ class ObOrderCreateController extends GetxController {
     }
   }
 
-  Future<void> endWithoutOrder(String notes) async {
-    final active = activeVisit.value;
-    if (active == null) return;
-    await _cartService.endWithoutOrder(visitId: active.visitId, notes: notes);
-    await _taskService.clearActiveVisit(visitId: active.visitId);
-    AppToast.showSuccess(AppTexts.obVisitClosedSuccess);
-    _navigateToTodayTasks();
-  }
-
-  Future<void> saveVisitNotes(String notes) async {
-    final active = activeVisit.value;
-    if (active == null) return;
-    await _cartService.saveVisitNotes(visitId: active.visitId, notes: notes);
-    AppToast.showSuccess(AppTexts.save);
-  }
-
-  int maxQuantityForLine(ObVisitCartLineModel line) {
-    ObProductModel? product;
+  /// Remaining free qty from product catalog (excludes this line's qty).
+  double bookableRemainingForLine(ObVisitCartLineModel line) {
     for (final item in products) {
-      if (item.id == line.productId) {
-        product = item;
-        break;
-      }
+      if (item.id == line.productId) return item.qtyBookable;
     }
-    final remaining = product?.qtyBookable ?? 0;
-    return (line.quantity + remaining).floor().clamp(1, 1000000);
+    return 0;
   }
 
-  Future<void> promptEndVisitWithoutOrder() async {
-    await Get.bottomSheet(
-      ObTaskNotesSheet(
-        title: AppTexts.obEndVisitTitle,
-        hint: AppTexts.obEndVisitNotesHint,
-        confirmLabel: AppTexts.confirm,
-        required: true,
-        initialNotes: null,
-        onSave: (notes) => endWithoutOrder(notes),
-      ),
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
+  /// Max cart qty for a line = current reserved qty + remaining free stock.
+  int maxQuantityForLine(ObVisitCartLineModel line) {
+    final remaining = bookableRemainingForLine(line);
+    final maxQty = (line.quantity + remaining).floor();
+    return maxQty < 1 ? 1 : maxQty;
+  }
+
+  void promptEndVisitWithoutOrder() {
+    final active = activeVisit.value;
+    if (active == null) return;
+    if (hasCartLines) {
+      AppToast.showWarning(AppTexts.obEndVisitRequiresEmptyCart);
+      return;
+    }
+    Get.toNamed(
+      AppRoutes.obNotes,
+      arguments: {
+        'purpose': ObNotesPurpose.endVisitWithoutOrder,
+        'visitId': active.visitId,
+      },
     );
   }
 
-  Future<void> promptSaveVisitNotes() async {
-    await Get.bottomSheet(
-      ObTaskNotesSheet(
-        title: AppTexts.obSaveVisitNotes,
-        hint: AppTexts.obVisitNotesHint,
-        confirmLabel: AppTexts.save,
-        initialNotes: null,
-        onSave: (notes) => saveVisitNotes(notes),
-      ),
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
+  void promptSaveVisitNotes() {
+    final active = activeVisit.value;
+    if (active == null) return;
+    Get.toNamed(
+      AppRoutes.obNotes,
+      arguments: {
+        'purpose': ObNotesPurpose.visitNotes,
+        'visitId': active.visitId,
+      },
     );
   }
 
@@ -181,7 +407,7 @@ class ObOrderCreateController extends GetxController {
         Get.find<OrderBookerShellController>().selectLeaf('ob_today_tasks');
       }
       if (Get.isRegistered<ObRouteDetailController>()) {
-        Get.find<ObRouteDetailController>().loadTasks();
+        Get.find<ObRouteDetailController>().loadTasks(force: true);
       }
     });
   }
