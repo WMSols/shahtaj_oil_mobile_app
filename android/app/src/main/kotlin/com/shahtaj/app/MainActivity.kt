@@ -1,4 +1,4 @@
-package com.example.shahtaj_oil_mobile_app
+package com.shahtaj.app
 
 import io.flutter.embedding.android.FlutterActivity
 
