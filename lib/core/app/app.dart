@@ -9,6 +9,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/theme/app_theme.dart';
 import 'package:shahtaj_oil_mobile_app/core/localization/app_translations.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_connectivity_banner.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_pages.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/locale_service.dart';
@@ -43,6 +44,7 @@ class ShahtajOilApp extends StatelessWidget {
               fit: StackFit.expand,
               children: [
                 child ?? const SizedBox.shrink(),
+                const AppToastHost(),
                 const AppConnectivityBanner(),
               ],
             ),

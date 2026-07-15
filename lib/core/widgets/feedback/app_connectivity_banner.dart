@@ -11,14 +11,14 @@ class AppConnectivityBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!Get.isRegistered<ConnectivityService>()) {
-      return const SizedBox.shrink();
-    }
-
-    final connectivity = Get.find<ConnectivityService>();
-
     return Obx(() {
-      if (connectivity.isOnline.value) return const SizedBox.shrink();
+      if (!Get.isRegistered<ConnectivityService>()) {
+        return const SizedBox.shrink();
+      }
+
+      if (Get.find<ConnectivityService>().isOnline.value) {
+        return const SizedBox.shrink();
+      }
 
       return Positioned(
         left: 0,
@@ -26,7 +26,7 @@ class AppConnectivityBanner extends StatelessWidget {
         bottom: 0,
         child: AppToastBar(
           message: AppTexts.noInternet,
-          style: AppToastStyle.warning,
+          style: AppToastStyle.error,
         ),
       );
     });
