@@ -1,3 +1,5 @@
+import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
+
 class ObVisitCartLineModel {
   const ObVisitCartLineModel({
     required this.lineId,
@@ -33,15 +35,27 @@ class ObVisitCartLineModel {
     unit: unit ?? this.unit,
   );
 
-  factory ObVisitCartLineModel.fromJson(Map<String, dynamic> json) =>
-      ObVisitCartLineModel(
-        lineId: (json['line_id'] as num?)?.toInt() ?? 0,
-        productId: (json['product_id'] as num?)?.toInt() ?? 0,
-        productName: json['product_name']?.toString() ?? '',
-        quantity: (json['quantity'] as num?)?.toDouble() ?? 0,
-        priceUnit: (json['price_unit'] as num?)?.toDouble() ?? 0,
-        unit: json['unit']?.toString(),
-      );
+  factory ObVisitCartLineModel.fromJson(Map<String, dynamic> json) {
+    final product = ApiMap.asMap(json['product']) ?? const <String, dynamic>{};
+    return ObVisitCartLineModel(
+      lineId: ApiMap.asInt(json['line_id']) ?? ApiMap.asInt(json['id']) ?? 0,
+      productId:
+          ApiMap.asInt(json['product_id']) ?? ApiMap.asInt(product['id']) ?? 0,
+      productName:
+          ApiMap.asString(json['product_name']) ??
+          ApiMap.asString(product['name']) ??
+          '',
+      quantity: ApiMap.asDouble(json['quantity']) ?? 0,
+      priceUnit:
+          ApiMap.asDouble(json['price_unit']) ??
+          ApiMap.asDouble(product['list_price']) ??
+          0,
+      unit:
+          ApiMap.asString(json['unit']) ??
+          ApiMap.asString(product['sale_uom']) ??
+          ApiMap.asString(product['uom']),
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     'line_id': lineId,

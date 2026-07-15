@@ -1,9 +1,10 @@
-// ignore_for_file: unused_field
-
 import 'package:get/get.dart';
 
-import 'package:shahtaj_oil_mobile_app/core/mock/app_mock_data.dart';
+import 'package:shahtaj_oil_mobile_app/core/constants/api_endpoints.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
+import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
+import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_route_option.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_shop_edit_request.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_shop_model.dart';
@@ -11,65 +12,135 @@ import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_shop_register_requ
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_zone_option.dart';
 
 class ObShopService extends GetxService {
-  ObShopService(this._api);
-  final ApiClient _api;
+  ObShopService(this._api, {OfflineCacheService? cache})
+    : _cache = cache ?? Get.find<OfflineCacheService>();
 
-  Future<List<ObShopModel>> fetchShops() async {
-    await Future<void>.delayed(const Duration(milliseconds: 400));
-    return AppMockData.obShops;
-    // Swap with API when ready:
-    // final response = await _api.get(ApiEndpoints.shops);
-    // final list = response.data as List<dynamic>;
-    // return list
-    //     .map((e) => ObShopModel.fromJson(e as Map<String, dynamic>))
-    //     .toList();
+  final ApiClient _api;
+  final OfflineCacheService _cache;
+
+  List<ObZoneOption>? _zonesCache;
+  final Map<int?, List<ObRouteOption>> _routesCache = {};
+
+  Future<List<ObShopModel>> fetchShops() {
+    return _cache.readThrough(
+      key: OfflineCacheKeys.shopsMine,
+      fetch: () => _api.postData(ApiEndpoints.obShopsMine),
+      parse: _parseShops,
+    );
+  }
+
+  Future<void> persistShops(List<ObShopModel> shops) async {
+    await _cache.saveMap(OfflineCacheKeys.shopsMine, {
+      'shops': shops.map((shop) => shop.toJson()).toList(growable: false),
+    });
   }
 
   Future<ObShopModel> fetchShop(String id, {bool includePhotos = false}) async {
-    await Future<void>.delayed(const Duration(milliseconds: 350));
-    final normalized = int.tryParse(id);
-    final prefixed = normalized != null
-        ? 'shop-${normalized.toString().padLeft(3, '0')}'
-        : id;
-    try {
-      return AppMockData.obShops.firstWhere(
-        (shop) => shop.id == id || shop.id == prefixed,
-      );
-    } catch (_) {
-      // Swap with API when ready:
-      // final response = await _api.get(
-      //   ApiEndpoints.obShopsGet,
-      //   queryParameters: {
-      //     'shop_id': normalized ?? id,
-      //     'include_photos': includePhotos,
-      //   },
-      // );
-      // return ObShopModel.fromJson(response.data as Map<String, dynamic>);
-      throw Exception('Shop not found');
+    final shopId = int.tryParse(id) ?? id;
+    final data = await _api.postData(
+      ApiEndpoints.obShopsGet,
+      data: {'shop_id': shopId, 'include_photos': includePhotos},
+    );
+    final shopJson = ApiMap.asMap(data['shop']) ?? data;
+    return ObShopModel.fromJson(shopJson);
+  }
+
+  Future<List<ObZoneOption>> fetchZones({bool force = false}) async {
+    if (!force && _zonesCache != null) return _zonesCache!;
+
+    final zones = await _cache.readThrough(
+      key: OfflineCacheKeys.zones,
+      fetch: () => _api.postData(ApiEndpoints.obZonesList),
+      parse: _parseZones,
+    );
+    _zonesCache = zones;
+    return zones;
+  }
+
+  Future<List<ObRouteOption>> fetchRoutes({
+    int? zoneId,
+    bool force = false,
+  }) async {
+    if (!force && _routesCache.containsKey(zoneId)) {
+      return _routesCache[zoneId]!;
     }
+
+    final key = OfflineCacheKeys.routes(zoneId);
+    var routes = await _cache.readThrough(
+      key: key,
+      fetch: () =>
+          _api.postData(ApiEndpoints.obRoutesList, data: {'zone_id': ?zoneId}),
+      parse: _parseRoutes,
+    );
+    if (zoneId != null) {
+      routes = routes
+          .where((route) => route.zoneId == zoneId || route.zoneId == 0)
+          .toList(growable: false);
+    }
+    _routesCache[zoneId] = routes;
+    return routes;
   }
 
-  Future<List<ObZoneOption>> fetchZones() async {
-    await Future<void>.delayed(const Duration(milliseconds: 200));
-    return AppMockData.obZones;
+  void clearLookupCache() {
+    _zonesCache = null;
+    _routesCache.clear();
   }
 
-  Future<List<ObRouteOption>> fetchRoutes({int? zoneId}) async {
-    await Future<void>.delayed(const Duration(milliseconds: 200));
-    final routes = AppMockData.obRoutes;
-    if (zoneId == null) return routes;
-    return routes.where((route) => route.zoneId == zoneId).toList();
-  }
-
-  Future<void> registerShop(ObShopRegisterRequest request) async {
-    await Future<void>.delayed(const Duration(milliseconds: 900));
-    // Swap with API when ready:
-    // await _api.post(ApiEndpoints.shops, data: request.toJson());
+  Future<ObShopModel> registerShop(ObShopRegisterRequest request) async {
+    final data = await _api.postData(
+      ApiEndpoints.obShopsRegister,
+      data: request.toJson(),
+    );
+    final shopJson = ApiMap.asMap(data['shop']);
+    if (shopJson == null) {
+      throw ApiException(message: 'Shop registered but response was empty.');
+    }
+    return ObShopModel.fromJson(shopJson);
   }
 
   Future<void> updateShop(ObShopEditRequest request) async {
-    await Future<void>.delayed(const Duration(milliseconds: 550));
-    // Swap with API when ready:
-    // await _api.post(ApiEndpoints.obShopsGet, data: request.toJson());
+    // Shahtaj v1 has shops/register + shops/get/mine only — no update endpoint yet.
+    throw ApiException(
+      message: 'Shop update is not available on the server yet.',
+    );
+  }
+
+  List<ObShopModel> _parseShops(Map<String, dynamic> data) {
+    return ApiMap.listOf(
+      data,
+      'shops',
+    ).map(ObShopModel.fromJson).toList(growable: false);
+  }
+
+  List<ObZoneOption> _parseZones(Map<String, dynamic> data) {
+    final rows = ApiMap.listOf(data, 'zones');
+    if (rows.isNotEmpty) {
+      return rows.map(ObZoneOption.fromJson).toList(growable: false);
+    }
+    final items = ApiMap.listOf(data, 'items');
+    if (items.isNotEmpty) {
+      return items.map(ObZoneOption.fromJson).toList(growable: false);
+    }
+    final bare = ApiMap.asMapList(data['value']);
+    if (bare.isNotEmpty) {
+      return bare.map(ObZoneOption.fromJson).toList(growable: false);
+    }
+    return const [];
+  }
+
+  List<ObRouteOption> _parseRoutes(Map<String, dynamic> data) {
+    final rows = ApiMap.listOf(data, 'routes');
+    if (rows.isNotEmpty) {
+      return rows.map(ObRouteOption.fromJson).toList(growable: false);
+    }
+    final items = ApiMap.listOf(data, 'items');
+    if (items.isNotEmpty) {
+      return items.map(ObRouteOption.fromJson).toList(growable: false);
+    }
+    final bare = ApiMap.asMapList(data['value']);
+    if (bare.isNotEmpty) {
+      return bare.map(ObRouteOption.fromJson).toList(growable: false);
+    }
+    return const [];
   }
 }

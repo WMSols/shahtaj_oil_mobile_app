@@ -16,6 +16,8 @@ enum VisitStatus { checkedIn, checkedOut }
 
 enum VisitOutcome { orderPlaced, endedWithoutOrder, skipped }
 
+enum PresenceStatus { online, away, offline }
+
 enum ShopStatus { pending, approved, rejected, active }
 
 enum ShopType { cash, credit }
@@ -23,6 +25,8 @@ enum ShopType { cash, credit }
 enum RouteStatus { notStarted, inProgress, completed }
 
 enum TaskStatus { pending, inVisit, skipped, completed }
+
+enum ObNotesPurpose { taskNotes, endVisitWithoutOrder, visitNotes }
 
 extension UserRoleX on UserRole {
   String get label => switch (this) {
@@ -117,6 +121,28 @@ extension VisitOutcomeX on VisitOutcome {
     VisitOutcome.endedWithoutOrder => AppColors.warning,
     VisitOutcome.skipped => AppColors.textMuted,
   };
+}
+
+extension PresenceStatusX on PresenceStatus {
+  String get label => switch (this) {
+    PresenceStatus.online => AppTexts.statusOnline,
+    PresenceStatus.away => AppTexts.statusAway,
+    PresenceStatus.offline => AppTexts.statusOffline,
+  };
+
+  Color get chipColor => switch (this) {
+    PresenceStatus.online => AppColors.success,
+    PresenceStatus.away => AppColors.warning,
+    PresenceStatus.offline => AppColors.textMuted,
+  };
+
+  static PresenceStatus fromApi(dynamic value) {
+    final raw = value?.toString().trim().toLowerCase() ?? '';
+    return PresenceStatus.values.firstWhere(
+      (status) => status.name == raw,
+      orElse: () => PresenceStatus.away,
+    );
+  }
 }
 
 extension ShopStatusX on ShopStatus {

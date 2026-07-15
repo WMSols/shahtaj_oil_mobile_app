@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'package:shahtaj_oil_mobile_app/core/design/images/app_images.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
+import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_primary_button.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/shops/register/ob_register_shop_form.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
@@ -42,8 +44,10 @@ class _ShopFormContent extends StatelessWidget {
 
             if (controller.loadError.value != null) {
               return AppEmptyState(
-                title: controller.screenTitle,
+                title: AppTexts.emptyLoadFailedTitle,
                 subtitle: controller.loadError.value!,
+                image: AppImages.emptyError,
+                onRefresh: () => controller.onPullToRefresh(),
               );
             }
 

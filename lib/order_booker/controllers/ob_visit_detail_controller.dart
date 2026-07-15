@@ -85,8 +85,11 @@ class ObVisitDetailController extends GetxController {
   }
 
   void openOrder() {
-    final orderId = visit.value?.orderId;
-    if (orderId == null) return;
-    Get.toNamed(AppRoutes.obOrderDetail.replaceFirst(':id', '$orderId'));
+    final current = visit.value;
+    if (current == null || !current.hasOrder) return;
+    Get.toNamed(
+      AppRoutes.obOrderDetail.replaceFirst(':id', '${current.visitId}'),
+      arguments: {'visitId': current.visitId, 'visitDetail': current},
+    );
   }
 }

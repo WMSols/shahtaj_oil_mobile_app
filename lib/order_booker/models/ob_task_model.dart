@@ -1,4 +1,5 @@
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
+import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 
 class ObTaskModel {
   const ObTaskModel({
@@ -59,22 +60,37 @@ class ObTaskModel {
     shopLongitude: shopLongitude ?? this.shopLongitude,
   );
 
-  factory ObTaskModel.fromJson(Map<String, dynamic> json) => ObTaskModel(
-    id:
-        (json['task_id'] as num?)?.toInt() ??
-        (json['id'] as num?)?.toInt() ??
-        0,
-    shopId: json['shop_id']?.toString() ?? '',
-    shopName: json['shop_name']?.toString() ?? '',
-    ownerName: json['owner_name']?.toString(),
-    phone: json['phone']?.toString(),
-    locationLabel: json['location_label']?.toString(),
-    sequence: (json['sequence'] as num?)?.toInt() ?? 0,
-    status: _parseStatus(json['status']),
-    notes: json['notes']?.toString(),
-    shopLatitude: (json['shop_latitude'] as num?)?.toDouble(),
-    shopLongitude: (json['shop_longitude'] as num?)?.toDouble(),
-  );
+  factory ObTaskModel.fromJson(Map<String, dynamic> json) {
+    final shop = ApiMap.asMap(json['shop']) ?? const <String, dynamic>{};
+    return ObTaskModel(
+      id: ApiMap.asInt(json['task_id']) ?? ApiMap.asInt(json['id']) ?? 0,
+      shopId:
+          ApiMap.asString(json['shop_id']) ??
+          ApiMap.asString(shop['shop_id']) ??
+          ApiMap.asString(shop['id']) ??
+          '',
+      shopName:
+          ApiMap.asString(json['shop_name']) ??
+          ApiMap.asString(shop['name']) ??
+          '',
+      ownerName:
+          ApiMap.asString(json['owner_name']) ??
+          ApiMap.asString(shop['owner_name']),
+      phone:
+          ApiMap.asString(json['phone']) ??
+          ApiMap.asString(shop['owner_phone']),
+      locationLabel: ApiMap.asString(json['location_label']),
+      sequence: ApiMap.asInt(json['sequence']) ?? 0,
+      status: _parseStatus(json['status'] ?? json['state']),
+      notes: ApiMap.asString(json['notes']),
+      shopLatitude:
+          ApiMap.asDouble(json['shop_latitude']) ??
+          ApiMap.asDouble(shop['latitude']),
+      shopLongitude:
+          ApiMap.asDouble(json['shop_longitude']) ??
+          ApiMap.asDouble(shop['longitude']),
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     'task_id': id,
@@ -92,19 +108,13 @@ class ObTaskModel {
 
   static TaskStatus _parseStatus(dynamic value) {
     final raw = value?.toString() ?? '';
+    final normalized = ApiMap.snakeToCamel(raw);
+    if (normalized == 'inProgress' || normalized == 'checkedIn') {
+      return TaskStatus.inVisit;
+    }
     return TaskStatus.values.firstWhere(
-      (status) => status.name == raw || status.name == _snakeToCamel(raw),
+      (status) => status.name == raw || status.name == normalized,
       orElse: () => TaskStatus.pending,
     );
-  }
-
-  static String _snakeToCamel(String value) {
-    if (!value.contains('_')) return value;
-    final parts = value.split('_');
-    return parts.first +
-        parts.skip(1).map((part) {
-          if (part.isEmpty) return '';
-          return part[0].toUpperCase() + part.substring(1);
-        }).join();
   }
 }

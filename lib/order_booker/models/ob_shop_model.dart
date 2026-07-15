@@ -1,4 +1,5 @@
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
+import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 
 class ObShopVerificationPhotos {
   const ObShopVerificationPhotos({
@@ -58,33 +59,60 @@ class ObShopModel {
       longitude!.abs() <= 180;
 
   factory ObShopModel.fromJson(Map<String, dynamic> json) {
-    final photos = json['verification_photos'] as Map<String, dynamic>?;
+    final photos =
+        ApiMap.asMap(json['verification_photos']) ??
+        ApiMap.asMap(json['photos']);
+    final zone = ApiMap.asMap(json['zone']);
+    final route = ApiMap.asMap(json['route']);
 
     return ObShopModel(
-      id: json['id']?.toString() ?? '',
-      name: json['name']?.toString() ?? '',
-      ownerName: json['owner_name']?.toString(),
-      phone: json['phone']?.toString(),
-      locationLabel: json['location_label']?.toString(),
-      address: json['address']?.toString(),
-      zoneName: json['zone_name']?.toString(),
-      routeName: json['route_name']?.toString(),
-      creditLimit: _readDouble(json['credit_limit']),
-      legacyBalance: _readDouble(json['legacy_balance']),
-      latitude: _readDouble(json['latitude']),
-      longitude: _readDouble(json['longitude']),
-      heroImageAsset: json['hero_image_asset']?.toString(),
+      id: ApiMap.asString(json['id']) ?? ApiMap.asString(json['shop_id']) ?? '',
+      name: ApiMap.asString(json['name']) ?? '',
+      ownerName: ApiMap.asString(json['owner_name']),
+      phone:
+          ApiMap.asString(json['phone']) ??
+          ApiMap.asString(json['owner_phone']),
+      locationLabel: ApiMap.asString(json['location_label']),
+      address: ApiMap.asString(json['address']),
+      zoneName:
+          ApiMap.asString(json['zone_name']) ?? ApiMap.asString(zone?['name']),
+      routeName:
+          ApiMap.asString(json['route_name']) ??
+          ApiMap.asString(route?['name']),
+      creditLimit: ApiMap.asDouble(json['credit_limit']),
+      legacyBalance: ApiMap.asDouble(json['legacy_balance']),
+      latitude: ApiMap.asDouble(json['latitude']),
+      longitude: ApiMap.asDouble(json['longitude']),
+      heroImageAsset: ApiMap.asString(json['hero_image_asset']),
       verificationPhotos: ObShopVerificationPhotos(
-        cnicFront: photos?['cnic_front']?.toString(),
-        cnicBack: photos?['cnic_back']?.toString(),
-        ownerPhoto: photos?['owner_photo']?.toString(),
-        shopExterior: photos?['shop_exterior']?.toString(),
+        cnicFront:
+            _photoRef(photos?['cnic_front']) ??
+            _photoRef(photos?['owner_cnic_front']),
+        cnicBack:
+            _photoRef(photos?['cnic_back']) ??
+            _photoRef(photos?['owner_cnic_back']),
+        ownerPhoto: _photoRef(photos?['owner_photo']),
+        shopExterior:
+            _photoRef(photos?['shop_exterior']) ??
+            _photoRef(photos?['shop_exterior_photo']),
       ),
-      status: ShopStatus.values.firstWhere(
-        (s) => s.name == json['status']?.toString(),
-        orElse: () => ShopStatus.pending,
-      ),
+      status: _parseStatus(json['status'] ?? json['approval_state']),
       isHighlighted: json['is_highlighted'] as bool? ?? false,
+    );
+  }
+
+  static String? _photoRef(dynamic value) {
+    if (value is String && value.trim().isNotEmpty) return value;
+    if (value is bool) return value ? 'available' : null;
+    return null;
+  }
+
+  static ShopStatus _parseStatus(dynamic value) {
+    final raw = value?.toString() ?? '';
+    final normalized = ApiMap.snakeToCamel(raw);
+    return ShopStatus.values.firstWhere(
+      (status) => status.name == raw || status.name == normalized,
+      orElse: () => ShopStatus.pending,
     );
   }
 
@@ -111,10 +139,4 @@ class ObShopModel {
     'status': status.name,
     'is_highlighted': isHighlighted,
   };
-}
-
-double? _readDouble(dynamic value) {
-  if (value == null) return null;
-  if (value is num) return value.toDouble();
-  return double.tryParse(value.toString());
 }

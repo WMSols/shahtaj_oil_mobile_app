@@ -114,6 +114,9 @@ class AppTexts {
   static String obShopsDistance(int shops, String distanceKm) =>
       'obShopsDistance'.trParams({'shops': '$shops', 'distance': distanceKm});
 
+  static String obShopsCount(int shops) =>
+      'obShopsCount'.trParams({'shops': '$shops'});
+
   static String obVanStockSummary(int count) =>
       'obVanStockSummary'.trParams({'count': '$count'});
   static String dmVanStockSummary(int count) =>
@@ -151,6 +154,9 @@ class AppTexts {
   static String get obWeeklyScheduleTitle => 'obWeeklyScheduleTitle'.tr;
   static String get obTargets => 'obTargets'.tr;
   static String get obOrdersToday => 'obOrdersToday'.tr;
+
+  static String obTargetsProgressPercent(int percent) =>
+      'obTargetsProgressPercent'.trParams({'percent': '$percent'});
   static String get obRecoveryTarget => 'obRecoveryTarget'.tr;
   static String get rmRecoveryTarget => 'rmRecoveryTarget'.tr;
   static String get rmTargets => 'rmTargets'.tr;
@@ -264,12 +270,16 @@ class AppTexts {
   static String get obShopNotOnRouteToday => 'obShopNotOnRouteToday'.tr;
   static String get obShopCheckInBeforeOrder => 'obShopCheckInBeforeOrder'.tr;
   static String get backOnline => 'backOnline'.tr;
+  static String get statusOnline => 'statusOnline'.tr;
+  static String get statusAway => 'statusAway'.tr;
+  static String get statusOffline => 'statusOffline'.tr;
   static String get obShopNotFound => 'obShopNotFound'.tr;
   static String get obCnicFrontLabel => 'obCnicFrontLabel'.tr;
   static String get obCnicBackLabel => 'obCnicBackLabel'.tr;
   static String get obOwnerPhotoLabel => 'obOwnerPhotoLabel'.tr;
   static String get obShopExteriorLabel => 'obShopExteriorLabel'.tr;
   static String get obShopEditTitle => 'obShopEditTitle'.tr;
+  static String get obShopEditComingSoon => 'obShopEditComingSoon'.tr;
   static String get obCheckInTitle => 'obCheckInTitle'.tr;
   static String get obTasksSection => 'obTasksSection'.tr;
   static String get obTaskCheckIn => 'obTaskCheckIn'.tr;
@@ -305,6 +315,11 @@ class AppTexts {
   static String get obPlaceOrderConfirmMessage =>
       'obPlaceOrderConfirmMessage'.tr;
   static String get obEndVisitWithoutOrder => 'obEndVisitWithoutOrder'.tr;
+
+  static String get obEndVisitRequiresEmptyCart =>
+      'obEndVisitRequiresEmptyCart'.tr;
+
+  static String get obNoRoutesInZone => 'obNoRoutesInZone'.tr;
   static String get obSaveVisitNotes => 'obSaveVisitNotes'.tr;
   static String get obVisitNotesHint => 'obVisitNotesHint'.tr;
   static String get obEndVisitTitle => 'obEndVisitTitle'.tr;
@@ -317,6 +332,9 @@ class AppTexts {
   static String get obCartPriceHint => 'obCartPriceHint'.tr;
   static String get obTotalLabel => 'obTotalLabel'.tr;
   static String get obNoMoreStockLeft => 'obNoMoreStockLeft'.tr;
+
+  static String obNotEnoughStock(String available) =>
+      'obNotEnoughStock'.trParams({'available': available});
 
   static String obVisitLoadedFor(int visitId) =>
       'obVisitLoadedFor'.trParams({'visitId': '$visitId'});
@@ -519,6 +537,22 @@ class AppTexts {
   static String get success => 'success'.tr;
   static String get noInternet => 'noInternet'.tr;
   static String get noInternetDescription => 'noInternetDescription'.tr;
+
+  static String get emptyLoadFailedTitle => 'emptyLoadFailedTitle'.tr;
+  static String get emptyLoadFailedSubtitle => 'emptyLoadFailedSubtitle'.tr;
+  static String get emptyNoRouteTitle => 'emptyNoRouteTitle'.tr;
+  static String get emptyNoOrdersTitle => 'emptyNoOrdersTitle'.tr;
+  static String get emptyNoTasksTitle => 'emptyNoTasksTitle'.tr;
+  static String get emptyNoShopsTitle => 'emptyNoShopsTitle'.tr;
+  static String get emptyNoVisitsTitle => 'emptyNoVisitsTitle'.tr;
+  static String get emptyNoTargetsTitle => 'emptyNoTargetsTitle'.tr;
+  static String get emptyNoScheduleTitle => 'emptyNoScheduleTitle'.tr;
+  static String get emptyNoProductsTitle => 'emptyNoProductsTitle'.tr;
+  static String get emptyCartTitle => 'emptyCartTitle'.tr;
+  static String get emptyNoActiveVisitTitle => 'emptyNoActiveVisitTitle'.tr;
+  static String get emptyNotFoundTitle => 'emptyNotFoundTitle'.tr;
+  static String get emptyComingSoonTitle => 'emptyComingSoonTitle'.tr;
+  static String get emptyProfileTitle => 'emptyProfileTitle'.tr;
 
   // Validation messages
   static String get emailRequired => 'emailRequired'.tr;

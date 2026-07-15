@@ -1,3 +1,5 @@
+import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
+
 class ObWeeklyScheduleDayModel {
   const ObWeeklyScheduleDayModel({
     required this.weekday,
@@ -23,18 +25,33 @@ class ObWeeklyScheduleDayModel {
 
   bool get hasAssignment => !isOffDay && routeId != null;
 
-  factory ObWeeklyScheduleDayModel.fromJson(Map<String, dynamic> json) =>
-      ObWeeklyScheduleDayModel(
-        weekday: (json['weekday'] as num?)?.toInt() ?? 1,
-        label: json['label']?.toString() ?? '',
-        routeId: (json['route_id'] as num?)?.toInt(),
-        routeName: json['route_name']?.toString(),
-        zoneId: (json['zone_id'] as num?)?.toInt(),
-        zoneName: json['zone_name']?.toString(),
-        shopCount: (json['shop_count'] as num?)?.toInt() ?? 0,
-        distanceKm: (json['distance_km'] as num?)?.toDouble() ?? 0,
-        isOffDay: json['is_off_day'] as bool? ?? false,
-      );
+  factory ObWeeklyScheduleDayModel.fromJson(Map<String, dynamic> json) {
+    final route = ApiMap.asMap(json['route']) ?? const <String, dynamic>{};
+    final zone = ApiMap.asMap(json['zone']) ?? const <String, dynamic>{};
+    final rawWeekday =
+        ApiMap.asInt(json['weekday']) ?? ApiMap.asInt(json['day_of_week']);
+    // Odoo day_of_week is 0=Monday … 6=Sunday; Dart DateTime uses 1=Monday … 7=Sunday.
+    final weekday = rawWeekday == null
+        ? DateTime.monday
+        : (rawWeekday >= 0 && rawWeekday <= 6 ? rawWeekday + 1 : rawWeekday);
+
+    return ObWeeklyScheduleDayModel(
+      weekday: weekday,
+      label:
+          ApiMap.asString(json['label']) ??
+          ApiMap.asString(json['day_label']) ??
+          '',
+      routeId: ApiMap.asInt(json['route_id']) ?? ApiMap.asInt(route['id']),
+      routeName:
+          ApiMap.asString(json['route_name']) ?? ApiMap.asString(route['name']),
+      zoneId: ApiMap.asInt(json['zone_id']) ?? ApiMap.asInt(zone['id']),
+      zoneName:
+          ApiMap.asString(json['zone_name']) ?? ApiMap.asString(zone['name']),
+      shopCount: ApiMap.asInt(json['shop_count']) ?? 0,
+      distanceKm: ApiMap.asDouble(json['distance_km']) ?? 0,
+      isOffDay: json['is_off_day'] as bool? ?? false,
+    );
+  }
 }
 
 class ObWeeklyScheduleModel {
@@ -43,14 +60,13 @@ class ObWeeklyScheduleModel {
   final List<ObWeeklyScheduleDayModel> days;
 
   factory ObWeeklyScheduleModel.fromJson(Map<String, dynamic> json) {
-    final list = json['days'] as List<dynamic>? ?? const [];
-    return ObWeeklyScheduleModel(
-      days: list
-          .map(
-            (item) =>
-                ObWeeklyScheduleDayModel.fromJson(item as Map<String, dynamic>),
-          )
-          .toList(),
-    );
+    final list = json.containsKey('schedules')
+        ? ApiMap.listOf(json, 'schedules')
+        : ApiMap.listOf(json, 'days');
+    final days = list
+        .map(ObWeeklyScheduleDayModel.fromJson)
+        .toList(growable: false);
+    days.sort((a, b) => a.weekday.compareTo(b.weekday));
+    return ObWeeklyScheduleModel(days: days);
   }
 }

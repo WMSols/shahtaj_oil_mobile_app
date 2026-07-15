@@ -1,3 +1,5 @@
+import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
+
 class ObActiveVisitModel {
   const ObActiveVisitModel({
     required this.visitId,
@@ -17,18 +19,31 @@ class ObActiveVisitModel {
   final double? latitude;
   final double? longitude;
 
-  factory ObActiveVisitModel.fromJson(Map<String, dynamic> json) =>
-      ObActiveVisitModel(
-        visitId: (json['visit_id'] as num?)?.toInt() ?? 0,
-        taskId: (json['task_id'] as num?)?.toInt() ?? 0,
-        shopId: json['shop_id']?.toString() ?? '',
-        shopName: json['shop_name']?.toString() ?? '',
-        checkedInAt: json['checked_in_at'] != null
-            ? DateTime.tryParse(json['checked_in_at'].toString())
-            : null,
-        latitude: (json['latitude'] as num?)?.toDouble(),
-        longitude: (json['longitude'] as num?)?.toDouble(),
-      );
+  factory ObActiveVisitModel.fromJson(Map<String, dynamic> json) {
+    final shop = ApiMap.asMap(json['shop']) ?? const <String, dynamic>{};
+    return ObActiveVisitModel(
+      visitId: ApiMap.asInt(json['visit_id']) ?? ApiMap.asInt(json['id']) ?? 0,
+      taskId: ApiMap.asInt(json['task_id']) ?? 0,
+      shopId:
+          ApiMap.asString(json['shop_id']) ??
+          ApiMap.asString(shop['shop_id']) ??
+          ApiMap.asString(shop['id']) ??
+          '',
+      shopName:
+          ApiMap.asString(json['shop_name']) ??
+          ApiMap.asString(shop['name']) ??
+          '',
+      checkedInAt:
+          ApiMap.asDateTime(json['checked_in_at']) ??
+          ApiMap.asDateTime(json['started_at']),
+      latitude:
+          ApiMap.asDouble(json['latitude']) ??
+          ApiMap.asDouble(shop['latitude']),
+      longitude:
+          ApiMap.asDouble(json['longitude']) ??
+          ApiMap.asDouble(shop['longitude']),
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     'visit_id': visitId,

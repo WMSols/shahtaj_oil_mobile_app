@@ -1,9 +1,10 @@
-import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
+import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
+import 'package:shahtaj_oil_mobile_app/core/utils/helper/app_location_helper.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_confirm_dialog.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_task_model.dart';
@@ -19,8 +20,9 @@ class ObCheckInController extends GetxController {
   final RxBool isSubmitting = false.obs;
   final Rxn<ObTaskModel> task = Rxn<ObTaskModel>();
 
-  final mapLatitude = Rxn<double>();
-  final mapLongitude = Rxn<double>();
+  /// Device GPS used for check-in (must be captured via Current location).
+  final checkInLatitude = Rxn<double>();
+  final checkInLongitude = Rxn<double>();
 
   int? get taskId =>
       Get.arguments is Map ? (Get.arguments as Map)['taskId'] as int? : null;
@@ -28,14 +30,21 @@ class ObCheckInController extends GetxController {
   String? get shopId =>
       Get.arguments is Map ? (Get.arguments as Map)['shopId'] as String? : null;
 
-  bool get hasLocation {
-    final lat = mapLatitude.value;
-    final lng = mapLongitude.value;
+  /// Shop pin for map preview only — does not enable check-in.
+  double? get shopLatitude => task.value?.shopLatitude;
+  double? get shopLongitude => task.value?.shopLongitude;
+
+  bool get hasDeviceLocation {
+    final lat = checkInLatitude.value;
+    final lng = checkInLongitude.value;
     return lat != null && lng != null && lat.abs() <= 90 && lng.abs() <= 180;
   }
 
-  String get locationLabel => hasLocation
-      ? AppFormatter.coordinates(mapLatitude.value!, mapLongitude.value!)
+  String get locationLabel => hasDeviceLocation
+      ? AppFormatter.coordinates(
+          checkInLatitude.value!,
+          checkInLongitude.value!,
+        )
       : AppTexts.obLocationNotCaptured;
 
   @override
@@ -56,9 +65,13 @@ class ObCheckInController extends GetxController {
       }
 
       task.value = resolved;
-      if (resolved != null && resolved.hasShopCoordinates) {
-        mapLatitude.value = resolved.shopLatitude;
-        mapLongitude.value = resolved.shopLongitude;
+
+      final active = await _taskService.fetchActiveVisit();
+      if (active != null &&
+          resolved != null &&
+          active.taskId != resolved.id &&
+          active.shopId != resolved.shopId) {
+        _showMessage(AppTexts.obShopVisitActiveElsewhere);
       }
     } finally {
       isLoading.value = false;
@@ -68,25 +81,11 @@ class ObCheckInController extends GetxController {
   Future<void> useCurrentLocation() async {
     isLocating.value = true;
     try {
-      final enabled = await Geolocator.isLocationServiceEnabled();
-      if (!enabled) {
-        _showMessage(AppTexts.obLocationDisabled);
-        return;
-      }
-
-      var permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
-        _showMessage(AppTexts.obLocationPermissionDenied);
-        return;
-      }
-
-      final position = await Geolocator.getCurrentPosition();
-      mapLatitude.value = position.latitude;
-      mapLongitude.value = position.longitude;
+      final position = await AppLocationHelper.requireCurrentPosition();
+      checkInLatitude.value = position.latitude;
+      checkInLongitude.value = position.longitude;
+    } on ApiException catch (e) {
+      _showMessage(e.message);
     } catch (_) {
       _showMessage(AppTexts.obLocationFetchFailed);
     } finally {
@@ -96,8 +95,16 @@ class ObCheckInController extends GetxController {
 
   Future<void> checkIn() async {
     final current = task.value;
-    if (current == null || !hasLocation) {
+    if (current == null || !hasDeviceLocation) {
       _showMessage(AppTexts.obLocationNotCaptured);
+      return;
+    }
+
+    final active = await _taskService.fetchActiveVisit();
+    if (active != null &&
+        active.taskId != current.id &&
+        active.shopId != current.shopId) {
+      _showMessage(AppTexts.obShopVisitActiveElsewhere);
       return;
     }
 
@@ -105,14 +112,16 @@ class ObCheckInController extends GetxController {
     try {
       final visit = await _taskService.checkIn(
         taskId: current.id,
-        latitude: mapLatitude.value!,
-        longitude: mapLongitude.value!,
+        latitude: checkInLatitude.value!,
+        longitude: checkInLongitude.value!,
       );
       _showMessage(AppTexts.obCheckInSuccess, isError: false);
       Get.offNamed(
         AppRoutes.obOrderCreate,
         arguments: {'visitId': visit.visitId},
       );
+    } on ApiException catch (e) {
+      _showMessage(e.message);
     } catch (_) {
       _showMessage(AppTexts.error);
     } finally {
@@ -139,6 +148,8 @@ class ObCheckInController extends GetxController {
       if (Get.currentRoute == AppRoutes.obCheckIn) {
         Get.back(result: true);
       }
+    } on ApiException catch (e) {
+      _showMessage(e.message);
     } catch (_) {
       _showMessage(AppTexts.error);
     } finally {

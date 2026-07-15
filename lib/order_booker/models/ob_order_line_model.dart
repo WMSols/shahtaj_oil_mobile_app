@@ -1,3 +1,5 @@
+import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
+
 class ObOrderLineModel {
   const ObOrderLineModel({
     required this.productId,
@@ -11,13 +13,27 @@ class ObOrderLineModel {
   final double quantity;
   final double unitPrice;
 
-  factory ObOrderLineModel.fromJson(Map<String, dynamic> json) =>
-      ObOrderLineModel(
-        productId: json['product_id']?.toString() ?? '',
-        productName: json['product_name']?.toString() ?? '',
-        quantity: (json['quantity'] as num?)?.toDouble() ?? 0,
-        unitPrice: (json['unit_price'] as num?)?.toDouble() ?? 0,
-      );
+  double get lineTotal => quantity * unitPrice;
+
+  factory ObOrderLineModel.fromJson(Map<String, dynamic> json) {
+    final product = ApiMap.asMap(json['product']) ?? const <String, dynamic>{};
+    return ObOrderLineModel(
+      productId:
+          ApiMap.asString(json['product_id']) ??
+          ApiMap.asString(product['id']) ??
+          '',
+      productName:
+          ApiMap.asString(json['product_name']) ??
+          ApiMap.asString(product['name']) ??
+          '',
+      quantity: ApiMap.asDouble(json['quantity']) ?? 0,
+      unitPrice:
+          ApiMap.asDouble(json['unit_price']) ??
+          ApiMap.asDouble(json['price_unit']) ??
+          ApiMap.asDouble(product['list_price']) ??
+          0,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     'product_id': productId,

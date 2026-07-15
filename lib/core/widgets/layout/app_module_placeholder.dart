@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:shahtaj_oil_mobile_app/core/design/images/app_images.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_scaffold.dart';
@@ -14,7 +15,11 @@ class AppModulePlaceholder extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppScaffold(
       body: Center(
-        child: AppEmptyState(title: title, subtitle: AppTexts.comingSoon),
+        child: AppEmptyState(
+          title: AppTexts.emptyComingSoonTitle,
+          subtitle: title,
+          image: AppImages.empty,
+        ),
       ),
     );
   }

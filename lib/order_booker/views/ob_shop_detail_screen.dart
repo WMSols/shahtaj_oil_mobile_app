@@ -13,9 +13,18 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dar
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_loader.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_sub_screen_scaffold.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/controllers/ob_shop_detail_controller.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_shop_model.dart';
 
 class ObShopDetailScreen extends GetView<ObShopDetailController> {
   const ObShopDetailScreen({super.key});
+
+  bool _hasVerificationPhotos(ObShopModel shop) {
+    final photos = shop.verificationPhotos;
+    return photos.cnicFront != null ||
+        photos.cnicBack != null ||
+        photos.ownerPhoto != null ||
+        photos.shopExterior != null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +37,11 @@ class ObShopDetailScreen extends GetView<ObShopDetailController> {
 
         final shop = controller.shop.value;
         if (shop == null) {
-          return AppEmptyState(title: AppTexts.obShopNotFound);
+          return AppEmptyState(
+            title: AppTexts.emptyNotFoundTitle,
+            subtitle: AppTexts.obShopNotFound,
+            image: AppImages.emptyNotFound,
+          );
         }
 
         return Column(
@@ -38,10 +51,7 @@ class ObShopDetailScreen extends GetView<ObShopDetailController> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    ObShopDetailHero(
-                      imageAsset:
-                          shop.heroImageAsset ?? AppImages.onboardingIntro,
-                    ),
+                    ObShopDetailHero(imageAsset: shop.heroImageAsset),
                     Padding(
                       padding: AppSpacing.screenPadding(context),
                       child: Column(
@@ -57,8 +67,10 @@ class ObShopDetailScreen extends GetView<ObShopDetailController> {
                           ),
                           AppSpacing.vertical(context, 0.025),
                           ObShopDetailInfoSection(shop: shop),
-                          AppSpacing.vertical(context, 0.025),
-                          ObShopDetailPhotosSection(shop: shop),
+                          if (_hasVerificationPhotos(shop)) ...[
+                            AppSpacing.vertical(context, 0.025),
+                            ObShopDetailPhotosSection(shop: shop),
+                          ],
                           AppSpacing.vertical(context, 0.02),
                         ],
                       ),

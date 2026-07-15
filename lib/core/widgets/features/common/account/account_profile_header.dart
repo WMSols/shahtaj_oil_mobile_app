@@ -15,10 +15,12 @@ class AccountProfileHeader extends StatelessWidget {
     super.key,
     required this.user,
     required this.role,
+    required this.presenceStatus,
   });
 
   final UserModel user;
   final UserRole role;
+  final PresenceStatus presenceStatus;
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +33,8 @@ class AccountProfileHeader extends StatelessWidget {
           AppProfileAvatar(
             size: 72,
             name: user.displayName(AppTexts.defaultUserName),
+            presenceStatus: presenceStatus,
+            showPresenceDot: true,
           ),
           AppSpacing.horizontal(context, 0.025),
           Expanded(
@@ -44,7 +48,14 @@ class AccountProfileHeader extends StatelessWidget {
                   ).copyWith(fontWeight: FontWeight.w700),
                 ),
                 AppSpacing.vertical(context, 0.008),
-                AppStatusChip.role(role),
+                Wrap(
+                  spacing: AppSpacing.horizontalValue(context, 0.015),
+                  runSpacing: AppSpacing.verticalValue(context, 0.006),
+                  children: [
+                    AppStatusChip.role(role),
+                    AppStatusChip.presence(presenceStatus),
+                  ],
+                ),
               ],
             ),
           ),

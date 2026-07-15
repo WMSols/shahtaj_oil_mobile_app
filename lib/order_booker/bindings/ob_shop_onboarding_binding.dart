@@ -11,12 +11,12 @@ class ObShopOnboardingBinding extends Bindings {
       Get.lazyPut<ObShopService>(() => ObShopService(Get.find<ApiClient>()));
     }
 
-    // Recreate so register vs edit (`:id`) always start from route params.
-    if (Get.isRegistered<ObShopOnboardingController>()) {
-      Get.delete<ObShopOnboardingController>(force: true);
+    // Do not force-delete while the shell may still be showing/animating the
+    // register form — that disposes TextEditingControllers mid-gesture.
+    if (!Get.isRegistered<ObShopOnboardingController>()) {
+      Get.put<ObShopOnboardingController>(
+        ObShopOnboardingController(Get.find<ObShopService>()),
+      );
     }
-    Get.put<ObShopOnboardingController>(
-      ObShopOnboardingController(Get.find<ObShopService>()),
-    );
   }
 }

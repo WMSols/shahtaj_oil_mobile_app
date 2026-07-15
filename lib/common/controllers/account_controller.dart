@@ -30,16 +30,23 @@ class AccountController extends GetxController {
     loadProfile();
   }
 
-  Future<void> loadProfile() async {
+  Future<void> loadProfile({bool force = false}) async {
     if (_session.role.value == null) {
       loadError.value = AppTexts.error;
       return;
     }
 
-    isLoading.value = true;
-    loadError.value = null;
+    if (!force && hasProfile) {
+      isLoading.value = false;
+      return;
+    }
+
+    if (!hasProfile) {
+      isLoading.value = true;
+    }
     try {
       await _profileService.fetchCurrentUser();
+      loadError.value = null;
     } catch (_) {
       if (!hasProfile) {
         loadError.value = AppTexts.error;

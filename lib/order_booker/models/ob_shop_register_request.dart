@@ -38,11 +38,11 @@ class ObShopRegisterRequest {
   Map<String, dynamic> toJson() => {
     'name': name,
     'owner_name': ownerName,
-    'owner_cnic': ownerCnic,
     'owner_phone': ownerPhone,
     'latitude': latitude,
     'longitude': longitude,
-    'shop_type': shopType.name,
+    'shop_category': shopType.name,
+    if (ownerCnic.trim().isNotEmpty) 'owner_cnic_number': ownerCnic.trim(),
     if (zoneId != null) 'zone_id': zoneId,
     if (routeId != null) 'route_id': routeId,
     if (creditLimit != null) 'credit_limit': creditLimit,

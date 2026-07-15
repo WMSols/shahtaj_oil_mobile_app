@@ -9,26 +9,42 @@ class ConnectivityService extends GetxService {
   final RxBool isOnline = true.obs;
   final Connectivity _connectivity = Connectivity();
   bool _wasOffline = false;
+  bool _listening = false;
 
   Future<ConnectivityService> init() async {
-    final result = await _connectivity.checkConnectivity();
-    isOnline.value = _hasConnection(result);
+    if (_listening) return this;
+    _listening = true;
+
+    try {
+      final result = await _connectivity.checkConnectivity();
+      isOnline.value = _hasConnection(result);
+      if (!isOnline.value) _wasOffline = true;
+    } catch (_) {
+      // Keep default; listener will correct state.
+    }
+
     _connectivity.onConnectivityChanged.listen(_onConnectivityChanged);
     return this;
   }
 
   void _onConnectivityChanged(List<ConnectivityResult> result) {
     final online = _hasConnection(result);
+    final wasOnline = isOnline.value;
     isOnline.value = online;
 
     if (!online) {
       _wasOffline = true;
+      // Sticky error snackbars sit in the overlay above the app builder;
+      // dismiss them so the persistent offline banner stays visible.
+      if (Get.isSnackbarOpen) {
+        Get.closeAllSnackbars();
+      }
       return;
     }
 
-    if (_wasOffline) {
+    if (_wasOffline || !wasOnline) {
       _wasOffline = false;
-      AppToast.showInformation(AppTexts.backOnline);
+      AppToast.showSuccess(AppTexts.backOnline);
     }
   }
 

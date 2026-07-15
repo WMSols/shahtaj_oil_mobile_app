@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'package:shahtaj_oil_mobile_app/core/design/images/app_images.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/orders/ob_order_detail_content.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
@@ -19,8 +20,13 @@ class ObOrderDetailScreen extends GetView<ObOrderDetailController> {
         if (controller.isLoading.value) return const AppLoader();
         if (controller.error.value != null || controller.order.value == null) {
           return AppEmptyState(
-            title: AppTexts.obOrderDetailTitle,
+            title: controller.error.value != null
+                ? AppTexts.emptyLoadFailedTitle
+                : AppTexts.emptyNotFoundTitle,
             subtitle: controller.error.value ?? AppTexts.error,
+            image: controller.error.value != null
+                ? AppImages.emptyError
+                : AppImages.emptyNotFound,
           );
         }
         return const ObOrderDetailContent();

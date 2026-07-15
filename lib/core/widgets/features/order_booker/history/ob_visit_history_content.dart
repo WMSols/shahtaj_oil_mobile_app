@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
+import 'package:shahtaj_oil_mobile_app/core/design/images/app_images.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/responsive/app_responsive.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
@@ -91,16 +92,20 @@ class ObVisitHistoryContent extends GetView<ObHistoryController> {
 
             if (controller.error.value != null) {
               return AppEmptyState(
-                title: AppTexts.error,
+                title: AppTexts.emptyLoadFailedTitle,
                 subtitle: controller.error.value!,
+                image: AppImages.emptyError,
+                onRefresh: () => controller.loadVisits(reset: true),
               );
             }
 
             final visits = controller.filteredVisits;
             if (visits.isEmpty) {
               return AppEmptyState(
-                title: AppTexts.navHistory,
+                title: AppTexts.emptyNoVisitsTitle,
                 subtitle: AppTexts.obNoVisitsFound,
+                image: AppImages.emptyNoVisits,
+                onRefresh: () => controller.loadVisits(reset: true),
               );
             }
 

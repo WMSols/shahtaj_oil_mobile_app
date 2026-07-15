@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
+import 'package:shahtaj_oil_mobile_app/core/design/images/app_images.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/dashboard/ob_route_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/tasks/ob_active_visit_banner.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/tasks/ob_task_card.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/tasks/ob_today_route_summary_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/tasks/ob_today_tasks_progress.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_loader.dart';
@@ -25,16 +26,20 @@ class ObTodayTasksContent extends GetView<ObRouteDetailController> {
 
       if (controller.error.value != null) {
         return AppEmptyState(
-          title: AppTexts.error,
+          title: AppTexts.emptyLoadFailedTitle,
           subtitle: controller.error.value!,
+          image: AppImages.emptyError,
+          onRefresh: () => controller.loadTasks(force: true),
         );
       }
 
       final data = controller.todayTasks.value;
       if (data == null) {
         return AppEmptyState(
-          title: AppTexts.obTodayTasksTitle,
+          title: AppTexts.emptyNoTasksTitle,
           subtitle: AppTexts.obNoTasksToday,
+          image: AppImages.emptyNoTasks,
+          onRefresh: () => controller.loadTasks(force: true),
         );
       }
 
@@ -42,11 +47,11 @@ class ObTodayTasksContent extends GetView<ObRouteDetailController> {
       final activeVisit = controller.activeVisit.value;
 
       return RefreshIndicator(
-        onRefresh: controller.loadTasks,
+        onRefresh: () => controller.loadTasks(force: true),
         child: ListView(
           padding: AppSpacing.screenPadding(context),
           children: [
-            ObTodayRouteSummaryCard(route: data.route),
+            ObRouteCard(route: data.route, showAction: false),
             AppSpacing.vertical(context, 0.016),
             ObTodayTasksProgress(
               completed: data.completedCount,
@@ -67,8 +72,9 @@ class ObTodayTasksContent extends GetView<ObRouteDetailController> {
             AppSpacing.vertical(context, 0.012),
             if (tasks.isEmpty)
               AppEmptyState(
-                title: AppTexts.obTodayTasksTitle,
+                title: AppTexts.emptyNoTasksTitle,
                 subtitle: AppTexts.obNoTasksToday,
+                image: AppImages.emptyNoTasks,
               )
             else
               ...tasks.map((task) {

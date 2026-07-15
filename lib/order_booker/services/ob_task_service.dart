@@ -1,60 +1,86 @@
-// ignore_for_file: unused_field
-
 import 'package:get/get.dart';
 
-import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
-import 'package:shahtaj_oil_mobile_app/core/mock/app_mock_data.dart';
+import 'package:shahtaj_oil_mobile_app/core/constants/api_endpoints.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
+import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_active_visit_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_route_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_task_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_today_tasks_model.dart';
 
 class ObTaskService extends GetxService {
-  ObTaskService(this._api);
+  ObTaskService(this._api, {OfflineCacheService? cache})
+    : _cache = cache ?? Get.find<OfflineCacheService>();
 
   final ApiClient _api;
+  final OfflineCacheService _cache;
 
-  List<ObTaskModel> _tasks = List<ObTaskModel>.from(AppMockData.obTodayTasks);
-  ObRouteModel _route = AppMockData.obTodaysRoute;
-  ObActiveVisitModel? _activeVisit = AppMockData.obActiveVisit;
+  List<ObTaskModel> _tasks = const [];
+  ObRouteModel? _route;
+  ObActiveVisitModel? _activeVisit;
 
-  Future<ObTodayTasksModel> fetchTodayTasks() async {
-    await Future<void>.delayed(const Duration(milliseconds: 450));
-    return ObTodayTasksModel(
-      route: _route,
-      tasks: List<ObTaskModel>.from(_tasks),
+  Future<ObTodayTasksModel> fetchTodayTasks() {
+    return _cache.readThrough(
+      key: OfflineCacheKeys.tasksToday,
+      fetch: () => _api.postData(ApiEndpoints.obTasksToday),
+      parse: (data) => _applyToday(ObTodayTasksModel.fromJson(data)),
     );
-    // Swap with API when ready:
-    // final response = await _api.get(ApiEndpoints.obTasksToday);
-    // return ObTodayTasksModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  ObTodayTasksModel _applyToday(ObTodayTasksModel today) {
+    _route = today.route;
+    _tasks = List<ObTaskModel>.from(today.tasks);
+    return today;
   }
 
   Future<ObActiveVisitModel?> fetchActiveVisit() async {
-    await Future<void>.delayed(const Duration(milliseconds: 250));
+    try {
+      final data = await _api.postData(ApiEndpoints.obVisitsActive);
+      await _cache.saveMap(OfflineCacheKeys.activeVisit, data);
+      return _applyActiveVisit(data);
+    } catch (_) {
+      final cached = await _cache.readMap(OfflineCacheKeys.activeVisit);
+      if (cached != null) return _applyActiveVisit(cached);
+      // Don't fail tasks/screens solely because visit probe failed.
+      return _activeVisit;
+    }
+  }
+
+  ObActiveVisitModel? _applyActiveVisit(Map<String, dynamic> data) {
+    final visitJson = ApiMap.asMap(data['visit']);
+    if (visitJson == null) {
+      _activeVisit = null;
+      return null;
+    }
+    final visit = ObActiveVisitModel.fromJson(visitJson);
+    _activeVisit = visit.visitId == 0 ? null : visit;
     return _activeVisit;
-    // Swap with API when ready:
-    // final response = await _api.get(ApiEndpoints.obVisitsActive);
-    // final data = response.data as Map<String, dynamic>?;
-    // if (data == null || data.isEmpty) return null;
-    // return ObActiveVisitModel.fromJson(data);
   }
 
   Future<ObTaskModel?> findTaskById(int taskId) async {
-    await Future<void>.delayed(const Duration(milliseconds: 150));
     try {
       return _tasks.firstWhere((task) => task.id == taskId);
     } catch (_) {
-      return null;
+      await fetchTodayTasks();
+      try {
+        return _tasks.firstWhere((task) => task.id == taskId);
+      } catch (_) {
+        return null;
+      }
     }
   }
 
   Future<ObTaskModel?> findTaskByShopId(String shopId) async {
-    await Future<void>.delayed(const Duration(milliseconds: 150));
     try {
       return _tasks.firstWhere((task) => task.shopId == shopId);
     } catch (_) {
-      return null;
+      await fetchTodayTasks();
+      try {
+        return _tasks.firstWhere((task) => task.shopId == shopId);
+      } catch (_) {
+        return null;
+      }
     }
   }
 
@@ -65,134 +91,69 @@ class ObTaskService extends GetxService {
     required double latitude,
     required double longitude,
   }) async {
-    await Future<void>.delayed(const Duration(milliseconds: 700));
-    // Swap with API when ready:
-    // final response = await _api.post(
-    //   ApiEndpoints.obTasksCheckIn,
-    //   data: {
-    //     'task_id': taskId,
-    //     'latitude': latitude,
-    //     'longitude': longitude,
-    //   },
-    // );
-    // final visit = ObActiveVisitModel.fromJson(
-    //   response.data as Map<String, dynamic>,
-    // );
-    // _activeVisit = visit;
-    // return visit;
-
-    final index = _tasks.indexWhere((task) => task.id == taskId);
-    if (index == -1) throw Exception('Task not found');
-
-    final task = _tasks[index];
-    _tasks = _tasks.map((item) {
-      if (item.id == taskId) {
-        return item.copyWith(status: TaskStatus.inVisit);
-      }
-      if (item.status == TaskStatus.inVisit) {
-        return item.copyWith(status: TaskStatus.completed);
-      }
-      return item;
-    }).toList();
-
-    _route = ObRouteModel(
-      id: _route.id,
-      name: _route.name,
-      description: _route.description,
-      shopCount: _route.shopCount,
-      distanceKm: _route.distanceKm,
-      status: RouteStatus.inProgress,
+    final data = await _api.postData(
+      ApiEndpoints.obTasksCheckIn,
+      data: {'task_id': taskId, 'latitude': latitude, 'longitude': longitude},
     );
-
-    final visit = ObActiveVisitModel(
-      visitId: DateTime.now().millisecondsSinceEpoch,
-      taskId: taskId,
-      shopId: task.shopId,
-      shopName: task.shopName,
-      checkedInAt: DateTime.now(),
-      latitude: latitude,
-      longitude: longitude,
-    );
+    final visitJson = ApiMap.asMap(data['visit']) ?? data;
+    final visit = ObActiveVisitModel.fromJson(visitJson);
     _activeVisit = visit;
+    await _cache.saveMap(OfflineCacheKeys.activeVisit, {
+      'visit': visit.toJson(),
+    });
+    await fetchTodayTasks();
     return visit;
   }
 
   Future<void> completeActiveVisit({required int visitId}) async {
-    await Future<void>.delayed(const Duration(milliseconds: 250));
     final current = _activeVisit;
-    if (current == null || current.visitId != visitId) return;
-
-    _tasks = _tasks
-        .map(
-          (task) => task.id == current.taskId
-              ? task.copyWith(status: TaskStatus.completed)
-              : task,
-        )
-        .toList();
+    if (current == null || current.visitId != visitId) {
+      _activeVisit = null;
+      return;
+    }
     _activeVisit = null;
+    await _cache.saveMap(OfflineCacheKeys.activeVisit, const {});
+    await fetchTodayTasks();
   }
 
   Future<void> clearActiveVisit({required int visitId}) async {
-    await Future<void>.delayed(const Duration(milliseconds: 200));
     final current = _activeVisit;
-    if (current == null || current.visitId != visitId) return;
+    if (current != null && current.visitId != visitId) return;
     _activeVisit = null;
+    await _cache.saveMap(OfflineCacheKeys.activeVisit, const {});
+    await fetchTodayTasks();
   }
 
   Future<void> skipTask(int taskId) async {
-    await Future<void>.delayed(const Duration(milliseconds: 500));
-    // Swap with API when ready:
-    // await _api.post(ApiEndpoints.obTasksSkip, data: {'task_id': taskId});
-
-    final index = _tasks.indexWhere((task) => task.id == taskId);
-    if (index == -1) throw Exception('Task not found');
-
-    _tasks = _tasks
-        .map(
-          (task) => task.id == taskId
-              ? task.copyWith(status: TaskStatus.skipped)
-              : task,
-        )
-        .toList();
-
+    await _api.postData(ApiEndpoints.obTasksSkip, data: {'task_id': taskId});
     if (_activeVisit?.taskId == taskId) {
       _activeVisit = null;
+      await _cache.saveMap(OfflineCacheKeys.activeVisit, const {});
     }
+    await fetchTodayTasks();
   }
 
   Future<void> saveTaskNotes({
     required int taskId,
     required String notes,
   }) async {
-    await Future<void>.delayed(const Duration(milliseconds: 400));
-    // Swap with API when ready:
-    // await _api.post(
-    //   ApiEndpoints.obTasksNotes,
-    //   data: {'task_id': taskId, 'notes': notes},
-    // );
-
-    final index = _tasks.indexWhere((task) => task.id == taskId);
-    if (index == -1) throw Exception('Task not found');
-
-    _tasks = _tasks
-        .map(
-          (task) => task.id == taskId
-              ? task.copyWith(notes: notes.trim().isEmpty ? null : notes.trim())
-              : task,
-        )
-        .toList();
+    await _api.postData(
+      ApiEndpoints.obTasksNotes,
+      data: {'task_id': taskId, 'notes': notes.trim()},
+    );
+    await fetchTodayTasks();
   }
 
   Future<void> startRoute(String routeId) async {
-    await Future<void>.delayed(const Duration(milliseconds: 300));
-    if (_route.id != routeId) return;
+    final currentRoute = _route;
+    if (currentRoute == null || currentRoute.id != routeId) return;
     _route = ObRouteModel(
-      id: _route.id,
-      name: _route.name,
-      description: _route.description,
-      shopCount: _route.shopCount,
-      distanceKm: _route.distanceKm,
-      status: RouteStatus.inProgress,
+      id: currentRoute.id,
+      name: currentRoute.name,
+      description: currentRoute.description,
+      shopCount: currentRoute.shopCount,
+      distanceKm: currentRoute.distanceKm,
+      status: currentRoute.status,
     );
   }
 }
