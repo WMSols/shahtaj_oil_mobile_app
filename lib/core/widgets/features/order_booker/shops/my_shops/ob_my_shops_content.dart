@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
+import 'package:shahtaj_oil_mobile_app/core/design/images/app_images.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_filter_chip.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/shops/my_shops/ob_my_shop_card.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_loader.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_async_body.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_search_field.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/controllers/ob_my_shops_controller.dart';
 
@@ -53,27 +53,16 @@ class ObMyShopsContent extends GetView<ObMyShopsController> {
         ),
         Expanded(
           child: Obx(() {
-            if (controller.isLoading.value) {
-              return const AppLoader();
-            }
-
-            if (controller.error.value != null) {
-              return AppEmptyState(
-                title: AppTexts.error,
-                subtitle: controller.error.value!,
-              );
-            }
-
             final shops = controller.filteredShops;
-            if (shops.isEmpty) {
-              return AppEmptyState(
-                title: AppTexts.obMyShopsTitle,
-                subtitle: AppTexts.obNoShopsFound,
-              );
-            }
-
-            return RefreshIndicator(
-              onRefresh: controller.loadShops,
+            return AppAsyncBody(
+              isLoading: controller.isLoading.value,
+              hasError: controller.error.value != null,
+              isEmpty: shops.isEmpty,
+              errorMessage: controller.error.value,
+              emptyTitle: AppTexts.emptyNoShopsTitle,
+              emptySubtitle: AppTexts.obNoShopsFound,
+              emptyImage: AppImages.emptyNoShops,
+              onRefresh: () => controller.loadShops(force: true),
               child: ListView.builder(
                 padding: AppSpacing.screenPadding(context),
                 itemCount: shops.length,

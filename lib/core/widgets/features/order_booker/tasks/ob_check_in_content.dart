@@ -17,6 +17,8 @@ class ObCheckInContent extends StatelessWidget {
     required this.task,
     required this.latitude,
     required this.longitude,
+    this.shopLatitude,
+    this.shopLongitude,
     required this.locationLabel,
     required this.hasLocation,
     required this.isLocating,
@@ -29,6 +31,8 @@ class ObCheckInContent extends StatelessWidget {
   final ObTaskModel task;
   final double? latitude;
   final double? longitude;
+  final double? shopLatitude;
+  final double? shopLongitude;
   final String locationLabel;
   final bool hasLocation;
   final bool isLocating;
@@ -39,8 +43,8 @@ class ObCheckInContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mapLat = latitude ?? task.shopLatitude;
-    final mapLng = longitude ?? task.shopLongitude;
+    final mapLat = latitude ?? shopLatitude ?? task.shopLatitude;
+    final mapLng = longitude ?? shopLongitude ?? task.shopLongitude;
 
     return ListView(
       padding: AppSpacing.screenPadding(context),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'package:shahtaj_oil_mobile_app/core/design/images/app_images.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/tasks/ob_check_in_content.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
@@ -23,17 +24,20 @@ class ObCheckInScreen extends GetView<ObCheckInController> {
         final task = controller.task.value;
         if (task == null) {
           return AppEmptyState(
-            title: AppTexts.obCheckInTitle,
+            title: AppTexts.emptyNotFoundTitle,
             subtitle: AppTexts.obTaskNotFound,
+            image: AppImages.emptyNotFound,
           );
         }
 
         return ObCheckInContent(
           task: task,
-          latitude: controller.mapLatitude.value,
-          longitude: controller.mapLongitude.value,
+          latitude: controller.checkInLatitude.value,
+          longitude: controller.checkInLongitude.value,
+          shopLatitude: controller.shopLatitude,
+          shopLongitude: controller.shopLongitude,
           locationLabel: controller.locationLabel,
-          hasLocation: controller.hasLocation,
+          hasLocation: controller.hasDeviceLocation,
           isLocating: controller.isLocating.value,
           isSubmitting: controller.isSubmitting.value,
           onUseCurrentLocation: controller.useCurrentLocation,

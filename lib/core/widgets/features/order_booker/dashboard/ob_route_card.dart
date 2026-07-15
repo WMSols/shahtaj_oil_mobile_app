@@ -13,12 +13,21 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_route_model.dart';
 
 class ObRouteCard extends StatelessWidget {
-  const ObRouteCard({super.key, required this.route, this.onActionTap});
+  const ObRouteCard({
+    super.key,
+    required this.route,
+    this.onActionTap,
+    this.showAction = true,
+  });
 
   final ObRouteModel route;
   final VoidCallback? onActionTap;
+  final bool showAction;
 
-  bool get _hasAction => route.status != RouteStatus.completed;
+  bool get _hasAction =>
+      showAction &&
+      onActionTap != null &&
+      route.status != RouteStatus.completed;
   bool get _isActive => route.status == RouteStatus.inProgress;
 
   @override
@@ -47,21 +56,19 @@ class ObRouteCard extends StatelessWidget {
               AppStatusChip.route(route.status),
             ],
           ),
+          if (!showAction) AppSpacing.vertical(context, 0.008),
           Row(
             children: [
               Icon(
-                route.status == RouteStatus.completed
-                    ? AppIcons.check
-                    : AppIcons.shops,
+                (!showAction || route.status != RouteStatus.completed)
+                    ? AppIcons.shops
+                    : AppIcons.check,
                 color: route.status.chipColor,
                 size: AppResponsive.iconSize(context),
               ),
               AppSpacing.horizontal(context, 0.01),
               Text(
-                AppTexts.obShopsDistance(
-                  route.shopCount,
-                  route.distanceKm.toStringAsFixed(1),
-                ),
+                AppTexts.obShopsCount(route.shopCount),
                 style: AppTextStyles.bodyText(
                   context,
                 ).copyWith(color: AppColors.grey),

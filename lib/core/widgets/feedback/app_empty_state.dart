@@ -11,27 +11,31 @@ class AppEmptyState extends StatelessWidget {
     super.key,
     required this.title,
     this.subtitle,
+    this.image = AppImages.empty,
     this.actionLabel,
     this.onAction,
+    this.onRefresh,
   });
 
   final String title;
   final String? subtitle;
+  final String image;
   final String? actionLabel;
   final VoidCallback? onAction;
+  final Future<void> Function()? onRefresh;
 
   @override
   Widget build(BuildContext context) {
     final imageSize = AppResponsive.emptyIconSize(context) * 0.7;
 
-    return Center(
+    final content = Center(
       child: Padding(
         padding: AppSpacing.symmetric(context, h: 0.04, v: 0.02),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Image.asset(
-              AppImages.empty,
+              image,
               width: imageSize,
               height: imageSize,
               fit: BoxFit.contain,
@@ -64,6 +68,23 @@ class AppEmptyState extends StatelessWidget {
             ],
           ],
         ),
+      ),
+    );
+
+    if (onRefresh == null) return content;
+
+    return RefreshIndicator(
+      onRefresh: onRefresh!,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: content,
+            ),
+          );
+        },
       ),
     );
   }

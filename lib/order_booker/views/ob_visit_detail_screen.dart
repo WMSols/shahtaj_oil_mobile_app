@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'package:shahtaj_oil_mobile_app/core/design/images/app_images.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/history/ob_visit_detail_content.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
@@ -20,8 +21,13 @@ class ObVisitDetailScreen extends GetView<ObVisitDetailController> {
 
         if (controller.error.value != null || controller.visit.value == null) {
           return AppEmptyState(
-            title: AppTexts.obVisitDetailTitle,
+            title: controller.error.value != null
+                ? AppTexts.emptyLoadFailedTitle
+                : AppTexts.emptyNotFoundTitle,
             subtitle: controller.error.value ?? AppTexts.obVisitNotFound,
+            image: controller.error.value != null
+                ? AppImages.emptyError
+                : AppImages.emptyNotFound,
           );
         }
 
