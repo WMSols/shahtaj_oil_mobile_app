@@ -50,30 +50,41 @@ class ObHistoryController extends GetxController {
   }
 
   Future<void> loadVisits({bool reset = false}) async {
-    if (reset) {
+    final hadCache = visits.isNotEmpty;
+    if (reset && !hadCache) {
       isLoading.value = true;
-      _offset = 0;
-      _total = 0;
-      visits.clear();
     }
-    error.value = null;
+    if (!reset) {
+      // pagination / append — keep current error until success
+    } else if (!hadCache) {
+      error.value = null;
+    }
 
     try {
       final result = await _visitService.fetchMyVisits(
         limit: _pageSize,
-        offset: _offset,
+        offset: reset ? 0 : _offset,
         dateFrom: dateFrom.value,
         dateTo: dateTo.value,
       );
       _total = result.total;
       if (reset) {
         visits.assignAll(result.visits);
+        _offset = visits.length;
       } else {
         visits.addAll(result.visits);
+        _offset = visits.length;
       }
-      _offset = visits.length;
+      error.value = null;
     } catch (_) {
-      error.value = AppTexts.error;
+      if (!hadCache) {
+        error.value = AppTexts.error;
+        if (reset) {
+          visits.clear();
+          _offset = 0;
+          _total = 0;
+        }
+      }
     } finally {
       isLoading.value = false;
       isLoadingMore.value = false;
@@ -109,23 +120,32 @@ class ObHistoryController extends GetxController {
   bool get hasDateFilter => dateFrom.value != null || dateTo.value != null;
 
   Future<void> pickDateFrom(BuildContext context) async {
+    final today = DateTime.now();
+    final maxDate = DateTime(today.year, today.month, today.day);
     final picked = await AppDateTimePicker.show(
       context,
       title: AppTexts.obVisitFilterDateFrom,
-      initial: dateFrom.value ?? DateTime.now(),
+      initial: dateFrom.value ?? maxDate,
+      maxDate: maxDate,
       mode: AppDateTimePickerMode.dateOnly,
     );
     if (picked == null) return;
     dateFrom.value = DateTime(picked.year, picked.month, picked.day);
+    if (dateTo.value != null && dateTo.value!.isBefore(dateFrom.value!)) {
+      dateTo.value = dateFrom.value;
+    }
     await loadVisits(reset: true);
   }
 
   Future<void> pickDateTo(BuildContext context) async {
+    final today = DateTime.now();
+    final maxDate = DateTime(today.year, today.month, today.day);
     final picked = await AppDateTimePicker.show(
       context,
       title: AppTexts.obVisitFilterDateTo,
-      initial: dateTo.value ?? dateFrom.value ?? DateTime.now(),
+      initial: dateTo.value ?? dateFrom.value ?? maxDate,
       minDate: dateFrom.value,
+      maxDate: maxDate,
       mode: AppDateTimePickerMode.dateOnly,
     );
     if (picked == null) return;

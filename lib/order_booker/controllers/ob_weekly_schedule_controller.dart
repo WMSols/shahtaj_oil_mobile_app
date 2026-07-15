@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/cached_load_mixin.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_dashboard_model.dart';
@@ -9,7 +10,7 @@ import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_weekly_schedule_mo
 import 'package:shahtaj_oil_mobile_app/order_booker/services/ob_dashboard_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/ob_weekly_schedule_service.dart';
 
-class ObWeeklyScheduleController extends GetxController {
+class ObWeeklyScheduleController extends GetxController with CachedLoadMixin {
   ObWeeklyScheduleController(
     this._weeklyScheduleService,
     this._dashboardService,
@@ -18,11 +19,15 @@ class ObWeeklyScheduleController extends GetxController {
   final ObWeeklyScheduleService _weeklyScheduleService;
   final ObDashboardService _dashboardService;
 
-  final RxBool isLoading = true.obs;
-  final RxnString error = RxnString();
   final RxList<ObWeeklyScheduleDayModel> days =
       <ObWeeklyScheduleDayModel>[].obs;
   final Rxn<ObRouteModel> todaysRoute = Rxn<ObRouteModel>();
+
+  @override
+  bool get hasCachedData => days.isNotEmpty;
+
+  @override
+  String get loadFailedMessage => AppTexts.error;
 
   @override
   void onInit() {
@@ -30,25 +35,18 @@ class ObWeeklyScheduleController extends GetxController {
     load();
   }
 
-  Future<void> load() async {
-    isLoading.value = true;
-    error.value = null;
-    try {
-      final results = await Future.wait([
-        _weeklyScheduleService.fetchWeeklySchedule(),
-        _dashboardService.fetchDashboard(),
-      ]);
-      final schedule = results[0] as ObWeeklyScheduleModel;
-      final dashboard = results[1] as ObDashboardModel;
-      days.assignAll(schedule.days);
-      todaysRoute.value = dashboard.todaysRoute;
-    } catch (_) {
-      error.value = AppTexts.error;
-      days.clear();
-      todaysRoute.value = null;
-    } finally {
-      isLoading.value = false;
-    }
+  Future<void> load({bool force = false}) => loadCached(force: force);
+
+  @override
+  Future<void> fetchData() async {
+    final results = await Future.wait([
+      _weeklyScheduleService.fetchWeeklySchedule(),
+      _dashboardService.fetchDashboard(),
+    ]);
+    final schedule = results[0] as ObWeeklyScheduleModel;
+    final dashboard = results[1] as ObDashboardModel;
+    days.assignAll(schedule.days);
+    todaysRoute.value = dashboard.todaysRoute;
   }
 
   Future<void> onTodayRouteAction() async {

@@ -109,7 +109,7 @@ class ObShopDetailController extends GetxController {
 
   void editShop() {
     if (!canEditShop || shopId.isEmpty) return;
-    Get.toNamed(AppRoutes.obShopEdit.replaceFirst(':id', shopId));
+    AppToast.showInformation(AppTexts.obShopEditComingSoon);
   }
 
   Future<void> createOrder() async {
@@ -121,7 +121,7 @@ class ObShopDetailController extends GetxController {
     }
 
     if (hasActiveVisitElsewhere) {
-      AppToast.showWarning(AppTexts.obShopVisitActiveElsewhere);
+      AppToast.showError(AppTexts.obShopVisitActiveElsewhere);
       return;
     }
 
@@ -150,7 +150,7 @@ class ObShopDetailController extends GetxController {
     }
 
     if (hasActiveVisitElsewhere) {
-      AppToast.showWarning(AppTexts.obShopVisitActiveElsewhere);
+      AppToast.showError(AppTexts.obShopVisitActiveElsewhere);
       return;
     }
 

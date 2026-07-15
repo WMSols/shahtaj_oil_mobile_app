@@ -11,6 +11,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.d
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/locale_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/connectivity_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_drawer_entry.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_profile_avatar.dart';
@@ -78,10 +79,20 @@ class AppDrawer extends StatelessWidget {
                     final chipRole = session.role.value == null
                         ? roleLabel
                         : currentRole.label;
+                    final connectivity = Get.find<ConnectivityService>();
+                    final presence = !connectivity.isOnline.value
+                        ? PresenceStatus.offline
+                        : (session.user.value?.presenceStatus ??
+                              PresenceStatus.away);
 
                     return Row(
                       children: [
-                        AppProfileAvatar(size: 48, name: currentName),
+                        AppProfileAvatar(
+                          size: 48,
+                          name: currentName,
+                          presenceStatus: presence,
+                          showPresenceDot: true,
+                        ),
                         AppSpacing.horizontal(context, 0.02),
                         Expanded(
                           child: Column(

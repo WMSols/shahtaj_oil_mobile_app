@@ -1,3 +1,5 @@
+import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
+
 class ObProductModel {
   const ObProductModel({
     required this.id,
@@ -36,16 +38,20 @@ class ObProductModel {
   );
 
   factory ObProductModel.fromJson(Map<String, dynamic> json) => ObProductModel(
-    id:
-        (json['product_id'] as num?)?.toInt() ??
-        (json['id'] as num?)?.toInt() ??
+    id: ApiMap.asInt(json['product_id']) ?? ApiMap.asInt(json['id']) ?? 0,
+    name: ApiMap.asString(json['name']) ?? '',
+    unit:
+        ApiMap.asString(json['unit']) ??
+        ApiMap.asString(json['sale_uom']) ??
+        ApiMap.asString(json['uom']) ??
+        '',
+    priceUnit:
+        ApiMap.asDouble(json['price_unit']) ??
+        ApiMap.asDouble(json['list_price']) ??
         0,
-    name: json['name']?.toString() ?? '',
-    unit: json['unit']?.toString() ?? '',
-    priceUnit: (json['price_unit'] as num?)?.toDouble() ?? 0,
-    qtyBookable: (json['qty_bookable'] as num?)?.toDouble() ?? 0,
-    sku: json['sku']?.toString(),
-    imageUrl: json['image_url']?.toString(),
+    qtyBookable: ApiMap.asDouble(json['qty_bookable']) ?? 0,
+    sku: ApiMap.asString(json['sku']),
+    imageUrl: ApiMap.asString(json['image_url']),
   );
 
   Map<String, dynamic> toJson() => {

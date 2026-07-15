@@ -1,11 +1,13 @@
+import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
+
 class AppHelper {
   AppHelper._();
 
   static DateTime? parseDateTimeOrNull(String? value) {
     if (value == null || value.trim().isEmpty) return null;
     final s = value.trim();
-    final dt = DateTime.tryParse(s);
-    if (dt != null) return dt;
+    final fromApi = ApiMap.asDateTime(s);
+    if (fromApi != null) return fromApi;
     final parts = s.split('-');
     if (parts.length >= 3) {
       final y = int.tryParse(parts[0]);

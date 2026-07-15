@@ -1,3 +1,5 @@
+import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
+
 class ObRouteOption {
   const ObRouteOption({
     required this.id,
@@ -8,6 +10,17 @@ class ObRouteOption {
   final int id;
   final int zoneId;
   final String name;
+
+  factory ObRouteOption.fromJson(Map<String, dynamic> json) {
+    return ObRouteOption(
+      id: ApiMap.asInt(json['id']) ?? 0,
+      zoneId:
+          ApiMap.asInt(json['zone_id']) ??
+          ApiMap.asInt(ApiMap.asMap(json['zone'])?['id']) ??
+          0,
+      name: ApiMap.asString(json['name']) ?? '',
+    );
+  }
 
   @override
   bool operator ==(Object other) =>

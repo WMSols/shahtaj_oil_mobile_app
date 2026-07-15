@@ -2,6 +2,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
+import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/helper/app_helper.dart';
 
 /// Display formatting and shared input formatters.
@@ -10,14 +11,16 @@ class AppFormatter {
   AppFormatter._();
 
   static String dateTime(DateTime timestamp) {
-    final datePart = DateFormat('EEE MMM dd yyyy').format(timestamp);
-    final timePart = DateFormat('h:mm a').format(timestamp);
+    final local = timestamp.toLocal();
+    final datePart = DateFormat('EEE MMM dd yyyy').format(local);
+    final timePart = DateFormat('h:mm a').format(local);
     return '$datePart - $timePart';
   }
 
   static String viewDetailDateTime(DateTime d) {
-    final datePart = DateFormat('d MMM, yyyy').format(d);
-    final timePart = DateFormat('hh:mm:ss a').format(d);
+    final local = d.toLocal();
+    final datePart = DateFormat('d MMM, yyyy').format(local);
+    final timePart = DateFormat('hh:mm:ss a').format(local);
     return '$datePart $timePart';
   }
 
@@ -39,9 +42,11 @@ class AppFormatter {
     return '${d.day} ${months[d.month - 1]} ${d.year}';
   }
 
-  static String timeOfDay(DateTime d) => DateFormat('h:mm a').format(d);
+  static String timeOfDay(DateTime d) =>
+      DateFormat('h:mm a').format(d.toLocal());
 
   static String shortDate(DateTime d) {
+    final local = d.toLocal();
     final months = [
       AppTexts.monJan,
       AppTexts.monFeb,
@@ -56,7 +61,7 @@ class AppFormatter {
       AppTexts.monNov,
       AppTexts.monDec,
     ];
-    return '${months[d.month - 1]} ${d.day}, ${d.year}';
+    return '${months[local.month - 1]} ${local.day}, ${local.year}';
   }
 
   static String dayNameFull(int weekday) {
@@ -130,10 +135,8 @@ class AppFormatter {
   }
 
   static DateTime? parseApiDateTime(dynamic raw) {
-    if (raw == null) return null;
-    if (raw is DateTime) return raw;
-    if (raw is! String || raw.trim().isEmpty) return null;
-    return DateTime.tryParse(raw);
+    if (raw is DateTime) return raw.toLocal();
+    return ApiMap.asDateTime(raw);
   }
 
   static String capitalizeFirstLetter(String text) {

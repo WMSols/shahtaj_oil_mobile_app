@@ -2,18 +2,21 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 
+import 'package:shahtaj_oil_mobile_app/common/controllers/order_booker_shell_controller.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
+import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
+import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
+import 'package:shahtaj_oil_mobile_app/core/utils/helper/app_location_helper.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/validator/app_validator.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_confirm_dialog.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
-import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/controllers/ob_my_shops_controller.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_route_option.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_shop_edit_request.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_shop_model.dart';
@@ -56,7 +59,13 @@ class ObShopOnboardingController extends GetxController {
   final isLocating = false.obs;
   final RxnString loadError = RxnString();
 
+  /// Bumped on clear so Form / dropdowns fully remount with empty state.
+  final formEpoch = 0.obs;
+
   String? get editingShopId {
+    // Only treat as edit when the named edit route is active so leftover
+    // Get.parameters['id'] (e.g. from shop detail) never flips register into edit.
+    if (!Get.currentRoute.contains('/edit')) return null;
     final id = Get.parameters['id'];
     if (id == null || id.trim().isEmpty) return null;
     return id;
@@ -101,11 +110,11 @@ class ObShopOnboardingController extends GetxController {
     super.onClose();
   }
 
-  Future<void> _bootstrap() async {
+  Future<void> _bootstrap({bool forceLookups = false}) async {
     isLoadingOptions.value = true;
     loadError.value = null;
     try {
-      zones.assignAll(await _shopService.fetchZones());
+      zones.assignAll(await _shopService.fetchZones(force: forceLookups));
       if (isEditing) {
         await _loadShopForEdit(editingShopId!);
       }
@@ -164,6 +173,9 @@ class ObShopOnboardingController extends GetxController {
     routes.clear();
     if (zone == null) return;
     routes.assignAll(await _shopService.fetchRoutes(zoneId: zone.id));
+    if (routes.isEmpty) {
+      AppToast.showWarning(AppTexts.obNoRoutesInZone);
+    }
   }
 
   void onRouteChanged(ObRouteOption? route) => selectedRoute.value = route;
@@ -177,6 +189,21 @@ class ObShopOnboardingController extends GetxController {
   }
 
   String? validateShopType(ShopType? value) {
+    if (value == null) return AppTexts.fieldRequired;
+    return null;
+  }
+
+  String? validateZone(ObZoneOption? value) {
+    if (isEditing) return null;
+    if (value == null) return AppTexts.fieldRequired;
+    return null;
+  }
+
+  String? validateRoute(ObRouteOption? value) {
+    if (isEditing) return null;
+    if (selectedZone.value != null && routes.isEmpty) {
+      return AppTexts.obNoRoutesInZone;
+    }
     if (value == null) return AppTexts.fieldRequired;
     return null;
   }
@@ -248,24 +275,10 @@ class ObShopOnboardingController extends GetxController {
   Future<void> useCurrentLocation() async {
     isLocating.value = true;
     try {
-      final enabled = await Geolocator.isLocationServiceEnabled();
-      if (!enabled) {
-        _showMessage(AppTexts.obLocationDisabled);
-        return;
-      }
-
-      var permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
-        _showMessage(AppTexts.obLocationPermissionDenied);
-        return;
-      }
-
-      final position = await Geolocator.getCurrentPosition();
+      final position = await AppLocationHelper.requireCurrentPosition();
       _setLocation(position.latitude, position.longitude);
+    } on ApiException catch (e) {
+      _showMessage(e.message);
     } catch (_) {
       _showMessage(AppTexts.obLocationFetchFailed);
     } finally {
@@ -279,6 +292,20 @@ class ObShopOnboardingController extends GetxController {
       _showMessage(AppTexts.obLocationNotCaptured);
       return;
     }
+    if (!isEditing) {
+      if (selectedZone.value == null) {
+        _showMessage(AppTexts.fieldRequired);
+        return;
+      }
+      if (routes.isEmpty) {
+        _showMessage(AppTexts.obNoRoutesInZone);
+        return;
+      }
+      if (selectedRoute.value == null) {
+        _showMessage(AppTexts.fieldRequired);
+        return;
+      }
+    }
 
     isSubmitting.value = true;
     try {
@@ -287,6 +314,8 @@ class ObShopOnboardingController extends GetxController {
       } else {
         await _submitRegister();
       }
+    } on ApiException catch (e) {
+      _showMessage(e.message);
     } catch (_) {
       _showMessage(AppTexts.error);
     } finally {
@@ -317,10 +346,28 @@ class ObShopOnboardingController extends GetxController {
       shopExteriorPhoto: _encodePhoto(shopExteriorPhoto.value),
     );
 
-    await _shopService.registerShop(request);
+    final shop = await _shopService.registerShop(request);
+    clearForm();
     _showMessage(AppTexts.obShopRegisteredSuccess, isError: false);
+
+    if (Get.isRegistered<ObMyShopsController>()) {
+      final myShops = Get.find<ObMyShopsController>();
+      await myShops.loadShops(force: true);
+      // shops/mine can lag or return empty right after register; keep the
+      // submitted shop visible from the register response.
+      myShops.upsertShop(shop);
+    }
+
+    _navigateToMyShops();
+  }
+
+  void _navigateToMyShops() {
     if (Get.currentRoute == AppRoutes.obShopOnboarding) {
       Get.back(result: true);
+      return;
+    }
+    if (Get.isRegistered<OrderBookerShellController>()) {
+      Get.find<OrderBookerShellController>().selectLeaf('ob_my_shops');
     }
   }
 
@@ -360,7 +407,7 @@ class ObShopOnboardingController extends GetxController {
 
   Future<void> onPullToRefresh() async {
     if (isEditing) {
-      await _bootstrap();
+      await _bootstrap(forceLookups: true);
       return;
     }
 
@@ -373,6 +420,7 @@ class ObShopOnboardingController extends GetxController {
 
     if (confirmed == true) {
       clearForm();
+      zones.assignAll(await _shopService.fetchZones(force: true));
     }
   }
 
@@ -397,7 +445,9 @@ class ObShopOnboardingController extends GetxController {
     ownerPhoto.value = null;
     shopExteriorPhoto.value = null;
 
-    formKey.currentState?.reset();
+    // Do not call FormState.reset() — it restores initial field values and
+    // undoes TextEditingController.clear() for shop name / type.
+    formEpoch.value++;
   }
 
   String? validateRequired(String? value) {

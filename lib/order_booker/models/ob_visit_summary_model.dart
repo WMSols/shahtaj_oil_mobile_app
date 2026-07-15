@@ -1,4 +1,5 @@
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
+import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 
 class ObVisitSummaryModel {
   const ObVisitSummaryModel({
@@ -23,45 +24,61 @@ class ObVisitSummaryModel {
   final String? orderNumber;
   final double? subtotal;
 
-  factory ObVisitSummaryModel.fromJson(Map<String, dynamic> json) =>
-      ObVisitSummaryModel(
-        visitId: (json['visit_id'] as num?)?.toInt() ?? 0,
-        shopName: json['shop_name']?.toString() ?? '',
-        ownerName: json['owner_name']?.toString(),
-        checkedInAt:
-            DateTime.tryParse(json['checked_in_at']?.toString() ?? '') ??
-            DateTime.now(),
-        checkedOutAt: json['checked_out_at'] != null
-            ? DateTime.tryParse(json['checked_out_at'].toString())
-            : null,
-        outcome: parseOutcome(json['outcome']?.toString()),
-        orderId: (json['order_id'] as num?)?.toInt(),
-        orderNumber: json['order_number']?.toString(),
-        subtotal: (json['subtotal'] as num?)?.toDouble(),
-      );
+  factory ObVisitSummaryModel.fromJson(Map<String, dynamic> json) {
+    final shop = ApiMap.asMap(json['shop']) ?? const <String, dynamic>{};
+    final orderNumber =
+        ApiMap.asString(json['order_number']) ??
+        ApiMap.asString(json['sale_order_name']);
+    return ObVisitSummaryModel(
+      visitId: ApiMap.asInt(json['visit_id']) ?? ApiMap.asInt(json['id']) ?? 0,
+      shopName:
+          ApiMap.asString(json['shop_name']) ??
+          ApiMap.asString(shop['name']) ??
+          '',
+      ownerName:
+          ApiMap.asString(json['owner_name']) ??
+          ApiMap.asString(shop['owner_name']),
+      checkedInAt:
+          ApiMap.asDateTime(json['checked_in_at']) ??
+          ApiMap.asDateTime(json['started_at']) ??
+          DateTime.now(),
+      checkedOutAt:
+          ApiMap.asDateTime(json['checked_out_at']) ??
+          ApiMap.asDateTime(json['ended_at']),
+      outcome: parseOutcome(ApiMap.asString(json['outcome'])),
+      orderId: ApiMap.asInt(json['order_id']),
+      orderNumber: orderNumber,
+      subtotal:
+          ApiMap.asDouble(json['subtotal']) ??
+          ApiMap.asDouble(json['order_amount']),
+    );
+  }
 
   static VisitOutcome parseOutcome(String? raw) {
     if (raw == null || raw.trim().isEmpty) {
       return VisitOutcome.endedWithoutOrder;
     }
-    final value = raw.trim();
+    final value = raw.trim().toLowerCase();
+    if (value == 'order' || value == 'order_placed' || value == 'orderplaced') {
+      return VisitOutcome.orderPlaced;
+    }
+    if (value == 'skipped' || value == 'skip') {
+      return VisitOutcome.skipped;
+    }
+    if (value == 'no_order' ||
+        value == 'no-order' ||
+        value == 'ended_without_order' ||
+        value == 'endedwithoutorder' ||
+        value == 'no_sale') {
+      return VisitOutcome.endedWithoutOrder;
+    }
     return VisitOutcome.values.firstWhere(
       (outcome) =>
-          outcome.name == value ||
-          outcome.name == _snakeToCamel(value) ||
-          outcome.name == value.replaceAll('-', '_'),
+          outcome.name == raw ||
+          outcome.name == ApiMap.snakeToCamel(raw) ||
+          outcome.name == raw.replaceAll('-', '_'),
       orElse: () => VisitOutcome.endedWithoutOrder,
     );
-  }
-
-  static String _snakeToCamel(String value) {
-    final parts = value.split('_');
-    if (parts.isEmpty) return value;
-    return parts.first +
-        parts.skip(1).map((part) {
-          if (part.isEmpty) return part;
-          return part[0].toUpperCase() + part.substring(1);
-        }).join();
   }
 }
 
@@ -72,15 +89,10 @@ class ObVisitListResult {
   final int total;
 
   factory ObVisitListResult.fromJson(Map<String, dynamic> json) {
-    final list = json['visits'] as List<dynamic>? ?? const [];
+    final list = ApiMap.listOf(json, 'visits');
     return ObVisitListResult(
-      visits: list
-          .map(
-            (item) =>
-                ObVisitSummaryModel.fromJson(item as Map<String, dynamic>),
-          )
-          .toList(),
-      total: (json['total'] as num?)?.toInt() ?? list.length,
+      visits: list.map(ObVisitSummaryModel.fromJson).toList(growable: false),
+      total: ApiMap.asInt(json['total']) ?? list.length,
     );
   }
 }

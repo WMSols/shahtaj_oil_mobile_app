@@ -1,6 +1,8 @@
 import 'package:get/get.dart';
 
+import 'package:shahtaj_oil_mobile_app/common/controllers/order_booker_shell_controller.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/cached_load_mixin.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
@@ -10,15 +12,19 @@ import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_route_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_targets_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/ob_dashboard_service.dart';
 
-class ObDashboardController extends GetxController {
+class ObDashboardController extends GetxController with CachedLoadMixin {
   ObDashboardController(this._service, this._session);
 
   final ObDashboardService _service;
   final SessionService _session;
 
-  final RxBool isLoading = true.obs;
-  final RxnString error = RxnString();
   final Rxn<ObDashboardModel> dashboard = Rxn<ObDashboardModel>();
+
+  @override
+  bool get hasCachedData => dashboard.value != null;
+
+  @override
+  String get loadFailedMessage => 'Failed to load dashboard';
 
   @override
   void onInit() {
@@ -34,16 +40,11 @@ class ObDashboardController extends GetxController {
   ObTargetsModel get targets =>
       dashboard.value?.targets ?? const ObTargetsModel();
 
-  Future<void> loadDashboard() async {
-    isLoading.value = true;
-    error.value = null;
-    try {
-      dashboard.value = await _service.fetchDashboard();
-    } catch (_) {
-      error.value = 'Failed to load dashboard';
-    } finally {
-      isLoading.value = false;
-    }
+  Future<void> loadDashboard({bool force = false}) => loadCached(force: force);
+
+  @override
+  Future<void> fetchData() async {
+    dashboard.value = await _service.fetchDashboard();
   }
 
   Future<void> onRouteAction() async {
@@ -58,11 +59,22 @@ class ObDashboardController extends GetxController {
     Get.toNamed(_routeWithId(AppRoutes.obRouteDetail, route.id));
   }
 
-  void goToRouteDetail() => Get.toNamed(AppRoutes.obRouteDetail);
+  void goToRouteDetail() {
+    if (Get.isRegistered<OrderBookerShellController>()) {
+      Get.find<OrderBookerShellController>().selectLeaf('ob_today_tasks');
+      return;
+    }
+    final route = todaysRoute;
+    if (route == null || route.id.isEmpty) return;
+    Get.toNamed(_routeWithId(AppRoutes.obRouteDetail, route.id));
+  }
+
   void goToTargets() => Get.toNamed(AppRoutes.obTargets);
   void goToOrderHistory() => Get.toNamed(AppRoutes.obHistory);
-  void openOrder(ObOrderSummaryModel order) =>
-      Get.toNamed(_routeWithId(AppRoutes.obOrderDetail, order.id));
+  void openOrder(ObOrderSummaryModel order) => Get.toNamed(
+    _routeWithId(AppRoutes.obOrderDetail, order.id),
+    arguments: {'visitId': order.id},
+  );
 
   String _routeWithId(String routePattern, String id) =>
       routePattern.replaceFirst(':id', id);

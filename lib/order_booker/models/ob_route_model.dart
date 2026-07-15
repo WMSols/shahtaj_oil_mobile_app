@@ -1,4 +1,5 @@
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
+import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 
 class ObRouteModel {
   const ObRouteModel({
@@ -18,16 +19,22 @@ class ObRouteModel {
   final RouteStatus status;
 
   factory ObRouteModel.fromJson(Map<String, dynamic> json) => ObRouteModel(
-    id: json['id']?.toString() ?? '',
-    name: json['name']?.toString() ?? '',
-    description: json['description']?.toString(),
-    shopCount: (json['shop_count'] as num?)?.toInt() ?? 0,
-    distanceKm: (json['distance_km'] as num?)?.toDouble() ?? 0,
-    status: RouteStatus.values.firstWhere(
-      (s) => s.name == json['status']?.toString(),
-      orElse: () => RouteStatus.notStarted,
-    ),
+    id: ApiMap.asString(json['id']) ?? '',
+    name: ApiMap.asString(json['name']) ?? '',
+    description: ApiMap.asString(json['description']),
+    shopCount: ApiMap.asInt(json['shop_count']) ?? 0,
+    distanceKm: ApiMap.asDouble(json['distance_km']) ?? 0,
+    status: parseStatus(json['status']),
   );
+
+  static RouteStatus parseStatus(dynamic value) {
+    final raw = value?.toString() ?? '';
+    final normalized = ApiMap.snakeToCamel(raw);
+    return RouteStatus.values.firstWhere(
+      (status) => status.name == raw || status.name == normalized,
+      orElse: () => RouteStatus.notStarted,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     'id': id,

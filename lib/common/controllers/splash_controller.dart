@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/role_route_resolver.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/presence_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/storage_service.dart';
 
@@ -22,6 +23,10 @@ class SplashController extends GetxController {
 
       final token = await _storage.getToken();
       if (token != null && token.isNotEmpty && _session.role.value != null) {
+        if (Get.isRegistered<PresenceService>()) {
+          // ignore: unawaited_futures
+          Get.find<PresenceService>().markOnlineNow();
+        }
         RoleRouteResolver.goToRoleHome(_session.role.value!);
         return;
       }

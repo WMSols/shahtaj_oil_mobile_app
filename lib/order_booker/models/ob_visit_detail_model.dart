@@ -1,4 +1,5 @@
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
+import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_visit_summary_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/visit/ob_visit_cart_line_model.dart';
 
@@ -39,36 +40,59 @@ class ObVisitDetailModel {
   final double? latitude;
   final double? longitude;
 
-  bool get hasOrder => outcome == VisitOutcome.orderPlaced && orderId != null;
+  bool get hasOrder =>
+      outcome == VisitOutcome.orderPlaced &&
+      (orderId != null || (orderNumber != null && orderNumber!.isNotEmpty));
 
   factory ObVisitDetailModel.fromJson(Map<String, dynamic> json) {
-    final linesJson = json['lines'] as List<dynamic>? ?? const [];
+    final shop = ApiMap.asMap(json['shop']) ?? const <String, dynamic>{};
+    final linesJson = ApiMap.listOf(json, 'lines');
     return ObVisitDetailModel(
-      visitId: (json['visit_id'] as num?)?.toInt() ?? 0,
-      shopId: json['shop_id']?.toString() ?? '',
-      shopName: json['shop_name']?.toString() ?? '',
-      ownerName: json['owner_name']?.toString(),
-      shopPhone: json['shop_phone']?.toString(),
-      locationLabel: json['location_label']?.toString(),
+      visitId: ApiMap.asInt(json['visit_id']) ?? ApiMap.asInt(json['id']) ?? 0,
+      shopId:
+          ApiMap.asString(json['shop_id']) ??
+          ApiMap.asString(shop['shop_id']) ??
+          ApiMap.asString(shop['id']) ??
+          '',
+      shopName:
+          ApiMap.asString(json['shop_name']) ??
+          ApiMap.asString(shop['name']) ??
+          '',
+      ownerName:
+          ApiMap.asString(json['owner_name']) ??
+          ApiMap.asString(shop['owner_name']),
+      shopPhone:
+          ApiMap.asString(json['shop_phone']) ??
+          ApiMap.asString(shop['owner_phone']),
+      locationLabel: ApiMap.asString(json['location_label']),
       checkedInAt:
-          DateTime.tryParse(json['checked_in_at']?.toString() ?? '') ??
+          ApiMap.asDateTime(json['checked_in_at']) ??
+          ApiMap.asDateTime(json['started_at']) ??
           DateTime.now(),
-      checkedOutAt: json['checked_out_at'] != null
-          ? DateTime.tryParse(json['checked_out_at'].toString())
-          : null,
-      outcome: ObVisitSummaryModel.parseOutcome(json['outcome']?.toString()),
-      notes: json['notes']?.toString(),
+      checkedOutAt:
+          ApiMap.asDateTime(json['checked_out_at']) ??
+          ApiMap.asDateTime(json['ended_at']),
+      outcome: ObVisitSummaryModel.parseOutcome(
+        ApiMap.asString(json['outcome']),
+      ),
+      notes: ApiMap.asString(json['notes']),
       lines: linesJson
-          .map(
-            (item) =>
-                ObVisitCartLineModel.fromJson(item as Map<String, dynamic>),
-          )
-          .toList(),
-      subtotal: (json['subtotal'] as num?)?.toDouble() ?? 0,
-      orderId: (json['order_id'] as num?)?.toInt(),
-      orderNumber: json['order_number']?.toString(),
-      latitude: (json['latitude'] as num?)?.toDouble(),
-      longitude: (json['longitude'] as num?)?.toDouble(),
+          .map(ObVisitCartLineModel.fromJson)
+          .toList(growable: false),
+      subtotal:
+          ApiMap.asDouble(json['subtotal']) ??
+          ApiMap.asDouble(json['order_amount']) ??
+          0,
+      orderId: ApiMap.asInt(json['order_id']),
+      orderNumber:
+          ApiMap.asString(json['order_number']) ??
+          ApiMap.asString(json['sale_order_name']),
+      latitude:
+          ApiMap.asDouble(json['latitude']) ??
+          ApiMap.asDouble(shop['latitude']),
+      longitude:
+          ApiMap.asDouble(json['longitude']) ??
+          ApiMap.asDouble(shop['longitude']),
     );
   }
 }

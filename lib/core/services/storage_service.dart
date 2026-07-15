@@ -52,6 +52,13 @@ class StorageService {
 
   Future<void> clearAll() => _storage.deleteAll();
 
+  Future<String?> readValue(String key) => _read(key);
+
+  Future<void> writeValue(String key, String value) =>
+      _storage.write(key: key, value: value);
+
+  Future<void> deleteValue(String key) => _storage.delete(key: key);
+
   Future<String?> _read(String key) =>
       _storage.read(key: key).timeout(_readTimeout, onTimeout: () => null);
 }

@@ -1,8 +1,7 @@
 class ApiEndpoints {
   ApiEndpoints._();
 
-  // Shared feature paths (role modules may prefix via UserRole.apiPrefix later).
-  // Role-specific auth paths live in role_api_endpoints.dart.
+  // Shared legacy placeholders (DM/RM still pending real APIs).
   static const authLogin = '/api/v1/auth/login';
   static const authLogout = '/api/v1/auth/logout';
   static const authMe = '/api/v1/auth/me';
@@ -34,7 +33,9 @@ class ApiEndpoints {
   static const handovers = '/api/v1/handovers';
   static String handover(String id) => '/api/v1/handovers/$id';
 
-  // Order booker — Shahtaj v1
+  // Order booker — Shahtaj v1 (all POST unless noted)
+  static const obAuthLogin = '/api/shahtaj/v1/auth/login';
+  static const obAuthMe = '/api/shahtaj/v1/auth/me';
   static const obTasksToday = '/api/shahtaj/v1/tasks/today';
   static const obTasksCheckIn = '/api/shahtaj/v1/tasks/check-in';
   static const obTasksSkip = '/api/shahtaj/v1/tasks/skip';
@@ -52,5 +53,10 @@ class ApiEndpoints {
   static const obVisitsGet = '/api/shahtaj/v1/visits/get';
   static const obScheduleWeekly = '/api/shahtaj/v1/schedule/weekly';
   static const obTargetsMine = '/api/shahtaj/v1/targets/mine';
+  static const obShopsRegister = '/api/shahtaj/v1/shops/register';
+  static const obShopsMine = '/api/shahtaj/v1/shops/mine';
   static const obShopsGet = '/api/shahtaj/v1/shops/get';
+  static const obZonesList = '/api/shahtaj/v1/zones/list';
+  static const obRoutesList = '/api/shahtaj/v1/routes/list';
+  static const obPresenceHeartbeat = '/api/shahtaj/v1/presence/heartbeat';
 }

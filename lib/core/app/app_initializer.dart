@@ -3,7 +3,9 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/design/system/app_system_ui.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/connectivity_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/locale_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/storage_service.dart';
 
@@ -16,6 +18,7 @@ class AppInitializer {
 
     final storage = StorageService();
     Get.put(storage, permanent: true);
+    Get.put(OfflineCacheService(storage), permanent: true);
 
     final localeService = LocaleService(storage);
     await localeService.init();
@@ -28,6 +31,10 @@ class AppInitializer {
       debugPrint('Session restore failed: $error\n$stackTrace');
     }
     Get.put(sessionService, permanent: true);
+
+    final connectivity = ConnectivityService();
+    Get.put(connectivity, permanent: true);
+    await connectivity.init();
   }
 
   static Future<void> _loadEnv() async {
