@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/images/app_images.dart';
@@ -64,49 +65,54 @@ class ObVisitCartPanel extends StatelessWidget {
             }),
           ],
           AppSpacing.vertical(context, 0.01),
-          Container(
-            padding: AppSpacing.symmetric(context, h: 0.02, v: 0.01),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(
-                AppResponsive.radius(context),
+          Obx(() {
+            final subtotal = controller.displaySubtotal();
+            return Container(
+              padding: AppSpacing.symmetric(context, h: 0.02, v: 0.01),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(
+                  AppResponsive.radius(context),
+                ),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.2),
+                ),
               ),
-              border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.2),
-              ),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    AppTexts.obSubtotal,
-                    style: AppTextStyles.caption(context).copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      AppTexts.obSubtotal,
+                      style: AppTextStyles.caption(context).copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
                   ),
-                ),
-                Text(
-                  AppFormatter.currencyWhole(cart.subtotal),
-                  style: AppTextStyles.bodyText(context).copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.primary,
+                  Text(
+                    AppFormatter.currencyWhole(subtotal),
+                    style: AppTextStyles.bodyText(context).copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.primary,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ),
+                ],
+              ),
+            );
+          }),
           AppSpacing.vertical(context, 0.02),
-          AppPrimaryButton(
-            label: AppTexts.obPlaceOrder,
-            isLoading: controller.isPlacingOrder.value,
-            onPressed: hasLines ? controller.promptPlaceOrder : null,
+          Obx(
+            () => AppPrimaryButton(
+              label: AppTexts.obPlaceOrder,
+              isLoading: controller.isPlacingOrder.value,
+              onPressed: hasLines ? controller.promptPlaceOrder : null,
+            ),
           ),
           AppSpacing.vertical(context, 0.008),
           AppSecondaryButton(
             label: AppTexts.obEndVisitWithoutOrder,
             outlinedOnly: true,
-            onPressed: hasLines ? null : controller.promptEndVisitWithoutOrder,
+            onPressed: controller.promptEndVisitWithoutOrder,
           ),
           AppSpacing.vertical(context, 0.008),
           AppSecondaryButton(

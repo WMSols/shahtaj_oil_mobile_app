@@ -8,6 +8,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_primary_button.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/visit/ob_product_model.dart';
 
 class ObProductCard extends StatelessWidget {
@@ -66,6 +67,9 @@ class ObProductCard extends StatelessWidget {
               icon: AppIcons.add,
               onPressed: outOfStock ? null : onAdd,
             ),
+          ] else ...[
+            AppSpacing.vertical(context, 0.01),
+            AppStatusChip.alreadyInCart(),
           ],
         ],
       ),
