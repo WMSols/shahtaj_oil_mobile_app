@@ -1,3 +1,5 @@
+import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
+
 class ObShopEditRequest {
   const ObShopEditRequest({
     required this.shopId,
@@ -6,6 +8,7 @@ class ObShopEditRequest {
     required this.ownerPhone,
     required this.latitude,
     required this.longitude,
+    required this.shopType,
     this.creditLimit,
     this.legacyBalance,
   });
@@ -16,6 +19,7 @@ class ObShopEditRequest {
   final String ownerPhone;
   final double latitude;
   final double longitude;
+  final ShopType shopType;
   final double? creditLimit;
   final double? legacyBalance;
 
@@ -27,6 +31,7 @@ class ObShopEditRequest {
       'owner_phone': ownerPhone,
       'latitude': latitude,
       'longitude': longitude,
+      'shop_category': shopType.name,
       if (creditLimit != null) 'credit_limit': creditLimit,
       if (legacyBalance != null) 'legacy_balance': legacyBalance,
     };

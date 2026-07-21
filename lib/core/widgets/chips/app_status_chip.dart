@@ -43,11 +43,17 @@ class AppStatusChip extends StatelessWidget {
   factory AppStatusChip.shop(ShopStatus status) =>
       AppStatusChip(label: status.label, color: status.chipColor);
 
+  factory AppStatusChip.shopType(ShopType type) =>
+      AppStatusChip(label: type.label, color: type.chipColor);
+
   factory AppStatusChip.task(TaskStatus status) =>
       AppStatusChip(label: status.label, color: status.chipColor);
 
   factory AppStatusChip.lowStock() =>
       AppStatusChip(label: AppTexts.obLowStock, color: AppColors.warning);
+
+  factory AppStatusChip.alreadyInCart() =>
+      AppStatusChip(label: AppTexts.obAlreadyInCart, color: AppColors.success);
 
   factory AppStatusChip.role(UserRole role) =>
       AppStatusChip(label: role.label, color: AppColors.primary);
@@ -59,17 +65,18 @@ class AppStatusChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final displayLabel = uppercase ? label.toUpperCase() : label;
 
-    final textStyle = (AppTextStyles.hintText(
-      context,
-    ).copyWith(color: AppColors.white, fontWeight: FontWeight.w600));
-
     return Container(
       padding: AppSpacing.symmetric(context, h: 0.02, v: 0.002),
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(AppResponsive.radius(context)),
       ),
-      child: Text(displayLabel, style: textStyle),
+      child: Text(
+        displayLabel,
+        style: AppTextStyles.hintText(
+          context,
+        ).copyWith(color: AppColors.white, fontWeight: FontWeight.w600),
+      ),
     );
   }
 }

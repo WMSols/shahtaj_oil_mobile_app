@@ -6,6 +6,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.d
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/info/app_detail_row.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_shop_model.dart';
 
@@ -50,11 +51,33 @@ class ObShopDetailInfoSection extends StatelessWidget {
                   label: AppTexts.obRouteLabel,
                   value: shop.routeName!,
                 ),
-              if (shop.creditLimit != null)
+              AppDetailRow(
+                label: AppTexts.obShopTypeLabel,
+                trailing: AppStatusChip.shopType(shop.shopType),
+              ),
+              if (shop.isCreditShop && shop.creditLimit != null)
                 AppDetailRow(
                   label: AppTexts.obCreditLimitLabel.replaceAll(' (Rs)', ''),
                   value: AppFormatter.currencyWhole(shop.creditLimit!),
                   valueColor: AppColors.primary,
+                  valueWeight: FontWeight.w700,
+                ),
+              if (shop.isCreditShop && shop.outstandingBalance != null)
+                AppDetailRow(
+                  label: AppTexts.obOutstandingBalanceLabel,
+                  value: AppFormatter.currencyWhole(shop.outstandingBalance!),
+                  valueColor: AppColors.error,
+                  valueWeight: FontWeight.w700,
+                ),
+              if (shop.isCreditShop && shop.resolvedCreditRemaining != null)
+                AppDetailRow(
+                  label: AppTexts.obCreditRemainingLabel,
+                  value: AppFormatter.currencyWhole(
+                    shop.resolvedCreditRemaining!,
+                  ),
+                  valueColor: shop.resolvedCreditRemaining! < 0
+                      ? AppColors.error
+                      : AppColors.success,
                   valueWeight: FontWeight.w700,
                 ),
               if (shop.legacyBalance != null)

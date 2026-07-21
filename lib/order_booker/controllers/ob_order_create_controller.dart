@@ -10,22 +10,30 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_confirm_dialog.
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/controllers/ob_route_detail_controller.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_active_visit_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_shop_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/visit/ob_product_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/visit/ob_visit_cart_line_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/visit/ob_visit_cart_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/ob_shop_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/ob_task_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/ob_visit_cart_service.dart';
 
 class ObOrderCreateController extends GetxController {
-  ObOrderCreateController(this._taskService, this._cartService);
+  ObOrderCreateController(
+    this._taskService,
+    this._cartService,
+    this._shopService,
+  );
 
   final ObTaskService _taskService;
   final ObVisitCartService _cartService;
+  final ObShopService _shopService;
 
   final RxBool isLoading = true.obs;
   final RxBool isPlacingOrder = false.obs;
   final RxnString error = RxnString();
   final Rxn<ObActiveVisitModel> activeVisit = Rxn<ObActiveVisitModel>();
+  final Rxn<ObShopModel> shop = Rxn<ObShopModel>();
   final RxList<ObProductModel> products = <ObProductModel>[].obs;
   final Rxn<ObVisitCartModel> cart = Rxn<ObVisitCartModel>();
 
@@ -63,13 +71,41 @@ class ObOrderCreateController extends GetxController {
         return;
       }
       activeVisit.value = active;
-      await _loadProductsAndCart(active, resolvedVisitId);
+      await Future.wait([
+        _loadProductsAndCart(active, resolvedVisitId),
+        _loadShop(active),
+      ]);
     } on ApiException catch (e) {
       error.value = e.message;
     } catch (_) {
       error.value = AppTexts.error;
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  /// Credit fields come from shop APIs only (`shops/get`, fallback `shops/mine`).
+  Future<void> _loadShop(ObActiveVisitModel active) async {
+    shop.value = null;
+    if (active.shopId.isEmpty) return;
+
+    try {
+      shop.value = await _shopService.fetchShop(active.shopId);
+      return;
+    } catch (_) {
+      // Fall through to shops/mine.
+    }
+
+    try {
+      final shops = await _shopService.fetchShops();
+      for (final item in shops) {
+        if (item.id == active.shopId) {
+          shop.value = item;
+          return;
+        }
+      }
+    } catch (_) {
+      // Credit summary is optional for order placement.
     }
   }
 
@@ -140,7 +176,7 @@ class ObOrderCreateController extends GetxController {
   }
 
   String quantityFieldText(ObVisitCartLineModel line) {
-    return qtyDrafts[line.lineId] ?? formatQuantity(line.quantity);
+    return qtyDrafts[line.lineId] ?? '';
   }
 
   String? quantityError(int lineId) => qtyErrors[lineId];
@@ -151,6 +187,18 @@ class ObOrderCreateController extends GetxController {
 
   double displayLineTotal(ObVisitCartLineModel line) {
     return displayQuantity(line) * line.priceUnit;
+  }
+
+  /// Live cart subtotal from quantity drafts / previews (not only API cart).
+  double displaySubtotal() {
+    final current = cart.value;
+    if (current == null) return 0;
+    // Touch map so Obx rebuilds while typing.
+    qtyPreviews.length;
+    return current.lines.fold<double>(
+      0,
+      (sum, line) => sum + displayLineTotal(line),
+    );
   }
 
   String bookableLabel(ObVisitCartLineModel line) {
@@ -181,7 +229,7 @@ class ObOrderCreateController extends GetxController {
     final maxQty = maxQuantityForLine(line);
     if (parsed > maxQty) {
       qtyErrors[lineId] = AppTexts.obNotEnoughStock(maxQty.toString());
-      qtyPreviews[lineId] = null;
+      qtyPreviews[lineId] = parsed;
       qtyDrafts.refresh();
       qtyErrors.refresh();
       qtyPreviews.refresh();
@@ -200,10 +248,10 @@ class ObOrderCreateController extends GetxController {
     final line = lineById(lineId);
     if (line == null) return;
 
-    final raw = (qtyDrafts[lineId] ?? formatQuantity(line.quantity)).trim();
+    final raw = (qtyDrafts[lineId] ?? '').trim();
     final parsed = double.tryParse(raw);
 
-    if (parsed == null || parsed < 1) {
+    if (raw.isEmpty || parsed == null || parsed < 1) {
       qtyDrafts.remove(lineId);
       qtyErrors[lineId] = null;
       qtyPreviews[lineId] = null;
@@ -217,7 +265,7 @@ class ObOrderCreateController extends GetxController {
     if (parsed > maxQty) {
       qtyDrafts[lineId] = raw;
       qtyErrors[lineId] = AppTexts.obNotEnoughStock(maxQty.toString());
-      qtyPreviews[lineId] = null;
+      qtyPreviews[lineId] = parsed;
       qtyDrafts.refresh();
       qtyErrors.refresh();
       qtyPreviews.refresh();

@@ -14,6 +14,8 @@ class AppOutlineCard extends StatelessWidget {
     this.borderColor = AppColors.cardBorder,
     this.clipBehavior = Clip.antiAlias,
     this.statusColor,
+    this.statusStripeEdge = AppStatusStripeEdge.left,
+    this.statusStripeThicknessFactor = 0.008,
     this.onTap,
     this.width,
   });
@@ -24,6 +26,8 @@ class AppOutlineCard extends StatelessWidget {
   final Color borderColor;
   final Clip clipBehavior;
   final Color? statusColor;
+  final AppStatusStripeEdge statusStripeEdge;
+  final double statusStripeThicknessFactor;
   final VoidCallback? onTap;
   final double? width;
 
@@ -37,7 +41,11 @@ class AppOutlineCard extends StatelessWidget {
         ? Padding(padding: resolvedPadding, child: child)
         : Stack(
             children: [
-              AppStatusStripe(color: statusColor!),
+              AppStatusStripe(
+                color: statusColor!,
+                edge: statusStripeEdge,
+                thicknessFactor: statusStripeThicknessFactor,
+              ),
               Padding(padding: resolvedPadding, child: child),
             ],
           );

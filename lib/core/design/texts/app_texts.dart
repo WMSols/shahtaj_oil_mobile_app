@@ -218,6 +218,9 @@ class AppTexts {
   static String get obRouteHint => 'obRouteHint'.tr;
   static String get obCreditLimitLabel => 'obCreditLimitLabel'.tr;
   static String get obLegacyBalanceLabel => 'obLegacyBalanceLabel'.tr;
+  static String get obOutstandingBalanceLabel => 'obOutstandingBalanceLabel'.tr;
+  static String get obCreditRemainingLabel => 'obCreditRemainingLabel'.tr;
+  static String get obShopCreditSummary => 'obShopCreditSummary'.tr;
   static String get obLatitudeHint => 'obLatitudeHint'.tr;
   static String get obLongitudeHint => 'obLongitudeHint'.tr;
   static String get obCreditLimitHint => 'obCreditLimitHint'.tr;
@@ -311,6 +314,7 @@ class AppTexts {
   static String get obNoCartItems => 'obNoCartItems'.tr;
   static String get obAddProductsToStart => 'obAddProductsToStart'.tr;
   static String get obAddToCart => 'obAddToCart'.tr;
+  static String get obAlreadyInCart => 'obAlreadyInCart'.tr;
   static String get obPlaceOrder => 'obPlaceOrder'.tr;
   static String get obPlaceOrderConfirmMessage =>
       'obPlaceOrderConfirmMessage'.tr;
@@ -329,6 +333,8 @@ class AppTexts {
   static String get obVisitClosedSuccess => 'obVisitClosedSuccess'.tr;
   static String get obSubtotal => 'obSubtotal'.tr;
   static String get obCartQuantityHint => 'obCartQuantityHint'.tr;
+  static String obCartQuantityInputHint(String max, String product) =>
+      'obCartQuantityInputHint'.trParams({'max': max, 'product': product});
   static String get obCartPriceHint => 'obCartPriceHint'.tr;
   static String get obTotalLabel => 'obTotalLabel'.tr;
   static String get obNoMoreStockLeft => 'obNoMoreStockLeft'.tr;
@@ -362,11 +368,68 @@ class AppTexts {
   static String get obOrderNumberLabel => 'obOrderNumberLabel'.tr;
 
   // Delivery man screens
+  static String get dmDashboardSubtitle => 'dmDashboardSubtitle'.tr;
   static String get dmPickupTitle => 'dmPickupTitle'.tr;
   static String get dmDeliverTitle => 'dmDeliverTitle'.tr;
   static String get dmDeliveryDetailTitle => 'dmDeliveryDetailTitle'.tr;
   static String get dmReturnTitle => 'dmReturnTitle'.tr;
   static String get dmOrderDetailTitle => 'dmOrderDetailTitle'.tr;
+  static String get dmPickupRequired => 'dmPickupRequired'.tr;
+  static String get dmPickupDone => 'dmPickupDone'.tr;
+  static String get dmGoToPickup => 'dmGoToPickup'.tr;
+  static String get dmContinueDeliveries => 'dmContinueDeliveries'.tr;
+  static String get dmConfirmPickup => 'dmConfirmPickup'.tr;
+  static String get dmNoInTransitOrders => 'dmNoInTransitOrders'.tr;
+  static String get dmStartDelivery => 'dmStartDelivery'.tr;
+  static String get dmMarkDelivered => 'dmMarkDelivered'.tr;
+  static String get dmConfirmDelivery => 'dmConfirmDelivery'.tr;
+  static String get dmReceiverNameLabel => 'dmReceiverNameLabel'.tr;
+  static String get dmReceiverNameHint => 'dmReceiverNameHint'.tr;
+  static String get dmDeliveryNotesHint => 'dmDeliveryNotesHint'.tr;
+  static String get dmProofPhotoTitle => 'dmProofPhotoTitle'.tr;
+  static String get dmProofPhotoSubtitle => 'dmProofPhotoSubtitle'.tr;
+  static String get dmProofPhotoRequired => 'dmProofPhotoRequired'.tr;
+  static String get dmOrderLinesSection => 'dmOrderLinesSection'.tr;
+  static String get dmTimelineSection => 'dmTimelineSection'.tr;
+  static String get dmOrderedQty => 'dmOrderedQty'.tr;
+  static String get dmLoadedQty => 'dmLoadedQty'.tr;
+  static String get dmDeliveredQty => 'dmDeliveredQty'.tr;
+  static String get dmRejectedQty => 'dmRejectedQty'.tr;
+  static String get dmDamagedQty => 'dmDamagedQty'.tr;
+  static String get dmLeftoverQty => 'dmLeftoverQty'.tr;
+  static String get dmLoadedQtyHint => 'dmLoadedQtyHint'.tr;
+  static String get dmDeliveredQtyHint => 'dmDeliveredQtyHint'.tr;
+  static String get dmInvalidQuantity => 'dmInvalidQuantity'.tr;
+  static String get dmPickupBeforeDelivery => 'dmPickupBeforeDelivery'.tr;
+  static String get dmDeliverySubmitted => 'dmDeliverySubmitted'.tr;
+  static String get dmDeliveryStarted => 'dmDeliveryStarted'.tr;
+  static String get dmPickupConfirmed => 'dmPickupConfirmed'.tr;
+  static String get dmReturnSubmitted => 'dmReturnSubmitted'.tr;
+  static String get dmReturnAlreadySubmitted => 'dmReturnAlreadySubmitted'.tr;
+  static String get dmReceiverRequired => 'dmReceiverRequired'.tr;
+  static String get dmNoActiveOrdersForReturn => 'dmNoActiveOrdersForReturn'.tr;
+  static String get dmLeftoverStock => 'dmLeftoverStock'.tr;
+  static String get dmRejectedStock => 'dmRejectedStock'.tr;
+  static String get dmDamagedStock => 'dmDamagedStock'.tr;
+  static String get dmNotesHint => 'dmNotesHint'.tr;
+  static String get dmWarehouse => 'dmWarehouse'.tr;
+  static String get dmVehicle => 'dmVehicle'.tr;
+  static String get dmShiftDate => 'dmShiftDate'.tr;
+  static String get dmShopLabel => 'dmShopLabel'.tr;
+  static String get dmAddressLabel => 'dmAddressLabel'.tr;
+  static String get dmItemsLabel => 'dmItemsLabel'.tr;
+  static String get dmAmountLabel => 'dmAmountLabel'.tr;
+  static String get dmDateLabel => 'dmDateLabel'.tr;
+  static String get dmPickupItems => 'dmPickupItems'.tr;
+  static String get dmTodaySummary => 'dmTodaySummary'.tr;
+  static String dmItemsCount(int count) =>
+      'dmItemsCount'.trParams({'count': '$count'});
+  static String dmWarehouseLabel(String warehouse) =>
+      'dmWarehouseLabel'.trParams({'warehouse': warehouse});
+  static String dmVehicleLabel(String vehicle) =>
+      'dmVehicleLabel'.trParams({'vehicle': vehicle});
+  static String dmShiftDateLabel(String date) =>
+      'dmShiftDateLabel'.trParams({'date': date});
 
   // Recovery man screens
   static String get rmShopInvoicesTitle => 'rmShopInvoicesTitle'.tr;
