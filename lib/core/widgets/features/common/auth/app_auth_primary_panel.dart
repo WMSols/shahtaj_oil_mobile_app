@@ -9,6 +9,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_secondary_button.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_remember_me.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_text_field.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_brought_by_footer.dart';
 
@@ -75,6 +76,13 @@ class AppAuthPrimaryPanel extends GetView<AuthController> {
                           fillColor: AppColors.white,
                           borderColor: AppColors.cardBorder,
                           focusedBorderColor: AppColors.white,
+                        ),
+                      ),
+                      AppSpacing.vertical(context, 0.012),
+                      Obx(
+                        () => AppRememberMe(
+                          value: controller.rememberMe.value,
+                          onChanged: controller.setRememberMe,
                         ),
                       ),
                       AppSpacing.vertical(context, 0.02),
