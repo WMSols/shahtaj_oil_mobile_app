@@ -25,7 +25,10 @@ class ObShopModel {
     this.address,
     this.zoneName,
     this.routeName,
+    this.shopType = ShopType.credit,
     this.creditLimit,
+    this.outstandingBalance,
+    this.creditRemaining,
     this.legacyBalance,
     this.latitude,
     this.longitude,
@@ -43,7 +46,10 @@ class ObShopModel {
   final String? address;
   final String? zoneName;
   final String? routeName;
+  final ShopType shopType;
   final double? creditLimit;
+  final double? outstandingBalance;
+  final double? creditRemaining;
   final double? legacyBalance;
   final double? latitude;
   final double? longitude;
@@ -58,12 +64,21 @@ class ObShopModel {
       latitude!.abs() <= 90 &&
       longitude!.abs() <= 180;
 
+  bool get isCreditShop => shopType == ShopType.credit;
+
+  double? get resolvedCreditRemaining {
+    if (creditRemaining != null) return creditRemaining;
+    if (creditLimit == null || outstandingBalance == null) return null;
+    return creditLimit! - outstandingBalance!;
+  }
+
   factory ObShopModel.fromJson(Map<String, dynamic> json) {
     final photos =
         ApiMap.asMap(json['verification_photos']) ??
         ApiMap.asMap(json['photos']);
     final zone = ApiMap.asMap(json['zone']);
     final route = ApiMap.asMap(json['route']);
+    final creditLimit = ApiMap.asDouble(json['credit_limit']);
 
     return ObShopModel(
       id: ApiMap.asString(json['id']) ?? ApiMap.asString(json['shop_id']) ?? '',
@@ -79,7 +94,10 @@ class ObShopModel {
       routeName:
           ApiMap.asString(json['route_name']) ??
           ApiMap.asString(route?['name']),
-      creditLimit: ApiMap.asDouble(json['credit_limit']),
+      shopType: _parseShopType(json['shop_category']),
+      creditLimit: creditLimit,
+      outstandingBalance: ApiMap.asDouble(json['outstanding_balance']),
+      creditRemaining: ApiMap.asDouble(json['credit_remaining']),
       legacyBalance: ApiMap.asDouble(json['legacy_balance']),
       latitude: ApiMap.asDouble(json['latitude']),
       longitude: ApiMap.asDouble(json['longitude']),
@@ -116,6 +134,13 @@ class ObShopModel {
     );
   }
 
+  static ShopType _parseShopType(dynamic value) {
+    final raw = value?.toString().trim().toLowerCase();
+    if (raw == ShopType.cash.name) return ShopType.cash;
+    if (raw == ShopType.credit.name) return ShopType.credit;
+    return ShopType.credit;
+  }
+
   Map<String, dynamic> toJson() => {
     'id': id,
     'name': name,
@@ -125,7 +150,10 @@ class ObShopModel {
     'address': address,
     'zone_name': zoneName,
     'route_name': routeName,
+    'shop_category': shopType.name,
     'credit_limit': creditLimit,
+    'outstanding_balance': outstandingBalance,
+    'credit_remaining': creditRemaining,
     'legacy_balance': legacyBalance,
     'latitude': latitude,
     'longitude': longitude,

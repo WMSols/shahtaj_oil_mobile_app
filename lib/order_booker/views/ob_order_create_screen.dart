@@ -5,6 +5,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/images/app_images.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/visit/ob_product_card.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/visit/ob_shop_credit_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/visit/ob_visit_cart_panel.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/visit/ob_visit_header_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
@@ -51,6 +52,10 @@ class ObOrderCreateScreen extends GetView<ObOrderCreateController> {
                 shopName: visit.shopName,
                 visitId: visit.visitId,
               ),
+              if (controller.shop.value != null) ...[
+                AppSpacing.vertical(context, 0.016),
+                ObShopCreditCard(shop: controller.shop.value!),
+              ],
               AppSpacing.vertical(context, 0.016),
               Text(AppTexts.obProductsSection),
               AppSpacing.vertical(context, 0.008),

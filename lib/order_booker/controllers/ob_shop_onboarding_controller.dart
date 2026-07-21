@@ -137,9 +137,7 @@ class ObShopOnboardingController extends GetxController {
     creditLimitController.text = shop.creditLimit?.toStringAsFixed(0) ?? '';
     legacyBalanceController.text = shop.legacyBalance?.toStringAsFixed(0) ?? '';
 
-    selectedShopType.value = (shop.creditLimit ?? 0) > 0
-        ? ShopType.credit
-        : ShopType.cash;
+    selectedShopType.value = shop.shopType;
 
     if (shop.hasCoordinates) {
       _setLocation(shop.latitude!, shop.longitude!);
@@ -382,6 +380,7 @@ class ObShopOnboardingController extends GetxController {
       ownerPhone: _normalizedPhone(),
       latitude: mapLatitude.value!,
       longitude: mapLongitude.value!,
+      shopType: selectedShopType.value!,
       creditLimit: isCreditShop
           ? _parseOptionalDouble(creditLimitController.text)
           : null,

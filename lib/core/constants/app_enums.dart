@@ -166,6 +166,11 @@ extension ShopTypeX on ShopType {
     ShopType.cash => AppTexts.shopTypeCash,
     ShopType.credit => AppTexts.shopTypeCredit,
   };
+
+  Color get chipColor => switch (this) {
+    ShopType.cash => AppColors.success,
+    ShopType.credit => AppColors.primary,
+  };
 }
 
 extension RouteStatusX on RouteStatus {
