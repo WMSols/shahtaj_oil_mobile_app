@@ -12,6 +12,7 @@ class AppTextField extends StatelessWidget {
   const AppTextField({
     super.key,
     this.controller,
+    this.focusNode,
     this.initialValue,
     this.label,
     required this.hint,
@@ -34,6 +35,7 @@ class AppTextField extends StatelessWidget {
     this.inputFormatters,
     this.readOnly = false,
     this.onTap,
+    this.errorText,
     this.borderColor,
     this.fillColor,
     this.labelColor,
@@ -43,6 +45,7 @@ class AppTextField extends StatelessWidget {
   });
 
   final TextEditingController? controller;
+  final FocusNode? focusNode;
   final String? initialValue;
   final String? label;
   final String hint;
@@ -65,6 +68,7 @@ class AppTextField extends StatelessWidget {
   final List<TextInputFormatter>? inputFormatters;
   final bool readOnly;
   final VoidCallback? onTap;
+  final String? errorText;
   final Color? borderColor;
   final Color? fillColor;
   final Color? labelColor;
@@ -99,6 +103,7 @@ class AppTextField extends StatelessWidget {
           AppSpacing.vertical(context, 0.005),
         TextFormField(
           controller: controller,
+          focusNode: focusNode,
           initialValue: controller == null ? initialValue : null,
           obscureText: obscureText,
           keyboardType: keyboardType,
@@ -131,7 +136,7 @@ class AppTextField extends StatelessWidget {
                 : null,
             focusedBorderColor: focusedBorderColor,
             borderless: borderless,
-          ),
+          ).copyWith(errorText: errorText, errorMaxLines: 3),
         ),
       ],
     );

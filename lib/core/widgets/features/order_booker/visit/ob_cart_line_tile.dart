@@ -10,7 +10,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.d
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_input_decoration.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_text_field.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/controllers/ob_order_create_controller.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/visit/ob_visit_cart_line_model.dart';
 
@@ -130,16 +130,15 @@ class _ObCartLineTileState extends State<ObCartLineTile> {
               ),
             ),
             AppSpacing.vertical(context, 0.01),
-            Text(
-              '${AppTexts.obCartQuantityHint} (max $maxQuantity)',
-              style: AppTextStyles.caption(
-                context,
-              ).copyWith(color: AppColors.black, fontWeight: FontWeight.w600),
-            ),
-            AppSpacing.vertical(context, 0.008),
-            TextField(
+            AppTextField(
               controller: _qtyController,
               focusNode: _focusNode,
+              label: AppTexts.obCartQuantityHint,
+              hint: AppTexts.obCartQuantityInputHint(
+                '$maxQuantity',
+                line.productName,
+              ),
+              prefixIcon: AppIcons.myshops,
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
@@ -149,14 +148,8 @@ class _ObCartLineTileState extends State<ObCartLineTile> {
               textInputAction: TextInputAction.done,
               onChanged: (raw) => _c.onQuantityInputChanged(lineId, raw),
               onSubmitted: (_) => _c.commitQuantityInput(lineId),
-              decoration: AppInputDecoration.decoration(
-                context,
-                hintText: '1',
-                borderless: true,
-              ).copyWith(errorText: errorText, errorMaxLines: 3),
-              style: AppTextStyles.bodyText(
-                context,
-              ).copyWith(fontWeight: FontWeight.w700, color: AppColors.primary),
+              errorText: errorText,
+              textColor: AppColors.primary,
             ),
             AppSpacing.vertical(context, 0.01),
             _LabeledValue(
