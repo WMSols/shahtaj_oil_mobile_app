@@ -1,5 +1,7 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
+
 class StorageService {
   static const _tokenKey = 'auth_token';
   static const _roleKey = 'user_role';
@@ -49,6 +51,47 @@ class StorageService {
 
   Future<void> setOnboardingCompleted() =>
       _storage.write(key: _onboardingCompletedKey, value: 'true');
+
+  // ── Remember me (per role) ──────────────────────────────────────────────
+
+  String _rememberFlagKey(UserRole role) => 'remember_me_${role.name}';
+  String _rememberLoginKey(UserRole role) => 'remember_login_${role.name}';
+  String _rememberPasswordKey(UserRole role) =>
+      'remember_password_${role.name}';
+
+  Future<bool> isRememberMeEnabled(UserRole role) async {
+    final value = await _read(_rememberFlagKey(role));
+    return value == 'true';
+  }
+
+  Future<String?> getRememberedLogin(UserRole role) =>
+      _read(_rememberLoginKey(role));
+
+  Future<String?> getRememberedPassword(UserRole role) =>
+      _read(_rememberPasswordKey(role));
+
+  Future<void> saveRememberedCredentials({
+    required UserRole role,
+    required String login,
+    required String password,
+  }) async {
+    await _storage.write(key: _rememberFlagKey(role), value: 'true');
+    await _storage.write(key: _rememberLoginKey(role), value: login);
+    await _storage.write(key: _rememberPasswordKey(role), value: password);
+  }
+
+  Future<void> clearRememberedCredentials(UserRole role) async {
+    await _storage.delete(key: _rememberFlagKey(role));
+    await _storage.delete(key: _rememberLoginKey(role));
+    await _storage.delete(key: _rememberPasswordKey(role));
+  }
+
+  /// Clears auth session keys only — keeps locale, onboarding, and remember-me.
+  Future<void> clearSessionData() async {
+    await clearToken();
+    await clearRole();
+    await clearUser();
+  }
 
   Future<void> clearAll() => _storage.deleteAll();
 

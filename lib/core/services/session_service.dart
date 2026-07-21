@@ -57,6 +57,6 @@ class SessionService extends GetxService {
   Future<void> clearSession() async {
     user.value = null;
     role.value = null;
-    await _storage.clearAll();
+    await _storage.clearSessionData();
   }
 }
