@@ -5,7 +5,6 @@ import 'package:get/get.dart';
 import 'package:shahtaj_oil_mobile_app/common/models/user_model.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/api_endpoints.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
-import 'package:shahtaj_oil_mobile_app/core/constants/role_api_endpoints.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/presence_service.dart';
@@ -24,10 +23,9 @@ class AuthService extends GetxService {
     required String password,
     required UserRole role,
   }) async {
+    // DM/RM: UI-only mock session — no API until those modules are wired.
     if (role != UserRole.orderBooker) {
-      throw ApiException(
-        message: 'API login is only available for Order Booker right now.',
-      );
+      return _loginUiOnly(email: email, role: role);
     }
 
     final database = _api.odooDatabase;
@@ -69,14 +67,33 @@ class AuthService extends GetxService {
     return user;
   }
 
+  /// Local session for Delivery Man / Recovery Man while UI is built without APIs.
+  Future<UserModel> _loginUiOnly({
+    required String email,
+    required UserRole role,
+  }) async {
+    final trimmed = email.trim();
+    final display = trimmed.isEmpty
+        ? (role == UserRole.deliveryMan ? 'Delivery Man' : 'Recovery Man')
+        : trimmed.split('@').first;
+
+    final user = UserModel(
+      id: 'ui-${role.name}',
+      name: display,
+      email: trimmed.isEmpty ? '${role.name}@shahtaj.local' : trimmed,
+      role: role,
+      presenceStatus: PresenceStatus.online,
+    ).withResolvedName();
+
+    await _storage.saveToken('ui-mock-token-${role.name}');
+    await _storage.saveRole(role.name);
+    await _session.setSession(userModel: user, userRole: role);
+    return user;
+  }
+
   Future<void> logout() async {
     // No logout endpoint in Shahtaj v1 yet — clear local session only.
-    final role = _session.role.value;
-    if (role != null && role != UserRole.orderBooker) {
-      try {
-        await _api.post(role.authLogoutPath);
-      } catch (_) {}
-    }
+    // Skip API for non-OB (UI-only mock sessions).
     await _session.clearSession();
   }
 }
