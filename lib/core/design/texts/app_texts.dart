@@ -80,6 +80,9 @@ class AppTexts {
   static String get developerName => 'developerName'.tr;
   static String get allRightsReserved => 'allRightsReserved'.tr;
   static String get loginSuccessful => 'loginSuccessful'.tr;
+  static String get logoutSuccessful => 'logoutSuccessful'.tr;
+  static String get loginCredentialsRequired => 'loginCredentialsRequired'.tr;
+  static String get loginFailed => 'loginFailed'.tr;
   static String get accountCreatedSuccess => 'accountCreatedSuccess'.tr;
   static String get loginFailedTitle => 'loginFailedTitle'.tr;
   static String get signUpFailedTitle => 'signUpFailedTitle'.tr;
@@ -600,6 +603,16 @@ class AppTexts {
   static String get success => 'success'.tr;
   static String get noInternet => 'noInternet'.tr;
   static String get noInternetDescription => 'noInternetDescription'.tr;
+  static String get locationServicesOff => 'locationServicesOff'.tr;
+  static String get locationServicesOn => 'locationServicesOn'.tr;
+  static String get formInvalid => 'formInvalid'.tr;
+  static String get locationEnableTitle => 'locationEnableTitle'.tr;
+  static String get locationEnableMessage => 'locationEnableMessage'.tr;
+  static String get locationPermissionTitle => 'locationPermissionTitle'.tr;
+  static String get locationPermissionMessage => 'locationPermissionMessage'.tr;
+  static String get locationEnableSteps => 'locationEnableSteps'.tr;
+  static String get locationOpenSettings => 'locationOpenSettings'.tr;
+  static String get locationOpenAppSettings => 'locationOpenAppSettings'.tr;
 
   static String get emptyLoadFailedTitle => 'emptyLoadFailedTitle'.tr;
   static String get emptyLoadFailedSubtitle => 'emptyLoadFailedSubtitle'.tr;

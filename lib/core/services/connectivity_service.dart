@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 
 class ConnectivityService extends GetxService {
@@ -24,6 +27,9 @@ class ConnectivityService extends GetxService {
     }
 
     _connectivity.onConnectivityChanged.listen(_onConnectivityChanged);
+    if (isOnline.value && Get.isRegistered<OfflineCacheService>()) {
+      unawaited(Get.find<OfflineCacheService>().flushSyncQueue());
+    }
     return this;
   }
 
@@ -45,6 +51,9 @@ class ConnectivityService extends GetxService {
     if (_wasOffline || !wasOnline) {
       _wasOffline = false;
       AppToast.showSuccess(AppTexts.backOnline);
+      if (Get.isRegistered<OfflineCacheService>()) {
+        unawaited(Get.find<OfflineCacheService>().flushSyncQueue());
+      }
     }
   }
 
