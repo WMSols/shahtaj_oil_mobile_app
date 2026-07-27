@@ -64,11 +64,13 @@ class OnboardingController extends GetxController {
   Future<void> selectEnglish() async {
     isEnglishSelected.value = true;
     await _locale.setEnglish();
+    await goToNextPage();
   }
 
   Future<void> selectUrdu() async {
     isEnglishSelected.value = false;
     await _locale.setUrdu();
+    await goToNextPage();
   }
 
   Future<void> selectRole(UserRole role) async {
