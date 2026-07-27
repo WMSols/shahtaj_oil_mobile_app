@@ -27,6 +27,7 @@ class ApiMap {
   }
 
   static double? asDouble(dynamic value) {
+    if (value is bool) return null;
     if (value is num) return value.toDouble();
     return double.tryParse(value?.toString() ?? '');
   }
