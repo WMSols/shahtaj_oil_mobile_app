@@ -30,7 +30,7 @@ class AppFormFieldLabel extends StatelessWidget {
               label!,
               style: AppTextStyles.labelText(context).copyWith(
                 color: color ?? AppColors.black,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
               ),
             ),
             if (required)
