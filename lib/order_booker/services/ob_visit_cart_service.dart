@@ -92,10 +92,14 @@ class ObVisitCartService extends GetxService {
     _cacheVisitLines(visitId, data);
   }
 
-  Future<String> placeOrder({required int visitId}) async {
+  Future<String> placeOrder({
+    required int visitId,
+    required double latitude,
+    required double longitude,
+  }) async {
     final data = await _api.postData(
       ApiEndpoints.obVisitsPlaceOrder,
-      data: {'visit_id': visitId},
+      data: {'visit_id': visitId, 'latitude': latitude, 'longitude': longitude},
     );
     _linesByVisit[visitId] = [];
     _productsByVisit.remove(visitId);

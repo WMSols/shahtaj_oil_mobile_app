@@ -6,6 +6,7 @@ import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
+import 'package:shahtaj_oil_mobile_app/core/utils/helper/app_helper.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_confirm_dialog.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/controllers/ob_route_detail_controller.dart';
@@ -392,7 +393,12 @@ class ObOrderCreateController extends GetxController {
     if (active == null) return;
     isPlacingOrder.value = true;
     try {
-      await _cartService.placeOrder(visitId: active.visitId);
+      final position = await AppHelper.requireCurrentPosition(showGuide: true);
+      await _cartService.placeOrder(
+        visitId: active.visitId,
+        latitude: position.latitude,
+        longitude: position.longitude,
+      );
       await _taskService.completeActiveVisit(visitId: active.visitId);
       AppToast.showSuccess(AppTexts.obOrderPlacedSuccess);
       _navigateToTodayTasks();

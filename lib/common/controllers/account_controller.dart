@@ -7,6 +7,7 @@ import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 
 class AccountController extends GetxController {
   AccountController(this._session, this._profileService, this._authService);
@@ -60,7 +61,10 @@ class AccountController extends GetxController {
     isLoggingOut.value = true;
     try {
       await _authService.logout();
+      AppToast.showSuccess(AppTexts.logoutSuccessful);
       Get.offAllNamed(AppRoutes.selectRole);
+    } catch (_) {
+      AppToast.showError(AppTexts.error);
     } finally {
       isLoggingOut.value = false;
     }

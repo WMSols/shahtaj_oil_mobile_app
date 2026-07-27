@@ -40,9 +40,7 @@ class ObCheckInScreen extends GetView<ObCheckInController> {
           hasLocation: controller.hasDeviceLocation,
           isLocating: controller.isLocating.value,
           isSubmitting: controller.isSubmitting.value,
-          onUseCurrentLocation: controller.useCurrentLocation,
           onCheckIn: controller.checkIn,
-          onSkip: controller.confirmSkip,
         );
       }),
     );

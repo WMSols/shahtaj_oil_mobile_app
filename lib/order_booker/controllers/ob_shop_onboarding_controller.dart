@@ -12,7 +12,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
-import 'package:shahtaj_oil_mobile_app/core/utils/helper/app_location_helper.dart';
+import 'package:shahtaj_oil_mobile_app/core/utils/helper/app_helper.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/validator/app_validator.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_confirm_dialog.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
@@ -273,7 +273,7 @@ class ObShopOnboardingController extends GetxController {
   Future<void> useCurrentLocation() async {
     isLocating.value = true;
     try {
-      final position = await AppLocationHelper.requireCurrentPosition();
+      final position = await AppHelper.requireCurrentPosition();
       _setLocation(position.latitude, position.longitude);
     } on ApiException catch (e) {
       _showMessage(e.message);
@@ -285,7 +285,10 @@ class ObShopOnboardingController extends GetxController {
   }
 
   Future<void> submit() async {
-    if (!(formKey.currentState?.validate() ?? false)) return;
+    if (!(formKey.currentState?.validate() ?? false)) {
+      AppToast.showError(AppTexts.formInvalid);
+      return;
+    }
     if (!hasLocation) {
       _showMessage(AppTexts.obLocationNotCaptured);
       return;

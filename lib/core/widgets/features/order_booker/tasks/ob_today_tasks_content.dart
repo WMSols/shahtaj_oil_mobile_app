@@ -87,9 +87,6 @@ class ObTodayTasksContent extends GetView<ObRouteDetailController> {
                     onCheckIn: task.status == TaskStatus.pending
                         ? () => controller.openCheckIn(task)
                         : null,
-                    onSkip: task.status == TaskStatus.pending
-                        ? () => controller.confirmSkipTask(task)
-                        : null,
                     onNotes: () => controller.openTaskNotes(task),
                     onTap: task.status == TaskStatus.inVisit
                         ? controller.resumeActiveVisit

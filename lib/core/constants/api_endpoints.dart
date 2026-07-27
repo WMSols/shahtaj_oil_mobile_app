@@ -38,7 +38,6 @@ class ApiEndpoints {
   static const obAuthMe = '/api/shahtaj/v1/auth/me';
   static const obTasksToday = '/api/shahtaj/v1/tasks/today';
   static const obTasksCheckIn = '/api/shahtaj/v1/tasks/check-in';
-  static const obTasksSkip = '/api/shahtaj/v1/tasks/skip';
   static const obTasksNotes = '/api/shahtaj/v1/tasks/notes';
   static const obVisitsActive = '/api/shahtaj/v1/visits/active';
   static const obProductsList = '/api/shahtaj/v1/products/list';
