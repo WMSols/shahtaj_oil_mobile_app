@@ -67,7 +67,7 @@ class PresenceService extends GetxService with WidgetsBindingObserver {
   /// Sets local presence to online and pings the server immediately.
   /// Call after login so the UI does not wait for the periodic timer.
   Future<void> markOnlineNow() async {
-    if (!_hasSession) return;
+    if (!_shouldUsePresenceApi) return;
     await _setLocalPresence(PresenceStatus.online);
     _foreground = true;
     _stop();
@@ -75,7 +75,8 @@ class PresenceService extends GetxService with WidgetsBindingObserver {
   }
 
   void _syncHeartbeat() {
-    if (!_hasSession) {
+    // Presence heartbeat is Order Booker–only until other roles have APIs.
+    if (!_shouldUsePresenceApi) {
       _stop();
       return;
     }
@@ -97,12 +98,17 @@ class PresenceService extends GetxService with WidgetsBindingObserver {
 
   bool get _hasSession => _session.user.value != null;
 
+  /// Live presence APIs exist only for Order Booker. DM/RM use mock UI sessions.
+  bool get _shouldUsePresenceApi =>
+      _hasSession && _session.role.value == UserRole.orderBooker;
+
   bool get _isNetworkOnline {
     if (!Get.isRegistered<ConnectivityService>()) return true;
     return Get.find<ConnectivityService>().isOnline.value;
   }
 
-  bool get _shouldRun => _hasSession && _isNetworkOnline && _foreground;
+  bool get _shouldRun =>
+      _shouldUsePresenceApi && _isNetworkOnline && _foreground;
 
   void _start() {
     if (_timer != null) return;

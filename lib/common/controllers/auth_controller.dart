@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/common/services/auth_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
+import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/role_route_resolver.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/storage_service.dart';
@@ -75,7 +76,7 @@ class AuthController extends GetxController {
     // Order Booker uses live API — credentials required.
     // DM/RM are UI-only for now: allow empty fields and local mock session.
     if (role == UserRole.orderBooker && (login.isEmpty || password.isEmpty)) {
-      AppToast.showError('Please enter login and password.');
+      AppToast.showError(AppTexts.loginCredentialsRequired);
       return;
     }
 
@@ -83,11 +84,12 @@ class AuthController extends GetxController {
     try {
       await _authService.login(email: login, password: password, role: role);
       await _persistRememberMe(login: login, password: password);
+      AppToast.showSuccess(AppTexts.loginSuccessful);
       RoleRouteResolver.goToRoleHome(role);
     } on ApiException catch (e) {
       AppToast.showError(e.message);
     } catch (_) {
-      AppToast.showError('Login failed. Please try again.');
+      AppToast.showError(AppTexts.loginFailed);
     } finally {
       isLoading.value = false;
     }
