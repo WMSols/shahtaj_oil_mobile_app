@@ -73,12 +73,33 @@ class ObShopModel {
   }
 
   factory ObShopModel.fromJson(Map<String, dynamic> json) {
-    final photos =
-        ApiMap.asMap(json['verification_photos']) ??
-        ApiMap.asMap(json['photos']);
+    final photoFlags =
+        ApiMap.asMap(json['photos']) ??
+        ApiMap.asMap(json['verification_photos']);
+    // When include_photos=true, base64 payloads live under photo_data.
+    final photoData = ApiMap.asMap(json['photo_data']);
     final zone = ApiMap.asMap(json['zone']);
     final route = ApiMap.asMap(json['route']);
     final creditLimit = ApiMap.asDouble(json['credit_limit']);
+
+    String? photo(String key, [List<String> aliases = const []]) {
+      for (final name in [key, ...aliases]) {
+        final data = _photoRef(photoData?[name]);
+        if (data != null) return data;
+      }
+      for (final name in [key, ...aliases]) {
+        final flagged = _photoRef(photoFlags?[name]);
+        if (flagged != null) return flagged;
+      }
+      for (final name in [key, ...aliases]) {
+        final topLevel = _photoRef(json[name]);
+        if (topLevel != null) return topLevel;
+      }
+      return null;
+    }
+
+    final exterior = photo('shop_exterior_photo', ['shop_exterior']);
+    final owner = photo('owner_photo');
 
     return ObShopModel(
       id: ApiMap.asString(json['id']) ?? ApiMap.asString(json['shop_id']) ?? '',
@@ -101,18 +122,12 @@ class ObShopModel {
       legacyBalance: ApiMap.asDouble(json['legacy_balance']),
       latitude: ApiMap.asDouble(json['latitude']),
       longitude: ApiMap.asDouble(json['longitude']),
-      heroImageAsset: ApiMap.asString(json['hero_image_asset']),
+      heroImageAsset: ApiMap.asString(json['hero_image_asset']) ?? exterior,
       verificationPhotos: ObShopVerificationPhotos(
-        cnicFront:
-            _photoRef(photos?['cnic_front']) ??
-            _photoRef(photos?['owner_cnic_front']),
-        cnicBack:
-            _photoRef(photos?['cnic_back']) ??
-            _photoRef(photos?['owner_cnic_back']),
-        ownerPhoto: _photoRef(photos?['owner_photo']),
-        shopExterior:
-            _photoRef(photos?['shop_exterior']) ??
-            _photoRef(photos?['shop_exterior_photo']),
+        cnicFront: photo('owner_cnic_front', ['cnic_front']),
+        cnicBack: photo('owner_cnic_back', ['cnic_back']),
+        ownerPhoto: owner,
+        shopExterior: exterior,
       ),
       status: _parseStatus(json['status'] ?? json['approval_state']),
       isHighlighted: json['is_highlighted'] as bool? ?? false,
@@ -120,8 +135,22 @@ class ObShopModel {
   }
 
   static String? _photoRef(dynamic value) {
-    if (value is String && value.trim().isNotEmpty) return value;
-    if (value is bool) return value ? 'available' : null;
+    if (value == null || value == false) return null;
+    // API may send a presence flag without a loadable URL/path.
+    if (value is bool) return null;
+    if (value is String) {
+      final text = value.trim();
+      if (text.isEmpty || text.toLowerCase() == 'available') return null;
+      return text;
+    }
+    if (value is Map) {
+      final map = Map<String, dynamic>.from(value);
+      return _photoRef(map['url']) ??
+          _photoRef(map['image_url']) ??
+          _photoRef(map['src']) ??
+          _photoRef(map['path']) ??
+          _photoRef(map['data']);
+    }
     return null;
   }
 

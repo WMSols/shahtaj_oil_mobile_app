@@ -6,6 +6,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/responsive/app_responsive.dar
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/media/app_ref_image.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_shop_model.dart';
 
 class ObShopDetailPhotosSection extends StatelessWidget {
@@ -66,40 +67,55 @@ class ObPhotoPreviewTile extends StatelessWidget {
   final String label;
   final String? asset;
 
+  static const double _borderWidth = 1.5;
+
   @override
   Widget build(BuildContext context) {
     final radius = AppResponsive.radius(context);
-    final hasImage = asset != null;
+    final hasImage = AppRefImage.isLoadable(asset);
 
     return Column(
       children: [
         Expanded(
-          child: Container(
-            width: double.infinity,
+          child: DecoratedBox(
             decoration: BoxDecoration(
               color: AppColors.inputFill,
               borderRadius: BorderRadius.circular(radius),
               border: Border.all(
                 color: hasImage ? AppColors.primary : AppColors.lightGrey,
-                width: hasImage ? 2 : 1.5,
+                width: _borderWidth,
               ),
             ),
-            clipBehavior: Clip.antiAlias,
-            child: hasImage
-                ? Image.asset(asset!, fit: BoxFit.cover)
-                : Center(
-                    child: Icon(
-                      AppIcons.image5,
-                      color: AppColors.grey,
-                      size: AppResponsive.iconSize(context, factor: 1.4),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(
+                (radius - _borderWidth).clamp(0, radius),
+              ),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  if (hasImage)
+                    SizedBox.expand(
+                      child: AppRefImage(ref: asset, fit: BoxFit.cover),
+                    )
+                  else
+                    Center(
+                      child: Icon(
+                        AppIcons.image5,
+                        color: AppColors.grey,
+                        size: AppResponsive.iconSize(context, factor: 1.4),
+                      ),
                     ),
-                  ),
+                ],
+              ),
+            ),
           ),
         ),
         AppSpacing.vertical(context, 0.008),
         Text(
           label,
           textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: AppTextStyles.caption(context).copyWith(
             color: AppColors.grey,
             fontWeight: FontWeight.w500,

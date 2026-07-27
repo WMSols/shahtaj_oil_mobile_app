@@ -12,6 +12,7 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/shops/
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_loader.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_sub_screen_scaffold.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/media/app_ref_image.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/controllers/ob_shop_detail_controller.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_shop_model.dart';
 
@@ -20,10 +21,10 @@ class ObShopDetailScreen extends GetView<ObShopDetailController> {
 
   bool _hasVerificationPhotos(ObShopModel shop) {
     final photos = shop.verificationPhotos;
-    return photos.cnicFront != null ||
-        photos.cnicBack != null ||
-        photos.ownerPhoto != null ||
-        photos.shopExterior != null;
+    return AppRefImage.isLoadable(photos.cnicFront) ||
+        AppRefImage.isLoadable(photos.cnicBack) ||
+        AppRefImage.isLoadable(photos.ownerPhoto) ||
+        AppRefImage.isLoadable(photos.shopExterior);
   }
 
   @override
@@ -51,7 +52,9 @@ class ObShopDetailScreen extends GetView<ObShopDetailController> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    ObShopDetailHero(imageAsset: shop.heroImageAsset),
+                    ObShopDetailHero(
+                      imageAsset: shop.verificationPhotos.shopExterior,
+                    ),
                     Padding(
                       padding: AppSpacing.screenPadding(context),
                       child: Column(

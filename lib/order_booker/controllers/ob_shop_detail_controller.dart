@@ -71,7 +71,7 @@ class ObShopDetailController extends GetxController {
 
     isLoading.value = true;
     try {
-      shop.value = await _shopService.fetchShop(shopId);
+      shop.value = await _shopService.fetchShop(shopId, includePhotos: true);
       await refreshVisitState();
     } catch (_) {
       shop.value = null;

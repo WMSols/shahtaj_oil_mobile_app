@@ -24,6 +24,8 @@ class AppPhotoUploadTile extends StatelessWidget {
   final Uint8List? imageBytes;
   final VoidCallback? onTap;
 
+  static const double _borderWidth = 1.5;
+
   bool get _hasImage => imageBytes != null && imageBytes!.isNotEmpty;
 
   @override
@@ -34,102 +36,126 @@ class AppPhotoUploadTile extends StatelessWidget {
       onTap: onTap,
       child: AspectRatio(
         aspectRatio: 1,
-        child: Container(
+        child: DecoratedBox(
           decoration: BoxDecoration(
             color: AppColors.inputFill,
             borderRadius: BorderRadius.circular(radius),
             border: Border.all(
               color: _hasImage ? AppColors.primary : AppColors.lightGrey,
-              width: _hasImage ? 2 : 1.5,
+              width: _borderWidth,
             ),
           ),
-          clipBehavior: Clip.antiAlias,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              if (_hasImage)
-                Image.memory(imageBytes!, fit: BoxFit.cover)
-              else
-                Center(
-                  child: Padding(
-                    padding: AppSpacing.symmetric(context, h: 0.02, v: 0.01),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          icon,
-                          color: AppColors.grey,
-                          size: AppResponsive.iconSize(context, factor: 1.4),
-                        ),
-                        AppSpacing.vertical(context, 0.008),
-                        Text(
-                          title,
-                          textAlign: TextAlign.center,
-                          style: AppTextStyles.caption(context).copyWith(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(
+              (radius - _borderWidth).clamp(0, radius),
+            ),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                if (_hasImage)
+                  Image.memory(
+                    imageBytes!,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
+                    gaplessPlayback: true,
+                  ),
+                if (!_hasImage)
+                  Center(
+                    child: Padding(
+                      padding: AppSpacing.symmetric(context, h: 0.02, v: 0.01),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            icon,
                             color: AppColors.grey,
-                            fontWeight: FontWeight.w700,
+                            size: AppResponsive.iconSize(context, factor: 1.4),
                           ),
-                        ),
-                        AppSpacing.vertical(context, 0.003),
-                        Text(
-                          subtitle,
-                          textAlign: TextAlign.center,
-                          style: AppTextStyles.hintText(context),
-                        ),
-                      ],
+                          AppSpacing.vertical(context, 0.008),
+                          Text(
+                            title,
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyles.caption(context).copyWith(
+                              color: AppColors.grey,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          AppSpacing.vertical(context, 0.003),
+                          Text(
+                            subtitle,
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyles.hintText(context),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              if (_hasImage) ...[
-                Container(color: AppColors.black.withValues(alpha: 0.35)),
-                Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        icon,
+                if (_hasImage) ...[
+                  const ColoredBox(color: Color(0x59000000)),
+                  Center(
+                    child: Padding(
+                      padding: AppSpacing.symmetric(context, h: 0.02, v: 0.01),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            icon,
+                            color: AppColors.white,
+                            size: AppResponsive.iconSize(context, factor: 1.4),
+                          ),
+                          AppSpacing.vertical(context, 0.008),
+                          Text(
+                            title,
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyles.caption(context).copyWith(
+                              color: AppColors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          AppSpacing.vertical(context, 0.003),
+                          Text(
+                            subtitle,
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyles.hintText(context).copyWith(
+                              color: AppColors.white.withValues(alpha: 0.9),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: AppSpacing.verticalValue(context, 0.008),
+                    right: AppSpacing.horizontalValue(context, 0.02),
+                    child: Container(
+                      padding: EdgeInsets.all(
+                        AppResponsive.scaleSize(context, 4),
+                      ),
+                      decoration: const BoxDecoration(
+                        color: AppColors.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        AppIcons.check,
                         color: AppColors.white,
-                        size: AppResponsive.iconSize(context),
+                        size: AppResponsive.scaleSize(context, 14),
                       ),
-                      AppSpacing.vertical(context, 0.006),
-                      Text(
-                        title,
-                        textAlign: TextAlign.center,
-                        style: AppTextStyles.caption(context).copyWith(
-                          color: AppColors.white,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      Text(
-                        subtitle,
-                        textAlign: TextAlign.center,
-                        style: AppTextStyles.hintText(context).copyWith(
-                          color: AppColors.white.withValues(alpha: 0.9),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Positioned(
-                  top: AppSpacing.verticalValue(context, 0.008),
-                  right: AppSpacing.horizontalValue(context, 0.02),
-                  child: Container(
-                    padding: EdgeInsets.all(
-                      AppResponsive.scaleSize(context, 4),
-                    ),
-                    decoration: const BoxDecoration(
-                      color: AppColors.primary,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      AppIcons.check,
-                      color: AppColors.white,
-                      size: AppResponsive.scaleSize(context, 14),
                     ),
                   ),
-                ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
