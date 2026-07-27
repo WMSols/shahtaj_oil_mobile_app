@@ -2,9 +2,7 @@ import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
-import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_confirm_dialog.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_active_visit_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_task_model.dart';
@@ -78,26 +76,6 @@ class ObRouteDetailController extends GetxController {
     nav?.then((_) => loadTasks(force: true));
   }
 
-  Future<void> confirmSkipTask(ObTaskModel task) async {
-    final confirmed = await Get.dialog<bool>(
-      AppConfirmDialog(
-        title: AppTexts.obSkipTaskTitle,
-        message: AppTexts.obSkipTaskMessage,
-        confirmLabel: AppTexts.obTaskSkip,
-      ),
-    );
-    if (confirmed != true) return;
-
-    try {
-      await _taskService.skipTask(task.id);
-      await loadTasks(force: true);
-    } on ApiException catch (e) {
-      _showMessage(e.message);
-    } catch (_) {
-      _showMessage(AppTexts.error);
-    }
-  }
-
   void openTaskNotes(ObTaskModel task) {
     Get.toNamed(
       AppRoutes.obNotes,
@@ -113,9 +91,5 @@ class ObRouteDetailController extends GetxController {
     final visit = activeVisit.value;
     if (visit == null) return;
     Get.toNamed(AppRoutes.obOrderCreate, arguments: {'visitId': visit.visitId});
-  }
-
-  void _showMessage(String message) {
-    AppToast.showError(message);
   }
 }

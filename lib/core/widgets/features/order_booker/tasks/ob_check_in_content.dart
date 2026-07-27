@@ -7,7 +7,6 @@ import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_primary_button.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_secondary_button.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_map_preview.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_task_model.dart';
 
@@ -23,9 +22,7 @@ class ObCheckInContent extends StatelessWidget {
     required this.hasLocation,
     required this.isLocating,
     required this.isSubmitting,
-    required this.onUseCurrentLocation,
     required this.onCheckIn,
-    required this.onSkip,
   });
 
   final ObTaskModel task;
@@ -37,14 +34,13 @@ class ObCheckInContent extends StatelessWidget {
   final bool hasLocation;
   final bool isLocating;
   final bool isSubmitting;
-  final VoidCallback onUseCurrentLocation;
   final VoidCallback onCheckIn;
-  final VoidCallback onSkip;
 
   @override
   Widget build(BuildContext context) {
     final mapLat = latitude ?? shopLatitude ?? task.shopLatitude;
     final mapLng = longitude ?? shopLongitude ?? task.shopLongitude;
+    final isBusy = isSubmitting || isLocating;
 
     return ListView(
       padding: AppSpacing.screenPadding(context),
@@ -99,25 +95,11 @@ class ObCheckInContent extends StatelessWidget {
             color: hasLocation ? AppColors.textPrimary : AppColors.grey,
           ),
         ),
-        AppSpacing.vertical(context, 0.01),
-        AppSecondaryButton(
-          label: AppTexts.obUseCurrentLocation,
-          icon: AppIcons.gps,
-          outlinedOnly: true,
-          isLoading: isLocating,
-          onPressed: isLocating ? null : onUseCurrentLocation,
-        ),
         AppSpacing.vertical(context, 0.02),
         AppPrimaryButton(
           label: AppTexts.obTaskCheckIn,
-          isLoading: isSubmitting,
-          onPressed: isSubmitting || !hasLocation ? null : onCheckIn,
-        ),
-        AppSpacing.vertical(context, 0.01),
-        AppSecondaryButton(
-          label: AppTexts.obTaskSkip,
-          outlinedOnly: true,
-          onPressed: isSubmitting ? null : onSkip,
+          isLoading: isBusy,
+          onPressed: isBusy ? null : onCheckIn,
         ),
       ],
     );

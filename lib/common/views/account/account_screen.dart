@@ -33,7 +33,8 @@ class AccountScreen extends GetView<AccountController> {
             ? PresenceStatus.offline
             : (user?.presenceStatus ?? PresenceStatus.away);
 
-        if (controller.isLoading.value && user == null) {
+        if (controller.isLoggingOut.value ||
+            (controller.isLoading.value && user == null)) {
           return const AppLoader();
         }
 

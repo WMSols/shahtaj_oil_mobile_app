@@ -124,15 +124,6 @@ class ObTaskService extends GetxService {
     await fetchTodayTasks();
   }
 
-  Future<void> skipTask(int taskId) async {
-    await _api.postData(ApiEndpoints.obTasksSkip, data: {'task_id': taskId});
-    if (_activeVisit?.taskId == taskId) {
-      _activeVisit = null;
-      await _cache.saveMap(OfflineCacheKeys.activeVisit, const {});
-    }
-    await fetchTodayTasks();
-  }
-
   Future<void> saveTaskNotes({
     required int taskId,
     required String notes,

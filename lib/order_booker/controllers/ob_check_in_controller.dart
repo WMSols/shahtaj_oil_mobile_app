@@ -4,8 +4,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
-import 'package:shahtaj_oil_mobile_app/core/utils/helper/app_location_helper.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_confirm_dialog.dart';
+import 'package:shahtaj_oil_mobile_app/core/utils/helper/app_helper.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_task_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/ob_task_service.dart';
@@ -20,7 +19,6 @@ class ObCheckInController extends GetxController {
   final RxBool isSubmitting = false.obs;
   final Rxn<ObTaskModel> task = Rxn<ObTaskModel>();
 
-  /// Device GPS used for check-in (must be captured via Current location).
   final checkInLatitude = Rxn<double>();
   final checkInLongitude = Rxn<double>();
 
@@ -30,7 +28,6 @@ class ObCheckInController extends GetxController {
   String? get shopId =>
       Get.arguments is Map ? (Get.arguments as Map)['shopId'] as String? : null;
 
-  /// Shop pin for map preview only — does not enable check-in.
   double? get shopLatitude => task.value?.shopLatitude;
   double? get shopLongitude => task.value?.shopLongitude;
 
@@ -78,16 +75,19 @@ class ObCheckInController extends GetxController {
     }
   }
 
-  Future<void> useCurrentLocation() async {
+  Future<bool> _captureDeviceLocation() async {
     isLocating.value = true;
     try {
-      final position = await AppLocationHelper.requireCurrentPosition();
+      final position = await AppHelper.requireCurrentPosition(showGuide: true);
       checkInLatitude.value = position.latitude;
       checkInLongitude.value = position.longitude;
+      return true;
     } on ApiException catch (e) {
       _showMessage(e.message);
+      return false;
     } catch (_) {
       _showMessage(AppTexts.obLocationFetchFailed);
+      return false;
     } finally {
       isLocating.value = false;
     }
@@ -95,9 +95,11 @@ class ObCheckInController extends GetxController {
 
   Future<void> checkIn() async {
     final current = task.value;
-    if (current == null || !hasDeviceLocation) {
-      _showMessage(AppTexts.obLocationNotCaptured);
-      return;
+    if (current == null) return;
+
+    if (!hasDeviceLocation) {
+      final captured = await _captureDeviceLocation();
+      if (!captured || !hasDeviceLocation) return;
     }
 
     final active = await _taskService.fetchActiveVisit();
@@ -120,34 +122,6 @@ class ObCheckInController extends GetxController {
         AppRoutes.obOrderCreate,
         arguments: {'visitId': visit.visitId},
       );
-    } on ApiException catch (e) {
-      _showMessage(e.message);
-    } catch (_) {
-      _showMessage(AppTexts.error);
-    } finally {
-      isSubmitting.value = false;
-    }
-  }
-
-  Future<void> confirmSkip() async {
-    final current = task.value;
-    if (current == null) return;
-
-    final confirmed = await Get.dialog<bool>(
-      AppConfirmDialog(
-        title: AppTexts.obSkipTaskTitle,
-        message: AppTexts.obSkipTaskMessage,
-        confirmLabel: AppTexts.obTaskSkip,
-      ),
-    );
-    if (confirmed != true) return;
-
-    isSubmitting.value = true;
-    try {
-      await _taskService.skipTask(current.id);
-      if (Get.currentRoute == AppRoutes.obCheckIn) {
-        Get.back(result: true);
-      }
     } on ApiException catch (e) {
       _showMessage(e.message);
     } catch (_) {

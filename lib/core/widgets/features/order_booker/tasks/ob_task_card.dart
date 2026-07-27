@@ -17,21 +17,17 @@ class ObTaskCard extends StatelessWidget {
     super.key,
     required this.task,
     this.onCheckIn,
-    this.onSkip,
     this.onNotes,
     this.onTap,
   });
 
   final ObTaskModel task;
   final VoidCallback? onCheckIn;
-  final VoidCallback? onSkip;
   final VoidCallback? onNotes;
   final VoidCallback? onTap;
 
   bool get _canCheckIn => task.status == TaskStatus.pending;
-  bool get _canSkip => task.status == TaskStatus.pending;
-  bool get _showActions =>
-      _canCheckIn || _canSkip || onNotes != null || onTap != null;
+  bool get _showActions => _canCheckIn || onNotes != null || onTap != null;
 
   @override
   Widget build(BuildContext context) {
@@ -137,16 +133,7 @@ class ObTaskCard extends StatelessWidget {
                     label: AppTexts.obTaskCheckIn,
                     onTap: onCheckIn,
                   ),
-                if (_canCheckIn && _canSkip)
-                  AppSpacing.horizontal(context, 0.012),
-                if (_canSkip)
-                  AppOutlineIconButton(
-                    icon: AppIcons.block5,
-                    label: AppTexts.obTaskSkip,
-                    onTap: onSkip,
-                    foregroundColor: AppColors.warning,
-                  ),
-                if ((_canCheckIn || _canSkip) && onNotes != null)
+                if (_canCheckIn && onNotes != null)
                   AppSpacing.horizontal(context, 0.012),
                 if (onNotes != null)
                   AppOutlineIconButton(
