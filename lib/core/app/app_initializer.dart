@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/system/app_system_ui.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/connectivity_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/locale_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/location_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/storage_service.dart';
@@ -35,6 +36,12 @@ class AppInitializer {
     final connectivity = ConnectivityService();
     Get.put(connectivity, permanent: true);
     await connectivity.init();
+
+    final location = LocationService();
+    Get.put(location, permanent: true);
+    await location.init();
+
+    await Get.find<OfflineCacheService>().refreshPendingSyncCount();
   }
 
   static Future<void> _loadEnv() async {

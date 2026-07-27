@@ -72,6 +72,9 @@ abstract final class AppTranslationMaps {
     'developerName': 'WMSols',
     'allRightsReserved': 'All rights reserved.',
     'loginSuccessful': 'Login successful',
+    'logoutSuccessful': 'Logged out successfully',
+    'loginCredentialsRequired': 'Please enter login and password.',
+    'loginFailed': 'Login failed. Please try again.',
     'accountCreatedSuccess': 'Account created successfully',
     'loginFailedTitle': 'Login failed',
     'signUpFailedTitle': 'Sign up failed',
@@ -221,6 +224,20 @@ abstract final class AppTranslationMaps {
     'error': 'Error',
     'success': 'Success',
     'noInternet': 'No internet connection',
+    'locationServicesOff': 'Device location is off',
+    'locationServicesOn': 'Location enabled',
+    'formInvalid': 'Please fix the highlighted fields.',
+    'locationEnableTitle': 'Turn on location',
+    'locationEnableMessage':
+        'Location is required for check-in and placing orders. Please enable location services on your device.',
+    'locationPermissionTitle': 'Allow location access',
+    'locationPermissionMessage':
+        'This app needs location permission. Open app settings and allow location access.',
+    'locationEnableSteps':
+        'Android: Settings → Location → turn On\n'
+        'iPhone: Settings → Privacy & Security → Location Services → On',
+    'locationOpenSettings': 'Open location settings',
+    'locationOpenAppSettings': 'Open app settings',
     'noInternetDescription':
         'Please check your internet connection and try again.',
     'emptyLoadFailedTitle': 'Couldn\'t load',
@@ -600,6 +617,9 @@ abstract final class AppTranslationMaps {
     'developerName': 'WMSols',
     'allRightsReserved': 'جملہ حقوق محفوظ ہیں۔',
     'loginSuccessful': 'لاگ ان کامیاب',
+    'logoutSuccessful': 'کامیابی سے لاگ آؤٹ ہو گئے',
+    'loginCredentialsRequired': 'براہ کرم لاگ ان اور پاس ورڈ درج کریں۔',
+    'loginFailed': 'لاگ ان ناکام۔ براہ کرم دوبارہ کوشش کریں۔',
     'accountCreatedSuccess': 'اکاؤنٹ کامیابی سے بن گیا',
     'loginFailedTitle': 'لاگ ان ناکام',
     'signUpFailedTitle': 'سائن اپ ناکام',
@@ -749,6 +769,20 @@ abstract final class AppTranslationMaps {
     'error': 'خرابی',
     'success': 'کامیابی',
     'noInternet': 'انٹرنیٹ کنکشن نہیں',
+    'locationServicesOff': 'ڈیوائس لوکیشن بند ہے',
+    'locationServicesOn': 'لوکیشن آن ہے',
+    'formInvalid': 'براہ کرم نمایاں فیلڈز درست کریں۔',
+    'locationEnableTitle': 'لوکیشن آن کریں',
+    'locationEnableMessage':
+        'چیک ان اور آرڈر کے لیے لوکیشن ضروری ہے۔ براہ کرم اپنے ڈیوائس پر لوکیشن سروس آن کریں۔',
+    'locationPermissionTitle': 'لوکیشن کی اجازت دیں',
+    'locationPermissionMessage':
+        'اس ایپ کو لوکیشن کی اجازت درکار ہے۔ ایپ سیٹنگز کھولیں اور لوکیشن کی اجازت دیں۔',
+    'locationEnableSteps':
+        'Android: Settings → Location → On\n'
+        'iPhone: Settings → Privacy & Security → Location Services → On',
+    'locationOpenSettings': 'لوکیشن سیٹنگز کھولیں',
+    'locationOpenAppSettings': 'ایپ سیٹنگز کھولیں',
     'noInternetDescription':
         'براہ کرم اپنا انٹرنیٹ کنکشن چیک کریں اور دوبارہ کوشش کریں۔',
     'emptyLoadFailedTitle': 'لوڈ نہیں ہو سکا',

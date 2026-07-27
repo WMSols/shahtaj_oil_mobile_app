@@ -18,7 +18,7 @@ class AppColors {
   static const Color cardBorder = Color(0xFFE5E7EB);
   static const Color inputFill = Color(0xFFF3F4F6);
   static const Color lightGrey = Color(0xFFE5E7EB);
-  static const Color success = Color(0xFF34C759);
+  static const Color success = Color(0xFF268E40);
   static const Color information = Color(0xFF2196F3);
   static const Color warning = Color(0xFFFF9800);
   static const Color error = Color(0xFFBF0D00);

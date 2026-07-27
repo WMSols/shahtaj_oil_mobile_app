@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:shahtaj_oil_mobile_app/common/services/profile_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/connectivity_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/location_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/presence_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
@@ -26,6 +27,11 @@ class InitialBinding extends Bindings {
       final connectivity = ConnectivityService();
       Get.put<ConnectivityService>(connectivity, permanent: true);
       connectivity.init();
+    }
+    if (!Get.isRegistered<LocationService>()) {
+      final location = LocationService();
+      Get.put<LocationService>(location, permanent: true);
+      location.init();
     }
     if (!Get.isRegistered<ApiClient>()) {
       Get.put<ApiClient>(
