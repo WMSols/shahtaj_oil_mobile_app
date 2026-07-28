@@ -64,7 +64,7 @@ class ObVisitHistoryCard extends StatelessWidget {
                 Row(
                   children: [
                     Icon(
-                      AppIcons.history5,
+                      AppIcons.calendar,
                       size: AppResponsive.iconSize(context, factor: 0.8),
                       color: AppColors.primary,
                     ),

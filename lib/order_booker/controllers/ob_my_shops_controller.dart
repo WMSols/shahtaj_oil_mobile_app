@@ -22,7 +22,6 @@ class ObMyShopsController extends GetxController with CachedLoadMixin {
   static const _filterStatuses = [
     ShopStatus.pending,
     ShopStatus.approved,
-    ShopStatus.active,
     ShopStatus.rejected,
   ];
 

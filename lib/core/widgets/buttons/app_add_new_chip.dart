@@ -37,7 +37,7 @@ class AppAddNewChip extends StatelessWidget {
             ),
             AppSpacing.horizontal(context, 0.01),
             Text(
-              AppTexts.addNew,
+              AppTexts.addNew.toUpperCase(),
               style: AppTextStyles.caption(
                 context,
               ).copyWith(color: AppColors.white, fontWeight: FontWeight.w600),
