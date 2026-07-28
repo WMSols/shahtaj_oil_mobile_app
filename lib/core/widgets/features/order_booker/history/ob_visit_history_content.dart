@@ -261,7 +261,7 @@ class _ClearDatesChip extends StatelessWidget {
               ),
               AppSpacing.horizontal(context, 0.012),
               Text(
-                AppTexts.obVisitClearDates,
+                AppTexts.obVisitClearDates.toUpperCase(),
                 style: AppTextStyles.caption(
                   context,
                 ).copyWith(color: AppColors.error, fontWeight: FontWeight.w700),

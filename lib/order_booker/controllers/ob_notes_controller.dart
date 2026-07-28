@@ -68,7 +68,10 @@ class ObNotesController extends GetxController {
 
   Future<void> save() async {
     final notes = notesController.text.trim();
-    if (notesRequired && notes.isEmpty) return;
+    if (notesRequired && notes.isEmpty) {
+      AppToast.showError(AppTexts.fieldRequired);
+      return;
+    }
 
     isSaving.value = true;
     try {
@@ -99,6 +102,7 @@ class ObNotesController extends GetxController {
     final id = taskId;
     if (id == null) return;
     await _taskService.saveTaskNotes(taskId: id, notes: notes);
+    AppToast.showSuccess(AppTexts.save);
     if (Get.isRegistered<ObRouteDetailController>()) {
       await Get.find<ObRouteDetailController>().loadTasks(
         silent: true,
