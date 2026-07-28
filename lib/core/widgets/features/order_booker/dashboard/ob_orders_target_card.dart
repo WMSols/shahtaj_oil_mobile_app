@@ -14,9 +14,7 @@ class ObOrdersTargetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final progress = targets.ordersTarget == 0
-        ? 0.0
-        : targets.ordersCurrent / targets.ordersTarget;
+    final progress = targets.headlinePercent / 100;
 
     return Container(
       width: double.infinity,
@@ -29,18 +27,17 @@ class ObOrdersTargetCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '${targets.ordersCurrent} / ${targets.ordersTarget}',
+            AppTexts.obTargetsProgressPercent(targets.headlinePercent),
             style: AppTextStyles.headline(
               context,
             ).copyWith(color: AppColors.white, fontWeight: FontWeight.w600),
           ),
+          AppSpacing.vertical(context, 0.004),
           Text(
-            AppTexts.obTargetsProgressPercent(
-              ((progress.clamp(0, 1)) * 100).round(),
-            ),
-            style: AppTextStyles.heading(
+            AppTexts.obTargetsDashboardSummary,
+            style: AppTextStyles.bodyText(
               context,
-            ).copyWith(color: AppColors.white, fontWeight: FontWeight.w500),
+            ).copyWith(color: AppColors.white.withValues(alpha: 0.9)),
           ),
           AppSpacing.vertical(context, 0.01),
           ClipRRect(

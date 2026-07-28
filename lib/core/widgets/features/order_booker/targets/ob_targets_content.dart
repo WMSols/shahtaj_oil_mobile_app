@@ -31,7 +31,10 @@ class ObTargetsContent extends GetView<ObTargetsController> {
                   padding: EdgeInsets.only(
                     bottom: AppSpacing.verticalValue(context, 0.01),
                   ),
-                  child: ObTargetProgressCard(target: item),
+                  child: ObTargetProgressCard(
+                    controller: controller,
+                    target: item,
+                  ),
                 ),
               )
               .toList(),

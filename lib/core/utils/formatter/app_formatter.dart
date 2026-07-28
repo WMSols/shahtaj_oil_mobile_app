@@ -188,6 +188,58 @@ class AppFormatter {
     return count.toString();
   }
 
+  /// Target qty/weight — whole number when possible, else one decimal.
+  static String targetAmount(double value) {
+    if (value == value.roundToDouble()) return value.toStringAsFixed(0);
+    return value.toStringAsFixed(1);
+  }
+
+  /// e.g. `40 / 20 kg` or `40 / 20` when [unit] is empty.
+  static String targetProgressValues({
+    required double current,
+    required double target,
+    String unit = '',
+  }) {
+    final values = '${targetAmount(current)} / ${targetAmount(target)}';
+    final trimmedUnit = targetDisplayUnit(unit);
+    if (trimmedUnit.isEmpty) return values;
+    return '$values $trimmedUnit';
+  }
+
+  /// Prefer full unit labels over short API codes (kg, ton, qty).
+  static String targetDisplayUnit(String unit) {
+    final trimmed = unit.trim();
+    if (trimmed.isEmpty) return '';
+
+    if (trimmed.contains(' ') || trimmed.contains('(')) return trimmed;
+
+    return switch (trimmed.toLowerCase()) {
+      'kg' => 'Kilogram (kg)',
+      'g' => 'Gram (g)',
+      'ton' => 'Ton',
+      'ltr' || 'l' => 'Liter',
+      'qty' => 'Quantity',
+      _ =>
+        trimmed.length <= 4
+            ? trimmed[0].toUpperCase() + trimmed.substring(1)
+            : trimmed,
+    };
+  }
+
+  /// Title-case only when the whole string is lowercase (keeps API mixed-case names).
+  static String displayLabel(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return trimmed;
+    if (trimmed != trimmed.toLowerCase()) return trimmed;
+    return trimmed
+        .split(RegExp(r'\s+'))
+        .map((word) {
+          if (word.isEmpty) return word;
+          return word[0].toUpperCase() + word.substring(1);
+        })
+        .join(' ');
+  }
+
   static String invoiceNumber(String id) => 'INV-${id.padLeft(6, '0')}';
 
   static String displayDate(String? rawDate) {
