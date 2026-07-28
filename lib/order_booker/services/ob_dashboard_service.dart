@@ -53,17 +53,7 @@ class ObDashboardService extends GetxService {
   }
 
   ObTargetsModel _targetsSummary(List<ObTargetItemModel> items) {
-    if (items.isEmpty) return const ObTargetsModel();
-    var current = 0.0;
-    var target = 0.0;
-    for (final item in items) {
-      current += item.current;
-      target += item.target;
-    }
-    return ObTargetsModel(
-      ordersCurrent: current.round(),
-      ordersTarget: target.round(),
-    );
+    return ObTargetsModel.fromTargets(items);
   }
 
   ObOrderSummaryModel _orderFromVisit(ObVisitSummaryModel visit) {

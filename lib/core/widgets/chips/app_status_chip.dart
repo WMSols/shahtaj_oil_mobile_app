@@ -8,25 +8,16 @@ import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.d
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 
 class AppStatusChip extends StatelessWidget {
-  const AppStatusChip({
-    super.key,
-    required this.label,
-    required this.color,
-    this.uppercase = false,
-  });
+  const AppStatusChip({super.key, required this.label, required this.color});
 
   final String label;
   final Color color;
-  final bool uppercase;
 
   factory AppStatusChip.route(RouteStatus status) =>
       AppStatusChip(label: status.label, color: status.chipColor);
 
-  factory AppStatusChip.order(OrderStatus status) => AppStatusChip(
-    label: status.label,
-    color: status.chipColor,
-    uppercase: true,
-  );
+  factory AppStatusChip.order(OrderStatus status) =>
+      AppStatusChip(label: status.label, color: status.chipColor);
 
   factory AppStatusChip.delivery(DeliveryStatus status) =>
       AppStatusChip(label: status.label, color: status.chipColor);
@@ -61,10 +52,11 @@ class AppStatusChip extends StatelessWidget {
   factory AppStatusChip.presence(PresenceStatus status) =>
       AppStatusChip(label: status.label, color: status.chipColor);
 
+  factory AppStatusChip.target({required String label, required Color color}) =>
+      AppStatusChip(label: label, color: color);
+
   @override
   Widget build(BuildContext context) {
-    final displayLabel = uppercase ? label.toUpperCase() : label;
-
     return Container(
       padding: AppSpacing.symmetric(context, h: 0.02, v: 0.002),
       decoration: BoxDecoration(
@@ -72,7 +64,7 @@ class AppStatusChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppResponsive.radius(context)),
       ),
       child: Text(
-        displayLabel,
+        label.toUpperCase(),
         style: AppTextStyles.hintText(
           context,
         ).copyWith(color: AppColors.white, fontWeight: FontWeight.w600),

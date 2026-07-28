@@ -1,17 +1,29 @@
-class ObTargetsModel {
-  const ObTargetsModel({this.ordersCurrent = 0, this.ordersTarget = 0});
+import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_target_item_model.dart';
 
-  final int ordersCurrent;
-  final int ordersTarget;
+class ObTargetsModel {
+  const ObTargetsModel({this.headlinePercent = 0});
+
+  /// Average headline progress across active targets (0–100).
+  final int headlinePercent;
+
+  factory ObTargetsModel.fromTargets(List<ObTargetItemModel> items) {
+    if (items.isEmpty) return const ObTargetsModel();
+    final sum = items.fold<double>(
+      0,
+      (total, item) => total + item.headlineProgress,
+    );
+    return ObTargetsModel(
+      headlinePercent: ((sum / items.length) * 100).round().clamp(0, 100),
+    );
+  }
 
   factory ObTargetsModel.fromJson(Map<String, dynamic> json) {
     return ObTargetsModel(
-      ordersCurrent: (json['orders_current'] as num?)?.toInt() ?? 0,
-      ordersTarget: (json['orders_target'] as num?)?.toInt() ?? 0,
+      headlinePercent: (json['headline_percent'] as num?)?.toInt() ?? 0,
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {'orders_current': ordersCurrent, 'orders_target': ordersTarget};
+    return {'headline_percent': headlinePercent};
   }
 }

@@ -160,6 +160,21 @@ class AppTexts {
 
   static String obTargetsProgressPercent(int percent) =>
       'obTargetsProgressPercent'.trParams({'percent': '$percent'});
+  static String get obTargetsDashboardSummary => 'obTargetsDashboardSummary'.tr;
+  static String get obTargetTypeCollectiveQuantity =>
+      'obTargetTypeCollectiveQuantity'.tr;
+  static String get obTargetTypeCollectiveWeight =>
+      'obTargetTypeCollectiveWeight'.tr;
+  static String get obTargetTypeCombinedProduct =>
+      'obTargetTypeCombinedProduct'.tr;
+  static String get obTargetTypeProductQuantity =>
+      'obTargetTypeProductQuantity'.tr;
+  static String get obTargetTypeProductWeight => 'obTargetTypeProductWeight'.tr;
+  static String get obTargetMeasureWeight => 'obTargetMeasureWeight'.tr;
+  static String get obTargetMeasureQuantity => 'obTargetMeasureQuantity'.tr;
+  static String get obCombinedTargetHeadlineHint =>
+      'obCombinedTargetHeadlineHint'.tr;
+  static String get obTargetProductsSection => 'obTargetProductsSection'.tr;
   static String get obRecoveryTarget => 'obRecoveryTarget'.tr;
   static String get rmRecoveryTarget => 'rmRecoveryTarget'.tr;
   static String get rmTargets => 'rmTargets'.tr;
