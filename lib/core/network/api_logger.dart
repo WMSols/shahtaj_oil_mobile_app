@@ -15,6 +15,9 @@ class ApiLogger {
   static const _magenta = '\x1B[35m';
   static const _dim = '\x1B[2m';
 
+  /// Android/`print` truncates ~1KB lines — chunk so full payloads stay visible.
+  static const _chunkSize = 800;
+
   static Interceptor interceptor() {
     return InterceptorsWrapper(
       onRequest: (options, handler) {
@@ -65,8 +68,23 @@ class ApiLogger {
   }
 
   static void _print(String message) {
-    // ignore: avoid_print
-    print(message);
+    if (message.length <= _chunkSize) {
+      // ignore: avoid_print
+      print(message);
+      return;
+    }
+    var offset = 0;
+    var part = 1;
+    final total = (message.length / _chunkSize).ceil();
+    while (offset < message.length) {
+      final end = (offset + _chunkSize < message.length)
+          ? offset + _chunkSize
+          : message.length;
+      // ignore: avoid_print
+      print('[log $part/$total] ${message.substring(offset, end)}');
+      offset = end;
+      part++;
+    }
   }
 
   static String _safeJson(dynamic value) {
@@ -75,7 +93,7 @@ class ApiLogger {
         return const JsonEncoder.withIndent('  ').convert(_redact(value));
       }
       if (value is List) {
-        return const JsonEncoder.withIndent('  ').convert(value);
+        return const JsonEncoder.withIndent('  ').convert(_redact(value));
       }
       if (value is String) return value;
       return value.toString();
@@ -94,10 +112,25 @@ class ApiLogger {
             keyName.contains('api_key')) {
           return MapEntry(key, '***');
         }
+        // Keep structure readable: huge base64 blobs are summarized with length.
+        if (_isLikelyBase64Payload(keyName, entry)) {
+          final text = entry.toString();
+          return MapEntry(key, '[base64 length=${text.length}]');
+        }
         return MapEntry(key, _redact(entry));
       });
     }
     if (value is List) return value.map(_redact).toList();
     return value;
+  }
+
+  static bool _isLikelyBase64Payload(String keyName, dynamic entry) {
+    if (entry is! String) return false;
+    if (entry.length < 200) return false;
+    return keyName.contains('photo') ||
+        keyName.contains('image') ||
+        keyName.contains('base64') ||
+        keyName.endsWith('_front') ||
+        keyName.endsWith('_back');
   }
 }
