@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'package:shahtaj_oil_mobile_app/common/controllers/onboarding_controller.dart';
+import 'package:shahtaj_oil_mobile_app/common/controllers/onboarding/onboarding_controller.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/common/onboarding/onboarding_progress_bar.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/common/onboarding/onboarding_step_actions.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/common/onboarding/onboarding_step_content.dart';
+import 'package:shahtaj_oil_mobile_app/common/widgets/onboarding/onboarding_progress_bar.dart';
+import 'package:shahtaj_oil_mobile_app/common/widgets/onboarding/onboarding_step_actions.dart';
+import 'package:shahtaj_oil_mobile_app/common/widgets/onboarding/onboarding_step_content.dart';
 
 class OnboardingScreen extends GetView<OnboardingController> {
   const OnboardingScreen({super.key});
