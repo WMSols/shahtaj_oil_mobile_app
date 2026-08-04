@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'package:shahtaj_oil_mobile_app/common/controllers/splash_controller.dart';
+import 'package:shahtaj_oil_mobile_app/common/controllers/splash/splash_controller.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/images/app_images.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/responsive/app_responsive.dart';

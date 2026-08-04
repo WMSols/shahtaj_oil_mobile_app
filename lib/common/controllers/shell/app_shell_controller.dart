@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'package:shahtaj_oil_mobile_app/common/services/profile_service.dart';
+import 'package:shahtaj_oil_mobile_app/common/services/account/profile_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_drawer_entry.dart';
 
 abstract class AppShellController extends GetxController {
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
   final RxString selectedLeafId = ''.obs;
   final RxSet<String> expandedGroupIds = <String>{}.obs;
+
+  static const _exitConfirmWindow = Duration(seconds: 2);
+  DateTime? _lastBackAt;
 
   List<AppDrawerEntry> get drawerEntries;
 
@@ -23,6 +28,12 @@ abstract class AppShellController extends GetxController {
     }
     return leaves;
   }
+
+  /// First drawer leaf is always the role dashboard / home.
+  String get homeLeafId => allLeaves.isEmpty ? '' : allLeaves.first.id;
+
+  bool get isOnHome =>
+      homeLeafId.isNotEmpty && selectedLeafId.value == homeLeafId;
 
   AppDrawerLeaf get currentLeaf => allLeaves.firstWhere(
     (leaf) => leaf.id == selectedLeafId.value,
@@ -65,6 +76,34 @@ abstract class AppShellController extends GetxController {
     selectedLeafId.value = id;
     _expandParentOf(id);
     scaffoldKey.currentState?.closeDrawer();
+  }
+
+  /// Handles Android/iOS system back while a drawer leaf is showing.
+  ///
+  /// Returns `true` when the shell route should pop (exit the app module).
+  bool handleSystemBack() {
+    final scaffold = scaffoldKey.currentState;
+    if (scaffold?.isDrawerOpen ?? false) {
+      scaffold!.closeDrawer();
+      return false;
+    }
+
+    if (!isOnHome) {
+      selectLeaf(homeLeafId);
+      _lastBackAt = null;
+      return false;
+    }
+
+    final now = DateTime.now();
+    if (_lastBackAt == null ||
+        now.difference(_lastBackAt!) > _exitConfirmWindow) {
+      _lastBackAt = now;
+      AppToast.showInformation(AppTexts.pressBackAgainToExit);
+      return false;
+    }
+
+    _lastBackAt = null;
+    return true;
   }
 
   void openAccount() {
