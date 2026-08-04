@@ -2,14 +2,17 @@ import 'dart:async';
 
 import 'package:get/get.dart';
 
-import 'package:shahtaj_oil_mobile_app/common/models/user_model.dart';
+import 'package:shahtaj_oil_mobile_app/common/models/account/user_model.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/api_endpoints.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/presence_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/storage_service.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/tasks/ob_task_service.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/visit/ob_visit_cart_service.dart';
 
 class AuthService extends GetxService {
   AuthService(this._api, this._storage, this._session);
@@ -23,9 +26,14 @@ class AuthService extends GetxService {
     required String password,
     required UserRole role,
   }) async {
-    // DM/RM: UI-only mock session — no API until those modules are wired.
-    if (role != UserRole.orderBooker) {
+    // DM: UI-only mock session — no API until that module is wired.
+    // RM never reaches here (blocked in AuthController).
+    if (role == UserRole.deliveryMan) {
       return _loginUiOnly(email: email, role: role);
+    }
+
+    if (role != UserRole.orderBooker) {
+      throw ApiException(message: 'This module is under development.');
     }
 
     final database = _api.odooDatabase;
@@ -67,15 +75,13 @@ class AuthService extends GetxService {
     return user;
   }
 
-  /// Local session for Delivery Man / Recovery Man while UI is built without APIs.
+  /// Local session for Delivery Man while UI is built without APIs.
   Future<UserModel> _loginUiOnly({
     required String email,
     required UserRole role,
   }) async {
     final trimmed = email.trim();
-    final display = trimmed.isEmpty
-        ? (role == UserRole.deliveryMan ? 'Delivery Man' : 'Recovery Man')
-        : trimmed.split('@').first;
+    final display = trimmed.isEmpty ? 'Delivery Man' : trimmed.split('@').first;
 
     final user = UserModel(
       id: 'ui-${role.name}',
@@ -94,6 +100,15 @@ class AuthService extends GetxService {
   Future<void> logout() async {
     // No logout endpoint in Shahtaj v1 yet — clear local session only.
     // Skip API for non-OB (UI-only mock sessions).
+    if (Get.isRegistered<OfflineCacheService>()) {
+      await Get.find<OfflineCacheService>().clearOrderBookerSessionCache();
+    }
+    if (Get.isRegistered<ObTaskService>()) {
+      await Get.delete<ObTaskService>(force: true);
+    }
+    if (Get.isRegistered<ObVisitCartService>()) {
+      await Get.delete<ObVisitCartService>(force: true);
+    }
     await _session.clearSession();
   }
 }
