@@ -14,6 +14,7 @@ class AppIconButton extends StatelessWidget {
     this.iconColor = AppColors.textPrimary,
     this.backgroundColor = Colors.transparent,
     this.iconSize,
+    this.isLoading = false,
   });
 
   final IconData icon;
@@ -22,6 +23,7 @@ class AppIconButton extends StatelessWidget {
   final Color iconColor;
   final Color backgroundColor;
   final double? iconSize;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -32,15 +34,25 @@ class AppIconButton extends StatelessWidget {
       color: backgroundColor,
       borderRadius: radius,
       child: InkWell(
-        onTap: onTap,
+        onTap: isLoading ? null : onTap,
         borderRadius: radius,
         child: Padding(
           padding: AppSpacing.symmetric(context, h: 0.01, v: 0.005),
           child: Stack(
             clipBehavior: Clip.none,
             children: [
-              Icon(icon, color: iconColor, size: size),
-              if (badge != null && badge!.isNotEmpty)
+              if (isLoading)
+                SizedBox(
+                  width: size,
+                  height: size,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: iconColor,
+                  ),
+                )
+              else
+                Icon(icon, color: iconColor, size: size),
+              if (!isLoading && badge != null && badge!.isNotEmpty)
                 Positioned(
                   right: -2,
                   top: -2,

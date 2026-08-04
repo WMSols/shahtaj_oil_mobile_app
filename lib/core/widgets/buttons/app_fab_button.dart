@@ -13,6 +13,7 @@ class AppFABButton extends StatelessWidget {
     this.icon = AppIcons.add,
     this.backgroundColor = AppColors.primary,
     this.foregroundColor = AppColors.white,
+    this.isLoading = false,
   });
 
   final String label;
@@ -20,6 +21,7 @@ class AppFABButton extends StatelessWidget {
   final IconData icon;
   final Color backgroundColor;
   final Color foregroundColor;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -29,10 +31,19 @@ class AppFABButton extends StatelessWidget {
     ).copyWith(color: foregroundColor, fontWeight: FontWeight.w600);
 
     return FloatingActionButton.extended(
-      onPressed: onPressed,
+      onPressed: isLoading ? null : onPressed,
       backgroundColor: backgroundColor,
       elevation: 10,
-      icon: Icon(icon, color: foregroundColor, size: iconSize),
+      icon: isLoading
+          ? SizedBox(
+              width: iconSize,
+              height: iconSize,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: foregroundColor,
+              ),
+            )
+          : Icon(icon, color: foregroundColor, size: iconSize),
       label: Text(label, style: textStyle),
     );
   }
