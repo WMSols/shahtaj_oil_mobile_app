@@ -1,21 +1,19 @@
 import 'package:get/get.dart';
 
-import 'package:shahtaj_oil_mobile_app/common/bindings/account_binding.dart';
-import 'package:shahtaj_oil_mobile_app/common/bindings/auth_binding.dart';
-import 'package:shahtaj_oil_mobile_app/common/bindings/delivery_man_shell_binding.dart';
-import 'package:shahtaj_oil_mobile_app/common/bindings/onboarding_binding.dart';
-import 'package:shahtaj_oil_mobile_app/common/bindings/order_booker_shell_binding.dart';
-import 'package:shahtaj_oil_mobile_app/common/bindings/recovery_man_shell_binding.dart';
-import 'package:shahtaj_oil_mobile_app/common/bindings/select_role_binding.dart';
-import 'package:shahtaj_oil_mobile_app/common/bindings/splash_binding.dart';
-import 'package:shahtaj_oil_mobile_app/common/views/account/account_screen.dart';
+import 'package:shahtaj_oil_mobile_app/common/bindings/auth/auth_binding.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/shell/delivery_man_shell_binding.dart';
+import 'package:shahtaj_oil_mobile_app/common/bindings/onboarding/onboarding_binding.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/shell/order_booker_shell_binding.dart';
+import 'package:shahtaj_oil_mobile_app/recovery_man/shell/recovery_man_shell_binding.dart';
+import 'package:shahtaj_oil_mobile_app/common/bindings/select_role/select_role_binding.dart';
+import 'package:shahtaj_oil_mobile_app/common/bindings/splash/splash_binding.dart';
 import 'package:shahtaj_oil_mobile_app/common/views/auth/login_screen.dart';
 import 'package:shahtaj_oil_mobile_app/common/views/onboarding/onboarding_screen.dart';
 import 'package:shahtaj_oil_mobile_app/common/views/select_role/select_role_screen.dart';
 import 'package:shahtaj_oil_mobile_app/common/views/splash/splash_screen.dart';
-import 'package:shahtaj_oil_mobile_app/common/controllers/delivery_man_shell_controller.dart';
-import 'package:shahtaj_oil_mobile_app/common/controllers/order_booker_shell_controller.dart';
-import 'package:shahtaj_oil_mobile_app/common/controllers/recovery_man_shell_controller.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/shell/delivery_man_shell_controller.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/shell/order_booker_shell_controller.dart';
+import 'package:shahtaj_oil_mobile_app/recovery_man/shell/recovery_man_shell_controller.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_shell.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 
@@ -42,11 +40,6 @@ class CommonRoutes {
       name: AppRoutes.login,
       page: LoginScreen.new,
       binding: AuthBinding(),
-    ),
-    GetPage(
-      name: AppRoutes.account,
-      page: AccountScreen.new,
-      binding: AccountBinding(),
     ),
     GetPage(
       name: AppRoutes.orderBooker,
