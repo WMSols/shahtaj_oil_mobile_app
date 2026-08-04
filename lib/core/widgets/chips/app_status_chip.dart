@@ -8,10 +8,20 @@ import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.d
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 
 class AppStatusChip extends StatelessWidget {
-  const AppStatusChip({super.key, required this.label, required this.color});
+  const AppStatusChip({
+    super.key,
+    required this.label,
+    required this.color,
+    this.fullWidth = false,
+    this.soft = false,
+  });
 
   final String label;
   final Color color;
+  final bool fullWidth;
+
+  /// Soft style: tinted background + colored text (vs solid fill + white text).
+  final bool soft;
 
   factory AppStatusChip.route(RouteStatus status) =>
       AppStatusChip(label: status.label, color: status.chipColor);
@@ -37,14 +47,25 @@ class AppStatusChip extends StatelessWidget {
   factory AppStatusChip.shopType(ShopType type) =>
       AppStatusChip(label: type.label, color: type.chipColor);
 
-  factory AppStatusChip.task(TaskStatus status) =>
-      AppStatusChip(label: status.label, color: status.chipColor);
+  factory AppStatusChip.task(TaskStatus status, {bool fullWidth = false}) =>
+      AppStatusChip(
+        label: status.label,
+        color: status.chipColor,
+        fullWidth: fullWidth,
+      );
+
+  factory AppStatusChip.shopVisitTag(ShopVisitTag tag) =>
+      AppStatusChip(label: tag.label, color: tag.chipColor, soft: true);
 
   factory AppStatusChip.lowStock() =>
       AppStatusChip(label: AppTexts.obLowStock, color: AppColors.warning);
 
-  factory AppStatusChip.alreadyInCart() =>
-      AppStatusChip(label: AppTexts.obAlreadyInCart, color: AppColors.success);
+  factory AppStatusChip.alreadyInCart({bool fullWidth = false}) =>
+      AppStatusChip(
+        label: AppTexts.obAlreadyInCart,
+        color: AppColors.success,
+        fullWidth: fullWidth,
+      );
 
   factory AppStatusChip.role(UserRole role) =>
       AppStatusChip(label: role.label, color: AppColors.primary);
@@ -55,20 +76,34 @@ class AppStatusChip extends StatelessWidget {
   factory AppStatusChip.target({required String label, required Color color}) =>
       AppStatusChip(label: label, color: color);
 
+  factory AppStatusChip.fullWidth({
+    required String label,
+    required Color color,
+  }) => AppStatusChip(label: label, color: color, fullWidth: true);
+
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final background = soft ? color.withValues(alpha: 0.2) : color;
+    final foreground = soft ? color : AppColors.white;
+
+    final child = Container(
+      width: fullWidth ? double.infinity : null,
       padding: AppSpacing.symmetric(context, h: 0.02, v: 0.002),
+      alignment: fullWidth ? Alignment.center : null,
       decoration: BoxDecoration(
-        color: color,
+        color: background,
         borderRadius: BorderRadius.circular(AppResponsive.radius(context)),
       ),
       child: Text(
         label.toUpperCase(),
+        textAlign: fullWidth ? TextAlign.center : TextAlign.start,
         style: AppTextStyles.hintText(
           context,
-        ).copyWith(color: AppColors.white, fontWeight: FontWeight.w600),
+        ).copyWith(color: foreground, fontWeight: FontWeight.w600),
       ),
     );
+
+    if (!fullWidth) return child;
+    return SizedBox(width: double.infinity, child: child);
   }
 }

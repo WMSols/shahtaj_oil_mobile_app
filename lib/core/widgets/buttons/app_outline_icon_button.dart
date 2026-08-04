@@ -13,6 +13,7 @@ class AppOutlineIconButton extends StatelessWidget {
     required this.onTap,
     this.backgroundColor = AppColors.white,
     this.foregroundColor = AppColors.primary,
+    this.isLoading = false,
   });
 
   final IconData icon;
@@ -20,10 +21,12 @@ class AppOutlineIconButton extends StatelessWidget {
   final VoidCallback? onTap;
   final Color backgroundColor;
   final Color foregroundColor;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
     final radius = AppResponsive.radius(context);
+    final busy = isLoading;
 
     return Expanded(
       child: Material(
@@ -34,18 +37,28 @@ class AppOutlineIconButton extends StatelessWidget {
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          onTap: onTap,
+          onTap: busy ? null : onTap,
           child: Padding(
             padding: AppSpacing.symmetric(context, h: 0.01, v: 0.01),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Icon(
-                  icon,
-                  color: foregroundColor,
-                  size: AppResponsive.iconSize(context, factor: 0.95),
-                ),
+                if (busy)
+                  SizedBox(
+                    width: AppResponsive.iconSize(context, factor: 0.95),
+                    height: AppResponsive.iconSize(context, factor: 0.95),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: foregroundColor,
+                    ),
+                  )
+                else
+                  Icon(
+                    icon,
+                    color: foregroundColor,
+                    size: AppResponsive.iconSize(context, factor: 0.95),
+                  ),
                 Text(
                   label,
                   textAlign: TextAlign.center,

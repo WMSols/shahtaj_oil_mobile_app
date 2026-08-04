@@ -30,6 +30,17 @@ class AppFilterChip extends StatelessWidget {
     onTap: onTap,
   );
 
+  factory AppFilterChip.deliveryStatus({
+    required DeliveryStatus status,
+    required bool selected,
+    required VoidCallback onTap,
+  }) => AppFilterChip(
+    label: status.label,
+    color: status.chipColor,
+    selected: selected,
+    onTap: onTap,
+  );
+
   @override
   Widget build(BuildContext context) {
     final backgroundColor = selected ? color : AppColors.white;
@@ -52,7 +63,7 @@ class AppFilterChip extends StatelessWidget {
               vertical: AppSpacing.verticalValue(context, 0.008),
             ),
             child: Text(
-              label,
+              label.toUpperCase(),
               style: AppTextStyles.caption(context).copyWith(
                 color: textColor,
                 fontWeight: FontWeight.w600,
