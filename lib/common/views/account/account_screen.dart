@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'package:shahtaj_oil_mobile_app/common/controllers/account_controller.dart';
+import 'package:shahtaj_oil_mobile_app/common/controllers/account/account_controller.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/images/app_images.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_primary_button.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/common/account/account_details_card.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/common/account/account_language_toggle_section.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/common/account/account_profile_header.dart';
+import 'package:shahtaj_oil_mobile_app/common/widgets/account/account_details_card.dart';
+import 'package:shahtaj_oil_mobile_app/common/widgets/account/account_language_toggle_section.dart';
+import 'package:shahtaj_oil_mobile_app/common/widgets/account/account_profile_header.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_loader.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_scaffold.dart';

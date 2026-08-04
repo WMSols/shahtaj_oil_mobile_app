@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:shahtaj_oil_mobile_app/common/models/user_model.dart';
+import 'package:shahtaj_oil_mobile_app/common/models/account/user_model.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';

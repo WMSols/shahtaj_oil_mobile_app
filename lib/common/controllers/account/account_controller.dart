@@ -1,8 +1,8 @@
 import 'package:get/get.dart';
 
-import 'package:shahtaj_oil_mobile_app/common/models/user_model.dart';
-import 'package:shahtaj_oil_mobile_app/common/services/auth_service.dart';
-import 'package:shahtaj_oil_mobile_app/common/services/profile_service.dart';
+import 'package:shahtaj_oil_mobile_app/common/models/account/user_model.dart';
+import 'package:shahtaj_oil_mobile_app/common/services/auth/auth_service.dart';
+import 'package:shahtaj_oil_mobile_app/common/services/account/profile_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
