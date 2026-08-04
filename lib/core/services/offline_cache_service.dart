@@ -20,6 +20,18 @@ abstract class OfflineCacheKeys {
   static String routes(int? zoneId) =>
       'offline_cache_ob_routes_${zoneId ?? 'all'}';
 
+  /// Keys wiped on OB logout so a new session cannot show a previous route.
+  static const List<String> orderBookerSessionKeys = [
+    shopsMine,
+    tasksToday,
+    activeVisit,
+    targetsMine,
+    scheduleWeekly,
+    visitsMine,
+    dashboard,
+    zones,
+  ];
+
   // Delivery Man
   static const dmOrders = 'offline_cache_dm_orders_v2';
   static const dmPickup = 'offline_cache_dm_pickup_v2';
@@ -128,24 +140,41 @@ class OfflineCacheService extends GetxService {
   }
 
   /// Fetches, saves, and parses. On failure, returns last saved payload if any.
+  ///
+  /// Set [allowStaleFallback] to false (e.g. pull-to-refresh) so a failed
+  /// network call cannot silently keep showing an outdated zone/route.
   Future<T> readThrough<T>({
     required String key,
     required Future<Map<String, dynamic>> Function() fetch,
     required T Function(Map<String, dynamic> json) parse,
     bool persist = true,
+    bool allowStaleFallback = true,
   }) async {
     try {
       final data = await fetch();
       if (persist) await saveMap(key, data);
       return parse(data);
     } catch (_) {
+      if (!allowStaleFallback) rethrow;
       final cached = await readMap(key);
       if (cached != null) return parse(cached);
       rethrow;
     }
   }
 
+  Future<void> clearKeys(Iterable<String> keys) async {
+    for (final key in keys) {
+      await _storage.deleteValue(key);
+    }
+  }
+
+  Future<void> clearOrderBookerSessionCache() =>
+      clearKeys(OfflineCacheKeys.orderBookerSessionKeys);
+
   /// Register a handler for `role.action` (e.g. `deliveryMan.confirm_pickup`).
+  ///
+  /// DM services register no-op handlers until live APIs land; when a handler
+  /// is missing, [flushSyncQueue] still drains items as synced.
   void registerSyncHandler(
     String role,
     String action,
