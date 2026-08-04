@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'package:shahtaj_oil_mobile_app/common/services/auth_service.dart';
+import 'package:shahtaj_oil_mobile_app/common/services/auth/auth_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
@@ -73,8 +73,14 @@ class AuthController extends GetxController {
     final login = emailController.text.trim();
     final password = passwordController.text;
 
+    // Recovery Man: UI not ready — toast only, no session / navigation.
+    if (role == UserRole.recoveryMan) {
+      AppToast.showInformation(AppTexts.moduleUnderDevelopment);
+      return;
+    }
+
     // Order Booker uses live API — credentials required.
-    // DM/RM are UI-only for now: allow empty fields and local mock session.
+    // Delivery Man is UI-only for now: allow empty fields and local mock session.
     if (role == UserRole.orderBooker && (login.isEmpty || password.isEmpty)) {
       AppToast.showError(AppTexts.loginCredentialsRequired);
       return;
@@ -84,7 +90,11 @@ class AuthController extends GetxController {
     try {
       await _authService.login(email: login, password: password, role: role);
       await _persistRememberMe(login: login, password: password);
-      AppToast.showSuccess(AppTexts.loginSuccessful);
+      if (role == UserRole.deliveryMan) {
+        AppToast.showInformation(AppTexts.moduleUiCompleted);
+      } else {
+        AppToast.showSuccess(AppTexts.loginSuccessful);
+      }
       RoleRouteResolver.goToRoleHome(role);
     } on ApiException catch (e) {
       AppToast.showError(e.message);

@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 
-import 'package:shahtaj_oil_mobile_app/common/controllers/auth_controller.dart';
-import 'package:shahtaj_oil_mobile_app/common/services/auth_service.dart';
+import 'package:shahtaj_oil_mobile_app/common/controllers/auth/auth_controller.dart';
+import 'package:shahtaj_oil_mobile_app/common/services/auth/auth_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/storage_service.dart';
