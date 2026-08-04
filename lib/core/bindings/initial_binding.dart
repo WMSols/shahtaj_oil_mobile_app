@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 
-import 'package:shahtaj_oil_mobile_app/common/services/profile_service.dart';
+import 'package:shahtaj_oil_mobile_app/common/services/account/profile_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/connectivity_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/location_service.dart';

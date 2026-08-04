@@ -20,6 +20,8 @@ enum PresenceStatus { online, away, offline }
 
 enum ShopStatus { pending, approved, rejected, active }
 
+enum ShopVisitTag { visited, notVisited }
+
 enum ShopType { cash, credit }
 
 enum RouteStatus { notStarted, inProgress, completed }
@@ -159,6 +161,26 @@ extension ShopStatusX on ShopStatus {
     ShopStatus.rejected => AppColors.error,
     ShopStatus.pending => AppColors.warning,
   };
+}
+
+extension ShopVisitTagX on ShopVisitTag {
+  String get label => switch (this) {
+    ShopVisitTag.visited => AppTexts.obVisitTagVisited,
+    ShopVisitTag.notVisited => AppTexts.obVisitTagNotVisited,
+  };
+
+  Color get chipColor => switch (this) {
+    ShopVisitTag.visited => AppColors.success,
+    ShopVisitTag.notVisited => AppColors.warning,
+  };
+
+  static ShopVisitTag fromApi(dynamic value) {
+    final raw = value?.toString().trim().toLowerCase() ?? '';
+    if (raw == 'not_visited' || raw == 'notvisited') {
+      return ShopVisitTag.notVisited;
+    }
+    return ShopVisitTag.visited;
+  }
 }
 
 extension ShopTypeX on ShopType {

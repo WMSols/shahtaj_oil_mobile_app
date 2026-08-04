@@ -5,87 +5,44 @@ class AppTexts {
 
   // App
   static String get appName => 'appName'.tr;
-  static String get appVersion => 'appVersion'.tr;
 
   // Common buttons
   static String get login => 'login'.tr;
   static String get logout => 'logout'.tr;
   static String get submit => 'submit'.tr;
-  static String get submitting => 'submitting'.tr;
-  static String get loading => 'loading'.tr;
-  static String get loggingIn => 'loggingIn'.tr;
   static String get save => 'save'.tr;
   static String get cancel => 'cancel'.tr;
   static String get confirm => 'confirm'.tr;
-  static String get delete => 'delete'.tr;
-  static String get edit => 'edit'.tr;
-  static String get create => 'create'.tr;
-  static String get update => 'update'.tr;
   static String get viewAll => 'viewAll'.tr;
-  static String get loadMore => 'loadMore'.tr;
-  static String get markAllRead => 'markAllRead'.tr;
   static String get search => 'search'.tr;
-  static String get filter => 'filter'.tr;
   static String get back => 'back'.tr;
-  static String get next => 'next'.tr;
   static String get continueLabel => 'continueLabel'.tr;
   static String get done => 'done'.tr;
-  static String get add => 'add'.tr;
   static String get retry => 'retry'.tr;
-  static String get comingSoon => 'comingSoon'.tr;
 
   // Auth
   static String get signIn => 'signIn'.tr;
   static String get signInButton => 'signInButton'.tr;
   static String get switchRole => 'switchRole'.tr;
-  static String get signUp => 'signUp'.tr;
-  static String get createAccount => 'createAccount'.tr;
-  static String get register => 'register'.tr;
-  static String get registerYourself => 'registerYourself'.tr;
-  static String get registerNow => 'registerNow'.tr;
-  static String get emailOrPhone => 'emailOrPhone'.tr;
-  static String get emailOrPhoneHint => 'emailOrPhoneHint'.tr;
-  static String get show => 'show'.tr;
-  static String get hide => 'hide'.tr;
   static String get phone => 'phone'.tr;
   static String get email => 'email'.tr;
   static String get password => 'password'.tr;
-  static String get currentPassword => 'currentPassword'.tr;
-  static String get newPassword => 'newPassword'.tr;
   static String get passwordHint => 'passwordHint'.tr;
-  static String get confirmPassword => 'confirmPassword'.tr;
-  static String get confirmPasswordHint => 'confirmPasswordHint'.tr;
   static String get fullName => 'fullName'.tr;
-  static String get fullNameHint => 'fullNameHint'.tr;
-  static String get phoneHint => 'phoneHint'.tr;
   static String get emailHint => 'emailHint'.tr;
-  static String get aboutYourselfHint => 'aboutYourselfHint'.tr;
   static String get rememberMe => 'rememberMe'.tr;
-  static String get authWelcomeTitle => 'authWelcomeTitle'.tr;
   static String get authWelcomeSubtitle => 'authWelcomeSubtitle'.tr;
   static String get signingInAs => 'signingInAs'.tr;
-  static String get authNoAccount => 'authNoAccount'.tr;
-  static String get authHaveAccount => 'authHaveAccount'.tr;
-  static String get generatePassword => 'generatePassword'.tr;
-  static String get yourDetails => 'yourDetails'.tr;
-  static String get profilePictures => 'profilePictures'.tr;
-  static String get uploadProfilePicture => 'uploadProfilePicture'.tr;
-  static String get security => 'security'.tr;
-  static String get generatePasswordPrefix => 'generatePasswordPrefix'.tr;
-  static String get generatePasswordHere => 'generatePasswordHere'.tr;
-  static String get generatePasswordMiddle => 'generatePasswordMiddle'.tr;
-  static String get copyrightsPrefix => 'copyrightsPrefix'.tr;
-  static String get brandName => 'brandName'.tr;
   static String get broughtByPrefix => 'broughtByPrefix'.tr;
   static String get developerName => 'developerName'.tr;
   static String get allRightsReserved => 'allRightsReserved'.tr;
   static String get loginSuccessful => 'loginSuccessful'.tr;
   static String get logoutSuccessful => 'logoutSuccessful'.tr;
+  static String get pressBackAgainToExit => 'pressBackAgainToExit'.tr;
   static String get loginCredentialsRequired => 'loginCredentialsRequired'.tr;
   static String get loginFailed => 'loginFailed'.tr;
-  static String get accountCreatedSuccess => 'accountCreatedSuccess'.tr;
-  static String get loginFailedTitle => 'loginFailedTitle'.tr;
-  static String get signUpFailedTitle => 'signUpFailedTitle'.tr;
+  static String get moduleUiCompleted => 'moduleUiCompleted'.tr;
+  static String get moduleUnderDevelopment => 'moduleUnderDevelopment'.tr;
   static String get selectYourRole => 'selectYourRole'.tr;
   static String get selectRoleBody => 'selectRoleBody'.tr;
   static String get defaultUserName => 'defaultUserName'.tr;
@@ -124,14 +81,20 @@ class AppTexts {
       'obVanStockSummary'.trParams({'count': '$count'});
   static String dmVanStockSummary(int count) =>
       'dmVanStockSummary'.trParams({'count': '$count'});
+  static String dmStockLoadedSummary(int count) =>
+      'dmStockLoadedSummary'.trParams({'count': '$count'});
+  static String dmStockOnHandSummary(int count) =>
+      'dmStockOnHandSummary'.trParams({'count': '$count'});
+  static String dmStockLoadedLabel(int count) =>
+      'dmStockLoadedLabel'.trParams({'count': '$count'});
+  static String get dmStockOnHandLabel => 'dmStockOnHandLabel'.tr;
+  static String get dmStockOnHandTitle => 'dmStockOnHandTitle'.tr;
+  static String get dmOrderIdLabel => 'dmOrderIdLabel'.tr;
 
   // Splash
-  static String get splashTagline => 'splashTagline'.tr;
 
   // Navigation
   static String get navDashboard => 'navDashboard'.tr;
-  static String get navProfile => 'navProfile'.tr;
-  static String get navNotifications => 'navNotifications'.tr;
   static String get navWeeklySchedule => 'navWeeklySchedule'.tr;
   static String get navTodayTasks => 'navTodayTasks'.tr;
   static String get navShops => 'navShops'.tr;
@@ -151,12 +114,10 @@ class AppTexts {
   static String get greetingEvening => 'greetingEvening'.tr;
   static String get greetingNight => 'greetingNight'.tr;
   static String get dashboardTitle => 'dashboardTitle'.tr;
-  static String get welcome => 'welcome'.tr;
   static String get obDashboardSubtitle => 'obDashboardSubtitle'.tr;
   static String get obTodaysRoute => 'obTodaysRoute'.tr;
   static String get obWeeklyScheduleTitle => 'obWeeklyScheduleTitle'.tr;
   static String get obTargets => 'obTargets'.tr;
-  static String get obOrdersToday => 'obOrdersToday'.tr;
 
   static String obTargetsProgressPercent(int percent) =>
       'obTargetsProgressPercent'.trParams({'percent': '$percent'});
@@ -175,17 +136,13 @@ class AppTexts {
   static String get obCombinedTargetHeadlineHint =>
       'obCombinedTargetHeadlineHint'.tr;
   static String get obTargetProductsSection => 'obTargetProductsSection'.tr;
-  static String get obRecoveryTarget => 'obRecoveryTarget'.tr;
   static String get rmRecoveryTarget => 'rmRecoveryTarget'.tr;
   static String get rmTargets => 'rmTargets'.tr;
   static String get obRecentOrders => 'obRecentOrders'.tr;
-  static String get dmStockItems => 'dmStockItems'.tr;
-  static String get obStockItems => 'obStockItems'.tr;
   static String get obStartRoute => 'obStartRoute'.tr;
   static String get obContinueRoute => 'obContinueRoute'.tr;
   static String get obLowStock => 'obLowStock'.tr;
   static String get obNoRouteAssigned => 'obNoRouteAssigned'.tr;
-  static String get obNoRoutesAssigned => 'obNoRoutesAssigned'.tr;
   static String get obNoRecentOrders => 'obNoRecentOrders'.tr;
   static String get routeStatusNotStarted => 'routeStatusNotStarted'.tr;
   static String get routeStatusInProgress => 'routeStatusInProgress'.tr;
@@ -203,7 +160,6 @@ class AppTexts {
 
   // Order booker screens
   static String get obTodayTasksTitle => 'obTodayTasksTitle'.tr;
-  static String get obRouteDetailTitle => 'obRouteDetailTitle'.tr;
   static String get obShopOnboardingTitle => 'obShopOnboardingTitle'.tr;
   static String get obRegisterShopButton => 'obRegisterShopButton'.tr;
   static String get obSectionShopInformation => 'obSectionShopInformation'.tr;
@@ -224,12 +180,8 @@ class AppTexts {
   static String get obOwnerCnicHint => 'obOwnerCnicHint'.tr;
   static String get obOwnerPhoneLabel => 'obOwnerPhoneLabel'.tr;
   static String get obOwnerPhoneHint => 'obOwnerPhoneHint'.tr;
-  static String get obLatitudeLabel => 'obLatitudeLabel'.tr;
-  static String get obLongitudeLabel => 'obLongitudeLabel'.tr;
   static String get obUseCurrentLocation => 'obUseCurrentLocation'.tr;
   static String get obLocationNotCaptured => 'obLocationNotCaptured'.tr;
-  static String get obMapPreviewBadge => 'obMapPreviewBadge'.tr;
-  static String get obMapPreviewLocation => 'obMapPreviewLocation'.tr;
   static String get obZoneLabel => 'obZoneLabel'.tr;
   static String get obZoneHint => 'obZoneHint'.tr;
   static String get obRouteLabel => 'obRouteLabel'.tr;
@@ -239,8 +191,6 @@ class AppTexts {
   static String get obOutstandingBalanceLabel => 'obOutstandingBalanceLabel'.tr;
   static String get obCreditRemainingLabel => 'obCreditRemainingLabel'.tr;
   static String get obShopCreditSummary => 'obShopCreditSummary'.tr;
-  static String get obLatitudeHint => 'obLatitudeHint'.tr;
-  static String get obLongitudeHint => 'obLongitudeHint'.tr;
   static String get obCreditLimitHint => 'obCreditLimitHint'.tr;
   static String get obLegacyBalanceHint => 'obLegacyBalanceHint'.tr;
   static String get obPickFromCamera => 'obPickFromCamera'.tr;
@@ -252,12 +202,10 @@ class AppTexts {
   static String get obTakePortrait => 'obTakePortrait'.tr;
   static String get obCaptureShop => 'obCaptureShop'.tr;
   static String get obPhotoUploaded => 'obPhotoUploaded'.tr;
-  static String get obRequiredFieldsNote => 'obRequiredFieldsNote'.tr;
   static String get obLocationDisabled => 'obLocationDisabled'.tr;
   static String get obLocationPermissionDenied =>
       'obLocationPermissionDenied'.tr;
   static String get obLocationFetchFailed => 'obLocationFetchFailed'.tr;
-  static String get obCoordinateInvalid => 'obCoordinateInvalid'.tr;
   static String get obShopRegisteredSuccess => 'obShopRegisteredSuccess'.tr;
   static String get obShopUpdatedSuccess => 'obShopUpdatedSuccess'.tr;
   static String get obRegisterShopHelpTitle => 'obRegisterShopHelpTitle'.tr;
@@ -278,7 +226,6 @@ class AppTexts {
       'obVerificationPhotosSection'.tr;
   static String get obPhoneNumberLabel => 'obPhoneNumberLabel'.tr;
   static String get obLocationLabel => 'obLocationLabel'.tr;
-  static String get obViewOnMap => 'obViewOnMap'.tr;
   static String get obCallOwner => 'obCallOwner'.tr;
   static String get obDirections => 'obDirections'.tr;
   static String get obEditShop => 'obEditShop'.tr;
@@ -304,10 +251,7 @@ class AppTexts {
   static String get obCheckInTitle => 'obCheckInTitle'.tr;
   static String get obTasksSection => 'obTasksSection'.tr;
   static String get obTaskCheckIn => 'obTaskCheckIn'.tr;
-  static String get obTaskSkip => 'obTaskSkip'.tr;
   static String get obTaskNotes => 'obTaskNotes'.tr;
-  static String get obSkipTaskTitle => 'obSkipTaskTitle'.tr;
-  static String get obSkipTaskMessage => 'obSkipTaskMessage'.tr;
   static String get obTaskNotesHint => 'obTaskNotesHint'.tr;
   static String get obActiveVisitTitle => 'obActiveVisitTitle'.tr;
   static String get obFieldWorkTitle => 'obFieldWorkTitle'.tr;
@@ -315,7 +259,12 @@ class AppTexts {
   static String get obNoTasksToday => 'obNoTasksToday'.tr;
   static String get obCheckInSuccess => 'obCheckInSuccess'.tr;
   static String get obTaskNotFound => 'obTaskNotFound'.tr;
-  static String get obCheckInShopContext => 'obCheckInShopContext'.tr;
+  static String get obVisitTagVisited => 'obVisitTagVisited'.tr;
+  static String get obVisitTagNotVisited => 'obVisitTagNotVisited'.tr;
+  static String get obShopVerifyOnSiteContext => 'obShopVerifyOnSiteContext'.tr;
+  static String get obShopVerifiedSuccess => 'obShopVerifiedSuccess'.tr;
+  static String get obShopExteriorRequired => 'obShopExteriorRequired'.tr;
+  static String get obPhotoRequired => 'obPhotoRequired'.tr;
 
   static String obTasksProgress(int completed, int total) => 'obTasksProgress'
       .trParams({'completed': '$completed', 'total': '$total'});
@@ -329,7 +278,6 @@ class AppTexts {
   static String get obProductsSection => 'obProductsSection'.tr;
   static String get obCartSection => 'obCartSection'.tr;
   static String get obNoProductsFound => 'obNoProductsFound'.tr;
-  static String get obNoCartItems => 'obNoCartItems'.tr;
   static String get obAddProductsToStart => 'obAddProductsToStart'.tr;
   static String get obAddToCart => 'obAddToCart'.tr;
   static String get obAlreadyInCart => 'obAlreadyInCart'.tr;
@@ -355,7 +303,6 @@ class AppTexts {
       'obCartQuantityInputHint'.trParams({'max': max, 'product': product});
   static String get obCartPriceHint => 'obCartPriceHint'.tr;
   static String get obTotalLabel => 'obTotalLabel'.tr;
-  static String get obNoMoreStockLeft => 'obNoMoreStockLeft'.tr;
 
   static String obNotEnoughStock(String available) =>
       'obNotEnoughStock'.trParams({'available': available});
@@ -399,7 +346,6 @@ class AppTexts {
   static String get dmConfirmPickup => 'dmConfirmPickup'.tr;
   static String get dmNoInTransitOrders => 'dmNoInTransitOrders'.tr;
   static String get dmStartDelivery => 'dmStartDelivery'.tr;
-  static String get dmMarkDelivered => 'dmMarkDelivered'.tr;
   static String get dmConfirmDelivery => 'dmConfirmDelivery'.tr;
   static String get dmReceiverNameLabel => 'dmReceiverNameLabel'.tr;
   static String get dmReceiverNameHint => 'dmReceiverNameHint'.tr;
@@ -413,7 +359,6 @@ class AppTexts {
   static String get dmLoadedQty => 'dmLoadedQty'.tr;
   static String get dmDeliveredQty => 'dmDeliveredQty'.tr;
   static String get dmRejectedQty => 'dmRejectedQty'.tr;
-  static String get dmDamagedQty => 'dmDamagedQty'.tr;
   static String get dmLeftoverQty => 'dmLeftoverQty'.tr;
   static String get dmLoadedQtyHint => 'dmLoadedQtyHint'.tr;
   static String get dmDeliveredQtyHint => 'dmDeliveredQtyHint'.tr;
@@ -427,8 +372,6 @@ class AppTexts {
   static String get dmReceiverRequired => 'dmReceiverRequired'.tr;
   static String get dmNoActiveOrdersForReturn => 'dmNoActiveOrdersForReturn'.tr;
   static String get dmLeftoverStock => 'dmLeftoverStock'.tr;
-  static String get dmRejectedStock => 'dmRejectedStock'.tr;
-  static String get dmDamagedStock => 'dmDamagedStock'.tr;
   static String get dmNotesHint => 'dmNotesHint'.tr;
   static String get dmWarehouse => 'dmWarehouse'.tr;
   static String get dmVehicle => 'dmVehicle'.tr;
@@ -456,28 +399,10 @@ class AppTexts {
 
   // Common labels
   static String get or => 'or'.tr;
-  static String get addNew => 'addNew'.tr;
-  static String get markComplete => 'markComplete'.tr;
   static String get view => 'view'.tr;
-  static String get approved => 'approved'.tr;
-  static String get personalDetail => 'personalDetail'.tr;
-  static String get uploadImages => 'uploadImages'.tr;
-  static String get uploadImage => 'uploadImage'.tr;
-  static String get uploadDocuments => 'uploadDocuments'.tr;
   static String get tapToUploadImages => 'tapToUploadImages'.tr;
-  static String get tapToUploadDocuments => 'tapToUploadDocuments'.tr;
-  static String get updateProfile => 'updateProfile'.tr;
-  static String get createdBy => 'createdBy'.tr;
   static String get userId => 'userId'.tr;
   static String get name => 'name'.tr;
-  static String get desc => 'desc'.tr;
-  static String get createdAtLabel => 'createdAtLabel'.tr;
-  static String get updatedAtLabel => 'updatedAtLabel'.tr;
-  static String get created => 'created'.tr;
-  static String get id => 'id'.tr;
-  static String get notApplicable => 'notApplicable'.tr;
-  static String get today => 'today'.tr;
-  static String get yesterday => 'yesterday'.tr;
 
   static String filesTotal(int count) =>
       'filesTotal'.trParams({'count': '$count'});
@@ -502,20 +427,10 @@ class AppTexts {
   static String daysAgo(int days) => 'daysAgo'.trParams({'days': '$days'});
 
   // Notifications
-  static String get notifications => 'notifications'.tr;
-  static String get unread => 'unread'.tr;
-  static String get read => 'read'.tr;
-  static String get noNotifications => 'noNotifications'.tr;
 
   // Profile
-  static String get myProfile => 'myProfile'.tr;
-  static String get editProfile => 'editProfile'.tr;
   static String get accountDetails => 'accountDetails'.tr;
-  static String get accountPreferences => 'accountPreferences'.tr;
-  static String get accountAppInfo => 'accountAppInfo'.tr;
   static String get role => 'role'.tr;
-  static String get memberSince => 'memberSince'.tr;
-  static String get profileUpdated => 'profileUpdated'.tr;
 
   // Roles
   static String get roleOrderBooker => 'roleOrderBooker'.tr;
@@ -577,9 +492,6 @@ class AppTexts {
   static String get periodPm => 'periodPm'.tr;
 
   // Status labels
-  static String get statusPending => 'statusPending'.tr;
-  static String get statusPaid => 'statusPaid'.tr;
-  static String get statusOverdue => 'statusOverdue'.tr;
 
   // Order statuses
   static String get orderStatusDraft => 'orderStatusDraft'.tr;
@@ -615,9 +527,7 @@ class AppTexts {
   static String get noDataYet => 'noDataYet'.tr;
   static String get notAvailable => 'notAvailable'.tr;
   static String get error => 'error'.tr;
-  static String get success => 'success'.tr;
   static String get noInternet => 'noInternet'.tr;
-  static String get noInternetDescription => 'noInternetDescription'.tr;
   static String get locationServicesOff => 'locationServicesOff'.tr;
   static String get locationServicesOn => 'locationServicesOn'.tr;
   static String get formInvalid => 'formInvalid'.tr;
