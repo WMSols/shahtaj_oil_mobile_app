@@ -16,6 +16,7 @@ class AppPhotoUploadTile extends StatelessWidget {
     required this.icon,
     this.imageBytes,
     this.onTap,
+    this.required = false,
   });
 
   final String title;
@@ -23,6 +24,7 @@ class AppPhotoUploadTile extends StatelessWidget {
   final IconData icon;
   final Uint8List? imageBytes;
   final VoidCallback? onTap;
+  final bool required;
 
   static const double _borderWidth = 1.5;
 
@@ -31,6 +33,7 @@ class AppPhotoUploadTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final radius = AppResponsive.radius(context);
+    final titleColor = _hasImage ? AppColors.white : AppColors.grey;
 
     return GestureDetector(
       onTap: onTap,
@@ -74,16 +77,7 @@ class AppPhotoUploadTile extends StatelessWidget {
                             size: AppResponsive.iconSize(context, factor: 1.4),
                           ),
                           AppSpacing.vertical(context, 0.008),
-                          Text(
-                            title,
-                            textAlign: TextAlign.center,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTextStyles.caption(context).copyWith(
-                              color: AppColors.grey,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
+                          _titleRow(context, titleColor),
                           AppSpacing.vertical(context, 0.003),
                           Text(
                             subtitle,
@@ -111,16 +105,7 @@ class AppPhotoUploadTile extends StatelessWidget {
                             size: AppResponsive.iconSize(context, factor: 1.4),
                           ),
                           AppSpacing.vertical(context, 0.008),
-                          Text(
-                            title,
-                            textAlign: TextAlign.center,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTextStyles.caption(context).copyWith(
-                              color: AppColors.white,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
+                          _titleRow(context, AppColors.white),
                           AppSpacing.vertical(context, 0.003),
                           Text(
                             subtitle,
@@ -159,6 +144,31 @@ class AppPhotoUploadTile extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _titleRow(BuildContext context, Color titleColor) {
+    return Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(
+            text: title,
+            style: AppTextStyles.caption(
+              context,
+            ).copyWith(color: titleColor, fontWeight: FontWeight.w700),
+          ),
+          if (required)
+            TextSpan(
+              text: ' *',
+              style: AppTextStyles.caption(
+                context,
+              ).copyWith(color: AppColors.error, fontWeight: FontWeight.w700),
+            ),
+        ],
+      ),
+      textAlign: TextAlign.center,
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
     );
   }
 }

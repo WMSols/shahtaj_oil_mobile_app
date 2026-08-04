@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
-import 'package:shahtaj_oil_mobile_app/common/controllers/app_shell_controller.dart';
+import 'package:shahtaj_oil_mobile_app/common/controllers/shell/app_shell_controller.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
@@ -31,91 +32,103 @@ class AppShell<T extends AppShellController> extends GetView<T> {
     return Obx(() {
       final currentLeaf = controller.currentLeaf;
 
-      return Scaffold(
-        key: controller.scaffoldKey,
-        backgroundColor: AppColors.scaffoldBackground,
-        drawer: AppDrawer(
-          entries: controller.drawerEntries,
-          selectedLeafId: controller.selectedLeafId.value,
-          expandedGroupIds: controller.expandedGroupIds.toSet(),
-          onLeafTap: controller.selectLeaf,
-          onGroupToggle: controller.toggleGroup,
-          roleLabel: roleLabel,
-        ),
-        appBar: AppBar(
-          backgroundColor: AppColors.white,
-          foregroundColor: AppColors.textPrimary,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          centerTitle: true,
-          title: Text(currentLeaf.label, style: AppTextStyles.heading(context)),
-          leadingWidth: AppResponsive.screenWidth(context) * 0.1,
-          leading: SizedBox(
-            width: AppResponsive.screenWidth(context) * 0.1,
-            child: Center(
-              child: AppIconButton(
-                icon: AppIcons.menu,
-                iconColor: AppColors.primary,
-                iconSize: iconSize,
-                onTap: controller.openDrawer,
+      return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) {
+          if (didPop) return;
+          if (controller.handleSystemBack()) {
+            SystemNavigator.pop();
+          }
+        },
+        child: Scaffold(
+          key: controller.scaffoldKey,
+          backgroundColor: AppColors.scaffoldBackground,
+          drawer: AppDrawer(
+            entries: controller.drawerEntries,
+            selectedLeafId: controller.selectedLeafId.value,
+            expandedGroupIds: controller.expandedGroupIds.toSet(),
+            onLeafTap: controller.selectLeaf,
+            onGroupToggle: controller.toggleGroup,
+            roleLabel: roleLabel,
+          ),
+          appBar: AppBar(
+            backgroundColor: AppColors.white,
+            foregroundColor: AppColors.textPrimary,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            centerTitle: true,
+            title: Text(
+              currentLeaf.label,
+              style: AppTextStyles.heading(context),
+            ),
+            leadingWidth: AppResponsive.screenWidth(context) * 0.1,
+            leading: SizedBox(
+              width: AppResponsive.screenWidth(context) * 0.1,
+              child: Center(
+                child: AppIconButton(
+                  icon: AppIcons.menu,
+                  iconColor: AppColors.primary,
+                  iconSize: iconSize,
+                  onTap: controller.openDrawer,
+                ),
               ),
             ),
+            actions: [
+              AppIconButton(
+                icon: AppIcons.language,
+                iconColor: AppColors.primary,
+                iconSize: iconSize,
+                onTap: localeService.toggleLocale,
+              ),
+              AppSpacing.horizontal(context, 0.01),
+              Center(
+                child: Obx(() {
+                  final connectivity = Get.find<ConnectivityService>();
+                  final user = session.user.value;
+                  final name =
+                      user?.displayName(AppTexts.defaultUserName) ??
+                      AppTexts.defaultUserName;
+                  final presence = !connectivity.isOnline.value
+                      ? PresenceStatus.offline
+                      : (user?.presenceStatus ?? PresenceStatus.away);
+
+                  return AppProfileAvatar(
+                    size: 34,
+                    name: name,
+                    presenceStatus: presence,
+                    showPresenceDot: true,
+                    onTap: controller.openAccount,
+                  );
+                }),
+              ),
+              AppSpacing.horizontal(context, 0.03),
+            ],
           ),
-          actions: [
-            AppIconButton(
-              icon: AppIcons.language,
-              iconColor: AppColors.primary,
-              iconSize: iconSize,
-              onTap: localeService.toggleLocale,
-            ),
-            AppSpacing.horizontal(context, 0.01),
-            Center(
-              child: Obx(() {
-                final connectivity = Get.find<ConnectivityService>();
-                final user = session.user.value;
-                final name =
-                    user?.displayName(AppTexts.defaultUserName) ??
-                    AppTexts.defaultUserName;
-                final presence = !connectivity.isOnline.value
-                    ? PresenceStatus.offline
-                    : (user?.presenceStatus ?? PresenceStatus.away);
+          body: AnimatedSwitcher(
+            duration: _transitionDuration,
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            transitionBuilder: (child, animation) {
+              final slide =
+                  Tween<Offset>(
+                    begin: const Offset(0.04, 0),
+                    end: Offset.zero,
+                  ).animate(
+                    CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.easeOutCubic,
+                    ),
+                  );
 
-                return AppProfileAvatar(
-                  size: 34,
-                  name: name,
-                  presenceStatus: presence,
-                  showPresenceDot: true,
-                  onTap: controller.openAccount,
-                );
-              }),
+              return FadeTransition(
+                opacity: animation,
+                child: SlideTransition(position: slide, child: child),
+              );
+            },
+            child: KeyedSubtree(
+              key: ValueKey<String>(currentLeaf.id),
+              child: currentLeaf.screen,
             ),
-            AppSpacing.horizontal(context, 0.03),
-          ],
-        ),
-        body: AnimatedSwitcher(
-          duration: _transitionDuration,
-          switchInCurve: Curves.easeOutCubic,
-          switchOutCurve: Curves.easeInCubic,
-          transitionBuilder: (child, animation) {
-            final slide =
-                Tween<Offset>(
-                  begin: const Offset(0.04, 0),
-                  end: Offset.zero,
-                ).animate(
-                  CurvedAnimation(
-                    parent: animation,
-                    curve: Curves.easeOutCubic,
-                  ),
-                );
-
-            return FadeTransition(
-              opacity: animation,
-              child: SlideTransition(position: slide, child: child),
-            );
-          },
-          child: KeyedSubtree(
-            key: ValueKey<String>(currentLeaf.id),
-            child: currentLeaf.screen,
           ),
         ),
       );

@@ -70,6 +70,3 @@ class AppTopFeedbackOverlay extends StatelessWidget {
     });
   }
 }
-
-/// Alias kept for older imports; prefer [AppTopFeedbackOverlay].
-typedef AppSystemStatusBanners = AppTopFeedbackOverlay;

@@ -97,8 +97,3 @@ class AppHelper {
     return Geolocator.getCurrentPosition();
   }
 }
-
-extension StringHelperExtension on String? {
-  bool get isNullOrEmpty => AppHelper.isNullOrEmpty(this);
-  bool get isNotNullOrEmpty => AppHelper.isNotNullOrEmpty(this);
-}
