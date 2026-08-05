@@ -4,14 +4,14 @@ import 'package:get/get.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/images/app_images.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/visit/ob_product_card.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/visit/ob_shop_credit_card.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/visit/ob_visit_cart_panel.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/visit/ob_visit_header_card.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/visit/ob_product_card.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/visit/ob_shop_credit_card.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/visit/ob_visit_cart_panel.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/visit/ob_visit_header_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_loader.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_sub_screen_scaffold.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/controllers/ob_order_create_controller.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/controllers/visit/ob_order_create_controller.dart';
 
 class ObOrderCreateScreen extends GetView<ObOrderCreateController> {
   const ObOrderCreateScreen({super.key});
@@ -74,6 +74,7 @@ class ObOrderCreateScreen extends GetView<ObOrderCreateController> {
                     child: ObProductCard(
                       product: product,
                       isInCart: controller.isProductInCart(product.id),
+                      isAdding: controller.addingProductId.value == product.id,
                       onAdd: () => controller.addProduct(product),
                     ),
                   ),
