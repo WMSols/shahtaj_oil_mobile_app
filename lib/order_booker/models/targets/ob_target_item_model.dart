@@ -4,7 +4,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_target_line_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/targets/ob_target_line_model.dart';
 
 enum ObTargetType {
   collectiveQuantity,

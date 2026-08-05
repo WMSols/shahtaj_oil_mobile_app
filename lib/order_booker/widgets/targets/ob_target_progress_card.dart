@@ -6,10 +6,10 @@ import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.d
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/targets/ob_target_line_row.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/targets/ob_target_progress_bar.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/controllers/ob_targets_controller.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_target_item_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/targets/ob_target_line_row.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/targets/ob_target_progress_bar.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/controllers/targets/ob_targets_controller.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/targets/ob_target_item_model.dart';
 
 class ObTargetProgressCard extends StatelessWidget {
   const ObTargetProgressCard({

@@ -4,7 +4,7 @@ import 'package:shahtaj_oil_mobile_app/core/constants/api_endpoints.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_target_item_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/targets/ob_target_item_model.dart';
 
 class ObTargetsService extends GetxService {
   ObTargetsService(this._api, {OfflineCacheService? cache})
