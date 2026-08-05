@@ -3,11 +3,11 @@ import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/design/images/app_images.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/orders/ob_order_detail_content.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/orders/ob_order_detail_content.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_loader.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_sub_screen_scaffold.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/controllers/ob_order_detail_controller.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/controllers/orders/ob_order_detail_controller.dart';
 
 class ObOrderDetailScreen extends GetView<ObOrderDetailController> {
   const ObOrderDetailScreen({super.key});

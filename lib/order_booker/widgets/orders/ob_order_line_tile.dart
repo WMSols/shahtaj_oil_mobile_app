@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_line_summary_tile.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_order_line_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/orders/ob_order_line_model.dart';
 
 class ObOrderLineTile extends StatelessWidget {
   const ObOrderLineTile({super.key, required this.line});

@@ -5,9 +5,9 @@ import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_order_detail_model.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_order_line_model.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_visit_detail_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/orders/ob_order_detail_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/orders/ob_order_line_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/history/ob_visit_detail_model.dart';
 
 /// Order detail is served by `visits/get` (no dedicated orders API).
 class ObOrderDetailService extends GetxService {
