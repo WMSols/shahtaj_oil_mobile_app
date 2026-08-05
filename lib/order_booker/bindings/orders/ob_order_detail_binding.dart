@@ -1,8 +1,8 @@
 import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/controllers/ob_order_detail_controller.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/services/ob_order_detail_service.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/controllers/orders/ob_order_detail_controller.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/orders/ob_order_detail_service.dart';
 
 class ObOrderDetailBinding extends Bindings {
   @override
