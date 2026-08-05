@@ -1,30 +1,63 @@
-import 'package:shahtaj_oil_mobile_app/common/bindings/account_binding.dart';
-import 'package:shahtaj_oil_mobile_app/common/controllers/app_shell_controller.dart';
+import 'package:shahtaj_oil_mobile_app/common/bindings/account/account_binding.dart';
+import 'package:shahtaj_oil_mobile_app/common/controllers/shell/app_shell_controller.dart';
 import 'package:shahtaj_oil_mobile_app/common/views/account/account_screen.dart';
-import 'package:shahtaj_oil_mobile_app/core/bindings/order_booker_services_binding.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/shell/order_booker_services_binding.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_drawer_entry.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_dashboard_binding.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_history_binding.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_my_shops_binding.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_route_detail_binding.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_shop_onboarding_binding.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_targets_binding.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_weekly_schedule_binding.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_dashboard_screen.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_history_screen.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_my_shops_screen.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_route_detail_screen.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_shop_onboarding_screen.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_targets_screen.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/views/ob_weekly_schedule_screen.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/bindings/dashboard/ob_dashboard_binding.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/bindings/history/ob_history_binding.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/bindings/shops/ob_my_shops_binding.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/bindings/tasks/ob_route_detail_binding.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/bindings/shops/ob_shop_onboarding_binding.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/bindings/targets/ob_targets_binding.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/bindings/schedule/ob_weekly_schedule_binding.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/controllers/dashboard/ob_dashboard_controller.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/controllers/tasks/ob_route_detail_controller.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/controllers/schedule/ob_weekly_schedule_controller.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/views/dashboard/ob_dashboard_screen.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/views/history/ob_history_screen.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/views/shops/ob_my_shops_screen.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/views/tasks/ob_route_detail_screen.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/views/shops/ob_shop_onboarding_screen.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/views/targets/ob_targets_screen.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/views/schedule/ob_weekly_schedule_screen.dart';
+import 'package:get/get.dart';
 
 class OrderBookerShellController extends AppShellController {
   @override
   void onInit() {
     OrderBookerServicesBinding.ensureRegistered();
     super.onInit();
+  }
+
+  @override
+  void selectLeaf(String id) {
+    super.selectLeaf(id);
+    _refreshLeafData(id);
+  }
+
+  void _refreshLeafData(String id) {
+    switch (id) {
+      case 'ob_today_tasks':
+        if (Get.isRegistered<ObRouteDetailController>()) {
+          Get.find<ObRouteDetailController>().loadTasks(
+            silent: true,
+            force: true,
+          );
+        }
+        break;
+      case 'ob_dashboard':
+        if (Get.isRegistered<ObDashboardController>()) {
+          Get.find<ObDashboardController>().loadDashboard(force: true);
+        }
+        break;
+      case 'ob_weekly_schedule':
+        if (Get.isRegistered<ObWeeklyScheduleController>()) {
+          Get.find<ObWeeklyScheduleController>().load(force: true);
+        }
+        break;
+    }
   }
 
   @override
