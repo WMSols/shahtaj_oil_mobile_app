@@ -7,7 +7,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.d
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
-import 'package:shahtaj_oil_mobile_app/recovery_man/models/rm_targets_model.dart';
+import 'package:shahtaj_oil_mobile_app/recovery_man/models/dashboard/rm_targets_model.dart';
 
 class RmRecoveryTargetCard extends StatelessWidget {
   const RmRecoveryTargetCard({super.key, required this.targets});

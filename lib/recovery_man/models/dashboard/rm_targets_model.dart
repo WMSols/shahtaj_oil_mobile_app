@@ -17,4 +17,4 @@ class RmTargetsModel {
       'recovery_target': recoveryTarget,
     };
   }
-}
+} 
