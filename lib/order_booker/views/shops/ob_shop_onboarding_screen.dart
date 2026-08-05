@@ -6,11 +6,11 @@ import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_primary_button.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/shops/register/ob_register_shop_form.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/shops/register/ob_register_shop_form.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_loader.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_sub_screen_scaffold.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/controllers/ob_shop_onboarding_controller.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/controllers/shops/ob_shop_onboarding_controller.dart';
 
 class ObShopOnboardingScreen extends GetView<ObShopOnboardingController> {
   const ObShopOnboardingScreen({super.key, this.embeddedInShell = false});

@@ -5,11 +5,13 @@ import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_route_option.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_shop_edit_request.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_shop_model.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_shop_register_request.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_zone_option.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_check_in_result.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/shops/ob_route_option.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/shops/ob_shop_edit_request.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/shops/ob_shop_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/shops/ob_shop_register_request.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/shops/ob_shop_verify_on_site_request.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/shops/ob_zone_option.dart';
 
 class ObShopService extends GetxService {
   ObShopService(this._api, {OfflineCacheService? cache})
@@ -96,6 +98,16 @@ class ObShopService extends GetxService {
       throw ApiException(message: 'Shop registered but response was empty.');
     }
     return ObShopModel.fromJson(shopJson);
+  }
+
+  Future<ObCheckInResult> verifyOnSite(
+    ObShopVerifyOnSiteRequest request,
+  ) async {
+    final data = await _api.postData(
+      ApiEndpoints.obShopsVerifyOnSite,
+      data: request.toJson(),
+    );
+    return ObCheckInResult.fromJson(data);
   }
 
   Future<void> updateShop(ObShopEditRequest request) async {

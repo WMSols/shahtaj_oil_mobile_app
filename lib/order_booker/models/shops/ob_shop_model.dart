@@ -1,5 +1,6 @@
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/shops/ob_shop_missing_field.dart';
 
 class ObShopVerificationPhotos {
   const ObShopVerificationPhotos({
@@ -20,6 +21,7 @@ class ObShopModel {
     required this.id,
     required this.name,
     this.ownerName,
+    this.ownerCnicNumber,
     this.phone,
     this.locationLabel,
     this.address,
@@ -36,11 +38,16 @@ class ObShopModel {
     this.verificationPhotos = const ObShopVerificationPhotos(),
     this.status = ShopStatus.pending,
     this.isHighlighted = false,
+    this.fieldVerified = true,
+    this.needsShopSetup = false,
+    this.visitTag = ShopVisitTag.visited,
+    this.missingFields = const [],
   });
 
   final String id;
   final String name;
   final String? ownerName;
+  final String? ownerCnicNumber;
   final String? phone;
   final String? locationLabel;
   final String? address;
@@ -57,12 +64,17 @@ class ObShopModel {
   final ObShopVerificationPhotos verificationPhotos;
   final ShopStatus status;
   final bool isHighlighted;
+  final bool fieldVerified;
+  final bool needsShopSetup;
+  final ShopVisitTag visitTag;
+  final List<ObShopMissingField> missingFields;
 
   bool get hasCoordinates =>
       latitude != null &&
       longitude != null &&
       latitude!.abs() <= 90 &&
-      longitude!.abs() <= 180;
+      longitude!.abs() <= 180 &&
+      !(latitude == 0 && longitude == 0);
 
   bool get isCreditShop => shopType == ShopType.credit;
 
@@ -100,11 +112,18 @@ class ObShopModel {
 
     final exterior = photo('shop_exterior_photo', ['shop_exterior']);
     final owner = photo('owner_photo');
+    final needsShopSetup =
+        json['needs_shop_setup'] == true || json['field_verified'] == false;
+    final fieldVerified = !needsShopSetup;
+    final visitTag = ShopVisitTagX.fromApi(
+      json['visit_tag'] ?? (needsShopSetup ? 'not_visited' : 'visited'),
+    );
 
     return ObShopModel(
       id: ApiMap.asString(json['id']) ?? ApiMap.asString(json['shop_id']) ?? '',
       name: ApiMap.asString(json['name']) ?? '',
       ownerName: ApiMap.asString(json['owner_name']),
+      ownerCnicNumber: ApiMap.asString(json['owner_cnic_number']),
       phone:
           ApiMap.asString(json['phone']) ??
           ApiMap.asString(json['owner_phone']),
@@ -131,6 +150,10 @@ class ObShopModel {
       ),
       status: _parseStatus(json['status'] ?? json['approval_state']),
       isHighlighted: json['is_highlighted'] as bool? ?? false,
+      fieldVerified: fieldVerified,
+      needsShopSetup: needsShopSetup,
+      visitTag: visitTag,
+      missingFields: ObShopMissingField.listFrom(json['missing_fields']),
     );
   }
 
@@ -174,6 +197,7 @@ class ObShopModel {
     'id': id,
     'name': name,
     'owner_name': ownerName,
+    'owner_cnic_number': ownerCnicNumber,
     'phone': phone,
     'location_label': locationLabel,
     'address': address,
@@ -195,5 +219,11 @@ class ObShopModel {
     },
     'status': status.name,
     'is_highlighted': isHighlighted,
+    'field_verified': fieldVerified,
+    'needs_shop_setup': needsShopSetup,
+    'visit_tag': visitTag == ShopVisitTag.notVisited
+        ? 'not_visited'
+        : 'visited',
+    'missing_fields': missingFields.map((f) => f.toJson()).toList(),
   };
 }

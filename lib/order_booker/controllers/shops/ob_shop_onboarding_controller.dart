@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 
-import 'package:shahtaj_oil_mobile_app/common/controllers/order_booker_shell_controller.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/shell/order_booker_shell_controller.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
@@ -16,13 +16,13 @@ import 'package:shahtaj_oil_mobile_app/core/utils/helper/app_helper.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/validator/app_validator.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_confirm_dialog.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/controllers/ob_my_shops_controller.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_route_option.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_shop_edit_request.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_shop_model.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_shop_register_request.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_zone_option.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/services/ob_shop_service.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/controllers/shops/ob_my_shops_controller.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/shops/ob_route_option.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/shops/ob_shop_edit_request.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/shops/ob_shop_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/shops/ob_shop_register_request.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/shops/ob_zone_option.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/shops/ob_shop_service.dart';
 
 enum ShopPhotoSlot { cnicFront, cnicBack, ownerPhoto, shopExterior }
 
@@ -294,6 +294,10 @@ class ObShopOnboardingController extends GetxController {
       return;
     }
     if (!isEditing) {
+      if (shopExteriorPhoto.value == null) {
+        _showMessage(AppTexts.obShopExteriorRequired);
+        return;
+      }
       if (selectedZone.value == null) {
         _showMessage(AppTexts.fieldRequired);
         return;

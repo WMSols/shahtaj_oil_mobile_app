@@ -4,17 +4,17 @@ import 'package:get/get.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/images/app_images.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/shops/shop_detail/ob_shop_detail_bottom_actions.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/shops/shop_detail/ob_shop_detail_hero.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/shops/shop_detail/ob_shop_detail_info_section.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/shops/shop_detail/ob_shop_detail_photos_section.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/shops/shop_detail/ob_shop_detail_summary_card.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/shops/shop_detail/ob_shop_detail_bottom_actions.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/shops/shop_detail/ob_shop_detail_hero.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/shops/shop_detail/ob_shop_detail_info_section.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/shops/shop_detail/ob_shop_detail_photos_section.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/shops/shop_detail/ob_shop_detail_summary_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_loader.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_sub_screen_scaffold.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/media/app_ref_image.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/controllers/ob_shop_detail_controller.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_shop_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/controllers/shops/ob_shop_detail_controller.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/shops/ob_shop_model.dart';
 
 class ObShopDetailScreen extends GetView<ObShopDetailController> {
   const ObShopDetailScreen({super.key});
@@ -87,6 +87,7 @@ class ObShopDetailScreen extends GetView<ObShopDetailController> {
                 showCreateOrder: controller.showResumeOrder,
                 showCheckIn: controller.showCheckIn,
                 createOrderLabel: controller.createOrderLabel,
+                isCheckingIn: controller.isCheckingIn.value,
                 onCreateOrder: controller.createOrder,
                 onCheckIn: controller.checkInToShop,
               ),

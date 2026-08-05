@@ -7,11 +7,12 @@ import 'package:shahtaj_oil_mobile_app/core/constants/app_map_tiles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_active_visit_model.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_shop_model.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_task_model.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/services/ob_shop_service.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/services/ob_task_service.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_active_visit_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/shops/ob_shop_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_task_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/shops/ob_shop_service.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/tasks/ob_task_service.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/tasks/ob_check_in_flow.dart';
 
 class ObShopDetailController extends GetxController {
   ObShopDetailController(this._shopService, this._taskService);
@@ -23,6 +24,7 @@ class ObShopDetailController extends GetxController {
   final Rxn<ObShopModel> shop = Rxn<ObShopModel>();
   final Rxn<ObActiveVisitModel> activeVisit = Rxn<ObActiveVisitModel>();
   final Rxn<ObTaskModel> todaysTask = Rxn<ObTaskModel>();
+  final RxBool isCheckingIn = false.obs;
 
   String get shopId => Get.parameters['id'] ?? '';
 
@@ -52,6 +54,10 @@ class ObShopDetailController extends GetxController {
   bool get showResumeOrder => canSellFromShop && hasActiveVisitHere;
 
   bool get showCheckIn => canCheckIn;
+
+  bool get needsFirstVisitSetup =>
+      (todaysTask.value?.needsShopSetup ?? false) ||
+      (shop.value?.needsShopSetup ?? false);
 
   String get createOrderLabel => hasActiveVisitHere
       ? AppTexts.obResumeVisit
@@ -165,11 +171,24 @@ class ObShopDetailController extends GetxController {
       return;
     }
 
-    await Get.toNamed(
-      AppRoutes.obCheckIn,
-      arguments: {'shopId': shopId, 'taskId': task.id},
-    );
-    await refreshVisitState();
+    final missing = todaysTask.value?.missingFields.isNotEmpty == true
+        ? todaysTask.value!.missingFields
+        : (shop.value?.missingFields ?? const []);
+
+    if (isCheckingIn.value) return;
+    isCheckingIn.value = true;
+    try {
+      await ObCheckInFlow.run(
+        taskService: _taskService,
+        task: task,
+        activeVisit: activeVisit.value,
+        missingFields: missing,
+        forceNeedsSetup: needsFirstVisitSetup,
+        onDone: refreshVisitState,
+      );
+    } finally {
+      isCheckingIn.value = false;
+    }
   }
 
   Future<void> _openMaps(double latitude, double longitude) async {

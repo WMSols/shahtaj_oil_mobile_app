@@ -10,7 +10,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_outline_icon_button.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_shop_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/shops/ob_shop_model.dart';
 
 class ObShopDetailSummaryCard extends StatelessWidget {
   const ObShopDetailSummaryCard({

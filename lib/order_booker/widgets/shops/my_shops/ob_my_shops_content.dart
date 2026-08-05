@@ -6,10 +6,10 @@ import 'package:shahtaj_oil_mobile_app/core/design/images/app_images.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_filter_chip.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/shops/my_shops/ob_my_shop_card.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/shops/my_shops/ob_my_shop_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_async_body.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_search_field.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/controllers/ob_my_shops_controller.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/controllers/shops/ob_my_shops_controller.dart';
 
 class ObMyShopsContent extends GetView<ObMyShopsController> {
   const ObMyShopsContent({super.key});

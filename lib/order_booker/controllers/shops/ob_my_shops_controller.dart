@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'package:shahtaj_oil_mobile_app/common/controllers/order_booker_shell_controller.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/shell/order_booker_shell_controller.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/cached_load_mixin.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/bindings/ob_shop_onboarding_binding.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_shop_model.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/services/ob_shop_service.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/bindings/shops/ob_shop_onboarding_binding.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/shops/ob_shop_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/shops/ob_shop_service.dart';
 
 class ObMyShopsController extends GetxController with CachedLoadMixin {
   ObMyShopsController(this._shopService);
