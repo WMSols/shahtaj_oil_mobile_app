@@ -4,11 +4,11 @@ import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/cached_load_mixin.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_dashboard_model.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_route_model.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_weekly_schedule_model.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/services/ob_dashboard_service.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/services/ob_weekly_schedule_service.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/dashboard/ob_dashboard_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/schedule/ob_route_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/schedule/ob_weekly_schedule_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/dashboard/ob_dashboard_service.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/schedule/ob_weekly_schedule_service.dart';
 
 class ObWeeklyScheduleController extends GetxController with CachedLoadMixin {
   ObWeeklyScheduleController(
