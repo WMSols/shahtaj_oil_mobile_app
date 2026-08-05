@@ -10,7 +10,8 @@ import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_primary_button.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_route_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/tasks/ob_today_tasks_progress.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/schedule/ob_route_model.dart';
 
 class ObRouteCard extends StatelessWidget {
   const ObRouteCard({
@@ -18,17 +19,23 @@ class ObRouteCard extends StatelessWidget {
     required this.route,
     this.onActionTap,
     this.showAction = true,
+    this.completedTasks,
+    this.totalTasks,
   });
 
   final ObRouteModel route;
   final VoidCallback? onActionTap;
   final bool showAction;
+  final int? completedTasks;
+  final int? totalTasks;
 
   bool get _hasAction =>
       showAction &&
       onActionTap != null &&
       route.status != RouteStatus.completed;
   bool get _isActive => route.status == RouteStatus.inProgress;
+  bool get _showProgress =>
+      totalTasks != null && totalTasks! > 0 && completedTasks != null;
 
   @override
   Widget build(BuildContext context) {
@@ -75,6 +82,13 @@ class ObRouteCard extends StatelessWidget {
               ),
             ],
           ),
+          if (_showProgress) ...[
+            AppSpacing.vertical(context, 0.012),
+            ObTodayTasksProgress(
+              completed: completedTasks!,
+              total: totalTasks!,
+            ),
+          ],
           if (_hasAction) ...[
             AppSpacing.vertical(context, 0.01),
             AppPrimaryButton(
