@@ -4,10 +4,11 @@ import 'package:shahtaj_oil_mobile_app/core/constants/api_endpoints.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_active_visit_model.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_route_model.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_task_model.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_today_tasks_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_active_visit_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_check_in_result.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/schedule/ob_route_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_task_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_today_tasks_model.dart';
 
 class ObTaskService extends GetxService {
   ObTaskService(this._api, {OfflineCacheService? cache})
@@ -20,11 +21,12 @@ class ObTaskService extends GetxService {
   ObRouteModel? _route;
   ObActiveVisitModel? _activeVisit;
 
-  Future<ObTodayTasksModel> fetchTodayTasks() {
+  Future<ObTodayTasksModel> fetchTodayTasks({bool allowStaleFallback = true}) {
     return _cache.readThrough(
       key: OfflineCacheKeys.tasksToday,
       fetch: () => _api.postData(ApiEndpoints.obTasksToday),
       parse: (data) => _applyToday(ObTodayTasksModel.fromJson(data)),
+      allowStaleFallback: allowStaleFallback,
     );
   }
 
@@ -86,7 +88,7 @@ class ObTaskService extends GetxService {
 
   ObActiveVisitModel? get activeVisitSync => _activeVisit;
 
-  Future<ObActiveVisitModel> checkIn({
+  Future<ObCheckInResult> checkIn({
     required int taskId,
     required double latitude,
     required double longitude,
@@ -95,14 +97,23 @@ class ObTaskService extends GetxService {
       ApiEndpoints.obTasksCheckIn,
       data: {'task_id': taskId, 'latitude': latitude, 'longitude': longitude},
     );
-    final visitJson = ApiMap.asMap(data['visit']) ?? data;
-    final visit = ObActiveVisitModel.fromJson(visitJson);
+    final result = ObCheckInResult.fromJson(data);
+    if (result.hasVisit) {
+      _activeVisit = result.visit;
+      await _cache.saveMap(OfflineCacheKeys.activeVisit, {
+        'visit': result.visit!.toJson(),
+      });
+    }
+    await fetchTodayTasks();
+    return result;
+  }
+
+  Future<void> applyActiveVisit(ObActiveVisitModel visit) async {
     _activeVisit = visit;
     await _cache.saveMap(OfflineCacheKeys.activeVisit, {
       'visit': visit.toJson(),
     });
     await fetchTodayTasks();
-    return visit;
   }
 
   Future<void> completeActiveVisit({required int visitId}) async {
