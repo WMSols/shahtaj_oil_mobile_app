@@ -12,6 +12,7 @@ class ObShopDetailBottomActions extends StatelessWidget {
     this.showCreateOrder = false,
     this.showCheckIn = false,
     this.createOrderLabel,
+    this.isCheckingIn = false,
     required this.onCreateOrder,
     required this.onCheckIn,
   });
@@ -19,6 +20,7 @@ class ObShopDetailBottomActions extends StatelessWidget {
   final bool showCreateOrder;
   final bool showCheckIn;
   final String? createOrderLabel;
+  final bool isCheckingIn;
   final VoidCallback onCreateOrder;
   final VoidCallback onCheckIn;
 
@@ -38,7 +40,7 @@ class ObShopDetailBottomActions extends StatelessWidget {
               AppPrimaryButton(
                 label: createOrderLabel ?? AppTexts.obCreateOrderButton,
                 icon: AppIcons.myshops5,
-                onPressed: onCreateOrder,
+                onPressed: isCheckingIn ? null : onCreateOrder,
               ),
               if (showCheckIn) AppSpacing.vertical(context, 0.01),
             ],
@@ -47,7 +49,8 @@ class ObShopDetailBottomActions extends StatelessWidget {
                 label: AppTexts.obCheckInToShop,
                 icon: AppIcons.location5,
                 outlinedOnly: true,
-                onPressed: onCheckIn,
+                isLoading: isCheckingIn,
+                onPressed: isCheckingIn ? null : onCheckIn,
               ),
           ],
         ),

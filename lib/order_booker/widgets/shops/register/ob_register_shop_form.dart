@@ -14,9 +14,9 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_map_preview.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_photo_upload_tile.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_text_field.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/controllers/ob_shop_onboarding_controller.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_route_option.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_zone_option.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/controllers/shops/ob_shop_onboarding_controller.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/shops/ob_route_option.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/shops/ob_zone_option.dart';
 
 class ObRegisterShopForm extends StatelessWidget {
   const ObRegisterShopForm({super.key, required this.controller});
@@ -220,6 +220,7 @@ class ObRegisterShopForm extends StatelessWidget {
               context,
               icon: AppIcons.cloudUpload5,
               title: AppTexts.obSectionDocumentsPhotos,
+              required: true,
               children: [
                 GridView.count(
                   crossAxisCount: 2,
@@ -260,6 +261,7 @@ class ObRegisterShopForm extends StatelessWidget {
                     ),
                     AppPhotoUploadTile(
                       title: AppTexts.obShopExteriorTitle,
+                      required: true,
                       subtitle: controller.shopExteriorPhoto.value == null
                           ? AppTexts.obCaptureShop
                           : AppTexts.obPhotoUploaded,
