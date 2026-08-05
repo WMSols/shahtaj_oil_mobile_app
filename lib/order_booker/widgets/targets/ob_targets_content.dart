@@ -4,9 +4,9 @@ import 'package:get/get.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/images/app_images.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/targets/ob_target_progress_card.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/targets/ob_target_progress_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_async_body.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/controllers/ob_targets_controller.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/controllers/targets/ob_targets_controller.dart';
 
 class ObTargetsContent extends GetView<ObTargetsController> {
   const ObTargetsContent({super.key});

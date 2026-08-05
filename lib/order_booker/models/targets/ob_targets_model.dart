@@ -1,4 +1,4 @@
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_target_item_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/targets/ob_target_item_model.dart';
 
 class ObTargetsModel {
   const ObTargetsModel({this.headlinePercent = 0});

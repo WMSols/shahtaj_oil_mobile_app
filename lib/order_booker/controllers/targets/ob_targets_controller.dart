@@ -5,9 +5,9 @@ import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/cached_load_mixin.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_target_item_model.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_target_line_model.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/services/ob_targets_service.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/targets/ob_target_item_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/targets/ob_target_line_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/targets/ob_targets_service.dart';
 
 class ObTargetsController extends GetxController with CachedLoadMixin {
   ObTargetsController(this._service);
