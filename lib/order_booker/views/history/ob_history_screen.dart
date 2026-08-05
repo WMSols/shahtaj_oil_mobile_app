@@ -3,9 +3,9 @@ import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/history/ob_visit_history_content.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/history/ob_visit_history_content.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_sub_screen_scaffold.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/controllers/ob_history_controller.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/controllers/history/ob_history_controller.dart';
 
 class ObHistoryScreen extends GetView<ObHistoryController> {
   const ObHistoryScreen({super.key, this.embeddedInShell = false});

@@ -9,10 +9,10 @@ import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_filter_chip.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/history/ob_visit_history_card.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/history/ob_visit_history_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_loader.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/controllers/ob_history_controller.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/controllers/history/ob_history_controller.dart';
 
 class ObVisitHistoryContent extends GetView<ObHistoryController> {
   const ObVisitHistoryContent({super.key});
