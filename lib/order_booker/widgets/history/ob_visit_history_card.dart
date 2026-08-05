@@ -10,7 +10,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_visit_summary_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/history/ob_visit_summary_model.dart';
 
 class ObVisitHistoryCard extends StatelessWidget {
   const ObVisitHistoryCard({

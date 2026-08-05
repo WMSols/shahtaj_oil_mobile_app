@@ -5,8 +5,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_visit_detail_model.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/services/ob_visit_service.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/history/ob_visit_detail_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/history/ob_visit_service.dart';
 
 class ObVisitDetailController extends GetxController {
   ObVisitDetailController(this._visitService);

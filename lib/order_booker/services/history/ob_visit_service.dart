@@ -5,8 +5,8 @@ import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_visit_detail_model.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_visit_summary_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/history/ob_visit_detail_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/history/ob_visit_summary_model.dart';
 
 class ObVisitService extends GetxService {
   ObVisitService(this._api, {OfflineCacheService? cache})

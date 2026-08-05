@@ -5,9 +5,9 @@ import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_primary_button.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_secondary_button.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/history/ob_visit_detail_sections.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/visit/ob_visit_header_card.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/controllers/ob_visit_detail_controller.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/history/ob_visit_detail_sections.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/visit/ob_visit_header_card.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/controllers/history/ob_visit_detail_controller.dart';
 
 class ObVisitDetailContent extends GetView<ObVisitDetailController> {
   const ObVisitDetailContent({super.key});
