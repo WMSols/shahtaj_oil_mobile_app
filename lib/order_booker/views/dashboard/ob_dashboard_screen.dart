@@ -4,15 +4,15 @@ import 'package:get/get.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/images/app_images.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/dashboard/ob_dashboard_greeting.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/dashboard/ob_orders_target_card.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/dashboard/ob_recent_orders_card.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/dashboard/ob_route_card.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/dashboard/ob_dashboard_greeting.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/dashboard/ob_orders_target_card.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/dashboard/ob_recent_orders_card.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/dashboard/ob_route_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_loader.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_scaffold.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_section_header.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/controllers/ob_dashboard_controller.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/controllers/dashboard/ob_dashboard_controller.dart';
 
 class ObDashboardScreen extends GetView<ObDashboardController> {
   const ObDashboardScreen({super.key});
@@ -60,6 +60,8 @@ class ObDashboardScreen extends GetView<ObDashboardController> {
                 ObRouteCard(
                   route: route,
                   onActionTap: controller.onRouteAction,
+                  completedTasks: controller.completedTasks,
+                  totalTasks: controller.totalTasks,
                 ),
               AppSpacing.vertical(context, 0.01),
               AppSectionHeader(

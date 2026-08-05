@@ -5,7 +5,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/responsive/app_responsive.dar
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_targets_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/targets/ob_targets_model.dart';
 
 class ObOrdersTargetCard extends StatelessWidget {
   const ObOrdersTargetCard({super.key, required this.targets});

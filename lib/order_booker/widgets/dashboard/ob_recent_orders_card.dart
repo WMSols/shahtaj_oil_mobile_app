@@ -7,7 +7,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.d
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_order_summary_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/orders/ob_order_summary_model.dart';
 
 class ObRecentOrdersCard extends StatelessWidget {
   const ObRecentOrdersCard({super.key, required this.orders, this.onOrderTap});

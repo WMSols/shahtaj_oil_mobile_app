@@ -5,12 +5,12 @@ import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_dashboard_model.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_order_summary_model.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_target_item_model.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_targets_model.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_today_tasks_model.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_visit_summary_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/dashboard/ob_dashboard_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/orders/ob_order_summary_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/targets/ob_target_item_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/targets/ob_targets_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_today_tasks_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/history/ob_visit_summary_model.dart';
 
 class ObDashboardService extends GetxService {
   ObDashboardService(this._api, {OfflineCacheService? cache})
@@ -19,9 +19,10 @@ class ObDashboardService extends GetxService {
   final ApiClient _api;
   final OfflineCacheService _cache;
 
-  Future<ObDashboardModel> fetchDashboard() {
+  Future<ObDashboardModel> fetchDashboard({bool allowStaleFallback = true}) {
     return _cache.readThrough(
       key: OfflineCacheKeys.dashboard,
+      allowStaleFallback: allowStaleFallback,
       fetch: () async {
         final results = await Future.wait([
           _api.postData(ApiEndpoints.obTasksToday),
@@ -41,6 +42,8 @@ class ObDashboardService extends GetxService {
 
         return ObDashboardModel(
           todaysRoute: today.route.id.isEmpty ? null : today.route,
+          completedTasks: today.completedCount,
+          totalTasks: today.totalCount,
           recentOrders: visits.visits
               .where((visit) => visit.outcome == VisitOutcome.orderPlaced)
               .map(_orderFromVisit)
