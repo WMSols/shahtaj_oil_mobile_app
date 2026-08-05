@@ -4,14 +4,14 @@ import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
-import 'package:shahtaj_oil_mobile_app/core/design/responsive/app_responsive.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_icon_button.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_text_field.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/controllers/ob_order_create_controller.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/controllers/visit/ob_order_create_controller.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/visit/ob_visit_cart_line_model.dart';
 
 class ObCartLineTile extends StatefulWidget {
@@ -78,6 +78,7 @@ class _ObCartLineTileState extends State<ObCartLineTile> {
       final bookableLabel = _c.bookableLabel(line);
       final errorText = _c.quantityError(lineId);
       final displayTotal = _c.displayLineTotal(line);
+      final isRemoving = _c.removingLineId.value == lineId;
 
       return AppOutlineCard(
         color: AppColors.grey.withValues(alpha: 0.08),
@@ -96,19 +97,11 @@ class _ObCartLineTileState extends State<ObCartLineTile> {
                     ).copyWith(fontWeight: FontWeight.w700),
                   ),
                 ),
-                IconButton(
-                  onPressed: () => _c.removeLine(lineId),
-                  visualDensity: VisualDensity.compact,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 36,
-                    minHeight: 36,
-                  ),
-                  icon: Icon(
-                    AppIcons.delete,
-                    color: AppColors.error,
-                    size: AppResponsive.iconSize(context),
-                  ),
+                AppIconButton(
+                  icon: AppIcons.delete,
+                  iconColor: AppColors.error,
+                  isLoading: isRemoving,
+                  onTap: isRemoving ? null : () => _c.removeLine(lineId),
                 ),
               ],
             ),

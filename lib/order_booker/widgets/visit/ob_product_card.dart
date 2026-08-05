@@ -17,11 +17,13 @@ class ObProductCard extends StatelessWidget {
     required this.product,
     required this.onAdd,
     this.isInCart = false,
+    this.isAdding = false,
   });
 
   final ObProductModel product;
   final VoidCallback onAdd;
   final bool isInCart;
+  final bool isAdding;
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +67,8 @@ class ObProductCard extends StatelessWidget {
             AppPrimaryButton(
               label: AppTexts.obAddToCart,
               icon: AppIcons.add,
-              onPressed: outOfStock ? null : onAdd,
+              isLoading: isAdding,
+              onPressed: outOfStock || isAdding ? null : onAdd,
             ),
           ] else ...[
             AppSpacing.vertical(context, 0.01),

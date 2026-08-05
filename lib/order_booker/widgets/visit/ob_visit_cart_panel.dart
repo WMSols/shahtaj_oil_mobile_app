@@ -11,9 +11,9 @@ import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_primary_button.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_secondary_button.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/visit/ob_cart_line_tile.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/visit/ob_cart_line_tile.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/controllers/ob_order_create_controller.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/controllers/visit/ob_order_create_controller.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/visit/ob_visit_cart_model.dart';
 
 class ObVisitCartPanel extends StatelessWidget {

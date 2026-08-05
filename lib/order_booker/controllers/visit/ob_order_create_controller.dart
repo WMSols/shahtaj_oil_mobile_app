@@ -1,7 +1,7 @@
 import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 
-import 'package:shahtaj_oil_mobile_app/common/controllers/order_booker_shell_controller.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/shell/order_booker_shell_controller.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
@@ -9,15 +9,15 @@ import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/helper/app_helper.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_confirm_dialog.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/controllers/ob_route_detail_controller.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_active_visit_model.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_shop_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/controllers/tasks/ob_route_detail_controller.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_active_visit_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/shops/ob_shop_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/visit/ob_product_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/visit/ob_visit_cart_line_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/visit/ob_visit_cart_model.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/services/ob_shop_service.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/services/ob_task_service.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/services/ob_visit_cart_service.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/shops/ob_shop_service.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/tasks/ob_task_service.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/visit/ob_visit_cart_service.dart';
 
 class ObOrderCreateController extends GetxController {
   ObOrderCreateController(
@@ -32,6 +32,8 @@ class ObOrderCreateController extends GetxController {
 
   final RxBool isLoading = true.obs;
   final RxBool isPlacingOrder = false.obs;
+  final RxnInt addingProductId = RxnInt();
+  final RxnInt removingLineId = RxnInt();
   final RxnString error = RxnString();
   final Rxn<ObActiveVisitModel> activeVisit = Rxn<ObActiveVisitModel>();
   final Rxn<ObShopModel> shop = Rxn<ObShopModel>();
@@ -149,6 +151,8 @@ class ObOrderCreateController extends GetxController {
     final active = activeVisit.value;
     if (active == null) return;
     if (isProductInCart(product.id)) return;
+    if (addingProductId.value != null) return;
+    addingProductId.value = product.id;
     try {
       await _cartService.addLine(
         visitId: active.visitId,
@@ -159,6 +163,8 @@ class ObOrderCreateController extends GetxController {
       AppToast.showError(e.message);
     } catch (_) {
       AppToast.showError(AppTexts.error);
+    } finally {
+      addingProductId.value = null;
     }
   }
 
@@ -328,6 +334,8 @@ class ObOrderCreateController extends GetxController {
   Future<void> removeLine(int lineId) async {
     final active = activeVisit.value;
     if (active == null) return;
+    if (removingLineId.value != null) return;
+    removingLineId.value = lineId;
     qtyDrafts.remove(lineId);
     qtyErrors.remove(lineId);
     qtyPreviews.remove(lineId);
@@ -338,6 +346,8 @@ class ObOrderCreateController extends GetxController {
       AppToast.showError(e.message);
     } catch (_) {
       AppToast.showError(AppTexts.error);
+    } finally {
+      removingLineId.value = null;
     }
   }
 
