@@ -3,11 +3,11 @@ import 'package:get/get.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_active_visit_model.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_task_model.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_today_tasks_model.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/services/ob_task_service.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_active_visit_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_task_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_today_tasks_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/tasks/ob_task_service.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/tasks/ob_check_in_flow.dart';
 
 class ObRouteDetailController extends GetxController {
   ObRouteDetailController(this._taskService);
@@ -18,6 +18,7 @@ class ObRouteDetailController extends GetxController {
   final RxnString error = RxnString();
   final Rxn<ObTodayTasksModel> todayTasks = Rxn<ObTodayTasksModel>();
   final Rxn<ObActiveVisitModel> activeVisit = Rxn<ObActiveVisitModel>();
+  final RxnInt checkingInTaskId = RxnInt();
 
   String get routeId => Get.parameters['id'] ?? '';
 
@@ -29,16 +30,16 @@ class ObRouteDetailController extends GetxController {
 
   Future<void> loadTasks({bool silent = false, bool force = false}) async {
     final hasCache = todayTasks.value != null;
-    if (!force && hasCache && !silent) {
-      isLoading.value = false;
-      return;
-    }
 
+    // Always hit the network so distributor zone/route changes show up without
+    // requiring logout. Keep showing cached UI while refreshing when possible.
     if (!silent && !hasCache) {
       isLoading.value = true;
     }
     try {
-      final data = await _taskService.fetchTodayTasks();
+      final data = await _taskService.fetchTodayTasks(
+        allowStaleFallback: !force,
+      );
       todayTasks.value = data;
       activeVisit.value = await _taskService.fetchActiveVisit();
 
@@ -46,10 +47,14 @@ class ObRouteDetailController extends GetxController {
           data.route.status == RouteStatus.notStarted &&
           data.route.id == routeId) {
         await _taskService.startRoute(routeId);
-        todayTasks.value = await _taskService.fetchTodayTasks();
+        todayTasks.value = await _taskService.fetchTodayTasks(
+          allowStaleFallback: !force,
+        );
       }
       error.value = null;
     } catch (_) {
+      // Keep existing tasks on screen when a refresh fails; only fail hard
+      // when there is nothing to show.
       if (!hasCache) {
         error.value = AppTexts.error;
       }
@@ -60,20 +65,19 @@ class ObRouteDetailController extends GetxController {
     }
   }
 
-  void openCheckIn(ObTaskModel task) {
-    final active = activeVisit.value;
-    if (active != null &&
-        active.taskId != task.id &&
-        active.shopId != task.shopId) {
-      AppToast.showError(AppTexts.obShopVisitActiveElsewhere);
-      return;
+  Future<void> openCheckIn(ObTaskModel task) async {
+    if (checkingInTaskId.value != null) return;
+    checkingInTaskId.value = task.id;
+    try {
+      await ObCheckInFlow.run(
+        taskService: _taskService,
+        task: task,
+        activeVisit: activeVisit.value,
+        onDone: () => loadTasks(force: true),
+      );
+    } finally {
+      checkingInTaskId.value = null;
     }
-
-    final nav = Get.toNamed(
-      AppRoutes.obCheckIn,
-      arguments: {'taskId': task.id},
-    );
-    nav?.then((_) => loadTasks(force: true));
   }
 
   void openTaskNotes(ObTaskModel task) {

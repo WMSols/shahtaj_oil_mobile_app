@@ -10,7 +10,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_outline_icon_button.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_task_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_task_model.dart';
 
 class ObTaskCard extends StatelessWidget {
   const ObTaskCard({
@@ -19,12 +19,14 @@ class ObTaskCard extends StatelessWidget {
     this.onCheckIn,
     this.onNotes,
     this.onTap,
+    this.isCheckingIn = false,
   });
 
   final ObTaskModel task;
   final VoidCallback? onCheckIn;
   final VoidCallback? onNotes;
   final VoidCallback? onTap;
+  final bool isCheckingIn;
 
   bool get _canCheckIn => task.status == TaskStatus.pending;
   bool get _showActions => _canCheckIn || onNotes != null || onTap != null;
@@ -51,7 +53,7 @@ class ObTaskCard extends StatelessWidget {
                 height: AppResponsive.scaleSize(context, 28),
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: task.status.chipColor.withValues(alpha: 0.15),
+                  color: task.status.chipColor.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: Text(
@@ -75,7 +77,7 @@ class ObTaskCard extends StatelessWidget {
                             style: AppTextStyles.sectionTitle(context),
                           ),
                         ),
-                        AppStatusChip.task(task.status),
+                        AppStatusChip.shopVisitTag(task.visitTag),
                       ],
                     ),
                     if (task.ownerName != null) ...[
@@ -131,7 +133,8 @@ class ObTaskCard extends StatelessWidget {
                   AppOutlineIconButton(
                     icon: AppIcons.task,
                     label: AppTexts.obTaskCheckIn,
-                    onTap: onCheckIn,
+                    isLoading: isCheckingIn,
+                    onTap: isCheckingIn ? null : onCheckIn,
                   ),
                 if (_canCheckIn && onNotes != null)
                   AppSpacing.horizontal(context, 0.012),
@@ -144,6 +147,8 @@ class ObTaskCard extends StatelessWidget {
               ],
             ),
           ],
+          AppSpacing.vertical(context, 0.012),
+          AppStatusChip.task(task.status, fullWidth: true),
         ],
       ),
     );

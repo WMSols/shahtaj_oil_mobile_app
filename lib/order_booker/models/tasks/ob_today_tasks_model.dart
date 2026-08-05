@@ -1,7 +1,7 @@
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_route_model.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_task_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/schedule/ob_route_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_task_model.dart';
 
 class ObTodayTasksModel {
   const ObTodayTasksModel({required this.route, required this.tasks});

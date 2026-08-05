@@ -6,13 +6,13 @@ import 'package:shahtaj_oil_mobile_app/core/design/images/app_images.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/dashboard/ob_route_card.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/tasks/ob_active_visit_banner.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/tasks/ob_task_card.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/tasks/ob_today_tasks_progress.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/dashboard/ob_route_card.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/tasks/ob_active_visit_banner.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/tasks/ob_task_card.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/tasks/ob_today_tasks_progress.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_loader.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/controllers/ob_route_detail_controller.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/controllers/tasks/ob_route_detail_controller.dart';
 
 class ObTodayTasksContent extends GetView<ObRouteDetailController> {
   const ObTodayTasksContent({super.key});
@@ -78,12 +78,15 @@ class ObTodayTasksContent extends GetView<ObRouteDetailController> {
               )
             else
               ...tasks.map((task) {
+                final isCheckingIn =
+                    controller.checkingInTaskId.value == task.id;
                 return Padding(
                   padding: EdgeInsets.only(
                     bottom: AppSpacing.verticalValue(context, 0.012),
                   ),
                   child: ObTaskCard(
                     task: task,
+                    isCheckingIn: isCheckingIn,
                     onCheckIn: task.status == TaskStatus.pending
                         ? () => controller.openCheckIn(task)
                         : null,

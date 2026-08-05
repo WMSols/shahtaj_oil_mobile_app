@@ -7,7 +7,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_primary_button.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/ob_active_visit_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_active_visit_model.dart';
 
 class ObActiveVisitBanner extends StatelessWidget {
   const ObActiveVisitBanner({

@@ -3,9 +3,9 @@ import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/tasks/ob_today_tasks_content.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/tasks/ob_today_tasks_content.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_sub_screen_scaffold.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/controllers/ob_route_detail_controller.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/controllers/tasks/ob_route_detail_controller.dart';
 
 class ObRouteDetailScreen extends GetView<ObRouteDetailController> {
   const ObRouteDetailScreen({super.key, this.embeddedInShell = false});
