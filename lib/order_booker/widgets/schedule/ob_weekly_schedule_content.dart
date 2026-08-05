@@ -4,12 +4,12 @@ import 'package:get/get.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/images/app_images.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/dashboard/ob_route_card.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/features/order_booker/schedule/ob_weekday_plan_card.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/dashboard/ob_route_card.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/schedule/ob_weekday_plan_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_async_body.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_section_header.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/controllers/ob_weekly_schedule_controller.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/controllers/schedule/ob_weekly_schedule_controller.dart';
 
 class ObWeeklyScheduleContent extends GetView<ObWeeklyScheduleController> {
   const ObWeeklyScheduleContent({super.key});
