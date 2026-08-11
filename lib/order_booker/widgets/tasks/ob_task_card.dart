@@ -29,7 +29,12 @@ class ObTaskCard extends StatelessWidget {
   final bool isCheckingIn;
 
   bool get _canCheckIn => task.status == TaskStatus.pending;
-  bool get _showActions => _canCheckIn || onNotes != null || onTap != null;
+
+  bool get _hasNotes => task.notes != null && task.notes!.trim().isNotEmpty;
+
+  bool get _showNotesButton => !_hasNotes && onNotes != null;
+
+  bool get _showActions => _canCheckIn || _showNotesButton;
 
   @override
   Widget build(BuildContext context) {
@@ -108,18 +113,6 @@ class ObTaskCard extends StatelessWidget {
                         ],
                       ),
                     ],
-                    if (task.notes != null &&
-                        task.notes!.trim().isNotEmpty) ...[
-                      AppSpacing.vertical(context, 0.008),
-                      Text(
-                        task.notes!,
-                        style: AppTextStyles.caption(
-                          context,
-                        ).copyWith(color: AppColors.grey),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
                   ],
                 ),
               ),
@@ -136,15 +129,57 @@ class ObTaskCard extends StatelessWidget {
                     isLoading: isCheckingIn,
                     onTap: isCheckingIn ? null : onCheckIn,
                   ),
-                if (_canCheckIn && onNotes != null)
+                if (_canCheckIn && _showNotesButton)
                   AppSpacing.horizontal(context, 0.012),
-                if (onNotes != null)
+                if (_showNotesButton)
                   AppOutlineIconButton(
                     icon: AppIcons.history5,
                     label: AppTexts.obTaskNotes,
                     onTap: onNotes,
                   ),
               ],
+            ),
+          ],
+          if (_hasNotes) ...[
+            AppSpacing.vertical(context, 0.012),
+            Material(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.circular(
+                AppResponsive.radius(context),
+              ),
+              child: InkWell(
+                onTap: onNotes,
+                borderRadius: BorderRadius.circular(
+                  AppResponsive.radius(context),
+                ),
+                child: Padding(
+                  padding: AppSpacing.symmetric(context, h: 0.025, v: 0.01),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          AppTexts.obTaskNotePreview(task.notes!.trim()),
+                          style: AppTextStyles.caption(context).copyWith(
+                            color: AppColors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (onNotes != null) ...[
+                        AppSpacing.horizontal(context, 0.015),
+                        Icon(
+                          AppIcons.edit,
+                          color: AppColors.white,
+                          size: AppResponsive.iconSize(context, factor: 0.85),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
             ),
           ],
           AppSpacing.vertical(context, 0.012),

@@ -163,6 +163,10 @@ class ObTaskModel {
     if (normalized == 'inProgress' || normalized == 'checkedIn') {
       return TaskStatus.inVisit;
     }
+    // Legacy API may still send "skipped"; treat as pending so the shop stays actionable.
+    if (normalized == 'skipped' || raw == 'skip') {
+      return TaskStatus.pending;
+    }
     return TaskStatus.values.firstWhere(
       (status) => status.name == raw || status.name == normalized,
       orElse: () => TaskStatus.pending,
