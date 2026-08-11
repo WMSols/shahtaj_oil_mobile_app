@@ -118,6 +118,9 @@ class AppTexts {
   static String get obTodaysRoute => 'obTodaysRoute'.tr;
   static String get obWeeklyScheduleTitle => 'obWeeklyScheduleTitle'.tr;
   static String get obTargets => 'obTargets'.tr;
+  static String get obSnapshotVisited => 'obSnapshotVisited'.tr;
+  static String get obSnapshotPending => 'obSnapshotPending'.tr;
+  static String get obSnapshotOrders => 'obSnapshotOrders'.tr;
 
   static String obTargetsProgressPercent(int percent) =>
       'obTargetsProgressPercent'.trParams({'percent': '$percent'});
@@ -139,8 +142,8 @@ class AppTexts {
   static String get rmRecoveryTarget => 'rmRecoveryTarget'.tr;
   static String get rmTargets => 'rmTargets'.tr;
   static String get obRecentOrders => 'obRecentOrders'.tr;
-  static String get obStartRoute => 'obStartRoute'.tr;
-  static String get obContinueRoute => 'obContinueRoute'.tr;
+  static String get obOpenTodayTasks => 'obOpenTodayTasks'.tr;
+  static String get obContinueTodayTasks => 'obContinueTodayTasks'.tr;
   static String get obLowStock => 'obLowStock'.tr;
   static String get obNoRouteAssigned => 'obNoRouteAssigned'.tr;
   static String get obNoRecentOrders => 'obNoRecentOrders'.tr;
@@ -149,7 +152,6 @@ class AppTexts {
   static String get routeStatusCompleted => 'routeStatusCompleted'.tr;
   static String get taskStatusPending => 'taskStatusPending'.tr;
   static String get taskStatusInVisit => 'taskStatusInVisit'.tr;
-  static String get taskStatusSkipped => 'taskStatusSkipped'.tr;
   static String get taskStatusCompleted => 'taskStatusCompleted'.tr;
 
   static String totalCount(int count) =>
@@ -207,7 +209,6 @@ class AppTexts {
       'obLocationPermissionDenied'.tr;
   static String get obLocationFetchFailed => 'obLocationFetchFailed'.tr;
   static String get obShopRegisteredSuccess => 'obShopRegisteredSuccess'.tr;
-  static String get obShopUpdatedSuccess => 'obShopUpdatedSuccess'.tr;
   static String get obRegisterShopHelpTitle => 'obRegisterShopHelpTitle'.tr;
   static String get obRegisterShopHelpBody => 'obRegisterShopHelpBody'.tr;
   static String get obRegisterShopResetTitle => 'obRegisterShopResetTitle'.tr;
@@ -216,7 +217,31 @@ class AppTexts {
   static String get obMyShopsTitle => 'obMyShopsTitle'.tr;
   static String get obRegisteredShopsTitle => 'obRegisteredShopsTitle'.tr;
   static String get obSearchShopHint => 'obSearchShopHint'.tr;
+  static String get obSearchTaskHint => 'obSearchTaskHint'.tr;
+  static String get obSearchVisitHint => 'obSearchVisitHint'.tr;
   static String get obShopsFilterAll => 'obShopsFilterAll'.tr;
+  static String get obNeedsSetupFilter => 'obNeedsSetupFilter'.tr;
+  static String get obShopHighlighted => 'obShopHighlighted'.tr;
+  static String get obNoTasksMatchSearch => 'obNoTasksMatchSearch'.tr;
+  static String get obNoVisitsMatchSearch => 'obNoVisitsMatchSearch'.tr;
+  static String obHistoryTotals(int count, String total) =>
+      'obHistoryTotals'.trParams({'count': '$count', 'total': total});
+  static String obOrderNumberValue(String number) =>
+      'obOrderNumberValue'.trParams({'number': number});
+  static String get obAddressLabel => 'obAddressLabel'.tr;
+  static String get obVisitTagLabel => 'obVisitTagLabel'.tr;
+  static String get obShopSetupLabel => 'obShopSetupLabel'.tr;
+  static String get obShopSetupRequired => 'obShopSetupRequired'.tr;
+  static String get obShopSetupRequiredBanner => 'obShopSetupRequiredBanner'.tr;
+  static String obShopMissingFieldsCount(int count) =>
+      'obShopMissingFieldsCount'.trParams({'count': '$count'});
+  static String get obShopMapSection => 'obShopMapSection'.tr;
+  static String get obScheduleToday => 'obScheduleToday'.tr;
+  static String get obTargetAtRisk => 'obTargetAtRisk'.tr;
+  static String get obTargetSortProgressLow => 'obTargetSortProgressLow'.tr;
+  static String get obTargetSortProgressHigh => 'obTargetSortProgressHigh'.tr;
+  static String get obTargetSortDateEnd => 'obTargetSortDateEnd'.tr;
+  static String get obTargetSortType => 'obTargetSortType'.tr;
   static String obShopOwner(String name) =>
       'obShopOwner'.trParams({'name': name});
   static String get obNoShopsFound => 'obNoShopsFound'.tr;
@@ -228,7 +253,6 @@ class AppTexts {
   static String get obLocationLabel => 'obLocationLabel'.tr;
   static String get obCallOwner => 'obCallOwner'.tr;
   static String get obDirections => 'obDirections'.tr;
-  static String get obEditShop => 'obEditShop'.tr;
   static String get obCreateOrderButton => 'obCreateOrderButton'.tr;
   static String get obCheckInToShop => 'obCheckInToShop'.tr;
   static String get obShopCannotOrderUntilApproved =>
@@ -246,13 +270,13 @@ class AppTexts {
   static String get obCnicBackLabel => 'obCnicBackLabel'.tr;
   static String get obOwnerPhotoLabel => 'obOwnerPhotoLabel'.tr;
   static String get obShopExteriorLabel => 'obShopExteriorLabel'.tr;
-  static String get obShopEditTitle => 'obShopEditTitle'.tr;
-  static String get obShopEditComingSoon => 'obShopEditComingSoon'.tr;
   static String get obCheckInTitle => 'obCheckInTitle'.tr;
   static String get obTasksSection => 'obTasksSection'.tr;
   static String get obTaskCheckIn => 'obTaskCheckIn'.tr;
   static String get obTaskNotes => 'obTaskNotes'.tr;
   static String get obTaskNotesHint => 'obTaskNotesHint'.tr;
+  static String obTaskNotePreview(String note) =>
+      'obTaskNotePreview'.trParams({'note': note});
   static String get obActiveVisitTitle => 'obActiveVisitTitle'.tr;
   static String get obFieldWorkTitle => 'obFieldWorkTitle'.tr;
   static String get obResumeVisit => 'obResumeVisit'.tr;
@@ -297,6 +321,12 @@ class AppTexts {
   static String get obActiveVisitMissing => 'obActiveVisitMissing'.tr;
   static String get obOrderPlacedSuccess => 'obOrderPlacedSuccess'.tr;
   static String get obVisitClosedSuccess => 'obVisitClosedSuccess'.tr;
+  static String get obLeaveVisitTitle => 'obLeaveVisitTitle'.tr;
+  static String get obLeaveVisitMessage => 'obLeaveVisitMessage'.tr;
+  static String get obLeaveNotesTitle => 'obLeaveNotesTitle'.tr;
+  static String get obLeaveNotesMessage => 'obLeaveNotesMessage'.tr;
+  static String get obVisitMismatch => 'obVisitMismatch'.tr;
+  static String get obSearchProductHint => 'obSearchProductHint'.tr;
   static String get obSubtotal => 'obSubtotal'.tr;
   static String get obCartQuantityHint => 'obCartQuantityHint'.tr;
   static String obCartQuantityInputHint(String max, String product) =>
@@ -328,7 +358,6 @@ class AppTexts {
   static String get obVisitCheckOutAt => 'obVisitCheckOutAt'.tr;
   static String get obVisitOutcomeOrder => 'obVisitOutcomeOrder'.tr;
   static String get obVisitOutcomeNoOrder => 'obVisitOutcomeNoOrder'.tr;
-  static String get obVisitOutcomeSkipped => 'obVisitOutcomeSkipped'.tr;
   static String get obViewOrder => 'obViewOrder'.tr;
   static String get obOrderNumberLabel => 'obOrderNumberLabel'.tr;
 
