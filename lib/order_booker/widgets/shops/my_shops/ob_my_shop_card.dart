@@ -49,6 +49,14 @@ class ObMyShopCard extends StatelessWidget {
                         style: AppTextStyles.sectionTitle(context).copyWith(),
                       ),
                     ),
+                    if (shop.isHighlighted) ...[
+                      AppStatusChip(
+                        label: AppTexts.obShopHighlighted,
+                        color: AppColors.primary,
+                        soft: true,
+                      ),
+                      AppSpacing.horizontal(context, 0.01),
+                    ],
                     AppStatusChip.shop(shop.status),
                   ],
                 ),

@@ -8,6 +8,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_filter_chip.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/widgets/shops/my_shops/ob_my_shop_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_async_body.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_shimmer_skeletons.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_search_field.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/controllers/shops/ob_my_shops_controller.dart';
 
@@ -38,8 +39,15 @@ class ObMyShopsContent extends GetView<ObMyShopsController> {
               children: [
                 AppFilterChip(
                   label: AppTexts.obShopsFilterAll,
-                  selected: controller.isFilterSelected(null),
-                  onTap: () => controller.selectFilter(null),
+                  selected:
+                      controller.isFilterSelected(null) &&
+                      !controller.needsSetupOnly.value,
+                  onTap: () {
+                    controller.selectFilter(null);
+                    if (controller.needsSetupOnly.value) {
+                      controller.toggleNeedsSetupFilter();
+                    }
+                  },
                 ),
                 for (final status in controller.filterStatuses)
                   AppFilterChip.shopStatus(
@@ -47,6 +55,11 @@ class ObMyShopsContent extends GetView<ObMyShopsController> {
                     selected: controller.isFilterSelected(status),
                     onTap: () => controller.selectFilter(status),
                   ),
+                AppFilterChip(
+                  label: AppTexts.obNeedsSetupFilter,
+                  selected: controller.needsSetupOnly.value,
+                  onTap: controller.toggleNeedsSetupFilter,
+                ),
               ],
             ),
           ),
@@ -63,6 +76,7 @@ class ObMyShopsContent extends GetView<ObMyShopsController> {
               emptySubtitle: AppTexts.obNoShopsFound,
               emptyImage: AppImages.emptyNoShops,
               onRefresh: () => controller.loadShops(force: true),
+              loading: AppShimmerSkeletons.shopList(context),
               child: ListView.builder(
                 padding: AppSpacing.screenPadding(context),
                 itemCount: shops.length,
