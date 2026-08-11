@@ -27,13 +27,10 @@ class ObTargetLineRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final measure = controller.lineMeasureLabel(line);
-    final accent = showProgress
-        ? controller.lineMeasureChipColor(line)
-        : AppColors.primary;
 
     return AppOutlineCard(
-      color: AppColors.inputFill,
-      borderColor: AppColors.lightGrey,
+      color: AppColors.primary,
+      borderColor: AppColors.primary,
       padding: AppSpacing.symmetric(context, h: 0.03, v: 0.012),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -45,7 +42,7 @@ class ObTargetLineRow extends StatelessWidget {
                 width: AppResponsive.iconSize(context, factor: 1.8),
                 height: AppResponsive.iconSize(context, factor: 1.8),
                 decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.12),
+                  color: AppColors.white.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(
                     AppResponsive.radius(context),
                   ),
@@ -53,7 +50,7 @@ class ObTargetLineRow extends StatelessWidget {
                 alignment: Alignment.center,
                 child: Icon(
                   AppIcons.myshops5,
-                  color: accent,
+                  color: AppColors.white,
                   size: AppResponsive.iconSize(context, factor: 0.95),
                 ),
               ),
@@ -66,14 +63,15 @@ class ObTargetLineRow extends StatelessWidget {
                       line.displayProductName,
                       style: AppTextStyles.bodyText(context).copyWith(
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
+                        color: AppColors.white,
                       ),
                     ),
                     if (measure.isNotEmpty) ...[
                       AppSpacing.vertical(context, 0.005),
-                      AppStatusChip.target(
+                      AppStatusChip(
                         label: measure,
-                        color: controller.lineMeasureChipColor(line),
+                        color: AppColors.white,
+                        soft: true,
                       ),
                     ],
                   ],
@@ -85,13 +83,16 @@ class ObTargetLineRow extends StatelessWidget {
             AppSpacing.vertical(context, 0.008),
             Text(
               controller.lineValueLabel(line),
-              style: AppTextStyles.caption(context).copyWith(
-                fontWeight: FontWeight.w700,
-                color: AppColors.darkGrey,
-              ),
+              style: AppTextStyles.caption(
+                context,
+              ).copyWith(fontWeight: FontWeight.w700, color: AppColors.white),
             ),
             AppSpacing.vertical(context, 0.006),
-            ObTargetProgressBar(value: line.progress),
+            ObTargetProgressBar(
+              value: line.progress,
+              valueColor: AppColors.white,
+              backgroundColor: AppColors.white.withValues(alpha: 0.28),
+            ),
           ],
         ],
       ),

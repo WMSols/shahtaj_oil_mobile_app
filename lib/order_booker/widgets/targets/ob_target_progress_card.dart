@@ -31,19 +31,30 @@ class ObTargetProgressCard extends StatelessWidget {
         title.trim().toLowerCase() != typeLabel.trim().toLowerCase();
     final showProducts = controller.showProducts(target);
     final showLineProgress = controller.showLineProgress(target);
+    final atRisk = controller.isAtRisk(target);
 
     return AppOutlineCard(
+      statusColor: atRisk ? AppColors.warning : null,
+      borderColor: atRisk ? AppColors.warning : AppColors.cardBorder,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (typeLabel != null)
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: AppStatusChip.target(
-                label: typeLabel,
-                color: target.type.chipColor,
-              ),
-            ),
+          Row(
+            children: [
+              if (typeLabel != null)
+                AppStatusChip.target(
+                  label: typeLabel,
+                  color: target.type.chipColor,
+                ),
+              const Spacer(),
+              if (atRisk)
+                AppStatusChip(
+                  label: AppTexts.obTargetAtRisk,
+                  color: AppColors.warning,
+                  soft: true,
+                ),
+            ],
+          ),
           if (showTitle && title.isNotEmpty) ...[
             AppSpacing.vertical(context, 0.006),
             Text(title, style: AppTextStyles.sectionTitle(context)),
