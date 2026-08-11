@@ -4,6 +4,7 @@ import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/cached_load_mixin.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/shell/order_booker_shell_controller.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/dashboard/ob_dashboard_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/schedule/ob_route_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/schedule/ob_weekly_schedule_model.dart';
@@ -28,6 +29,10 @@ class ObWeeklyScheduleController extends GetxController with CachedLoadMixin {
 
   @override
   String get loadFailedMessage => AppTexts.error;
+
+  int get todayWeekday => DateTime.now().weekday;
+
+  bool isToday(ObWeeklyScheduleDayModel day) => day.weekday == todayWeekday;
 
   @override
   void onInit() {
@@ -59,5 +64,20 @@ class ObWeeklyScheduleController extends GetxController with CachedLoadMixin {
       await _dashboardService.continueRoute(route.id);
     }
     Get.toNamed(AppRoutes.obRouteDetail.replaceFirst(':id', route.id));
+  }
+
+  void openTodayTasks() {
+    if (Get.isRegistered<OrderBookerShellController>()) {
+      Get.find<OrderBookerShellController>().selectLeaf('ob_today_tasks');
+      return;
+    }
+    final route = todaysRoute.value;
+    if (route == null || route.id.isEmpty) return;
+    Get.toNamed(AppRoutes.obRouteDetail.replaceFirst(':id', route.id));
+  }
+
+  void onDayTap(ObWeeklyScheduleDayModel day) {
+    if (!isToday(day) || day.isOffDay || !day.hasAssignment) return;
+    openTodayTasks();
   }
 }

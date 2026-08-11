@@ -8,6 +8,7 @@ import 'package:shahtaj_oil_mobile_app/order_booker/widgets/dashboard/ob_route_c
 import 'package:shahtaj_oil_mobile_app/order_booker/widgets/schedule/ob_weekday_plan_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_async_body.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_shimmer_skeletons.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_section_header.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/controllers/schedule/ob_weekly_schedule_controller.dart';
 
@@ -26,6 +27,7 @@ class ObWeeklyScheduleContent extends GetView<ObWeeklyScheduleController> {
         isEmpty: false,
         errorMessage: controller.error.value,
         onRefresh: () => controller.load(force: true),
+        loading: AppShimmerSkeletons.genericList(context, count: 7),
         child: ListView(
           padding: AppSpacing.screenPadding(context),
           children: [
@@ -57,7 +59,11 @@ class ObWeeklyScheduleContent extends GetView<ObWeeklyScheduleController> {
                   padding: EdgeInsets.only(
                     bottom: AppSpacing.verticalValue(context, 0.01),
                   ),
-                  child: ObWeekdayPlanCard(day: day),
+                  child: ObWeekdayPlanCard(
+                    day: day,
+                    isToday: controller.isToday(day),
+                    onTap: () => controller.onDayTap(day),
+                  ),
                 ),
               ),
           ],

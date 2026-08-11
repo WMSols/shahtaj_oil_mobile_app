@@ -7,6 +7,7 @@ import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_confirm_dialog.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/controllers/tasks/ob_route_detail_controller.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/tasks/ob_task_service.dart';
@@ -24,6 +25,7 @@ class ObNotesController extends GetxController {
   late final ObNotesPurpose purpose;
   int? taskId;
   int? visitId;
+  late final String _initialNotes;
 
   Map<String, dynamic> get _args => Get.arguments is Map
       ? Map<String, dynamic>.from(Get.arguments as Map)
@@ -48,6 +50,9 @@ class ObNotesController extends GetxController {
 
   bool get notesRequired => purpose == ObNotesPurpose.endVisitWithoutOrder;
 
+  bool get hasUnsavedNotes =>
+      notesController.text.trim() != _initialNotes.trim();
+
   @override
   void onInit() {
     super.onInit();
@@ -55,15 +60,32 @@ class ObNotesController extends GetxController {
     purpose = args['purpose'] as ObNotesPurpose? ?? ObNotesPurpose.taskNotes;
     taskId = args['taskId'] as int?;
     visitId = args['visitId'] as int?;
-    notesController = TextEditingController(
-      text: args['initialNotes'] as String? ?? '',
-    );
+    _initialNotes = args['initialNotes'] as String? ?? '';
+    notesController = TextEditingController(text: _initialNotes);
   }
 
   @override
   void onClose() {
     notesController.dispose();
     super.onClose();
+  }
+
+  /// Returns true when the screen may pop.
+  Future<bool> confirmLeave() async {
+    if (!hasUnsavedNotes) return true;
+    final confirmed = await Get.dialog<bool>(
+      AppConfirmDialog(
+        title: AppTexts.obLeaveNotesTitle,
+        message: AppTexts.obLeaveNotesMessage,
+        confirmLabel: AppTexts.confirm,
+        cancelLabel: AppTexts.cancel,
+      ),
+    );
+    return confirmed == true;
+  }
+
+  Future<void> leave() async {
+    if (await confirmLeave()) Get.back();
   }
 
   Future<void> save() async {

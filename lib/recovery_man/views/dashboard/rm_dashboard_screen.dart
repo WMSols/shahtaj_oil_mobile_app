@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/recovery_man/widgets/dashboard/rm_recovery_target_card.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_loader.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_shimmer_skeletons.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_scaffold.dart';
 import 'package:shahtaj_oil_mobile_app/recovery_man/controllers/dashboard/rm_dashboard_controller.dart';
 
@@ -16,7 +16,7 @@ class RmDashboardScreen extends GetView<RmDashboardController> {
     return AppScaffold(
       body: Obx(() {
         if (controller.isLoading.value) {
-          return const AppLoader();
+          return AppShimmerSkeletons.dashboard(context);
         }
 
         return ListView(

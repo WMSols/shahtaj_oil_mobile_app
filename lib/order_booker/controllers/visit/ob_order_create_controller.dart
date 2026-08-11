@@ -1,4 +1,5 @@
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/order_booker/shell/order_booker_shell_controller.dart';
@@ -39,16 +40,33 @@ class ObOrderCreateController extends GetxController {
   final Rxn<ObShopModel> shop = Rxn<ObShopModel>();
   final RxList<ObProductModel> products = <ObProductModel>[].obs;
   final Rxn<ObVisitCartModel> cart = Rxn<ObVisitCartModel>();
+  final productSearchController = TextEditingController();
+  final RxString productQuery = ''.obs;
+  final RxBool hasVisitMismatch = false.obs;
 
   /// Typed qty drafts / field errors keyed by cart line id.
   final RxMap<int, String> qtyDrafts = <int, String>{}.obs;
   final RxMap<int, String?> qtyErrors = <int, String?>{}.obs;
   final RxMap<int, double?> qtyPreviews = <int, double?>{}.obs;
 
-  int? get visitId =>
-      Get.arguments is Map ? (Get.arguments as Map)['visitId'] as int? : null;
+  int? get visitId {
+    final raw = Get.arguments is Map ? (Get.arguments as Map)['visitId'] : null;
+    if (raw is int) return raw;
+    if (raw is num) return raw.toInt();
+    return int.tryParse(raw?.toString() ?? '');
+  }
 
   bool get hasCartLines => (cart.value?.lines.isNotEmpty ?? false);
+  List<ObProductModel> get filteredProducts {
+    final query = productQuery.value.trim().toLowerCase();
+    if (query.isEmpty) return products.toList(growable: false);
+    return products
+        .where((p) => p.name.toLowerCase().contains(query))
+        .toList(growable: false);
+  }
+
+  bool get hasUnsavedVisitWork =>
+      (cart.value?.lines.isNotEmpty ?? false) || activeVisit.value != null;
 
   bool isProductInCart(int productId) {
     final lines = cart.value?.lines;
@@ -59,18 +77,37 @@ class ObOrderCreateController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    productSearchController.addListener(() {
+      final value = productSearchController.text;
+      if (productQuery.value != value) {
+        productQuery.value = value;
+      }
+    });
     load();
+  }
+
+  @override
+  void onClose() {
+    productSearchController.dispose();
+    super.onClose();
   }
 
   Future<void> load() async {
     isLoading.value = true;
     error.value = null;
+    hasVisitMismatch.value = false;
     try {
       final fallback = await _taskService.fetchActiveVisit();
       final active = fallback;
       final resolvedVisitId = visitId ?? active?.visitId;
       if (active == null || resolvedVisitId == null) {
         error.value = AppTexts.obActiveVisitMissing;
+        return;
+      }
+      if (visitId != null && active.visitId != visitId) {
+        hasVisitMismatch.value = true;
+        error.value = AppTexts.obVisitMismatch;
+        activeVisit.value = active;
         return;
       }
       activeVisit.value = active;
@@ -474,6 +511,34 @@ class ObOrderCreateController extends GetxController {
         Get.find<ObRouteDetailController>().loadTasks(force: true);
       }
     });
+  }
+
+  void resumeActiveVisit() {
+    final active = activeVisit.value;
+    if (active == null) return;
+    hasVisitMismatch.value = false;
+    error.value = null;
+    Get.offNamed(
+      AppRoutes.obOrderCreate,
+      arguments: {'visitId': active.visitId},
+    );
+  }
+
+  Future<bool> confirmLeave() async {
+    if (!hasUnsavedVisitWork) return true;
+    final confirmed = await Get.dialog<bool>(
+      AppConfirmDialog(
+        title: AppTexts.obLeaveVisitTitle,
+        message: AppTexts.obLeaveVisitMessage,
+        confirmLabel: AppTexts.confirm,
+        cancelLabel: AppTexts.cancel,
+      ),
+    );
+    return confirmed == true;
+  }
+
+  Future<void> leave() async {
+    if (await confirmLeave()) Get.back();
   }
 
   Future<void> _reloadCart() async {
