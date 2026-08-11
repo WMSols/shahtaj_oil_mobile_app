@@ -17,6 +17,7 @@ class ObMyShopsController extends GetxController with CachedLoadMixin {
   final searchController = TextEditingController();
   final RxString searchQuery = ''.obs;
   final Rxn<ShopStatus> statusFilter = Rxn<ShopStatus>();
+  final RxBool needsSetupOnly = false.obs;
   final RxList<ObShopModel> shops = <ObShopModel>[].obs;
 
   static const _filterStatuses = [
@@ -35,14 +36,27 @@ class ObMyShopsController extends GetxController with CachedLoadMixin {
 
   List<ObShopModel> get filteredShops {
     final query = searchQuery.value.trim().toLowerCase();
-    return shops.where((shop) {
+    final filtered = shops.where((shop) {
       final matchesStatus =
           statusFilter.value == null || shop.status == statusFilter.value;
       if (!matchesStatus) return false;
+      if (needsSetupOnly.value && !shop.needsShopSetup) return false;
       if (query.isEmpty) return true;
       return shop.name.toLowerCase().contains(query) ||
-          (shop.ownerName?.toLowerCase().contains(query) ?? false);
+          (shop.ownerName?.toLowerCase().contains(query) ?? false) ||
+          (shop.phone?.toLowerCase().contains(query) ?? false) ||
+          (shop.zoneName?.toLowerCase().contains(query) ?? false) ||
+          (shop.routeName?.toLowerCase().contains(query) ?? false) ||
+          (shop.locationLabel?.toLowerCase().contains(query) ?? false);
     }).toList();
+
+    filtered.sort((a, b) {
+      if (a.isHighlighted != b.isHighlighted) {
+        return a.isHighlighted ? -1 : 1;
+      }
+      return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+    });
+    return filtered;
   }
 
   @override
@@ -83,8 +97,12 @@ class ObMyShopsController extends GetxController with CachedLoadMixin {
 
   bool isFilterSelected(ShopStatus? status) => statusFilter.value == status;
 
-  void openShop(ObShopModel shop) =>
-      Get.toNamed(AppRoutes.obShopDetail.replaceFirst(':id', shop.id));
+  void toggleNeedsSetupFilter() => needsSetupOnly.value = !needsSetupOnly.value;
+
+  void openShop(ObShopModel shop) {
+    _shopService.rememberShop(shop);
+    Get.toNamed(AppRoutes.obShopDetail.replaceFirst(':id', shop.id));
+  }
 
   void goToRegisterShop({required bool embeddedInShell}) {
     ObShopOnboardingBinding().dependencies();
