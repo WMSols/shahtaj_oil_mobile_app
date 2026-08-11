@@ -16,9 +16,12 @@ abstract class OfflineCacheKeys {
   static const visitsMine = 'offline_cache_ob_visits_mine';
   static const dashboard = 'offline_cache_ob_dashboard';
   static const zones = 'offline_cache_ob_zones';
+  static const shopDetailPrefix = 'offline_cache_ob_shop_detail_';
 
   static String routes(int? zoneId) =>
       'offline_cache_ob_routes_${zoneId ?? 'all'}';
+
+  static String shopDetail(String id) => '$shopDetailPrefix$id';
 
   /// Keys wiped on OB logout so a new session cannot show a previous route.
   static const List<String> orderBookerSessionKeys = [
@@ -169,7 +172,20 @@ class OfflineCacheService extends GetxService {
   }
 
   Future<void> clearOrderBookerSessionCache() =>
-      clearKeys(OfflineCacheKeys.orderBookerSessionKeys);
+      _clearOrderBookerSessionCache();
+
+  Future<void> _clearOrderBookerSessionCache() async {
+    await clearKeys(OfflineCacheKeys.orderBookerSessionKeys);
+    final all = await _storage.readAllValues();
+    final dynamicKeys = all.keys.where(
+      (key) =>
+          key.startsWith('offline_cache_ob_routes_') ||
+          key.startsWith(OfflineCacheKeys.shopDetailPrefix),
+    );
+    if (dynamicKeys.isNotEmpty) {
+      await clearKeys(dynamicKeys);
+    }
+  }
 
   /// Register a handler for `role.action` (e.g. `deliveryMan.confirm_pickup`).
   ///

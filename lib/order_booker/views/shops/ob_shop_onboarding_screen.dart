@@ -67,7 +67,7 @@ class _ShopFormContent extends StatelessWidget {
             child: Obx(
               () => AppPrimaryButton(
                 label: controller.submitLabel,
-                icon: controller.isEditing ? AppIcons.edit : AppIcons.userAdd,
+                icon: AppIcons.userAdd,
                 isLoading: controller.isSubmitting.value,
                 onPressed: controller.isSubmitting.value
                     ? null

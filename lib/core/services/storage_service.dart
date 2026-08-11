@@ -102,6 +102,8 @@ class StorageService {
 
   Future<void> deleteValue(String key) => _storage.delete(key: key);
 
+  Future<Map<String, String>> readAllValues() => _storage.readAll();
+
   Future<String?> _read(String key) =>
       _storage.read(key: key).timeout(_readTimeout, onTimeout: () => null);
 }

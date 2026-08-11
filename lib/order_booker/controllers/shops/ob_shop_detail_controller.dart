@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -7,6 +7,7 @@ import 'package:shahtaj_oil_mobile_app/core/constants/app_map_tiles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/media/app_ref_image.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_active_visit_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/shops/ob_shop_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_task_model.dart';
@@ -25,6 +26,7 @@ class ObShopDetailController extends GetxController {
   final Rxn<ObActiveVisitModel> activeVisit = Rxn<ObActiveVisitModel>();
   final Rxn<ObTaskModel> todaysTask = Rxn<ObTaskModel>();
   final RxBool isCheckingIn = false.obs;
+  final RxBool isLoadingPhotos = false.obs;
 
   String get shopId => Get.parameters['id'] ?? '';
 
@@ -32,8 +34,6 @@ class ObShopDetailController extends GetxController {
     final status = shop.value?.status;
     return status == ShopStatus.approved || status == ShopStatus.active;
   }
-
-  bool get canEditShop => shop.value?.status == ShopStatus.pending;
 
   bool get hasActiveVisitHere =>
       activeVisit.value != null && activeVisit.value!.shopId == shopId;
@@ -63,26 +63,63 @@ class ObShopDetailController extends GetxController {
       ? AppTexts.obResumeVisit
       : AppTexts.obCreateOrderButton;
 
+  bool get hasVerificationPhotos {
+    final current = shop.value;
+    if (current == null) return false;
+    final photos = current.verificationPhotos;
+    return AppRefImage.isLoadable(photos.cnicFront) ||
+        AppRefImage.isLoadable(photos.cnicBack) ||
+        AppRefImage.isLoadable(photos.ownerPhoto) ||
+        AppRefImage.isLoadable(photos.shopExterior);
+  }
+
   @override
   void onInit() {
     super.onInit();
     loadShop();
   }
 
-  Future<void> loadShop() async {
+  Future<void> loadShop({bool force = false}) async {
     if (shopId.isEmpty) {
       isLoading.value = false;
       return;
     }
 
-    isLoading.value = true;
+    final seeded = await _shopService.peekShop(shopId);
+    if (seeded != null) {
+      shop.value = seeded;
+      isLoading.value = false;
+    } else {
+      isLoading.value = true;
+    }
+
     try {
-      shop.value = await _shopService.fetchShop(shopId, includePhotos: true);
-      await refreshVisitState();
+      await Future.wait([
+        _refreshShopDetail(force: force),
+        refreshVisitState(),
+      ]);
     } catch (_) {
-      shop.value = null;
+      if (shop.value == null) {
+        shop.value = null;
+      }
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> _refreshShopDetail({bool force = false}) async {
+    final needsPhotos = shop.value == null || !hasVerificationPhotos;
+    final fetchPhotos = needsPhotos || force;
+    if (fetchPhotos) isLoadingPhotos.value = true;
+    try {
+      final fresh = await _shopService.fetchShop(
+        shopId,
+        includePhotos: fetchPhotos,
+        force: force,
+      );
+      shop.value = fresh;
+    } finally {
+      isLoadingPhotos.value = false;
     }
   }
 
@@ -112,11 +149,6 @@ class ObShopDetailController extends GetxController {
   }
 
   Future<void> viewOnMap() => openDirections();
-
-  void editShop() {
-    if (!canEditShop || shopId.isEmpty) return;
-    AppToast.showInformation(AppTexts.obShopEditComingSoon);
-  }
 
   Future<void> createOrder() async {
     await refreshVisitState();
