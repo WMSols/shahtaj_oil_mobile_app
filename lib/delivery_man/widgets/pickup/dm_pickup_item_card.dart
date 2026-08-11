@@ -13,14 +13,17 @@ import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/pickup/dm_pickup
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/dashboard/dm_stock_item_model.dart';
 
 class DmPickupItemCard extends StatelessWidget {
-  const DmPickupItemCard({super.key, required this.item});
+  const DmPickupItemCard({
+    super.key,
+    required this.item,
+    required this.controller,
+  });
 
   final DmStockItemModel item;
+  final DmPickupController controller;
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.find<DmPickupController>();
-
     return Obx(() {
       final readOnly = controller.acknowledged.value;
       final error = controller.qtyErrors[item.id];

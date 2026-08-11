@@ -7,7 +7,7 @@ import 'package:shahtaj_oil_mobile_app/delivery_man/widgets/dashboard/dm_dashboa
 import 'package:shahtaj_oil_mobile_app/delivery_man/widgets/dashboard/dm_pickup_status_card.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/widgets/dashboard/dm_stock_items_section.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/widgets/dashboard/dm_today_summary_cards.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_loader.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_shimmer_skeletons.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_scaffold.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_section_header.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/dashboard/dm_dashboard_controller.dart';
@@ -20,7 +20,7 @@ class DmDashboardScreen extends GetView<DmDashboardController> {
     return AppScaffold(
       body: Obx(() {
         if (controller.isLoading.value) {
-          return const AppLoader();
+          return AppShimmerSkeletons.dashboard(context);
         }
 
         return RefreshIndicator(

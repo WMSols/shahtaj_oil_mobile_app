@@ -9,6 +9,7 @@ import 'package:shahtaj_oil_mobile_app/delivery_man/shell/delivery_man_shell_con
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
+import 'package:shahtaj_oil_mobile_app/core/utils/media/app_image_compress.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/orders/dm_delivery_order_model.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/orders/dm_order_line_model.dart';
@@ -125,9 +126,10 @@ class DmOrderDetailController extends GetxController {
       backgroundColor: Colors.white,
     );
     if (source == null) return;
-    final file = await _picker.pickImage(source: source, imageQuality: 60);
+    final file = await _picker.pickImage(source: source, imageQuality: 90);
     if (file == null) return;
-    proofPhotoBytes.value = await file.readAsBytes();
+    final raw = await file.readAsBytes();
+    proofPhotoBytes.value = await AppImageCompress.compress(raw);
   }
 
   void _goToHistory() {

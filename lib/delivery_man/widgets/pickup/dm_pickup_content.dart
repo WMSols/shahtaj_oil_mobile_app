@@ -29,7 +29,11 @@ class DmPickupContent extends GetView<DmPickupController> {
               padding: EdgeInsets.only(
                 bottom: AppSpacing.verticalValue(context, 0.01),
               ),
-              child: DmPickupItemCard(key: ValueKey(item.id), item: item),
+              child: DmPickupItemCard(
+                key: ValueKey(item.id),
+                item: item,
+                controller: controller,
+              ),
             ),
           ),
           AppSpacing.vertical(context, 0.01),
