@@ -40,14 +40,14 @@ class AppEmptyState extends StatelessWidget {
               height: imageSize,
               fit: BoxFit.contain,
             ),
-            AppSpacing.vertical(context, 0.02),
+            AppSpacing.vertical(context, 0.01),
             Text(
               title,
               style: AppTextStyles.heading(context),
               textAlign: TextAlign.center,
             ),
             if (subtitle != null) ...[
-              AppSpacing.vertical(context, 0.01),
+              AppSpacing.vertical(context, 0.005),
               Text(
                 subtitle!,
                 style: AppTextStyles.hintText(context),
@@ -55,7 +55,7 @@ class AppEmptyState extends StatelessWidget {
               ),
             ],
             if (actionLabel != null && onAction != null) ...[
-              AppSpacing.vertical(context, 0.015),
+              AppSpacing.vertical(context, 0.01),
               TextButton(
                 onPressed: onAction,
                 child: Text(
