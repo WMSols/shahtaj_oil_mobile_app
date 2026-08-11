@@ -8,15 +8,16 @@ import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/targets/ob_targets_model.dart';
 
 class ObOrdersTargetCard extends StatelessWidget {
-  const ObOrdersTargetCard({super.key, required this.targets});
+  const ObOrdersTargetCard({super.key, required this.targets, this.onTap});
 
   final ObTargetsModel targets;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final progress = targets.headlinePercent / 100;
 
-    return Container(
+    final content = Container(
       width: double.infinity,
       padding: AppSpacing.symmetric(context, h: 0.04, v: 0.02),
       decoration: BoxDecoration(
@@ -39,6 +40,21 @@ class ObOrdersTargetCard extends StatelessWidget {
               context,
             ).copyWith(color: AppColors.white.withValues(alpha: 0.9)),
           ),
+          if (targets.topHighlights.isNotEmpty) ...[
+            AppSpacing.vertical(context, 0.008),
+            for (final item in targets.topHighlights)
+              Padding(
+                padding: EdgeInsets.only(
+                  bottom: AppSpacing.verticalValue(context, 0.003),
+                ),
+                child: Text(
+                  item.dashboardLine,
+                  style: AppTextStyles.caption(
+                    context,
+                  ).copyWith(color: AppColors.white.withValues(alpha: 0.9)),
+                ),
+              ),
+          ],
           AppSpacing.vertical(context, 0.01),
           ClipRRect(
             borderRadius: BorderRadius.circular(AppResponsive.radius(context)),
@@ -50,6 +66,15 @@ class ObOrdersTargetCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+    if (onTap == null) return content;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppResponsive.radius(context)),
+        onTap: onTap,
+        child: content,
       ),
     );
   }

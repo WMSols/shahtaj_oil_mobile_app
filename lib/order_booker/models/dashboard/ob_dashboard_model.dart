@@ -9,14 +9,22 @@ class ObDashboardModel {
     this.recentOrders = const [],
     this.targets = const ObTargetsModel(),
     this.completedTasks = 0,
+    this.pendingTasks = 0,
+    this.inVisitTasks = 0,
     this.totalTasks = 0,
+    this.ordersTodayCount = 0,
+    this.ordersTodayValue = 0,
   });
 
   final ObRouteModel? todaysRoute;
   final List<ObOrderSummaryModel> recentOrders;
   final ObTargetsModel targets;
   final int completedTasks;
+  final int pendingTasks;
+  final int inVisitTasks;
   final int totalTasks;
+  final int ordersTodayCount;
+  final double ordersTodayValue;
 
   factory ObDashboardModel.fromJson(Map<String, dynamic> json) {
     final routeJson = json['todays_route'] ?? json['route'];
@@ -31,7 +39,11 @@ class ObDashboardModel {
         json['targets'] as Map<String, dynamic>? ?? const {},
       ),
       completedTasks: ApiMap.asInt(json['completed_tasks']) ?? 0,
+      pendingTasks: ApiMap.asInt(json['pending_tasks']) ?? 0,
+      inVisitTasks: ApiMap.asInt(json['in_visit_tasks']) ?? 0,
       totalTasks: ApiMap.asInt(json['total_tasks']) ?? 0,
+      ordersTodayCount: ApiMap.asInt(json['orders_today_count']) ?? 0,
+      ordersTodayValue: ApiMap.asDouble(json['orders_today_value']) ?? 0,
     );
   }
 
@@ -41,7 +53,11 @@ class ObDashboardModel {
       'recent_orders': recentOrders.map((e) => e.toJson()).toList(),
       'targets': targets.toJson(),
       'completed_tasks': completedTasks,
+      'pending_tasks': pendingTasks,
+      'in_visit_tasks': inVisitTasks,
       'total_tasks': totalTasks,
+      'orders_today_count': ordersTodayCount,
+      'orders_today_value': ordersTodayValue,
     };
   }
 }

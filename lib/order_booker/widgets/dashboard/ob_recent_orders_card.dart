@@ -60,7 +60,7 @@ class _RecentOrderRow extends StatelessWidget {
                   ).copyWith(color: AppColors.grey),
                 ),
                 AppSpacing.vertical(context, 0.006),
-                AppStatusChip.visitOutcome(VisitOutcome.orderPlaced),
+                AppStatusChip.order(order.status),
               ],
             ),
           ),
