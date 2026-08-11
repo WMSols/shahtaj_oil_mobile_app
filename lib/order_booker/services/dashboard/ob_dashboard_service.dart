@@ -40,12 +40,33 @@ class ObDashboardService extends GetxService {
         ).map(ObTargetItemModel.fromJson).toList(growable: false);
         final visits = ObVisitListResult.fromJson(results[2]);
 
+        final orderVisits = visits.visits
+            .where((visit) => visit.outcome == VisitOutcome.orderPlaced)
+            .toList(growable: false);
+        final todayStart = DateTime(
+          DateTime.now().year,
+          DateTime.now().month,
+          DateTime.now().day,
+        );
+        final ordersToday = orderVisits
+            .where((visit) {
+              final at = visit.checkedOutAt ?? visit.checkedInAt;
+              return !at.isBefore(todayStart);
+            })
+            .toList(growable: false);
+
         return ObDashboardModel(
           todaysRoute: today.route.id.isEmpty ? null : today.route,
           completedTasks: today.completedCount,
+          pendingTasks: today.pendingCount,
+          inVisitTasks: today.inVisitCount,
           totalTasks: today.totalCount,
-          recentOrders: visits.visits
-              .where((visit) => visit.outcome == VisitOutcome.orderPlaced)
+          ordersTodayCount: ordersToday.length,
+          ordersTodayValue: ordersToday.fold<double>(
+            0,
+            (sum, visit) => sum + (visit.subtotal ?? 0),
+          ),
+          recentOrders: orderVisits
               .map(_orderFromVisit)
               .toList(growable: false),
           targets: _targetsSummary(targets),

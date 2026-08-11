@@ -2,14 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/design/images/app_images.dart';
+import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
+import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/widgets/dashboard/ob_dashboard_greeting.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/widgets/dashboard/ob_orders_target_card.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/widgets/dashboard/ob_recent_orders_card.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/widgets/dashboard/ob_route_card.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/dashboard/ob_today_snapshot_strip.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/tasks/ob_active_visit_banner.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_loader.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_shimmer_skeletons.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_scaffold.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_section_header.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/controllers/dashboard/ob_dashboard_controller.dart';
@@ -21,8 +25,8 @@ class ObDashboardScreen extends GetView<ObDashboardController> {
   Widget build(BuildContext context) {
     return AppScaffold(
       body: Obx(() {
-        if (controller.isLoading.value) {
-          return const AppLoader();
+        if (controller.isLoading.value && controller.dashboard.value == null) {
+          return AppShimmerSkeletons.dashboard(context);
         }
 
         if (controller.error.value != null) {
@@ -36,7 +40,7 @@ class ObDashboardScreen extends GetView<ObDashboardController> {
 
         final route = controller.todaysRoute;
 
-        return RefreshIndicator(
+        final content = RefreshIndicator(
           onRefresh: () => controller.loadDashboard(force: true),
           child: ListView(
             padding: AppSpacing.screenPadding(context),
@@ -44,6 +48,27 @@ class ObDashboardScreen extends GetView<ObDashboardController> {
               ObDashboardGreeting(
                 greeting: controller.greeting,
                 userName: controller.userName,
+              ),
+              if (controller.activeVisit.value != null) ...[
+                AppSpacing.vertical(context, 0.012),
+                ObActiveVisitBanner(
+                  visit: controller.activeVisit.value!,
+                  onResume: controller.resumeActiveVisit,
+                ),
+              ],
+              AppSpacing.vertical(context, 0.016),
+              ObTodaySnapshotStrip(
+                completed: controller.completedTasks,
+                pending: controller.pendingTasks,
+                ordersCount: controller.ordersTodayCount,
+                ordersValue: controller.ordersTodayValue,
+                onVisitedTap: () =>
+                    controller.goToRouteDetail(filter: TaskStatus.completed),
+                onPendingTap: () =>
+                    controller.goToRouteDetail(filter: TaskStatus.pending),
+                onOrdersTap: () => controller.goToOrderHistory(
+                  outcome: VisitOutcome.orderPlaced,
+                ),
               ),
               AppSpacing.vertical(context, 0.02),
               AppSectionHeader(
@@ -59,6 +84,7 @@ class ObDashboardScreen extends GetView<ObDashboardController> {
               else
                 ObRouteCard(
                   route: route,
+                  onTap: controller.goToRouteDetail,
                   onActionTap: controller.onRouteAction,
                   completedTasks: controller.completedTasks,
                   totalTasks: controller.totalTasks,
@@ -68,7 +94,10 @@ class ObDashboardScreen extends GetView<ObDashboardController> {
                 title: AppTexts.obTargets,
                 onViewAll: controller.goToTargets,
               ),
-              ObOrdersTargetCard(targets: controller.targets),
+              ObOrdersTargetCard(
+                targets: controller.targets,
+                onTap: controller.goToTargets,
+              ),
               AppSpacing.vertical(context, 0.01),
               AppSectionHeader(
                 title: AppTexts.obRecentOrders,
@@ -87,6 +116,22 @@ class ObDashboardScreen extends GetView<ObDashboardController> {
                 ),
             ],
           ),
+        );
+        if (!controller.isLoading.value) return content;
+        return Stack(
+          children: [
+            content,
+            const Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: LinearProgressIndicator(
+                minHeight: 2,
+                color: AppColors.primary,
+                backgroundColor: Colors.transparent,
+              ),
+            ),
+          ],
         );
       }),
     );
