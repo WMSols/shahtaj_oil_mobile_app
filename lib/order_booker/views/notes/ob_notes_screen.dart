@@ -10,16 +10,23 @@ class ObNotesScreen extends GetView<ObNotesController> {
 
   @override
   Widget build(BuildContext context) {
-    return AppSubScreenScaffold(
-      title: controller.title,
-      body: Obx(
-        () => ObNotesContent(
-          notesController: controller.notesController,
-          hint: controller.hint,
-          confirmLabel: controller.confirmLabel,
-          isSaving: controller.isSaving.value,
-          onSave: controller.save,
-          onCancel: Get.back,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        await controller.leave();
+      },
+      child: AppSubScreenScaffold(
+        title: controller.title,
+        body: Obx(
+          () => ObNotesContent(
+            notesController: controller.notesController,
+            hint: controller.hint,
+            confirmLabel: controller.confirmLabel,
+            isSaving: controller.isSaving.value,
+            onSave: controller.save,
+            onCancel: controller.leave,
+          ),
         ),
       ),
     );
