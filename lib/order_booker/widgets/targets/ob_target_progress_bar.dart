@@ -5,9 +5,16 @@ import 'package:shahtaj_oil_mobile_app/core/design/responsive/app_responsive.dar
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 
 class ObTargetProgressBar extends StatelessWidget {
-  const ObTargetProgressBar({super.key, required this.value});
+  const ObTargetProgressBar({
+    super.key,
+    required this.value,
+    this.valueColor = AppColors.primary,
+    this.backgroundColor = AppColors.lightGrey,
+  });
 
   final double value;
+  final Color valueColor;
+  final Color backgroundColor;
 
   @override
   Widget build(BuildContext context) {
@@ -16,8 +23,8 @@ class ObTargetProgressBar extends StatelessWidget {
       child: LinearProgressIndicator(
         minHeight: AppSpacing.verticalValue(context, 0.005),
         value: value.clamp(0, 1),
-        valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
-        backgroundColor: AppColors.primary.withValues(alpha: 0.15),
+        valueColor: AlwaysStoppedAnimation<Color>(valueColor),
+        backgroundColor: backgroundColor,
       ),
     );
   }
