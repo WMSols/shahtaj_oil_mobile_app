@@ -6,7 +6,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/responsive/app_responsive.dar
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_primary_button.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_secondary_button.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_active_visit_model.dart';
 
 class ObActiveVisitBanner extends StatelessWidget {
@@ -22,24 +22,31 @@ class ObActiveVisitBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final radius = AppResponsive.radius(context);
+    final iconPad = AppResponsive.scaleSize(context, 8);
 
     return Container(
       width: double.infinity,
       padding: AppSpacing.symmetric(context, h: 0.035, v: 0.016),
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.1),
+        color: AppColors.primary,
         borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.35)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             children: [
-              Icon(
-                AppIcons.location5,
-                color: AppColors.primary,
-                size: AppResponsive.iconSize(context),
+              Container(
+                padding: EdgeInsets.all(iconPad),
+                decoration: BoxDecoration(
+                  color: AppColors.white.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(radius),
+                ),
+                child: Icon(
+                  AppIcons.location5,
+                  color: AppColors.white,
+                  size: AppResponsive.iconSize(context),
+                ),
               ),
               AppSpacing.horizontal(context, 0.012),
               Expanded(
@@ -49,15 +56,16 @@ class ObActiveVisitBanner extends StatelessWidget {
                     Text(
                       AppTexts.obActiveVisitTitle,
                       style: AppTextStyles.caption(context).copyWith(
-                        color: AppColors.primary,
+                        color: AppColors.white.withValues(alpha: 0.9),
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     Text(
                       AppTexts.obActiveVisitAt(visit.shopName),
-                      style: AppTextStyles.bodyText(
-                        context,
-                      ).copyWith(fontWeight: FontWeight.w600),
+                      style: AppTextStyles.bodyText(context).copyWith(
+                        color: AppColors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
@@ -65,7 +73,12 @@ class ObActiveVisitBanner extends StatelessWidget {
             ],
           ),
           AppSpacing.vertical(context, 0.012),
-          AppPrimaryButton(label: AppTexts.obResumeVisit, onPressed: onResume),
+          AppSecondaryButton(
+            label: AppTexts.obResumeVisit,
+            onPressed: onResume,
+            borderColor: AppColors.white,
+            textColor: AppColors.primary,
+          ),
         ],
       ),
     );

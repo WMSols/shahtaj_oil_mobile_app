@@ -12,6 +12,12 @@ class ObTodayTasksModel {
   int get completedCount =>
       tasks.where((task) => task.status == TaskStatus.completed).length;
 
+  int get pendingCount =>
+      tasks.where((task) => task.status == TaskStatus.pending).length;
+
+  int get inVisitCount =>
+      tasks.where((task) => task.status == TaskStatus.inVisit).length;
+
   int get totalCount => tasks.length;
 
   double get progress =>
@@ -50,16 +56,11 @@ class ObTodayTasksModel {
     final hasProgress = tasks.any(
       (task) =>
           task.status == TaskStatus.completed ||
-          task.status == TaskStatus.skipped ||
           task.status == TaskStatus.inVisit,
     );
     final allDone =
         tasks.isNotEmpty &&
-        tasks.every(
-          (task) =>
-              task.status == TaskStatus.completed ||
-              task.status == TaskStatus.skipped,
-        );
+        tasks.every((task) => task.status == TaskStatus.completed);
 
     final status = allDone
         ? RouteStatus.completed

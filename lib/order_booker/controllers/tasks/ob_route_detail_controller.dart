@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
@@ -19,13 +20,72 @@ class ObRouteDetailController extends GetxController {
   final Rxn<ObTodayTasksModel> todayTasks = Rxn<ObTodayTasksModel>();
   final Rxn<ObActiveVisitModel> activeVisit = Rxn<ObActiveVisitModel>();
   final RxnInt checkingInTaskId = RxnInt();
+  final Rxn<TaskStatus> statusFilter = Rxn<TaskStatus>();
+  final searchController = TextEditingController();
+  final RxString searchQuery = ''.obs;
 
   String get routeId => Get.parameters['id'] ?? '';
+
+  static const filterStatuses = [
+    TaskStatus.pending,
+    TaskStatus.inVisit,
+    TaskStatus.completed,
+  ];
+
+  List<ObTaskModel> get filteredSortedTasks {
+    final tasks = todayTasks.value?.tasks ?? const <ObTaskModel>[];
+    final filter = statusFilter.value;
+    final query = searchQuery.value.trim().toLowerCase();
+    final filtered = tasks.where((task) {
+      if (filter != null && task.status != filter) return false;
+      if (query.isEmpty) return true;
+      return task.shopName.toLowerCase().contains(query) ||
+          (task.ownerName?.toLowerCase().contains(query) ?? false);
+    }).toList();
+
+    int rank(TaskStatus status) => switch (status) {
+      TaskStatus.inVisit => 0,
+      TaskStatus.pending => 1,
+      TaskStatus.completed => 2,
+    };
+
+    filtered.sort((a, b) {
+      final byStatus = rank(a.status).compareTo(rank(b.status));
+      if (byStatus != 0) return byStatus;
+      return a.sequence.compareTo(b.sequence);
+    });
+    return filtered;
+  }
+
+  bool isFilterSelected(TaskStatus? status) => statusFilter.value == status;
+
+  void selectStatusFilter(TaskStatus? status) {
+    statusFilter.value = status;
+  }
 
   @override
   void onInit() {
     super.onInit();
+    searchController.addListener(
+      () => searchQuery.value = searchController.text,
+    );
+    final args = Get.arguments;
+    if (args is Map && args['taskFilter'] is String) {
+      final name = args['taskFilter'] as String;
+      for (final status in TaskStatus.values) {
+        if (status.name == name) {
+          statusFilter.value = status;
+          break;
+        }
+      }
+    }
     loadTasks();
+  }
+
+  @override
+  void onClose() {
+    searchController.dispose();
+    super.onClose();
   }
 
   Future<void> loadTasks({bool silent = false, bool force = false}) async {

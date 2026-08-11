@@ -11,14 +11,26 @@ class ObTodayTasksProgress extends StatelessWidget {
     super.key,
     required this.completed,
     required this.total,
+    this.onPrimary = false,
   });
 
   final int completed;
   final int total;
 
+  /// Light text / track for use on solid primary surfaces.
+  final bool onPrimary;
+
   @override
   Widget build(BuildContext context) {
     final progress = total == 0 ? 0.0 : completed / total;
+    final labelColor = onPrimary ? AppColors.white : AppColors.textPrimary;
+    final percentColor = onPrimary
+        ? AppColors.white.withValues(alpha: 0.85)
+        : AppColors.grey;
+    final trackColor = onPrimary
+        ? AppColors.white.withValues(alpha: 0.25)
+        : AppColors.lightGrey;
+    final barColor = onPrimary ? AppColors.white : AppColors.primary;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -28,17 +40,16 @@ class ObTodayTasksProgress extends StatelessWidget {
             Expanded(
               child: Text(
                 AppTexts.obTasksProgress(completed, total),
-                style: AppTextStyles.bodyText(context).copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
+                style: AppTextStyles.bodyText(
+                  context,
+                ).copyWith(fontWeight: FontWeight.w600, color: labelColor),
               ),
             ),
             Text(
               '${(progress * 100).round()}%',
               style: AppTextStyles.caption(
                 context,
-              ).copyWith(color: AppColors.grey),
+              ).copyWith(color: percentColor),
             ),
           ],
         ),
@@ -48,8 +59,8 @@ class ObTodayTasksProgress extends StatelessWidget {
           child: LinearProgressIndicator(
             value: progress,
             minHeight: AppSpacing.verticalValue(context, 0.008),
-            backgroundColor: AppColors.lightGrey,
-            color: AppColors.primary,
+            backgroundColor: trackColor,
+            color: barColor,
           ),
         ),
       ],

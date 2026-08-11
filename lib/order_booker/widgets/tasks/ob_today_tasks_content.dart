@@ -6,12 +6,15 @@ import 'package:shahtaj_oil_mobile_app/core/design/images/app_images.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_filter_chip.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_search_field.dart';
+import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/widgets/dashboard/ob_route_card.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/widgets/tasks/ob_active_visit_banner.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/widgets/tasks/ob_task_card.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/widgets/tasks/ob_today_tasks_progress.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_loader.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_shimmer_skeletons.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/controllers/tasks/ob_route_detail_controller.dart';
 
 class ObTodayTasksContent extends GetView<ObRouteDetailController> {
@@ -20,11 +23,12 @@ class ObTodayTasksContent extends GetView<ObRouteDetailController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      if (controller.isLoading.value) {
-        return const AppLoader();
+      if (controller.isLoading.value && controller.todayTasks.value == null) {
+        return AppShimmerSkeletons.taskList(context);
       }
 
-      if (controller.error.value != null) {
+      if (controller.error.value != null &&
+          controller.todayTasks.value == null) {
         return AppEmptyState(
           title: AppTexts.emptyLoadFailedTitle,
           subtitle: controller.error.value!,
@@ -43,7 +47,7 @@ class ObTodayTasksContent extends GetView<ObRouteDetailController> {
         );
       }
 
-      final tasks = data.tasks;
+      final tasks = controller.filteredSortedTasks;
       final activeVisit = controller.activeVisit.value;
 
       return RefreshIndicator(
@@ -64,7 +68,33 @@ class ObTodayTasksContent extends GetView<ObRouteDetailController> {
                 onResume: controller.resumeActiveVisit,
               ),
             ],
-            AppSpacing.vertical(context, 0.02),
+            AppSpacing.vertical(context, 0.016),
+            AppSearchField(
+              controller: controller.searchController,
+              hint: AppTexts.obSearchTaskHint,
+              prefixIcon: AppIcons.search,
+              suffixIcon: null,
+            ),
+            AppSpacing.vertical(context, 0.012),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  AppFilterChip(
+                    label: AppTexts.obShopsFilterAll,
+                    selected: controller.isFilterSelected(null),
+                    onTap: () => controller.selectStatusFilter(null),
+                  ),
+                  for (final status in ObRouteDetailController.filterStatuses)
+                    AppFilterChip.taskStatus(
+                      status: status,
+                      selected: controller.isFilterSelected(status),
+                      onTap: () => controller.selectStatusFilter(status),
+                    ),
+                ],
+              ),
+            ),
+            AppSpacing.vertical(context, 0.016),
             Text(
               AppTexts.obTasksSection,
               style: AppTextStyles.sectionTitle(context),
@@ -73,7 +103,9 @@ class ObTodayTasksContent extends GetView<ObRouteDetailController> {
             if (tasks.isEmpty)
               AppEmptyState(
                 title: AppTexts.emptyNoTasksTitle,
-                subtitle: AppTexts.obNoTasksToday,
+                subtitle: controller.searchQuery.value.trim().isEmpty
+                    ? AppTexts.obNoTasksToday
+                    : AppTexts.obNoTasksMatchSearch,
                 image: AppImages.emptyNoTasks,
               )
             else
