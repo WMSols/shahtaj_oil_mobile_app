@@ -111,9 +111,8 @@ class ObVisitDetailLinesSection extends StatelessWidget {
         Container(
           padding: AppSpacing.symmetric(context, h: 0.02, v: 0.01),
           decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.08),
+            color: AppColors.primary,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
           ),
           child: Row(
             children: [
@@ -122,16 +121,15 @@ class ObVisitDetailLinesSection extends StatelessWidget {
                   AppTexts.obSubtotal,
                   style: AppTextStyles.caption(context).copyWith(
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: AppColors.white.withValues(alpha: 0.9),
                   ),
                 ),
               ),
               Text(
                 AppFormatter.currencyWhole(visit.subtotal),
-                style: AppTextStyles.bodyText(context).copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.primary,
-                ),
+                style: AppTextStyles.bodyText(
+                  context,
+                ).copyWith(fontWeight: FontWeight.w800, color: AppColors.white),
               ),
             ],
           ),
