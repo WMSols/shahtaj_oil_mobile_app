@@ -73,15 +73,14 @@ class AuthController extends GetxController {
     final login = emailController.text.trim();
     final password = passwordController.text;
 
-    // Recovery Man: UI not ready — toast only, no session / navigation.
-    if (role == UserRole.recoveryMan) {
-      AppToast.showInformation(AppTexts.moduleUnderDevelopment);
-      return;
-    }
+    // DM / RM: re-enable this block to toast + stop login while modules are WIP.
+    // if (role == UserRole.deliveryMan || role == UserRole.recoveryMan) {
+    //   AppToast.showInformation(AppTexts.moduleUnderDevelopment);
+    //   return;
+    // }
 
     // Order Booker uses live API — credentials required.
-    // Delivery Man is UI-only for now: allow empty fields and local mock session.
-    if (role == UserRole.orderBooker && (login.isEmpty || password.isEmpty)) {
+    if (login.isEmpty || password.isEmpty) {
       AppToast.showError(AppTexts.loginCredentialsRequired);
       return;
     }
@@ -90,11 +89,7 @@ class AuthController extends GetxController {
     try {
       await _authService.login(email: login, password: password, role: role);
       await _persistRememberMe(login: login, password: password);
-      if (role == UserRole.deliveryMan) {
-        AppToast.showInformation(AppTexts.moduleUiCompleted);
-      } else {
-        AppToast.showSuccess(AppTexts.loginSuccessful);
-      }
+      AppToast.showSuccess(AppTexts.loginSuccessful);
       RoleRouteResolver.goToRoleHome(role);
     } on ApiException catch (e) {
       AppToast.showError(e.message);
