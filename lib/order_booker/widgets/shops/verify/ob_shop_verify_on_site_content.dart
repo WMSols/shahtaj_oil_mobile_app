@@ -169,11 +169,14 @@ class ObShopVerifyOnSiteContent extends StatelessWidget {
           label: field.label,
           hint: AppTexts.obOwnerPhoneHint,
           prefixIcon: AppIcons.phone,
+          pakistanPhonePrefix: true,
           required: field.required,
           borderless: true,
           keyboardType: TextInputType.phone,
+          inputFormatters: [PakistanPhoneInputFormatter()],
           validator: (v) => controller.validateOptionalText(v, 'owner_phone'),
-          textInputAction: TextInputAction.next,
+          // Next control is often shop_category dropdown, not a text field.
+          textInputAction: TextInputAction.done,
         );
       case 'shop_category':
         return AppDropdownField<ShopType>(

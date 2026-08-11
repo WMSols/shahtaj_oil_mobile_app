@@ -11,6 +11,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/helper/app_helper.dart';
+import 'package:shahtaj_oil_mobile_app/core/utils/media/app_image_compress.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/validator/app_validator.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/shops/ob_shop_missing_field.dart';
@@ -296,9 +297,10 @@ class ObShopVerifyOnSiteController extends GetxController {
         : ImageSource.camera;
     if (source == null) return;
 
-    final file = await _picker.pickImage(source: source, imageQuality: 75);
+    final file = await _picker.pickImage(source: source, imageQuality: 90);
     if (file == null) return;
-    final bytes = await file.readAsBytes();
+    final raw = await file.readAsBytes();
+    final bytes = await AppImageCompress.compress(raw);
 
     switch (key) {
       case 'shop_exterior_photo':
@@ -345,6 +347,9 @@ class ObShopVerifyOnSiteController extends GetxController {
     if (!showsKey(key)) return null;
     if (requiresKey(key) && (value == null || value.trim().isEmpty)) {
       return AppTexts.fieldRequired;
+    }
+    if (key == 'owner_phone' && value != null && value.trim().isNotEmpty) {
+      return AppValidator.validatePakistanLocalPhone(value);
     }
     return null;
   }
