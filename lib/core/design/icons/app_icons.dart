@@ -80,6 +80,8 @@ class AppIcons {
   static const IconData block = Iconsax.forbidden_2;
   static const IconData block5 = Iconsax.forbidden_25;
 
+  static const IconData pending = Iconsax.clock;
+
   // Auth & profile
   static const IconData email = Iconsax.sms;
   static const IconData email5 = Iconsax.sms5;
