@@ -41,6 +41,17 @@ class AppFilterChip extends StatelessWidget {
     onTap: onTap,
   );
 
+  factory AppFilterChip.taskStatus({
+    required TaskStatus status,
+    required bool selected,
+    required VoidCallback onTap,
+  }) => AppFilterChip(
+    label: status.label,
+    color: status.chipColor,
+    selected: selected,
+    onTap: onTap,
+  );
+
   @override
   Widget build(BuildContext context) {
     final backgroundColor = selected ? color : AppColors.white;

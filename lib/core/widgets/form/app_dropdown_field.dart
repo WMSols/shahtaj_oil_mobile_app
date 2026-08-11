@@ -64,7 +64,16 @@ class AppDropdownField<T> extends StatelessWidget {
                 ),
               )
               .toList(),
-          onChanged: onChanged,
+          onTap: () {
+            // Dismiss any open text-field keyboard before the menu opens.
+            FocusManager.instance.primaryFocus?.unfocus();
+          },
+          onChanged: onChanged == null
+              ? null
+              : (T? selected) {
+                  FocusManager.instance.primaryFocus?.unfocus();
+                  onChanged!(selected);
+                },
           validator: validator,
           decoration: AppInputDecoration.decoration(
             context,

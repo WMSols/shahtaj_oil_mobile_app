@@ -187,9 +187,7 @@ class _DrawerGroupTile extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Material(
-          color: headerActive
-              ? AppColors.primary.withValues(alpha: 0.12)
-              : null,
+          color: headerActive ? AppColors.primary : null,
           borderRadius: itemRadius,
           child: ListTile(
             leading: Icon(
@@ -197,13 +195,13 @@ class _DrawerGroupTile extends StatelessWidget {
                 entry.icon,
                 active: headerActive || _hasActiveChild,
               ),
-              color: headerActive ? AppColors.primary : AppColors.black,
+              color: headerActive ? AppColors.white : AppColors.black,
             ),
             title: Text(
               entry.label,
               style: AppTextStyles.bodyText(context).copyWith(
-                fontWeight: FontWeight.w500,
-                color: headerActive ? AppColors.primary : AppColors.black,
+                fontWeight: headerActive ? FontWeight.w600 : FontWeight.w500,
+                color: headerActive ? AppColors.white : AppColors.black,
               ),
             ),
             trailing: AnimatedRotation(
@@ -211,7 +209,7 @@ class _DrawerGroupTile extends StatelessWidget {
               duration: const Duration(milliseconds: 200),
               child: Icon(
                 AppIcons.filled(AppIcons.arrowDown, active: headerActive),
-                color: headerActive ? AppColors.primary : AppColors.grey,
+                color: headerActive ? AppColors.white : AppColors.grey,
                 size: AppResponsive.iconSize(context, factor: 0.9),
               ),
             ),

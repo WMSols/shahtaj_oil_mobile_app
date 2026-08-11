@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
@@ -35,7 +34,8 @@ class AppSubScreenScaffold extends StatelessWidget {
             color: AppColors.primary,
             size: AppResponsive.iconSize(context),
           ),
-          onPressed: Get.back,
+          // maybePop respects PopScope (e.g. leave-visit confirm); Get.back force-pops.
+          onPressed: () => Navigator.of(context).maybePop(),
         ),
         title: Text(title, style: AppTextStyles.heading(context)),
         bottom: const PreferredSize(

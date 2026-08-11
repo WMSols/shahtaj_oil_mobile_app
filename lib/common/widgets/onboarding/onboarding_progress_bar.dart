@@ -27,7 +27,7 @@ class OnboardingProgressBar extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            ColoredBox(color: AppColors.primary.withValues(alpha: 0.3)),
+            const ColoredBox(color: AppColors.lightGrey),
             TweenAnimationBuilder<double>(
               tween: Tween(end: _progress),
               duration: const Duration(milliseconds: 350),
