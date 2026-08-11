@@ -74,16 +74,13 @@ class ApiLogger {
       return;
     }
     var offset = 0;
-    var part = 1;
-    final total = (message.length / _chunkSize).ceil();
     while (offset < message.length) {
       final end = (offset + _chunkSize < message.length)
           ? offset + _chunkSize
           : message.length;
       // ignore: avoid_print
-      print('[log $part/$total] ${message.substring(offset, end)}');
+      print(message.substring(offset, end));
       offset = end;
-      part++;
     }
   }
 

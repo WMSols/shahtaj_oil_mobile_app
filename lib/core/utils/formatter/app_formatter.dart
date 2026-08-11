@@ -156,6 +156,16 @@ class AppFormatter {
     return '$symbol${formatter.format(amount)}';
   }
 
+  static String durationShort(Duration duration) {
+    final totalMinutes = duration.inMinutes;
+    if (totalMinutes < 1) return '<1m';
+    final hours = totalMinutes ~/ 60;
+    final minutes = totalMinutes % 60;
+    if (hours == 0) return '${minutes}m';
+    if (minutes == 0) return '${hours}h';
+    return '${hours}h ${minutes}m';
+  }
+
   static String coordinates(double latitude, double longitude) {
     final latDir = latitude >= 0 ? 'N' : 'S';
     final lngDir = longitude >= 0 ? 'E' : 'W';
@@ -298,10 +308,33 @@ class PakistanCnicInputFormatter extends TextInputFormatter {
     }
 
     final formatted = buffer.toString();
+    final digitsBeforeCursor = _digitCountUntil(
+      newValue.text,
+      newValue.selection.baseOffset,
+    );
+    final targetOffset = _offsetForDigits(formatted, digitsBeforeCursor);
     return TextEditingValue(
       text: formatted,
-      selection: TextSelection.collapsed(offset: formatted.length),
+      selection: TextSelection.collapsed(offset: targetOffset),
     );
+  }
+
+  int _digitCountUntil(String text, int cursorOffset) {
+    if (cursorOffset <= 0) return 0;
+    final end = cursorOffset.clamp(0, text.length);
+    return RegExp(r'\d').allMatches(text.substring(0, end)).length;
+  }
+
+  int _offsetForDigits(String formatted, int digitCount) {
+    if (digitCount <= 0) return 0;
+    var seen = 0;
+    for (var i = 0; i < formatted.length; i++) {
+      if (RegExp(r'\d').hasMatch(formatted[i])) {
+        seen++;
+        if (seen == digitCount) return i + 1;
+      }
+    }
+    return formatted.length;
   }
 }
 
@@ -318,10 +351,33 @@ class PakistanPhoneInputFormatter extends TextInputFormatter {
     final formatted = limited.length <= 3
         ? limited
         : '${limited.substring(0, 3)} ${limited.substring(3)}';
+    final digitsBeforeCursor = _digitCountUntil(
+      newValue.text,
+      newValue.selection.baseOffset,
+    );
+    final targetOffset = _offsetForDigits(formatted, digitsBeforeCursor);
 
     return TextEditingValue(
       text: formatted,
-      selection: TextSelection.collapsed(offset: formatted.length),
+      selection: TextSelection.collapsed(offset: targetOffset),
     );
+  }
+
+  int _digitCountUntil(String text, int cursorOffset) {
+    if (cursorOffset <= 0) return 0;
+    final end = cursorOffset.clamp(0, text.length);
+    return RegExp(r'\d').allMatches(text.substring(0, end)).length;
+  }
+
+  int _offsetForDigits(String formatted, int digitCount) {
+    if (digitCount <= 0) return 0;
+    var seen = 0;
+    for (var i = 0; i < formatted.length; i++) {
+      if (RegExp(r'\d').hasMatch(formatted[i])) {
+        seen++;
+        if (seen == digitCount) return i + 1;
+      }
+    }
+    return formatted.length;
   }
 }

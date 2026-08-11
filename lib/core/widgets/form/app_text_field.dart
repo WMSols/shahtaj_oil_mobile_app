@@ -114,6 +114,8 @@ class AppTextField extends StatelessWidget {
           onFieldSubmitted: (value) {
             if (textInputAction == TextInputAction.next) {
               FocusScope.of(context).nextFocus();
+            } else if (textInputAction == TextInputAction.done) {
+              FocusScope.of(context).unfocus();
             }
             onSubmitted?.call(value);
           },
