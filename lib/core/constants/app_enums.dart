@@ -14,7 +14,7 @@ enum CollectionStatus { pending, collected, handedOver }
 
 enum VisitStatus { checkedIn, checkedOut }
 
-enum VisitOutcome { orderPlaced, endedWithoutOrder, skipped }
+enum VisitOutcome { orderPlaced, endedWithoutOrder }
 
 enum PresenceStatus { online, away, offline }
 
@@ -26,7 +26,7 @@ enum ShopType { cash, credit }
 
 enum RouteStatus { notStarted, inProgress, completed }
 
-enum TaskStatus { pending, inVisit, skipped, completed }
+enum TaskStatus { pending, inVisit, completed }
 
 enum ObNotesPurpose { taskNotes, endVisitWithoutOrder, visitNotes }
 
@@ -115,13 +115,11 @@ extension VisitOutcomeX on VisitOutcome {
   String get label => switch (this) {
     VisitOutcome.orderPlaced => AppTexts.obVisitOutcomeOrder,
     VisitOutcome.endedWithoutOrder => AppTexts.obVisitOutcomeNoOrder,
-    VisitOutcome.skipped => AppTexts.obVisitOutcomeSkipped,
   };
 
   Color get chipColor => switch (this) {
     VisitOutcome.orderPlaced => AppColors.success,
     VisitOutcome.endedWithoutOrder => AppColors.warning,
-    VisitOutcome.skipped => AppColors.textMuted,
   };
 }
 
@@ -213,14 +211,12 @@ extension TaskStatusX on TaskStatus {
   String get label => switch (this) {
     TaskStatus.pending => AppTexts.taskStatusPending,
     TaskStatus.inVisit => AppTexts.taskStatusInVisit,
-    TaskStatus.skipped => AppTexts.taskStatusSkipped,
     TaskStatus.completed => AppTexts.taskStatusCompleted,
   };
 
   Color get chipColor => switch (this) {
     TaskStatus.pending => AppColors.warning,
     TaskStatus.inVisit => AppColors.primary,
-    TaskStatus.skipped => AppColors.textMuted,
     TaskStatus.completed => AppColors.success,
   };
 }
