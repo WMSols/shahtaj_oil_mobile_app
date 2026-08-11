@@ -36,10 +36,27 @@ class ObShopDetailInfoSection extends StatelessWidget {
                   label: AppTexts.obOwnerNameLabel,
                   value: shop.ownerName!,
                 ),
+              if (shop.ownerCnicNumber != null &&
+                  shop.ownerCnicNumber!.trim().isNotEmpty)
+                AppDetailRow(
+                  label: AppTexts.obOwnerCnicLabel,
+                  value: shop.ownerCnicNumber!,
+                ),
               if (shop.phone != null)
                 AppDetailRow(
                   label: AppTexts.obPhoneNumberLabel,
                   value: shop.phone!,
+                ),
+              if (shop.address != null && shop.address!.trim().isNotEmpty)
+                AppDetailRow(
+                  label: AppTexts.obAddressLabel,
+                  value: shop.address!,
+                ),
+              if (shop.locationLabel != null &&
+                  shop.locationLabel!.trim().isNotEmpty)
+                AppDetailRow(
+                  label: AppTexts.obLocationLabel,
+                  value: shop.locationLabel!,
                 ),
               if (shop.zoneName != null)
                 AppDetailRow(
@@ -55,6 +72,21 @@ class ObShopDetailInfoSection extends StatelessWidget {
                 label: AppTexts.obShopTypeLabel,
                 trailing: AppStatusChip.shopType(shop.shopType),
               ),
+              AppDetailRow(
+                label: AppTexts.obVisitTagLabel,
+                trailing: AppStatusChip.shopVisitTag(shop.visitTag),
+              ),
+              if (shop.needsShopSetup)
+                AppDetailRow(
+                  label: AppTexts.obShopSetupLabel,
+                  value: shop.missingFields.isEmpty
+                      ? AppTexts.obShopSetupRequired
+                      : AppTexts.obShopMissingFieldsCount(
+                          shop.missingFields.length,
+                        ),
+                  valueColor: AppColors.warning,
+                  valueWeight: FontWeight.w700,
+                ),
               if (shop.isCreditShop && shop.creditLimit != null)
                 AppDetailRow(
                   label: AppTexts.obCreditLimitLabel.replaceAll(' (Rs)', ''),

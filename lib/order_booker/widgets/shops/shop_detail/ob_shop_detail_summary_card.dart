@@ -18,13 +18,11 @@ class ObShopDetailSummaryCard extends StatelessWidget {
     required this.shop,
     required this.onCallOwner,
     required this.onDirections,
-    this.onEditShop,
   });
 
   final ObShopModel shop;
   final VoidCallback? onCallOwner;
   final VoidCallback? onDirections;
-  final VoidCallback? onEditShop;
 
   @override
   Widget build(BuildContext context) {
@@ -105,15 +103,6 @@ class ObShopDetailSummaryCard extends StatelessWidget {
                 label: AppTexts.obDirections,
                 onTap: onDirections,
               ),
-              AppSpacing.horizontal(context, 0.015),
-              if (onEditShop != null)
-                AppOutlineIconButton(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: AppColors.white,
-                  icon: AppIcons.edit,
-                  label: AppTexts.obEditShop,
-                  onTap: onEditShop,
-                ),
             ],
           ),
         ],

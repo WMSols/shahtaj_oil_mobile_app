@@ -11,6 +11,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
+import 'package:shahtaj_oil_mobile_app/core/utils/media/app_image_compress.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/helper/app_helper.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/validator/app_validator.dart';
@@ -18,8 +19,6 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_confirm_dialog.
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/controllers/shops/ob_my_shops_controller.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/shops/ob_route_option.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/shops/ob_shop_edit_request.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/shops/ob_shop_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/shops/ob_shop_register_request.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/shops/ob_zone_option.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/shops/ob_shop_service.dart';
@@ -62,17 +61,6 @@ class ObShopOnboardingController extends GetxController {
   /// Bumped on clear so Form / dropdowns fully remount with empty state.
   final formEpoch = 0.obs;
 
-  String? get editingShopId {
-    // Only treat as edit when the named edit route is active so leftover
-    // Get.parameters['id'] (e.g. from shop detail) never flips register into edit.
-    if (!Get.currentRoute.contains('/edit')) return null;
-    final id = Get.parameters['id'];
-    if (id == null || id.trim().isEmpty) return null;
-    return id;
-  }
-
-  bool get isEditing => editingShopId != null;
-
   bool get isCreditShop => selectedShopType.value == ShopType.credit;
 
   bool get hasLocation {
@@ -85,11 +73,9 @@ class ObShopOnboardingController extends GetxController {
       ? AppFormatter.coordinates(mapLatitude.value!, mapLongitude.value!)
       : AppTexts.obLocationNotCaptured;
 
-  String get screenTitle =>
-      isEditing ? AppTexts.obShopEditTitle : AppTexts.obShopOnboardingTitle;
+  String get screenTitle => AppTexts.obShopOnboardingTitle;
 
-  String get submitLabel =>
-      isEditing ? AppTexts.save : AppTexts.obRegisterShopButton;
+  String get submitLabel => AppTexts.obRegisterShopButton;
 
   static const shopTypes = ShopType.values;
 
@@ -115,53 +101,10 @@ class ObShopOnboardingController extends GetxController {
     loadError.value = null;
     try {
       zones.assignAll(await _shopService.fetchZones(force: forceLookups));
-      if (isEditing) {
-        await _loadShopForEdit(editingShopId!);
-      }
     } catch (_) {
-      loadError.value = isEditing ? AppTexts.obShopNotFound : AppTexts.error;
+      loadError.value = AppTexts.error;
     } finally {
       isLoadingOptions.value = false;
-    }
-  }
-
-  Future<void> _loadShopForEdit(String shopId) async {
-    final shop = await _shopService.fetchShop(shopId, includePhotos: true);
-    await _seedFromShop(shop);
-  }
-
-  Future<void> _seedFromShop(ObShopModel shop) async {
-    shopNameController.text = shop.name;
-    ownerNameController.text = shop.ownerName ?? '';
-    ownerPhoneController.text = _localPhone(shop.phone ?? '');
-    creditLimitController.text = shop.creditLimit?.toStringAsFixed(0) ?? '';
-    legacyBalanceController.text = shop.legacyBalance?.toStringAsFixed(0) ?? '';
-
-    selectedShopType.value = shop.shopType;
-
-    if (shop.hasCoordinates) {
-      _setLocation(shop.latitude!, shop.longitude!);
-    }
-
-    ObZoneOption? zone;
-    if (shop.zoneName != null) {
-      try {
-        zone = zones.firstWhere((item) => item.name == shop.zoneName);
-      } catch (_) {
-        zone = null;
-      }
-    }
-    if (zone != null) {
-      await onZoneChanged(zone);
-      if (shop.routeName != null) {
-        try {
-          selectedRoute.value = routes.firstWhere(
-            (item) => item.name == shop.routeName,
-          );
-        } catch (_) {
-          selectedRoute.value = null;
-        }
-      }
     }
   }
 
@@ -192,13 +135,11 @@ class ObShopOnboardingController extends GetxController {
   }
 
   String? validateZone(ObZoneOption? value) {
-    if (isEditing) return null;
     if (value == null) return AppTexts.fieldRequired;
     return null;
   }
 
   String? validateRoute(ObRouteOption? value) {
-    if (isEditing) return null;
     if (selectedZone.value != null && routes.isEmpty) {
       return AppTexts.obNoRoutesInZone;
     }
@@ -232,10 +173,11 @@ class ObShopOnboardingController extends GetxController {
     };
     if (source == null) return;
 
-    final file = await _picker.pickImage(source: source, imageQuality: 75);
+    final file = await _picker.pickImage(source: source, imageQuality: 90);
     if (file == null) return;
 
-    final bytes = await file.readAsBytes();
+    final raw = await file.readAsBytes();
+    final bytes = await AppImageCompress.compress(raw);
     switch (slot) {
       case ShopPhotoSlot.cnicFront:
         cnicFront.value = bytes;
@@ -293,32 +235,26 @@ class ObShopOnboardingController extends GetxController {
       _showMessage(AppTexts.obLocationNotCaptured);
       return;
     }
-    if (!isEditing) {
-      if (shopExteriorPhoto.value == null) {
-        _showMessage(AppTexts.obShopExteriorRequired);
-        return;
-      }
-      if (selectedZone.value == null) {
-        _showMessage(AppTexts.fieldRequired);
-        return;
-      }
-      if (routes.isEmpty) {
-        _showMessage(AppTexts.obNoRoutesInZone);
-        return;
-      }
-      if (selectedRoute.value == null) {
-        _showMessage(AppTexts.fieldRequired);
-        return;
-      }
+    if (shopExteriorPhoto.value == null) {
+      _showMessage(AppTexts.obShopExteriorRequired);
+      return;
+    }
+    if (selectedZone.value == null) {
+      _showMessage(AppTexts.fieldRequired);
+      return;
+    }
+    if (routes.isEmpty) {
+      _showMessage(AppTexts.obNoRoutesInZone);
+      return;
+    }
+    if (selectedRoute.value == null) {
+      _showMessage(AppTexts.fieldRequired);
+      return;
     }
 
     isSubmitting.value = true;
     try {
-      if (isEditing) {
-        await _submitEdit();
-      } else {
-        await _submitRegister();
-      }
+      await _submitRegister();
     } on ApiException catch (e) {
       _showMessage(e.message);
     } catch (_) {
@@ -376,31 +312,6 @@ class ObShopOnboardingController extends GetxController {
     }
   }
 
-  Future<void> _submitEdit() async {
-    final shopId = editingShopId;
-    if (shopId == null) return;
-
-    final request = ObShopEditRequest(
-      shopId: shopId,
-      name: shopNameController.text.trim(),
-      ownerName: ownerNameController.text.trim(),
-      ownerPhone: _normalizedPhone(),
-      latitude: mapLatitude.value!,
-      longitude: mapLongitude.value!,
-      shopType: selectedShopType.value!,
-      creditLimit: isCreditShop
-          ? _parseOptionalDouble(creditLimitController.text)
-          : null,
-      legacyBalance: isCreditShop
-          ? _parseOptionalDouble(legacyBalanceController.text)
-          : null,
-    );
-
-    await _shopService.updateShop(request);
-    _showMessage(AppTexts.obShopUpdatedSuccess, isError: false);
-    Get.back(result: true);
-  }
-
   void showHelp() {
     Get.dialog(
       AlertDialog(
@@ -412,11 +323,6 @@ class ObShopOnboardingController extends GetxController {
   }
 
   Future<void> onPullToRefresh() async {
-    if (isEditing) {
-      await _bootstrap(forceLookups: true);
-      return;
-    }
-
     final confirmed = await Get.dialog<bool>(
       AppConfirmDialog(
         title: AppTexts.obRegisterShopResetTitle,
@@ -464,10 +370,8 @@ class ObShopOnboardingController extends GetxController {
   String? validatePhone(String? value) =>
       AppValidator.validatePakistanLocalPhone(value);
 
-  String? validateCnic(String? value) {
-    if (isEditing && (value == null || value.trim().isEmpty)) return null;
-    return AppValidator.validatePakistanCnic(value);
-  }
+  String? validateCnic(String? value) =>
+      AppValidator.validatePakistanCnic(value);
 
   String? validateOptionalAmount(String? value) {
     if (value == null || value.trim().isEmpty) return null;
@@ -488,13 +392,6 @@ class ObShopOnboardingController extends GetxController {
     final digits = ownerPhoneController.text.replaceAll(RegExp(r'\D'), '');
     final local = digits.startsWith('92') ? digits.substring(2) : digits;
     return '+92$local';
-  }
-
-  String _localPhone(String value) {
-    final digits = value.replaceAll(RegExp(r'\D'), '');
-    final local = digits.startsWith('92') ? digits.substring(2) : digits;
-    if (local.length <= 3) return local;
-    return '${local.substring(0, 3)} ${local.substring(3)}';
   }
 
   double? _parseOptionalDouble(String value) {

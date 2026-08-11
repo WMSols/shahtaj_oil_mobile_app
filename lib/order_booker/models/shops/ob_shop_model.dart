@@ -193,7 +193,7 @@ class ObShopModel {
     return ShopType.credit;
   }
 
-  Map<String, dynamic> toJson() => {
+  Map<String, dynamic> toJson({bool includePhotos = true}) => {
     'id': id,
     'name': name,
     'owner_name': ownerName,
@@ -211,12 +211,13 @@ class ObShopModel {
     'latitude': latitude,
     'longitude': longitude,
     'hero_image_asset': heroImageAsset,
-    'verification_photos': {
-      'cnic_front': verificationPhotos.cnicFront,
-      'cnic_back': verificationPhotos.cnicBack,
-      'owner_photo': verificationPhotos.ownerPhoto,
-      'shop_exterior': verificationPhotos.shopExterior,
-    },
+    if (includePhotos)
+      'verification_photos': {
+        'cnic_front': verificationPhotos.cnicFront,
+        'cnic_back': verificationPhotos.cnicBack,
+        'owner_photo': verificationPhotos.ownerPhoto,
+        'shop_exterior': verificationPhotos.shopExterior,
+      },
     'status': status.name,
     'is_highlighted': isHighlighted,
     'field_verified': fieldVerified,

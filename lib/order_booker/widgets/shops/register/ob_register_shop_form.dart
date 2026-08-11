@@ -45,7 +45,8 @@ class ObRegisterShopForm extends StatelessWidget {
                   required: true,
                   borderless: true,
                   validator: controller.validateRequired,
-                  textInputAction: TextInputAction.next,
+                  // Next control is a dropdown, not a text field.
+                  textInputAction: TextInputAction.done,
                 ),
                 AppSpacing.vertical(context, 0.01),
                 AppDropdownField<ShopType>(
@@ -85,7 +86,7 @@ class ObRegisterShopForm extends StatelessWidget {
                   label: AppTexts.obOwnerCnicLabel,
                   hint: AppTexts.obOwnerCnicHint,
                   prefixIcon: AppIcons.personalCard,
-                  required: !controller.isEditing,
+                  required: true,
                   borderless: true,
                   keyboardType: TextInputType.number,
                   inputFormatters: [PakistanCnicInputFormatter()],
@@ -104,7 +105,8 @@ class ObRegisterShopForm extends StatelessWidget {
                   keyboardType: TextInputType.phone,
                   inputFormatters: [PakistanPhoneInputFormatter()],
                   validator: controller.validatePhone,
-                  textInputAction: TextInputAction.next,
+                  // Next fields are location / dropdowns, not text inputs.
+                  textInputAction: TextInputAction.done,
                 ),
               ],
             ),
@@ -139,49 +141,48 @@ class ObRegisterShopForm extends StatelessWidget {
                 ),
               ],
             ),
-            if (!controller.isEditing)
-              _section(
-                context,
-                icon: AppIcons.routes5,
-                title: AppTexts.obSectionRouteAssignment,
-                children: [
-                  AppDropdownField<ObZoneOption>(
-                    fieldKey: ValueKey(
-                      'zone-${controller.formEpoch.value}-${controller.selectedZone.value?.id}-${controller.zones.length}',
-                    ),
-                    label: AppTexts.obZoneLabel,
-                    hint: AppTexts.obZoneHint,
-                    prefixIcon: AppIcons.map,
-                    required: true,
-                    value: controller.selectedZone.value,
-                    items: controller.zones.toList(growable: false),
-                    getLabel: (zone) => zone.name,
-                    onChanged: controller.onZoneChanged,
-                    validator: controller.validateZone,
+            _section(
+              context,
+              icon: AppIcons.routes5,
+              title: AppTexts.obSectionRouteAssignment,
+              children: [
+                AppDropdownField<ObZoneOption>(
+                  fieldKey: ValueKey(
+                    'zone-${controller.formEpoch.value}-${controller.selectedZone.value?.id}-${controller.zones.length}',
                   ),
-                  AppSpacing.vertical(context, 0.01),
-                  AppDropdownField<ObRouteOption>(
-                    fieldKey: ValueKey(
-                      'route-${controller.formEpoch.value}-${controller.selectedZone.value?.id}-${controller.routes.length}-${controller.selectedRoute.value?.id}',
-                    ),
-                    label: AppTexts.obRouteLabel,
-                    hint:
-                        controller.selectedZone.value != null &&
-                            controller.routes.isEmpty
-                        ? AppTexts.obNoRoutesInZone
-                        : AppTexts.obRouteHint,
-                    prefixIcon: AppIcons.routes,
-                    required: true,
-                    value: controller.selectedRoute.value,
-                    items: controller.routes.toList(growable: false),
-                    getLabel: (route) => route.name,
-                    onChanged: controller.routes.isEmpty
-                        ? null
-                        : controller.onRouteChanged,
-                    validator: controller.validateRoute,
+                  label: AppTexts.obZoneLabel,
+                  hint: AppTexts.obZoneHint,
+                  prefixIcon: AppIcons.map,
+                  required: true,
+                  value: controller.selectedZone.value,
+                  items: controller.zones.toList(growable: false),
+                  getLabel: (zone) => zone.name,
+                  onChanged: controller.onZoneChanged,
+                  validator: controller.validateZone,
+                ),
+                AppSpacing.vertical(context, 0.01),
+                AppDropdownField<ObRouteOption>(
+                  fieldKey: ValueKey(
+                    'route-${controller.formEpoch.value}-${controller.selectedZone.value?.id}-${controller.routes.length}-${controller.selectedRoute.value?.id}',
                   ),
-                ],
-              ),
+                  label: AppTexts.obRouteLabel,
+                  hint:
+                      controller.selectedZone.value != null &&
+                          controller.routes.isEmpty
+                      ? AppTexts.obNoRoutesInZone
+                      : AppTexts.obRouteHint,
+                  prefixIcon: AppIcons.routes,
+                  required: true,
+                  value: controller.selectedRoute.value,
+                  items: controller.routes.toList(growable: false),
+                  getLabel: (route) => route.name,
+                  onChanged: controller.routes.isEmpty
+                      ? null
+                      : controller.onRouteChanged,
+                  validator: controller.validateRoute,
+                ),
+              ],
+            ),
             if (controller.isCreditShop)
               _section(
                 context,
