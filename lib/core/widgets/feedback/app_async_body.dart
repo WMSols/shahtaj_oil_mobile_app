@@ -20,6 +20,7 @@ class AppAsyncBody extends StatelessWidget {
     this.errorTitle,
     this.errorImage = AppImages.emptyError,
     this.onRefresh,
+    this.loading,
   });
 
   final bool isLoading;
@@ -33,10 +34,11 @@ class AppAsyncBody extends StatelessWidget {
   final String? errorTitle;
   final String errorImage;
   final Future<void> Function()? onRefresh;
+  final Widget? loading;
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) return const AppLoader();
+    if (isLoading) return loading ?? const AppLoader();
 
     if (hasError) {
       return AppEmptyState(
