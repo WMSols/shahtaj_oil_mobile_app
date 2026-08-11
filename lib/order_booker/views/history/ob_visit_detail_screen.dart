@@ -5,7 +5,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/images/app_images.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/widgets/history/ob_visit_detail_content.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_loader.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_shimmer_skeletons.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_sub_screen_scaffold.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/controllers/history/ob_visit_detail_controller.dart';
 
@@ -17,7 +17,9 @@ class ObVisitDetailScreen extends GetView<ObVisitDetailController> {
     return AppSubScreenScaffold(
       title: AppTexts.obVisitDetailTitle,
       body: Obx(() {
-        if (controller.isLoading.value) return const AppLoader();
+        if (controller.isLoading.value) {
+          return AppShimmerSkeletons.detail(context);
+        }
 
         if (controller.error.value != null || controller.visit.value == null) {
           return AppEmptyState(

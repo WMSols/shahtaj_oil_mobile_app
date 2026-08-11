@@ -9,9 +9,12 @@ import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_filter_chip.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_search_field.dart';
+import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/widgets/history/ob_visit_history_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_loader.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_shimmer_skeletons.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/controllers/history/ob_history_controller.dart';
 
 class ObVisitHistoryContent extends GetView<ObHistoryController> {
@@ -24,6 +27,15 @@ class ObVisitHistoryContent extends GetView<ObHistoryController> {
       children: [
         Padding(
           padding: AppSpacing.screenPadding(context),
+          child: AppSearchField(
+            controller: controller.searchController,
+            hint: AppTexts.obSearchVisitHint,
+            prefixIcon: AppIcons.search,
+            suffixIcon: null,
+          ),
+        ),
+        Padding(
+          padding: AppSpacing.screenPadding(context).copyWith(top: 0),
           child: Row(
             children: [
               Expanded(
@@ -84,10 +96,30 @@ class ObVisitHistoryContent extends GetView<ObHistoryController> {
             ),
           ),
         ),
+        Obx(() {
+          final visits = controller.filteredVisits;
+          if (controller.isLoading.value || visits.isEmpty) {
+            return const SizedBox.shrink();
+          }
+          return Padding(
+            padding: AppSpacing.screenPadding(
+              context,
+            ).copyWith(top: AppSpacing.verticalValue(context, 0.01), bottom: 0),
+            child: Text(
+              AppTexts.obHistoryTotals(
+                visits.length,
+                AppFormatter.currencyWhole(controller.filteredOrdersTotal),
+              ),
+              style: AppTextStyles.caption(
+                context,
+              ).copyWith(color: AppColors.primary, fontWeight: FontWeight.w700),
+            ),
+          );
+        }),
         Expanded(
           child: Obx(() {
             if (controller.isLoading.value) {
-              return const AppLoader();
+              return AppShimmerSkeletons.genericList(context);
             }
 
             if (controller.error.value != null) {
@@ -103,7 +135,9 @@ class ObVisitHistoryContent extends GetView<ObHistoryController> {
             if (visits.isEmpty) {
               return AppEmptyState(
                 title: AppTexts.emptyNoVisitsTitle,
-                subtitle: AppTexts.obNoVisitsFound,
+                subtitle: controller.searchQuery.value.trim().isEmpty
+                    ? AppTexts.obNoVisitsFound
+                    : AppTexts.obNoVisitsMatchSearch,
                 image: AppImages.emptyNoVisits,
                 onRefresh: () => controller.loadVisits(reset: true),
               );
@@ -139,6 +173,7 @@ class ObVisitHistoryContent extends GetView<ObHistoryController> {
                       child: ObVisitHistoryCard(
                         visit: visit,
                         timeLabel: controller.visitTimeLabel(visit),
+                        durationLabel: controller.visitDurationLabel(visit),
                         onTap: () => controller.openVisit(visit),
                       ),
                     );
@@ -166,16 +201,11 @@ class _DateFilterTile extends StatelessWidget {
     final radius = AppResponsive.radius(context);
 
     return Material(
-      color: hasValue
-          ? AppColors.primary.withValues(alpha: 0.1)
-          : AppColors.white,
+      color: hasValue ? AppColors.primary : AppColors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(radius),
         side: BorderSide(
-          color: hasValue
-              ? AppColors.primary.withValues(alpha: 0.45)
-              : AppColors.cardBorder,
-          width: hasValue ? 1.4 : 1,
+          color: hasValue ? AppColors.primary : AppColors.cardBorder,
         ),
       ),
       clipBehavior: Clip.antiAlias,
@@ -188,12 +218,14 @@ class _DateFilterTile extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(AppResponsive.scaleSize(context, 7)),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.12),
+                  color: hasValue
+                      ? AppColors.white.withValues(alpha: 0.18)
+                      : AppColors.inputFill,
                   borderRadius: BorderRadius.circular(radius),
                 ),
                 child: Icon(
                   AppIcons.calendar,
-                  color: AppColors.primary,
+                  color: hasValue ? AppColors.white : AppColors.primary,
                   size: AppResponsive.iconSize(context, factor: 0.85),
                 ),
               ),
@@ -205,7 +237,9 @@ class _DateFilterTile extends StatelessWidget {
                     Text(
                       label,
                       style: AppTextStyles.caption(context).copyWith(
-                        color: AppColors.primary,
+                        color: hasValue
+                            ? AppColors.white.withValues(alpha: 0.9)
+                            : AppColors.primary,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -215,9 +249,7 @@ class _DateFilterTile extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppTextStyles.bodyText(context).copyWith(
                         fontWeight: FontWeight.w600,
-                        color: hasValue
-                            ? AppColors.textPrimary
-                            : AppColors.textMuted,
+                        color: hasValue ? AppColors.white : AppColors.textMuted,
                       ),
                     ),
                   ],

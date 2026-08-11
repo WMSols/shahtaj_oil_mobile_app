@@ -16,6 +16,7 @@ class ObHistoryController extends GetxController {
   final ObVisitService _visitService;
 
   static const _pageSize = 20;
+  static const _minFilteredDesired = 8;
 
   final RxBool isLoading = true.obs;
   final RxBool isLoadingMore = false.obs;
@@ -24,6 +25,8 @@ class ObHistoryController extends GetxController {
   final Rxn<DateTime> dateFrom = Rxn<DateTime>();
   final Rxn<DateTime> dateTo = Rxn<DateTime>();
   final Rxn<VisitOutcome> outcomeFilter = Rxn<VisitOutcome>();
+  final searchController = TextEditingController();
+  final RxString searchQuery = ''.obs;
 
   int _offset = 0;
   int _total = 0;
@@ -34,19 +37,40 @@ class ObHistoryController extends GetxController {
     null,
     VisitOutcome.orderPlaced,
     VisitOutcome.endedWithoutOrder,
-    VisitOutcome.skipped,
   ];
 
   List<ObVisitSummaryModel> get filteredVisits {
     final filter = outcomeFilter.value;
-    if (filter == null) return visits;
-    return visits.where((visit) => visit.outcome == filter).toList();
+    final query = searchQuery.value.trim().toLowerCase();
+    return visits.where((visit) {
+      if (filter != null && visit.outcome != filter) return false;
+      if (query.isEmpty) return true;
+      return visit.shopName.toLowerCase().contains(query) ||
+          (visit.ownerName?.toLowerCase().contains(query) ?? false) ||
+          (visit.orderNumber?.toLowerCase().contains(query) ?? false);
+    }).toList();
   }
+
+  int get filteredCount => filteredVisits.length;
+
+  double get filteredOrdersTotal => filteredVisits.fold<double>(
+    0,
+    (sum, visit) => sum + (visit.subtotal ?? 0),
+  );
 
   @override
   void onInit() {
     super.onInit();
+    searchController.addListener(
+      () => searchQuery.value = searchController.text,
+    );
     loadVisits(reset: true);
+  }
+
+  @override
+  void onClose() {
+    searchController.dispose();
+    super.onClose();
   }
 
   Future<void> loadVisits({bool reset = false}) async {
@@ -54,9 +78,7 @@ class ObHistoryController extends GetxController {
     if (reset && !hadCache) {
       isLoading.value = true;
     }
-    if (!reset) {
-      // pagination / append — keep current error until success
-    } else if (!hadCache) {
+    if (reset && !hadCache) {
       error.value = null;
     }
 
@@ -76,6 +98,9 @@ class ObHistoryController extends GetxController {
         _offset = visits.length;
       }
       error.value = null;
+      if (reset || outcomeFilter.value != null) {
+        await _fillFilteredIfNeeded();
+      }
     } catch (_) {
       if (!hadCache) {
         error.value = AppTexts.error;
@@ -91,6 +116,26 @@ class ObHistoryController extends GetxController {
     }
   }
 
+  Future<void> _fillFilteredIfNeeded() async {
+    if (outcomeFilter.value == null) return;
+    var guard = 0;
+    while (hasMore &&
+        filteredVisits.length < _minFilteredDesired &&
+        guard < 5) {
+      guard++;
+      final result = await _visitService.fetchMyVisits(
+        limit: _pageSize,
+        offset: _offset,
+        dateFrom: dateFrom.value,
+        dateTo: dateTo.value,
+      );
+      _total = result.total;
+      if (result.visits.isEmpty) break;
+      visits.addAll(result.visits);
+      _offset = visits.length;
+    }
+  }
+
   Future<void> loadMore() async {
     if (isLoading.value || isLoadingMore.value || !hasMore) return;
     isLoadingMore.value = true;
@@ -99,6 +144,21 @@ class ObHistoryController extends GetxController {
 
   void selectOutcomeFilter(VisitOutcome? outcome) {
     outcomeFilter.value = outcome;
+    if (outcome != null) {
+      unawaitedFill();
+    }
+  }
+
+  void unawaitedFill() {
+    Future.microtask(() async {
+      if (isLoading.value || isLoadingMore.value) return;
+      isLoadingMore.value = true;
+      try {
+        await _fillFilteredIfNeeded();
+      } finally {
+        isLoadingMore.value = false;
+      }
+    });
   }
 
   bool isOutcomeSelected(VisitOutcome? outcome) =>
@@ -169,5 +229,13 @@ class ObHistoryController extends GetxController {
     final date = AppFormatter.shortDate(visit.checkedInAt);
     final time = AppFormatter.timeOfDay(visit.checkedInAt);
     return '$date • $time';
+  }
+
+  String? visitDurationLabel(ObVisitSummaryModel visit) {
+    final out = visit.checkedOutAt;
+    if (out == null) return null;
+    final duration = out.difference(visit.checkedInAt);
+    if (duration.isNegative) return null;
+    return AppFormatter.durationShort(duration);
   }
 }

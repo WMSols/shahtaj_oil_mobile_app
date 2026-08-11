@@ -17,11 +17,13 @@ class ObVisitHistoryCard extends StatelessWidget {
     super.key,
     required this.visit,
     required this.timeLabel,
+    this.durationLabel,
     this.onTap,
   });
 
   final ObVisitSummaryModel visit;
   final String timeLabel;
+  final String? durationLabel;
   final VoidCallback? onTap;
 
   @override
@@ -60,6 +62,14 @@ class ObVisitHistoryCard extends StatelessWidget {
                     style: mutedStyle,
                   ),
                 ],
+                if (visit.orderNumber != null &&
+                    visit.orderNumber!.trim().isNotEmpty) ...[
+                  AppSpacing.vertical(context, 0.005),
+                  Text(
+                    AppTexts.obOrderNumberValue(visit.orderNumber!),
+                    style: mutedStyle.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                ],
                 AppSpacing.vertical(context, 0.005),
                 Row(
                   children: [
@@ -71,7 +81,9 @@ class ObVisitHistoryCard extends StatelessWidget {
                     AppSpacing.horizontal(context, 0.01),
                     Expanded(
                       child: Text(
-                        timeLabel,
+                        durationLabel == null
+                            ? timeLabel
+                            : '$timeLabel · $durationLabel',
                         style: mutedStyle,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,

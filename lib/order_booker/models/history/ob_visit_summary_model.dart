@@ -62,14 +62,13 @@ class ObVisitSummaryModel {
     if (value == 'order' || value == 'order_placed' || value == 'orderplaced') {
       return VisitOutcome.orderPlaced;
     }
-    if (value == 'skipped' || value == 'skip') {
-      return VisitOutcome.skipped;
-    }
     if (value == 'no_order' ||
         value == 'no-order' ||
         value == 'ended_without_order' ||
         value == 'endedwithoutorder' ||
-        value == 'no_sale') {
+        value == 'no_sale' ||
+        value == 'skipped' ||
+        value == 'skip') {
       return VisitOutcome.endedWithoutOrder;
     }
     return VisitOutcome.values.firstWhere(
