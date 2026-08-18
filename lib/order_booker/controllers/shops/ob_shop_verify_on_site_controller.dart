@@ -89,6 +89,17 @@ class ObShopVerifyOnSiteController extends GetxController {
     return lat != null && lng != null && lat.abs() <= 90 && lng.abs() <= 180;
   }
 
+  bool get isCnicRequired {
+    final type = selectedShopType.value;
+    if (type == ShopType.cash) return false;
+    if (type == ShopType.credit) return true;
+    return requiresKey('owner_cnic_number');
+  }
+
+  void onShopTypeChanged(ShopType? type) {
+    selectedShopType.value = type;
+  }
+
   bool requiresKey(String key) =>
       missingFields.any((f) => f.key == key && f.required);
 
@@ -187,26 +198,33 @@ class ObShopVerifyOnSiteController extends GetxController {
   Future<void> _load() async {
     isLoading.value = true;
     try {
-      ObTaskModel? resolved = _taskFromArgs();
-      final id = taskId ?? resolved?.id;
-      if (resolved == null && id != null) {
-        resolved = await _taskService.findTaskById(id);
+      final taskFromArgs = _taskFromArgs();
+      ObTaskModel? resolved;
+      final id = taskId ?? taskFromArgs?.id;
+      if (id != null) {
+        resolved = await _taskService.findTaskById(id, forceRefresh: true);
       }
       if (resolved == null && shopId != null && shopId!.isNotEmpty) {
-        resolved = await _taskService.findTaskByShopId(shopId!);
+        resolved = await _taskService.findTaskByShopId(
+          shopId!,
+          forceRefresh: true,
+        );
       }
+      resolved ??= taskFromArgs;
       task.value = resolved;
 
       final parsed = <ObShopMissingField>[];
-      final fromArgs = _args['missingFields'];
-      if (fromArgs is List && fromArgs.isNotEmpty) {
-        for (final item in fromArgs.whereType<Map>()) {
-          parsed.add(
-            ObShopMissingField.fromJson(Map<String, dynamic>.from(item)),
-          );
-        }
-      } else if (resolved != null && resolved.missingFields.isNotEmpty) {
+      if (resolved != null && resolved.missingFields.isNotEmpty) {
         parsed.addAll(resolved.missingFields);
+      } else {
+        final fromArgs = _args['missingFields'];
+        if (fromArgs is List && fromArgs.isNotEmpty) {
+          for (final item in fromArgs.whereType<Map>()) {
+            parsed.add(
+              ObShopMissingField.fromJson(Map<String, dynamic>.from(item)),
+            );
+          }
+        }
       }
 
       // Keep every empty field from API (required + optional); GPS stays silent.
@@ -215,16 +233,11 @@ class ObShopVerifyOnSiteController extends GetxController {
           if (f.key.isNotEmpty && !_gpsKeys.contains(f.key)) f.key: f,
       };
 
-      if (byKey.isEmpty) {
+      final needsSetup =
+          resolved?.needsShopSetup ?? taskFromArgs?.needsShopSetup;
+      if (byKey.isEmpty && needsSetup == true) {
         for (final f in _defaultMissingFields) {
           byKey[f.key] = f;
-        }
-      } else {
-        // Credit fields are often empty but omitted from older missing_fields payloads.
-        for (final f in _defaultMissingFields) {
-          if (f.key == 'credit_limit' || f.key == 'legacy_balance') {
-            byKey.putIfAbsent(f.key, () => f);
-          }
         }
       }
 
@@ -336,10 +349,8 @@ class ObShopVerifyOnSiteController extends GetxController {
 
   String? validateCnic(String? value) {
     if (!showsKey('owner_cnic_number')) return null;
-    if (!requiresKey('owner_cnic_number') &&
-        (value == null || value.trim().isEmpty)) {
-      return null;
-    }
+    final empty = value == null || value.trim().isEmpty;
+    if (empty) return isCnicRequired ? AppTexts.fieldRequired : null;
     return AppValidator.validatePakistanCnic(value);
   }
 
@@ -475,7 +486,7 @@ class ObShopVerifyOnSiteController extends GetxController {
   static const _defaultMissingFields = <ObShopMissingField>[
     ObShopMissingField(
       key: 'shop_exterior_photo',
-      label: 'Shop Exterior Photo',
+      label: 'Shop Exterior / PFA License Number',
       required: true,
       type: 'image',
       source: 'camera',

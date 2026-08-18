@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
@@ -21,7 +20,6 @@ class ObRouteDetailController extends GetxController {
   final Rxn<ObActiveVisitModel> activeVisit = Rxn<ObActiveVisitModel>();
   final RxnInt checkingInTaskId = RxnInt();
   final Rxn<TaskStatus> statusFilter = Rxn<TaskStatus>();
-  final searchController = TextEditingController();
   final RxString searchQuery = ''.obs;
 
   String get routeId => Get.parameters['id'] ?? '';
@@ -63,12 +61,11 @@ class ObRouteDetailController extends GetxController {
     statusFilter.value = status;
   }
 
+  void onSearchChanged(String value) => searchQuery.value = value;
+
   @override
   void onInit() {
     super.onInit();
-    searchController.addListener(
-      () => searchQuery.value = searchController.text,
-    );
     final args = Get.arguments;
     if (args is Map && args['taskFilter'] is String) {
       final name = args['taskFilter'] as String;
@@ -80,12 +77,6 @@ class ObRouteDetailController extends GetxController {
       }
     }
     loadTasks();
-  }
-
-  @override
-  void onClose() {
-    searchController.dispose();
-    super.onClose();
   }
 
   Future<void> loadTasks({bool silent = false, bool force = false}) async {

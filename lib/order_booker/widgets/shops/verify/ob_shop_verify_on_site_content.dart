@@ -110,7 +110,9 @@ class ObShopVerifyOnSiteContent extends StatelessWidget {
                 children: [
                   for (final field in imageFields)
                     AppPhotoUploadTile(
-                      title: field.label,
+                      title: field.key == 'shop_exterior_photo'
+                          ? AppTexts.obShopExteriorTitle
+                          : field.label,
                       required:
                           field.required || field.key == 'shop_exterior_photo',
                       subtitle: controller.photoSlot(field.key).value == null
@@ -145,7 +147,7 @@ class ObShopVerifyOnSiteContent extends StatelessWidget {
           label: field.label,
           hint: AppTexts.obOwnerCnicHint,
           prefixIcon: AppIcons.personalCard,
-          required: field.required,
+          required: controller.isCnicRequired,
           borderless: true,
           keyboardType: TextInputType.number,
           inputFormatters: [PakistanCnicInputFormatter()],
@@ -187,7 +189,7 @@ class ObShopVerifyOnSiteContent extends StatelessWidget {
           value: controller.selectedShopType.value,
           items: ShopType.values,
           getLabel: (type) => type.label,
-          onChanged: (type) => controller.selectedShopType.value = type,
+          onChanged: controller.onShopTypeChanged,
           validator: field.required
               ? (value) => value == null ? AppTexts.fieldRequired : null
               : null,

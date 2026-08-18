@@ -60,11 +60,17 @@ class ObTaskService extends GetxService {
     return _activeVisit;
   }
 
-  Future<ObTaskModel?> findTaskById(int taskId) async {
+  Future<ObTaskModel?> findTaskById(
+    int taskId, {
+    bool forceRefresh = false,
+  }) async {
+    if (forceRefresh) {
+      await fetchTodayTasks(allowStaleFallback: false);
+    }
     try {
       return _tasks.firstWhere((task) => task.id == taskId);
     } catch (_) {
-      await fetchTodayTasks();
+      await fetchTodayTasks(allowStaleFallback: !forceRefresh);
       try {
         return _tasks.firstWhere((task) => task.id == taskId);
       } catch (_) {
@@ -73,11 +79,17 @@ class ObTaskService extends GetxService {
     }
   }
 
-  Future<ObTaskModel?> findTaskByShopId(String shopId) async {
+  Future<ObTaskModel?> findTaskByShopId(
+    String shopId, {
+    bool forceRefresh = false,
+  }) async {
+    if (forceRefresh) {
+      await fetchTodayTasks(allowStaleFallback: false);
+    }
     try {
       return _tasks.firstWhere((task) => task.shopId == shopId);
     } catch (_) {
-      await fetchTodayTasks();
+      await fetchTodayTasks(allowStaleFallback: !forceRefresh);
       try {
         return _tasks.firstWhere((task) => task.shopId == shopId);
       } catch (_) {
