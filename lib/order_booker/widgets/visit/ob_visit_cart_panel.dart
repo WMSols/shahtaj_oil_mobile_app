@@ -7,9 +7,9 @@ import 'package:shahtaj_oil_mobile_app/core/design/responsive/app_responsive.dar
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
-import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_primary_button.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_secondary_button.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_amount_summary_bar.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/widgets/visit/ob_cart_line_tile.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
@@ -65,38 +65,12 @@ class ObVisitCartPanel extends StatelessWidget {
             }),
           ],
           AppSpacing.vertical(context, 0.01),
-          Obx(() {
-            final subtotal = controller.displaySubtotal();
-            return Container(
-              padding: AppSpacing.symmetric(context, h: 0.02, v: 0.01),
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(
-                  AppResponsive.radius(context),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      AppTexts.obSubtotal,
-                      style: AppTextStyles.caption(context).copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.white.withValues(alpha: 0.9),
-                      ),
-                    ),
-                  ),
-                  Text(
-                    AppFormatter.currencyWhole(subtotal),
-                    style: AppTextStyles.bodyText(context).copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.white,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
+          Obx(
+            () => AppAmountSummaryBar(
+              label: AppTexts.obSubtotal,
+              amount: controller.displaySubtotal(),
+            ),
+          ),
           AppSpacing.vertical(context, 0.02),
           Obx(
             () => AppPrimaryButton(

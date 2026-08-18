@@ -86,7 +86,7 @@ class ObRegisterShopForm extends StatelessWidget {
                   label: AppTexts.obOwnerCnicLabel,
                   hint: AppTexts.obOwnerCnicHint,
                   prefixIcon: AppIcons.personalCard,
-                  required: true,
+                  required: controller.isCreditShop,
                   borderless: true,
                   keyboardType: TextInputType.number,
                   inputFormatters: [PakistanCnicInputFormatter()],

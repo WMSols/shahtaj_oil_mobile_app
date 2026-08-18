@@ -6,6 +6,9 @@ import 'package:shahtaj_oil_mobile_app/delivery_man/models/pickup/dm_pickup_mode
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/return/dm_return_model.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/dashboard/dm_stock_item_model.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/orders/dm_timeline_event_model.dart';
+import 'package:shahtaj_oil_mobile_app/recovery_man/models/collections/rm_collection_summary_model.dart';
+import 'package:shahtaj_oil_mobile_app/recovery_man/models/collections/rm_invoice_model.dart';
+import 'package:shahtaj_oil_mobile_app/recovery_man/models/collections/rm_shop_due_model.dart';
 import 'package:shahtaj_oil_mobile_app/recovery_man/models/dashboard/rm_targets_model.dart';
 
 /// Mock payloads still used by DM/RM stubs.
@@ -227,4 +230,187 @@ class AppMockData {
 
   static RmTargetsModel get rmTargets =>
       const RmTargetsModel(recoveryCurrent: 145000, recoveryTarget: 250000);
+
+  static List<RmShopDueModel> get rmShops => const [
+    RmShopDueModel(
+      id: 'rm-shop-001',
+      name: 'Al Madina Store',
+      ownerName: 'Ahmed Khan',
+      phone: '03001234567',
+      address: 'Shop 12, Saddar Bazaar, Rawalpindi',
+      outstanding: 45000,
+      invoiceCount: 3,
+      latitude: 33.5985,
+      longitude: 73.0440,
+    ),
+    RmShopDueModel(
+      id: 'rm-shop-002',
+      name: 'Khan General Store',
+      ownerName: 'Bilal Khan',
+      phone: '03115551234',
+      address: 'Main Market, G-9, Islamabad',
+      outstanding: 22500,
+      invoiceCount: 2,
+      latitude: 33.6938,
+      longitude: 73.0652,
+    ),
+    RmShopDueModel(
+      id: 'rm-shop-003',
+      name: 'City Mart',
+      ownerName: 'Usman Ali',
+      phone: '03219876543',
+      address: 'Commercial Area, Bahria Town',
+      outstanding: 78000,
+      invoiceCount: 4,
+      latitude: 33.5651,
+      longitude: 73.1266,
+    ),
+    RmShopDueModel(
+      id: 'rm-shop-004',
+      name: 'Fresh Mart',
+      ownerName: 'Sara Malik',
+      phone: '03337654321',
+      address: 'Block C, Satellite Town',
+      outstanding: 12000,
+      invoiceCount: 1,
+      latitude: 33.6260,
+      longitude: 73.0710,
+    ),
+  ];
+
+  static List<RmInvoiceModel> get rmInvoices {
+    final today = DateTime.now();
+    return [
+      RmInvoiceModel(
+        id: 'rm-inv-001',
+        shopId: 'rm-shop-001',
+        invoiceNumber: 'INV-24081',
+        issuedAt: today.subtract(const Duration(days: 18)),
+        originalAmount: 22000,
+        remainingAmount: 18000,
+      ),
+      RmInvoiceModel(
+        id: 'rm-inv-002',
+        shopId: 'rm-shop-001',
+        invoiceNumber: 'INV-24102',
+        issuedAt: today.subtract(const Duration(days: 9)),
+        originalAmount: 15000,
+        remainingAmount: 15000,
+      ),
+      RmInvoiceModel(
+        id: 'rm-inv-003',
+        shopId: 'rm-shop-001',
+        invoiceNumber: 'INV-24118',
+        issuedAt: today.subtract(const Duration(days: 4)),
+        originalAmount: 12000,
+        remainingAmount: 12000,
+      ),
+      RmInvoiceModel(
+        id: 'rm-inv-004',
+        shopId: 'rm-shop-002',
+        invoiceNumber: 'INV-24090',
+        issuedAt: today.subtract(const Duration(days: 14)),
+        originalAmount: 16000,
+        remainingAmount: 12500,
+      ),
+      RmInvoiceModel(
+        id: 'rm-inv-005',
+        shopId: 'rm-shop-002',
+        invoiceNumber: 'INV-24111',
+        issuedAt: today.subtract(const Duration(days: 6)),
+        originalAmount: 10000,
+        remainingAmount: 10000,
+      ),
+      RmInvoiceModel(
+        id: 'rm-inv-006',
+        shopId: 'rm-shop-003',
+        invoiceNumber: 'INV-24070',
+        issuedAt: today.subtract(const Duration(days: 28)),
+        originalAmount: 30000,
+        remainingAmount: 28000,
+      ),
+      RmInvoiceModel(
+        id: 'rm-inv-007',
+        shopId: 'rm-shop-003',
+        invoiceNumber: 'INV-24095',
+        issuedAt: today.subtract(const Duration(days: 16)),
+        originalAmount: 25000,
+        remainingAmount: 25000,
+      ),
+      RmInvoiceModel(
+        id: 'rm-inv-008',
+        shopId: 'rm-shop-003',
+        invoiceNumber: 'INV-24120',
+        issuedAt: today.subtract(const Duration(days: 5)),
+        originalAmount: 15000,
+        remainingAmount: 15000,
+      ),
+      RmInvoiceModel(
+        id: 'rm-inv-009',
+        shopId: 'rm-shop-003',
+        invoiceNumber: 'INV-24131',
+        issuedAt: today.subtract(const Duration(days: 2)),
+        originalAmount: 10000,
+        remainingAmount: 10000,
+      ),
+      RmInvoiceModel(
+        id: 'rm-inv-010',
+        shopId: 'rm-shop-004',
+        invoiceNumber: 'INV-24125',
+        issuedAt: today.subtract(const Duration(days: 3)),
+        originalAmount: 12000,
+        remainingAmount: 12000,
+      ),
+    ];
+  }
+
+  static List<RmCollectionSummaryModel> get rmCollections {
+    final now = DateTime.now();
+    return [
+      RmCollectionSummaryModel(
+        id: 'rm-col-001',
+        receiptNumber: 'RC-10021',
+        shopId: 'rm-shop-001',
+        shopName: 'Al Madina Store',
+        amount: 15000,
+        collectedAt: now.subtract(const Duration(hours: 2)),
+        method: PaymentMethod.cash,
+        mode: CollectionMode.invoiceWise,
+        status: CollectionStatus.collected,
+      ),
+      RmCollectionSummaryModel(
+        id: 'rm-col-002',
+        receiptNumber: 'RC-10022',
+        shopId: 'rm-shop-002',
+        shopName: 'Khan General Store',
+        amount: 8000,
+        collectedAt: now.subtract(const Duration(hours: 4)),
+        method: PaymentMethod.cheque,
+        mode: CollectionMode.invoiceWise,
+        status: CollectionStatus.collected,
+      ),
+      RmCollectionSummaryModel(
+        id: 'rm-col-003',
+        receiptNumber: 'RC-10023',
+        shopId: 'rm-shop-003',
+        shopName: 'City Mart',
+        amount: 25000,
+        collectedAt: now.subtract(const Duration(hours: 6)),
+        method: PaymentMethod.bank,
+        mode: CollectionMode.batch,
+        status: CollectionStatus.collected,
+      ),
+      RmCollectionSummaryModel(
+        id: 'rm-col-004',
+        receiptNumber: 'RC-09988',
+        shopId: 'rm-shop-004',
+        shopName: 'Fresh Mart',
+        amount: 9000,
+        collectedAt: now.subtract(const Duration(days: 1, hours: 3)),
+        method: PaymentMethod.cash,
+        mode: CollectionMode.invoiceWise,
+        status: CollectionStatus.handedOver,
+      ),
+    ];
+  }
 }
