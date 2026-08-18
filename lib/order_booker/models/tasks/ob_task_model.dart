@@ -20,6 +20,7 @@ class ObTaskModel {
     this.needsShopSetup = false,
     this.visitTag = ShopVisitTag.visited,
     this.missingFields = const [],
+    this.shopType,
   });
 
   final int id;
@@ -38,6 +39,7 @@ class ObTaskModel {
   final bool needsShopSetup;
   final ShopVisitTag visitTag;
   final List<ObShopMissingField> missingFields;
+  final ShopType? shopType;
 
   bool get hasShopCoordinates =>
       shopLatitude != null &&
@@ -63,6 +65,7 @@ class ObTaskModel {
     bool? needsShopSetup,
     ShopVisitTag? visitTag,
     List<ObShopMissingField>? missingFields,
+    ShopType? shopType,
   }) => ObTaskModel(
     id: id ?? this.id,
     shopId: shopId ?? this.shopId,
@@ -80,6 +83,7 @@ class ObTaskModel {
     needsShopSetup: needsShopSetup ?? this.needsShopSetup,
     visitTag: visitTag ?? this.visitTag,
     missingFields: missingFields ?? this.missingFields,
+    shopType: shopType ?? this.shopType,
   );
 
   factory ObTaskModel.fromJson(Map<String, dynamic> json) {
@@ -133,6 +137,12 @@ class ObTaskModel {
       needsShopSetup: needsShopSetup,
       visitTag: visitTag,
       missingFields: missing,
+      shopType: _parseShopType(
+        json['shop_category'] ??
+            json['shopCategory'] ??
+            shop['shop_category'] ??
+            shop['shopCategory'],
+      ),
     );
   }
 
@@ -155,7 +165,17 @@ class ObTaskModel {
         ? 'not_visited'
         : 'visited',
     'missing_fields': missingFields.map((f) => f.toJson()).toList(),
+    if (shopType != null) 'shop_category': shopType!.name,
   };
+
+  static ShopType? _parseShopType(dynamic value) {
+    if (value == null) return null;
+    if (value is ShopType) return value;
+    final raw = value.toString().trim().toLowerCase();
+    if (raw == ShopType.cash.name) return ShopType.cash;
+    if (raw == ShopType.credit.name) return ShopType.credit;
+    return null;
+  }
 
   static TaskStatus _parseStatus(dynamic value) {
     final raw = value?.toString() ?? '';
