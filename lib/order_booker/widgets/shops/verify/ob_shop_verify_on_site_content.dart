@@ -30,6 +30,9 @@ class ObShopVerifyOnSiteContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
+      // Touch shop type so CNIC required * rebuilds with cash/credit.
+      final shopType = controller.selectedShopType.value;
+      final isCnicRequired = controller.isCnicRequired;
       final isBusy =
           controller.isSubmitting.value || controller.isLocating.value;
       // Touch observables so Obx rebuilds when photos / fields change.
@@ -43,7 +46,12 @@ class ObShopVerifyOnSiteContent extends StatelessWidget {
                 f.key == 'shop_category' ||
                 (!f.isImage && !f.isGps),
           )
-          .toList(growable: false);
+          .toList();
+      formFields.sort((a, b) {
+        if (a.key == 'shop_category') return -1;
+        if (b.key == 'shop_category') return 1;
+        return 0;
+      });
       final imageFields = fields
           .where(
             (f) =>
@@ -90,7 +98,12 @@ class ObShopVerifyOnSiteContent extends StatelessWidget {
               ),
               for (final field in formFields) ...[
                 AppSpacing.vertical(context, 0.01),
-                _buildFormField(context, field),
+                _buildFormField(
+                  context,
+                  field,
+                  shopType: shopType,
+                  isCnicRequired: isCnicRequired,
+                ),
               ],
             ],
             if (imageFields.isNotEmpty) ...[
@@ -139,15 +152,21 @@ class ObShopVerifyOnSiteContent extends StatelessWidget {
     });
   }
 
-  Widget _buildFormField(BuildContext context, ObShopMissingField field) {
+  Widget _buildFormField(
+    BuildContext context,
+    ObShopMissingField field, {
+    required ShopType? shopType,
+    required bool isCnicRequired,
+  }) {
     switch (field.key) {
       case 'owner_cnic_number':
         return AppTextField(
+          key: ValueKey('verify-cnic-required-$isCnicRequired'),
           controller: controller.ownerCnicController,
-          label: field.label,
+          label: _labelWithoutAsterisk(field.label),
           hint: AppTexts.obOwnerCnicHint,
           prefixIcon: AppIcons.personalCard,
-          required: controller.isCnicRequired,
+          required: isCnicRequired,
           borderless: true,
           keyboardType: TextInputType.number,
           inputFormatters: [PakistanCnicInputFormatter()],
@@ -182,11 +201,12 @@ class ObShopVerifyOnSiteContent extends StatelessWidget {
         );
       case 'shop_category':
         return AppDropdownField<ShopType>(
+          fieldKey: ValueKey('verify-shop-type-$shopType'),
           label: field.label,
           hint: AppTexts.obShopTypeHint,
           prefixIcon: AppIcons.wallet,
           required: field.required,
-          value: controller.selectedShopType.value,
+          value: shopType,
           items: ShopType.values,
           getLabel: (type) => type.label,
           onChanged: controller.onShopTypeChanged,
@@ -241,5 +261,9 @@ class ObShopVerifyOnSiteContent extends StatelessWidget {
           textInputAction: TextInputAction.next,
         );
     }
+  }
+
+  static String _labelWithoutAsterisk(String label) {
+    return label.replaceAll(RegExp(r'\s*\*+\s*$'), '').trim();
   }
 }

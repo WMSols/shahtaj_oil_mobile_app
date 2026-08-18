@@ -89,12 +89,7 @@ class ObShopVerifyOnSiteController extends GetxController {
     return lat != null && lng != null && lat.abs() <= 90 && lng.abs() <= 180;
   }
 
-  bool get isCnicRequired {
-    final type = selectedShopType.value;
-    if (type == ShopType.cash) return false;
-    if (type == ShopType.credit) return true;
-    return requiresKey('owner_cnic_number');
-  }
+  bool get isCnicRequired => selectedShopType.value == ShopType.credit;
 
   void onShopTypeChanged(ShopType? type) {
     selectedShopType.value = type;
@@ -212,6 +207,8 @@ class ObShopVerifyOnSiteController extends GetxController {
       }
       resolved ??= taskFromArgs;
       task.value = resolved;
+      selectedShopType.value ??=
+          resolved?.shopType ?? _resolveInitialShopType();
 
       final parsed = <ObShopMissingField>[];
       if (resolved != null && resolved.missingFields.isNotEmpty) {
@@ -278,6 +275,38 @@ class ObShopVerifyOnSiteController extends GetxController {
       phone: _args['phone']?.toString(),
       needsShopSetup: true,
     );
+  }
+
+  ShopType? _resolveInitialShopType() {
+    final fromArgs =
+        _parseShopTypeValue(_args['shopCategory']) ??
+        _parseShopTypeValue(_args['shop_category']);
+    if (fromArgs != null) return fromArgs;
+
+    final rawTask = _args['task'];
+    if (rawTask is Map) {
+      final taskMap = Map<String, dynamic>.from(rawTask);
+      final fromTask =
+          _parseShopTypeValue(taskMap['shop_category']) ??
+          _parseShopTypeValue(taskMap['shopCategory']);
+      if (fromTask != null) return fromTask;
+
+      final shop = taskMap['shop'];
+      if (shop is Map) {
+        final shopMap = Map<String, dynamic>.from(shop);
+        return _parseShopTypeValue(shopMap['shop_category']);
+      }
+    }
+    return null;
+  }
+
+  ShopType? _parseShopTypeValue(dynamic raw) {
+    if (raw == null) return null;
+    if (raw is ShopType) return raw;
+    final normalized = raw.toString().trim().toLowerCase();
+    if (normalized == ShopType.cash.name) return ShopType.cash;
+    if (normalized == ShopType.credit.name) return ShopType.credit;
+    return null;
   }
 
   Future<bool> _captureDeviceLocationSilently() async {
@@ -494,7 +523,7 @@ class ObShopVerifyOnSiteController extends GetxController {
     ObShopMissingField(
       key: 'owner_cnic_number',
       label: 'Owner CNIC Number',
-      required: true,
+      required: false,
       type: 'string',
       source: 'form',
     ),
