@@ -4,7 +4,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 
-/// Shared dashboard greeting used by OB / DM (and future roles).
+/// Shared dashboard greeting used by OB / DM / RM.
 class AppDashboardGreeting extends StatelessWidget {
   const AppDashboardGreeting({
     super.key,

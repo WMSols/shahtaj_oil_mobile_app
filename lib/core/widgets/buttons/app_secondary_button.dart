@@ -55,7 +55,6 @@ class AppSecondaryButton extends StatelessWidget {
               )
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
                 children: [
                   if (icon != null) ...[
                     Icon(
@@ -65,10 +64,14 @@ class AppSecondaryButton extends StatelessWidget {
                     ),
                     SizedBox(width: AppResponsive.scaleSize(context, 8)),
                   ],
-                  Text(
-                    label,
-                    style: (labelStyle ?? AppTextStyles.buttonText(context))
-                        .copyWith(color: resolvedTextColor),
+                  Flexible(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: (labelStyle ?? AppTextStyles.buttonText(context))
+                          .copyWith(color: resolvedTextColor),
+                    ),
                   ),
                 ],
               ),

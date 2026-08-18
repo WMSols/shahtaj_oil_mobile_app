@@ -42,6 +42,7 @@ abstract class OfflineCacheKeys {
 
   // Recovery Man (reserved for future live APIs)
   static const rmTargets = 'offline_cache_rm_targets';
+  static const rmDashboard = 'offline_cache_rm_dashboard';
 
   /// Pending mutation queue for every role.
   static const syncQueue = 'offline_cache_sync_queue';

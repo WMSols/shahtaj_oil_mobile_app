@@ -167,7 +167,7 @@ class AppPhotoUploadTile extends StatelessWidget {
         ],
       ),
       textAlign: TextAlign.center,
-      maxLines: 2,
+      maxLines: 3,
       overflow: TextOverflow.ellipsis,
     );
   }

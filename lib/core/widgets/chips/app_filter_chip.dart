@@ -59,8 +59,8 @@ class AppFilterChip extends StatelessWidget {
     final textColor = selected ? AppColors.white : AppColors.grey;
 
     return Padding(
-      padding: EdgeInsets.only(
-        right: AppSpacing.horizontalValue(context, 0.02),
+      padding: EdgeInsetsDirectional.only(
+        end: AppSpacing.horizontalValue(context, 0.02),
       ),
       child: Material(
         color: backgroundColor,
