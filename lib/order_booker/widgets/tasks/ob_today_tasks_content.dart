@@ -47,9 +47,6 @@ class ObTodayTasksContent extends GetView<ObRouteDetailController> {
         );
       }
 
-      final tasks = controller.filteredSortedTasks;
-      final activeVisit = controller.activeVisit.value;
-
       return RefreshIndicator(
         onRefresh: () => controller.loadTasks(force: true),
         child: ListView(
@@ -61,37 +58,46 @@ class ObTodayTasksContent extends GetView<ObRouteDetailController> {
               completed: data.completedCount,
               total: data.totalCount,
             ),
-            if (activeVisit != null) ...[
-              AppSpacing.vertical(context, 0.016),
-              ObActiveVisitBanner(
-                visit: activeVisit,
-                onResume: controller.resumeActiveVisit,
-              ),
-            ],
+            Obx(() {
+              final activeVisit = controller.activeVisit.value;
+              if (activeVisit == null) return const SizedBox.shrink();
+              return Padding(
+                padding: EdgeInsets.only(
+                  top: AppSpacing.verticalValue(context, 0.016),
+                ),
+                child: ObActiveVisitBanner(
+                  visit: activeVisit,
+                  onResume: controller.resumeActiveVisit,
+                ),
+              );
+            }),
             AppSpacing.vertical(context, 0.016),
             AppSearchField(
-              controller: controller.searchController,
+              key: const ValueKey('ob_today_tasks_search'),
               hint: AppTexts.obSearchTaskHint,
               prefixIcon: AppIcons.search,
               suffixIcon: null,
+              onChanged: controller.onSearchChanged,
             ),
             AppSpacing.vertical(context, 0.012),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  AppFilterChip(
-                    label: AppTexts.obShopsFilterAll,
-                    selected: controller.isFilterSelected(null),
-                    onTap: () => controller.selectStatusFilter(null),
-                  ),
-                  for (final status in ObRouteDetailController.filterStatuses)
-                    AppFilterChip.taskStatus(
-                      status: status,
-                      selected: controller.isFilterSelected(status),
-                      onTap: () => controller.selectStatusFilter(status),
+            Obx(
+              () => SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    AppFilterChip(
+                      label: AppTexts.obShopsFilterAll,
+                      selected: controller.isFilterSelected(null),
+                      onTap: () => controller.selectStatusFilter(null),
                     ),
-                ],
+                    for (final status in ObRouteDetailController.filterStatuses)
+                      AppFilterChip.taskStatus(
+                        status: status,
+                        selected: controller.isFilterSelected(status),
+                        onTap: () => controller.selectStatusFilter(status),
+                      ),
+                  ],
+                ),
               ),
             ),
             AppSpacing.vertical(context, 0.016),
@@ -100,35 +106,40 @@ class ObTodayTasksContent extends GetView<ObRouteDetailController> {
               style: AppTextStyles.sectionTitle(context),
             ),
             AppSpacing.vertical(context, 0.012),
-            if (tasks.isEmpty)
-              AppEmptyState(
-                title: AppTexts.emptyNoTasksTitle,
-                subtitle: controller.searchQuery.value.trim().isEmpty
-                    ? AppTexts.obNoTasksToday
-                    : AppTexts.obNoTasksMatchSearch,
-                image: AppImages.emptyNoTasks,
-              )
-            else
-              ...tasks.map((task) {
-                final isCheckingIn =
-                    controller.checkingInTaskId.value == task.id;
-                return Padding(
-                  padding: EdgeInsets.only(
-                    bottom: AppSpacing.verticalValue(context, 0.012),
-                  ),
-                  child: ObTaskCard(
-                    task: task,
-                    isCheckingIn: isCheckingIn,
-                    onCheckIn: task.status == TaskStatus.pending
-                        ? () => controller.openCheckIn(task)
-                        : null,
-                    onNotes: () => controller.openTaskNotes(task),
-                    onTap: task.status == TaskStatus.inVisit
-                        ? controller.resumeActiveVisit
-                        : null,
-                  ),
+            Obx(() {
+              final tasks = controller.filteredSortedTasks;
+              if (tasks.isEmpty) {
+                return AppEmptyState(
+                  title: AppTexts.emptyNoTasksTitle,
+                  subtitle: controller.searchQuery.value.trim().isEmpty
+                      ? AppTexts.obNoTasksToday
+                      : AppTexts.obNoTasksMatchSearch,
+                  image: AppImages.emptyNoTasks,
                 );
-              }),
+              }
+              return Column(
+                children: [
+                  for (final task in tasks)
+                    Padding(
+                      padding: EdgeInsets.only(
+                        bottom: AppSpacing.verticalValue(context, 0.012),
+                      ),
+                      child: ObTaskCard(
+                        task: task,
+                        isCheckingIn:
+                            controller.checkingInTaskId.value == task.id,
+                        onCheckIn: task.status == TaskStatus.pending
+                            ? () => controller.openCheckIn(task)
+                            : null,
+                        onNotes: () => controller.openTaskNotes(task),
+                        onTap: task.status == TaskStatus.inVisit
+                            ? controller.resumeActiveVisit
+                            : null,
+                      ),
+                    ),
+                ],
+              );
+            }),
           ],
         ),
       );

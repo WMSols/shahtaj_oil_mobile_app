@@ -94,10 +94,17 @@ class ObDashboardScreen extends GetView<ObDashboardController> {
                 title: AppTexts.obTargets,
                 onViewAll: controller.goToTargets,
               ),
-              ObOrdersTargetCard(
-                targets: controller.targets,
-                onTap: controller.goToTargets,
-              ),
+              if (controller.targets.topHighlights.isEmpty)
+                AppEmptyState(
+                  title: AppTexts.emptyNoTargetsTitle,
+                  subtitle: AppTexts.obTargetsDashboardSummary,
+                  image: AppImages.emptyNoTargets,
+                )
+              else
+                ObOrdersTargetCard(
+                  targets: controller.targets,
+                  onTap: controller.goToTargets,
+                ),
               AppSpacing.vertical(context, 0.01),
               AppSectionHeader(
                 title: AppTexts.obRecentOrders,

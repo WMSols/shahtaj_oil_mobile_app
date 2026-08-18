@@ -370,8 +370,13 @@ class ObShopOnboardingController extends GetxController {
   String? validatePhone(String? value) =>
       AppValidator.validatePakistanLocalPhone(value);
 
-  String? validateCnic(String? value) =>
-      AppValidator.validatePakistanCnic(value);
+  String? validateCnic(String? value) {
+    final empty = value == null || value.trim().isEmpty;
+    if (empty) {
+      return isCreditShop ? AppTexts.fieldRequired : null;
+    }
+    return AppValidator.validatePakistanCnic(value);
+  }
 
   String? validateOptionalAmount(String? value) {
     if (value == null || value.trim().isEmpty) return null;

@@ -58,7 +58,7 @@ class ObTodaySnapshotStrip extends StatelessWidget {
             label: AppTexts.obSnapshotOrders,
             value: ordersCount == 0
                 ? '0'
-                : '$ordersCount\n${AppFormatter.currencyWhole(ordersValue)}',
+                : '$ordersCount\n${AppFormatter.compactCurrency(ordersValue)}',
             color: AppColors.primary,
             compact: ordersCount > 0,
             onTap: onOrdersTap,
