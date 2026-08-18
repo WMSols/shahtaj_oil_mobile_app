@@ -10,6 +10,7 @@ class ObRouteDetailBinding extends Bindings {
     OrderBookerServicesBinding.ensureRegistered();
     Get.lazyPut<ObRouteDetailController>(
       () => ObRouteDetailController(Get.find<ObTaskService>()),
+      fenix: true,
     );
   }
 }
