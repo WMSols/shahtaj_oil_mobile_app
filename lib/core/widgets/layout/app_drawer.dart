@@ -12,6 +12,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/locale_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/connectivity_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_icon_button.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_drawer_entry.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_profile_avatar.dart';
@@ -118,6 +119,15 @@ class AppDrawer extends StatelessWidget {
                                 AppStatusChip.role(currentRole),
                             ],
                           ),
+                        ),
+                        AppIconButton(
+                          icon: AppIcons.language,
+                          iconColor: AppColors.primary,
+                          iconSize: AppResponsive.iconSize(
+                            context,
+                            factor: 1.5,
+                          ),
+                          onTap: localeService.toggleLocale,
                         ),
                       ],
                     );
