@@ -78,8 +78,11 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/images/
-    - assets/images/common/
+    - assets/images/empty/common/
+    - assets/images/empty/order_booker/
+    - assets/images/empty/delivery_man/
+    - assets/images/empty/recovery_man/
+    - assets/images/onboarding/
     - assets/images/icons/
     - assets/images/logos/
     - .env
