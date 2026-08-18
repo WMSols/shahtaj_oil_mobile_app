@@ -141,6 +141,24 @@ class AppTexts {
   static String get obTargetProductsSection => 'obTargetProductsSection'.tr;
   static String get rmRecoveryTarget => 'rmRecoveryTarget'.tr;
   static String get rmTargets => 'rmTargets'.tr;
+  static String get rmDashboardSubtitle => 'rmDashboardSubtitle'.tr;
+  static String get rmSnapshotCollected => 'rmSnapshotCollected'.tr;
+  static String get rmSnapshotStillDue => 'rmSnapshotStillDue'.tr;
+  static String get rmSnapshotCashInBag => 'rmSnapshotCashInBag'.tr;
+  static String get rmRecentCollections => 'rmRecentCollections'.tr;
+  static String get rmNoRecentCollections => 'rmNoRecentCollections'.tr;
+  static String get rmTodayShopsTitle => 'rmTodayShopsTitle'.tr;
+  static String get rmSearchShopHint => 'rmSearchShopHint'.tr;
+  static String get rmFilterHighDue => 'rmFilterHighDue'.tr;
+  static String get rmFilterPartial => 'rmFilterPartial'.tr;
+  static String get rmNoShopsDue => 'rmNoShopsDue'.tr;
+  static String get rmNoShopsMatchSearch => 'rmNoShopsMatchSearch'.tr;
+  static String rmInvoicesCount(int count) =>
+      'rmInvoicesCount'.trParams({'count': '$count'});
+  static String get rmOutstandingLabel => 'rmOutstandingLabel'.tr;
+  static String get rmDueStatusLabel => 'rmDueStatusLabel'.tr;
+  static String get rmHighDueChip => 'rmHighDueChip'.tr;
+  static String get rmPartialChip => 'rmPartialChip'.tr;
   static String get obRecentOrders => 'obRecentOrders'.tr;
   static String get obOpenTodayTasks => 'obOpenTodayTasks'.tr;
   static String get obContinueTodayTasks => 'obContinueTodayTasks'.tr;
@@ -423,8 +441,61 @@ class AppTexts {
 
   // Recovery man screens
   static String get rmShopInvoicesTitle => 'rmShopInvoicesTitle'.tr;
+  static String get rmShopOutstandingTitle => 'rmShopOutstandingTitle'.tr;
   static String get rmRecordCollectionTitle => 'rmRecordCollectionTitle'.tr;
   static String get rmHandoverDetailTitle => 'rmHandoverDetailTitle'.tr;
+  static String get rmTotalOutstanding => 'rmTotalOutstanding'.tr;
+  static String get rmOpenInvoices => 'rmOpenInvoices'.tr;
+  static String get rmNoOpenInvoices => 'rmNoOpenInvoices'.tr;
+  static String get rmNoOpenInvoicesSubtitle => 'rmNoOpenInvoicesSubtitle'.tr;
+  static String get rmCollectSelected => 'rmCollectSelected'.tr;
+  static String get rmBatchPayment => 'rmBatchPayment'.tr;
+  static String get rmSelectAll => 'rmSelectAll'.tr;
+  static String get rmDeselectAll => 'rmDeselectAll'.tr;
+  static String get rmSelectInvoicesHint => 'rmSelectInvoicesHint'.tr;
+  static String rmSelectedCount(int count) =>
+      'rmSelectedCount'.trParams({'count': '$count'});
+  static String get rmInvoiceRemaining => 'rmInvoiceRemaining'.tr;
+  static String get rmInvoiceOriginal => 'rmInvoiceOriginal'.tr;
+  static String get rmCallShop => 'rmCallShop'.tr;
+  static String get rmDirections => 'rmDirections'.tr;
+  static String get rmNoPhoneToCall => 'rmNoPhoneToCall'.tr;
+  static String get rmNoLocationForDirections => 'rmNoLocationForDirections'.tr;
+  static String get emptyNoInvoicesTitle => 'emptyNoInvoicesTitle'.tr;
+  static String get rmPaymentCash => 'rmPaymentCash'.tr;
+  static String get rmPaymentCheque => 'rmPaymentCheque'.tr;
+  static String get rmPaymentBank => 'rmPaymentBank'.tr;
+  static String get rmModeInvoiceWise => 'rmModeInvoiceWise'.tr;
+  static String get rmModeBatch => 'rmModeBatch'.tr;
+  static String get rmHandoverStatusPending => 'rmHandoverStatusPending'.tr;
+  static String get rmHandoverStatusCompleted => 'rmHandoverStatusCompleted'.tr;
+  static String get rmPaymentMethod => 'rmPaymentMethod'.tr;
+  static String get rmCollectAmount => 'rmCollectAmount'.tr;
+  static String get rmFillRemaining => 'rmFillRemaining'.tr;
+  static String get rmBatchAmountHint => 'rmBatchAmountHint'.tr;
+  static String get rmAmountRequired => 'rmAmountRequired'.tr;
+  static String get rmAmountExceedsRemaining => 'rmAmountExceedsRemaining'.tr;
+  static String get rmChequeNumber => 'rmChequeNumber'.tr;
+  static String get rmChequeNumberHint => 'rmChequeNumberHint'.tr;
+  static String get rmChequeNumberRequired => 'rmChequeNumberRequired'.tr;
+  static String get rmBankReference => 'rmBankReference'.tr;
+  static String get rmBankReferenceHint => 'rmBankReferenceHint'.tr;
+  static String get rmBankReferenceRequired => 'rmBankReferenceRequired'.tr;
+  static String get rmCollectionNotes => 'rmCollectionNotes'.tr;
+  static String get rmCollectionNotesHint => 'rmCollectionNotesHint'.tr;
+  static String get rmConfirmCollection => 'rmConfirmCollection'.tr;
+  static String rmConfirmCollectionMessage(
+    String shop,
+    String amount,
+    String method,
+  ) => 'rmConfirmCollectionMessage'.trParams({
+    'shop': shop,
+    'amount': amount,
+    'method': method,
+  });
+  static String rmCollectionRecorded(String receipt) =>
+      'rmCollectionRecorded'.trParams({'receipt': receipt});
+  static String get rmCollectionFailed => 'rmCollectionFailed'.tr;
 
   // Common labels
   static String get or => 'or'.tr;
@@ -572,6 +643,7 @@ class AppTexts {
   static String get emptyLoadFailedSubtitle => 'emptyLoadFailedSubtitle'.tr;
   static String get emptyNoRouteTitle => 'emptyNoRouteTitle'.tr;
   static String get emptyNoOrdersTitle => 'emptyNoOrdersTitle'.tr;
+  static String get emptyNoCollectionsTitle => 'emptyNoCollectionsTitle'.tr;
   static String get emptyNoTasksTitle => 'emptyNoTasksTitle'.tr;
   static String get emptyNoShopsTitle => 'emptyNoShopsTitle'.tr;
   static String get emptyNoVisitsTitle => 'emptyNoVisitsTitle'.tr;

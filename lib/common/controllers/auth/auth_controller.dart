@@ -29,8 +29,14 @@ class AuthController extends GetxController {
 
   @override
   void onClose() {
-    emailController.dispose();
-    passwordController.dispose();
+    // Dispose after the login route unmounts. Immediate dispose races with
+    // Obx rebuilds / focus loss from the Sign In gesture after offAllNamed.
+    final email = emailController;
+    final password = passwordController;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      email.dispose();
+      password.dispose();
+    });
     super.onClose();
   }
 
@@ -41,11 +47,13 @@ class AuthController extends GetxController {
 
   Future<void> _restoreRememberedCredentials() async {
     final enabled = await _storage.isRememberMeEnabled(role);
+    if (isClosed) return;
     rememberMe.value = enabled;
     if (!enabled) return;
 
     final login = await _storage.getRememberedLogin(role);
     final password = await _storage.getRememberedPassword(role);
+    if (isClosed) return;
     if (login != null && login.isNotEmpty) {
       emailController.text = login;
     }
@@ -89,14 +97,17 @@ class AuthController extends GetxController {
     try {
       await _authService.login(email: login, password: password, role: role);
       await _persistRememberMe(login: login, password: password);
+      if (isClosed) return;
       AppToast.showSuccess(AppTexts.loginSuccessful);
       RoleRouteResolver.goToRoleHome(role);
+      // Route teardown disposes this controller — skip post-nav Obx updates.
+      return;
     } on ApiException catch (e) {
-      AppToast.showError(e.message);
+      if (!isClosed) AppToast.showError(e.message);
     } catch (_) {
-      AppToast.showError(AppTexts.loginFailed);
+      if (!isClosed) AppToast.showError(AppTexts.loginFailed);
     } finally {
-      isLoading.value = false;
+      if (!isClosed) isLoading.value = false;
     }
   }
 }

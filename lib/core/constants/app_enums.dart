@@ -12,6 +12,12 @@ enum DeliveryStatus { pending, pickedUp, inTransit, delivered, returned }
 
 enum CollectionStatus { pending, collected, handedOver }
 
+enum PaymentMethod { cash, cheque, bank }
+
+enum CollectionMode { invoiceWise, batch }
+
+enum HandoverStatus { pending, completed }
+
 enum VisitStatus { checkedIn, checkedOut }
 
 enum VisitOutcome { orderPlaced, endedWithoutOrder }
@@ -97,6 +103,91 @@ extension CollectionStatusX on CollectionStatus {
     CollectionStatus.collected => AppColors.primary,
     CollectionStatus.pending => AppColors.warning,
   };
+
+  static CollectionStatus fromApi(dynamic value) {
+    final raw = value?.toString().trim().toLowerCase() ?? '';
+    if (raw == 'handed_over' || raw == 'handover') {
+      return CollectionStatus.handedOver;
+    }
+    return CollectionStatus.values.firstWhere(
+      (status) => status.name == raw,
+      orElse: () => CollectionStatus.pending,
+    );
+  }
+}
+
+extension PaymentMethodX on PaymentMethod {
+  String get label => switch (this) {
+    PaymentMethod.cash => AppTexts.rmPaymentCash,
+    PaymentMethod.cheque => AppTexts.rmPaymentCheque,
+    PaymentMethod.bank => AppTexts.rmPaymentBank,
+  };
+
+  Color get chipColor => switch (this) {
+    PaymentMethod.cash => AppColors.success,
+    PaymentMethod.cheque => AppColors.warning,
+    PaymentMethod.bank => AppColors.primary,
+  };
+
+  static PaymentMethod fromApi(dynamic value) {
+    final raw = value?.toString().trim().toLowerCase() ?? '';
+    if (raw == 'bank_transfer' || raw == 'banktransfer' || raw == 'online') {
+      return PaymentMethod.bank;
+    }
+    if (raw == 'check' || raw == 'checke') {
+      return PaymentMethod.cheque;
+    }
+    return PaymentMethod.values.firstWhere(
+      (method) => method.name == raw,
+      orElse: () => PaymentMethod.cash,
+    );
+  }
+}
+
+extension CollectionModeX on CollectionMode {
+  String get label => switch (this) {
+    CollectionMode.invoiceWise => AppTexts.rmModeInvoiceWise,
+    CollectionMode.batch => AppTexts.rmModeBatch,
+  };
+
+  Color get chipColor => switch (this) {
+    CollectionMode.invoiceWise => AppColors.primary,
+    CollectionMode.batch => AppColors.information,
+  };
+
+  static CollectionMode fromApi(dynamic value) {
+    final raw = value?.toString().trim().toLowerCase() ?? '';
+    if (raw == 'invoice_wise' || raw == 'invoicewise' || raw == 'invoice') {
+      return CollectionMode.invoiceWise;
+    }
+    return CollectionMode.values.firstWhere(
+      (mode) => mode.name == raw,
+      orElse: () => CollectionMode.batch,
+    );
+  }
+}
+
+extension HandoverStatusX on HandoverStatus {
+  String get label => switch (this) {
+    HandoverStatus.pending => AppTexts.rmHandoverStatusPending,
+    HandoverStatus.completed => AppTexts.rmHandoverStatusCompleted,
+  };
+
+  Color get chipColor => switch (this) {
+    HandoverStatus.pending => AppColors.warning,
+    HandoverStatus.completed => AppColors.success,
+  };
+
+  static HandoverStatus fromApi(dynamic value) {
+    final raw = value?.toString().trim().toLowerCase() ?? '';
+    if (raw == 'done' || raw == 'complete') {
+      return HandoverStatus.completed;
+    }
+    return HandoverStatus.values.firstWhere(
+      (status) => status.name == raw,
+      orElse: () => HandoverStatus.pending,
+    );
+  }
 }
 
 extension VisitStatusX on VisitStatus {

@@ -9,7 +9,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_form_field_label.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_input_decoration.dart';
 
-class AppSearchField extends StatelessWidget {
+class AppSearchField extends StatefulWidget {
   const AppSearchField({
     super.key,
     this.controller,
@@ -46,30 +46,78 @@ class AppSearchField extends StatelessWidget {
   final bool readOnly;
 
   @override
+  State<AppSearchField> createState() => _AppSearchFieldState();
+}
+
+class _AppSearchFieldState extends State<AppSearchField> {
+  late final TextEditingController _internal;
+
+  @override
+  void initState() {
+    super.initState();
+    _internal = TextEditingController(text: _readableText(widget.controller));
+  }
+
+  @override
+  void didUpdateWidget(AppSearchField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller == widget.controller) return;
+    final next = _readableText(widget.controller);
+    if (_internal.text != next) {
+      _internal.text = next;
+    }
+  }
+
+  @override
+  void dispose() {
+    _internal.dispose();
+    super.dispose();
+  }
+
+  String _readableText(TextEditingController? controller) {
+    if (controller == null) return '';
+    try {
+      return controller.text;
+    } catch (_) {
+      return '';
+    }
+  }
+
+  void _handleChanged(String value) {
+    final external = widget.controller;
+    if (external != null) {
+      try {
+        if (external.text != value) external.text = value;
+      } catch (_) {}
+    }
+    widget.onChanged?.call(value);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        AppFormFieldLabel(label: label),
+        AppFormFieldLabel(label: widget.label),
         AppSpacing.vertical(context, 0.01),
         TextFormField(
-          controller: controller,
-          focusNode: focusNode,
-          keyboardType: keyboardType,
-          textInputAction: textInputAction,
-          validator: validator,
-          autovalidateMode: autovalidateMode,
-          onChanged: onChanged,
-          onFieldSubmitted: onSubmitted,
-          maxLines: maxLines,
-          inputFormatters: inputFormatters,
-          readOnly: readOnly,
+          controller: _internal,
+          focusNode: widget.focusNode,
+          keyboardType: widget.keyboardType,
+          textInputAction: widget.textInputAction,
+          validator: widget.validator,
+          autovalidateMode: widget.autovalidateMode,
+          onChanged: _handleChanged,
+          onFieldSubmitted: widget.onSubmitted,
+          maxLines: widget.maxLines,
+          inputFormatters: widget.inputFormatters,
+          readOnly: widget.readOnly,
           decoration: AppInputDecoration.decoration(
             context,
-            hintText: hint ?? AppTexts.search,
-            prefixIcon: prefixIcon,
-            suffixIcon: suffixIcon,
+            hintText: widget.hint ?? AppTexts.search,
+            prefixIcon: widget.prefixIcon,
+            suffixIcon: widget.suffixIcon,
           ),
           style: AppTextStyles.bodyText(context),
         ),

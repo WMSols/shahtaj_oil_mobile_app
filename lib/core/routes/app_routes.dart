@@ -25,4 +25,11 @@ class AppRoutes {
   // Delivery man (pushed / deep-linkable)
   static const dmOrderDetail = '/delivery-man/orders/:id';
   static const dmDeliveryDetail = '/delivery-man/deliveries/:id';
+
+  // Recovery man (pushed / deep-linkable)
+  static const rmShopOutstanding = '/recovery-man/shops/:id/outstanding';
+  static const rmRecordCollection = '/recovery-man/collections/record';
+  static const rmCollectionDetail = '/recovery-man/collections/:id';
+  static const rmHandoverConfirm = '/recovery-man/handover/confirm';
+  static const rmHandoverDetail = '/recovery-man/handover/:id';
 }

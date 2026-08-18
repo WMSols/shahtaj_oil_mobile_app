@@ -53,11 +53,11 @@ class AppIcons {
 
   static const IconData returnDelivery = Iconsax.truck_remove;
 
-  static const IconData collections = Iconsax.receipt;
-  static const IconData collections5 = Iconsax.receipt5;
+  static const IconData collections = Iconsax.money_recive;
+  static const IconData collections5 = Iconsax.money_recive5;
 
-  static const IconData handover = Iconsax.document_upload;
-  static const IconData handover5 = Iconsax.document_upload5;
+  static const IconData handover = Iconsax.money_send;
+  static const IconData handover5 = Iconsax.money_send5;
 
   // Actions
   static const IconData back = Iconsax.arrow_left_2;

@@ -9,13 +9,16 @@ import 'package:shahtaj_oil_mobile_app/core/services/storage_service.dart';
 class AuthBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut(
-      () => AuthService(
-        Get.find<ApiClient>(),
-        Get.find<StorageService>(),
-        Get.find<SessionService>(),
-      ),
-    );
-    Get.lazyPut(AuthController.new);
+    if (!Get.isRegistered<AuthService>()) {
+      Get.put(
+        AuthService(
+          Get.find<ApiClient>(),
+          Get.find<StorageService>(),
+          Get.find<SessionService>(),
+        ),
+        permanent: true,
+      );
+    }
+    Get.lazyPut(AuthController.new, fenix: true);
   }
 }
