@@ -54,8 +54,8 @@ class DmPickupModel {
     'id': id,
     'warehouse_name': warehouseName,
     'vehicle_code': vehicleCode,
-    'shift_date': shiftDate.toIso8601String(),
-    'acknowledged_at': acknowledgedAt?.toIso8601String(),
+    'shift_date': shiftDate.toUtc().toIso8601String(),
+    'acknowledged_at': acknowledgedAt?.toUtc().toIso8601String(),
     'items': items.map((e) => e.toJson()).toList(growable: false),
   };
 }

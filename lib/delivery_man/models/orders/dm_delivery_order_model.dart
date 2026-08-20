@@ -140,12 +140,12 @@ class DmDeliveryOrderModel {
     'item_count': resolvedItemCount,
     'total_amount': resolvedTotal,
     'status': status.name,
-    'scheduled_at': scheduledAt?.toIso8601String(),
+    'scheduled_at': scheduledAt?.toUtc().toIso8601String(),
     'lines': lines.map((e) => e.toJson()).toList(growable: false),
     'timeline': timeline.map((e) => e.toJson()).toList(growable: false),
     'receiver_name': receiverName,
     'proof_photo_base64': proofPhotoBase64,
-    'delivered_at': deliveredAt?.toIso8601String(),
+    'delivered_at': deliveredAt?.toUtc().toIso8601String(),
     'delivery_notes': deliveryNotes,
   };
 }
