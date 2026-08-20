@@ -33,16 +33,16 @@ class AppStatusChip extends StatelessWidget {
       AppStatusChip(label: status.label, color: status.chipColor);
 
   factory AppStatusChip.collection(CollectionStatus status) =>
-      AppStatusChip(label: status.label, color: status.chipColor);
+      AppStatusChip(label: status.label, color: status.chipColor, soft: true);
 
   factory AppStatusChip.paymentMethod(PaymentMethod method) =>
       AppStatusChip(label: method.label, color: method.chipColor);
 
   factory AppStatusChip.collectionMode(CollectionMode mode) =>
-      AppStatusChip(label: mode.label, color: mode.chipColor);
+      AppStatusChip(label: mode.label, color: mode.chipColor, soft: true);
 
   factory AppStatusChip.handover(HandoverStatus status) =>
-      AppStatusChip(label: status.label, color: status.chipColor);
+      AppStatusChip(label: status.label, color: status.chipColor, soft: true);
 
   factory AppStatusChip.visit(VisitStatus status) =>
       AppStatusChip(label: status.label, color: status.chipColor);

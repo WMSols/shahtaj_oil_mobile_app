@@ -481,6 +481,8 @@ class AppTexts {
   static String get rmBankReference => 'rmBankReference'.tr;
   static String get rmBankReferenceHint => 'rmBankReferenceHint'.tr;
   static String get rmBankReferenceRequired => 'rmBankReferenceRequired'.tr;
+  static String get rmBankScreenshotTitle => 'rmBankScreenshotTitle'.tr;
+  static String get rmBankScreenshotSubtitle => 'rmBankScreenshotSubtitle'.tr;
   static String get rmCollectionNotes => 'rmCollectionNotes'.tr;
   static String get rmCollectionNotesHint => 'rmCollectionNotesHint'.tr;
   static String get rmConfirmCollection => 'rmConfirmCollection'.tr;
@@ -496,6 +498,54 @@ class AppTexts {
   static String rmCollectionRecorded(String receipt) =>
       'rmCollectionRecorded'.trParams({'receipt': receipt});
   static String get rmCollectionFailed => 'rmCollectionFailed'.tr;
+  static String get rmCollectionDetailTitle => 'rmCollectionDetailTitle'.tr;
+  static String get rmSearchCollectionHint => 'rmSearchCollectionHint'.tr;
+  static String get rmNoCollectionsMatchSearch =>
+      'rmNoCollectionsMatchSearch'.tr;
+  static String get rmCollectionNotFound => 'rmCollectionNotFound'.tr;
+  static String rmHistoryTotals(int count, String total) =>
+      'rmHistoryTotals'.trParams({'count': '$count', 'total': total});
+  static String get rmReceiptNumber => 'rmReceiptNumber'.tr;
+  static String get rmCollectedAt => 'rmCollectedAt'.tr;
+  static String get rmCollectionStatus => 'rmCollectionStatus'.tr;
+  static String get rmCollectionMode => 'rmCollectionMode'.tr;
+  static String get rmCollectionAllocations => 'rmCollectionAllocations'.tr;
+  static String get rmUnallocatedBatch => 'rmUnallocatedBatch'.tr;
+  static String get rmUnallocatedBatchHint => 'rmUnallocatedBatchHint'.tr;
+  static String get rmHandoverTitle => 'rmHandoverTitle'.tr;
+  static String get rmHandoverConfirmTitle => 'rmHandoverConfirmTitle'.tr;
+  static String get rmBagCash => 'rmBagCash'.tr;
+  static String get rmBagCheque => 'rmBagCheque'.tr;
+  static String get rmBagTotal => 'rmBagTotal'.tr;
+  static String get rmPendingHandover => 'rmPendingHandover'.tr;
+  static String get rmRecentHandovers => 'rmRecentHandovers'.tr;
+  static String get rmNoBagCollections => 'rmNoBagCollections'.tr;
+  static String get rmNoBagCollectionsSubtitle =>
+      'rmNoBagCollectionsSubtitle'.tr;
+  static String get rmNoHandoversYet => 'rmNoHandoversYet'.tr;
+  static String get rmHandOverBag => 'rmHandOverBag'.tr;
+  static String get rmCountedCash => 'rmCountedCash'.tr;
+  static String get rmCountedCashHint => 'rmCountedCashHint'.tr;
+  static String get rmCashierName => 'rmCashierName'.tr;
+  static String get rmCashierNameHint => 'rmCashierNameHint'.tr;
+  static String get rmHandoverNotes => 'rmHandoverNotes'.tr;
+  static String get rmHandoverNotesHint => 'rmHandoverNotesHint'.tr;
+  static String get rmCashCountMismatch => 'rmCashCountMismatch'.tr;
+  static String get rmCashierRequired => 'rmCashierRequired'.tr;
+  static String get rmBagEmpty => 'rmBagEmpty'.tr;
+  static String get rmConfirmHandover => 'rmConfirmHandover'.tr;
+  static String rmConfirmHandoverMessage(String amount, String count) =>
+      'rmConfirmHandoverMessage'.trParams({'amount': amount, 'count': count});
+  static String rmHandoverRecorded(String reference) =>
+      'rmHandoverRecorded'.trParams({'reference': reference});
+  static String get rmHandoverFailed => 'rmHandoverFailed'.tr;
+  static String get rmHandoverNotFound => 'rmHandoverNotFound'.tr;
+  static String get rmHandoverReference => 'rmHandoverReference'.tr;
+  static String get rmHandoverAt => 'rmHandoverAt'.tr;
+  static String get rmHandoverCollections => 'rmHandoverCollections'.tr;
+  static String rmHandoverReceiptsCount(int count) =>
+      'rmHandoverReceiptsCount'.trParams({'count': '$count'});
+  static String get emptyNoHandoverTitle => 'emptyNoHandoverTitle'.tr;
 
   // Common labels
   static String get or => 'or'.tr;
