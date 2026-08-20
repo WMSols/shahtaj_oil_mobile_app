@@ -99,7 +99,7 @@ class DmReturnModel {
     'delivery_id': deliveryId,
     'notes': notes,
     'leftover': leftover.map((e) => e.toJson()).toList(growable: false),
-    'created_at': createdAt?.toIso8601String(),
+    'created_at': createdAt?.toUtc().toIso8601String(),
     'submitted': submitted,
   };
 }

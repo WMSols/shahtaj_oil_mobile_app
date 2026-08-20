@@ -50,7 +50,7 @@ class ObActiveVisitModel {
     'task_id': taskId,
     'shop_id': shopId,
     'shop_name': shopName,
-    'checked_in_at': checkedInAt?.toIso8601String(),
+    'checked_in_at': checkedInAt?.toUtc().toIso8601String(),
     'latitude': latitude,
     'longitude': longitude,
   };

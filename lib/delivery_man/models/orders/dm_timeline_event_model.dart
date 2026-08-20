@@ -24,7 +24,7 @@ class DmTimelineEventModel {
   Map<String, dynamic> toJson() => {
     'id': id,
     'title': title,
-    'at': at.toIso8601String(),
+    'at': at.toUtc().toIso8601String(),
     'note': note,
   };
 }

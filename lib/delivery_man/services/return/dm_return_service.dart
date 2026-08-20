@@ -81,7 +81,8 @@ class DmReturnService extends GetxService {
 
     return DmReturnModel(
       id: '',
-      deliveryId: 'shift-${DateTime.now().toIso8601String().substring(0, 10)}',
+      deliveryId:
+          'shift-${DateTime.now().toUtc().toIso8601String().substring(0, 10)}',
       leftover: byProduct.values.toList(growable: false),
     );
   }

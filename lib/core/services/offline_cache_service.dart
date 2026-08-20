@@ -40,7 +40,11 @@ abstract class OfflineCacheKeys {
   static const dmPickup = 'offline_cache_dm_pickup_v2';
   static const dmReturn = 'offline_cache_dm_return_v2';
 
-  // Recovery Man (reserved for future live APIs)
+  // Recovery Man
+  static const rmShops = 'offline_cache_rm_shops_v1';
+  static const rmInvoices = 'offline_cache_rm_invoices_v1';
+  static const rmCollections = 'offline_cache_rm_collections_v1';
+  static const rmHandovers = 'offline_cache_rm_handovers_v1';
   static const rmTargets = 'offline_cache_rm_targets';
   static const rmDashboard = 'offline_cache_rm_dashboard';
 
@@ -96,7 +100,7 @@ class OfflineSyncItem {
     'role': role,
     'action': action,
     'payload': payload,
-    'created_at': createdAt.toIso8601String(),
+    'created_at': createdAt.toUtc().toIso8601String(),
     'synced': synced,
   };
 }
