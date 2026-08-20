@@ -6,10 +6,12 @@ import 'package:shahtaj_oil_mobile_app/delivery_man/models/pickup/dm_pickup_mode
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/return/dm_return_model.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/dashboard/dm_stock_item_model.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/orders/dm_timeline_event_model.dart';
+import 'package:shahtaj_oil_mobile_app/recovery_man/models/collections/rm_collection_line_model.dart';
 import 'package:shahtaj_oil_mobile_app/recovery_man/models/collections/rm_collection_summary_model.dart';
 import 'package:shahtaj_oil_mobile_app/recovery_man/models/collections/rm_invoice_model.dart';
 import 'package:shahtaj_oil_mobile_app/recovery_man/models/collections/rm_shop_due_model.dart';
 import 'package:shahtaj_oil_mobile_app/recovery_man/models/dashboard/rm_targets_model.dart';
+import 'package:shahtaj_oil_mobile_app/recovery_man/models/handover/rm_handover_summary_model.dart';
 
 /// Mock payloads still used by DM/RM stubs.
 /// Order Booker uses live APIs + [OfflineCacheService].
@@ -377,6 +379,18 @@ class AppMockData {
         method: PaymentMethod.cash,
         mode: CollectionMode.invoiceWise,
         status: CollectionStatus.collected,
+        lines: const [
+          RmCollectionLineModel(
+            invoiceId: 'rm-inv-001',
+            invoiceNumber: 'INV-24081',
+            amount: 4000,
+          ),
+          RmCollectionLineModel(
+            invoiceId: 'rm-inv-002',
+            invoiceNumber: 'INV-24102',
+            amount: 11000,
+          ),
+        ],
       ),
       RmCollectionSummaryModel(
         id: 'rm-col-002',
@@ -388,6 +402,19 @@ class AppMockData {
         method: PaymentMethod.cheque,
         mode: CollectionMode.invoiceWise,
         status: CollectionStatus.collected,
+        reference: 'CHQ-4412',
+        lines: const [
+          RmCollectionLineModel(
+            invoiceId: 'rm-inv-004',
+            invoiceNumber: 'INV-24090',
+            amount: 3500,
+          ),
+          RmCollectionLineModel(
+            invoiceId: 'rm-inv-005',
+            invoiceNumber: 'INV-24111',
+            amount: 4500,
+          ),
+        ],
       ),
       RmCollectionSummaryModel(
         id: 'rm-col-003',
@@ -399,6 +426,8 @@ class AppMockData {
         method: PaymentMethod.bank,
         mode: CollectionMode.batch,
         status: CollectionStatus.collected,
+        reference: 'TRX-7781',
+        notes: 'Same-day bank transfer',
       ),
       RmCollectionSummaryModel(
         id: 'rm-col-004',
@@ -410,7 +439,40 @@ class AppMockData {
         method: PaymentMethod.cash,
         mode: CollectionMode.invoiceWise,
         status: CollectionStatus.handedOver,
+        handoverId: 'rm-ho-001',
+        lines: const [
+          RmCollectionLineModel(
+            invoiceId: 'rm-inv-010',
+            invoiceNumber: 'INV-24125',
+            amount: 9000,
+          ),
+        ],
       ),
     ];
   }
+
+  static List<RmHandoverSummaryModel> get rmHandovers {
+    final now = DateTime.now();
+    return [
+      RmHandoverSummaryModel(
+        id: 'rm-ho-001',
+        reference: 'HO-10001',
+        handedAt: now.subtract(const Duration(days: 1, hours: 1)),
+        cashAmount: 9000,
+        chequeAmount: 0,
+        collectionIds: const ['rm-col-004'],
+        cashierName: 'Ahmed Khan',
+        notes: 'Evening close',
+      ),
+    ];
+  }
+
+  /// Managers / cashiers the recovery staff can hand the bag over to.
+  static const List<String> rmManagers = [
+    'Ahmed Khan',
+    'Sara Ali',
+    'Bilal Hussain',
+    'Nadia Iqbal',
+    'Warehouse desk',
+  ];
 }

@@ -302,10 +302,16 @@ class AppToastBar extends StatelessWidget {
             ),
     );
 
+    // Only allow swipe-to-dismiss when a handler is wired up. Without one the
+    // Dismissible would remove itself from the tree but the parent would never
+    // stop building it, causing the "dismissed Dismissible still in tree" error.
+    final dismissHandler = onSwipeDismissed ?? onClose;
     return Dismissible(
       key: ValueKey('toast-${style.name}-$message'),
-      direction: DismissDirection.horizontal,
-      onDismissed: (_) => (onSwipeDismissed ?? onClose)?.call(),
+      direction: dismissHandler != null
+          ? DismissDirection.horizontal
+          : DismissDirection.none,
+      onDismissed: dismissHandler != null ? (_) => dismissHandler() : null,
       child: Material(color: backgroundColor, child: content),
     );
   }
