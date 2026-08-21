@@ -1,9 +1,9 @@
-import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
+﻿import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
-import 'package:shahtaj_oil_mobile_app/recovery_man/models/collections/rm_collection_line_model.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/models/collections/dm_collection_line_model.dart';
 
-class RmCollectionSummaryModel {
-  const RmCollectionSummaryModel({
+class DmCollectionSummaryModel {
+  const DmCollectionSummaryModel({
     required this.id,
     required this.receiptNumber,
     required this.shopId,
@@ -33,16 +33,16 @@ class RmCollectionSummaryModel {
   final String reference;
   final String? proofPhotoBase64;
   final String? handoverId;
-  final List<RmCollectionLineModel> lines;
+  final List<DmCollectionLineModel> lines;
 
   bool get isInBag =>
       status == CollectionStatus.collected && method != PaymentMethod.bank;
 
   bool get isUnallocatedBatch => mode == CollectionMode.batch && lines.isEmpty;
 
-  factory RmCollectionSummaryModel.fromJson(Map<String, dynamic> json) {
+  factory DmCollectionSummaryModel.fromJson(Map<String, dynamic> json) {
     final rawLines = json['lines'];
-    return RmCollectionSummaryModel(
+    return DmCollectionSummaryModel(
       id: ApiMap.asString(json['id']) ?? '',
       receiptNumber: ApiMap.asString(json['receipt_number']) ?? '',
       shopId: ApiMap.asString(json['shop_id']) ?? '',
@@ -60,7 +60,7 @@ class RmCollectionSummaryModel {
           ? rawLines
                 .whereType<Map>()
                 .map(
-                  (item) => RmCollectionLineModel.fromJson(
+                  (item) => DmCollectionLineModel.fromJson(
                     Map<String, dynamic>.from(item),
                   ),
                 )
@@ -88,13 +88,13 @@ class RmCollectionSummaryModel {
     };
   }
 
-  RmCollectionSummaryModel copyWith({
+  DmCollectionSummaryModel copyWith({
     CollectionStatus? status,
     String? handoverId,
     String? proofPhotoBase64,
-    List<RmCollectionLineModel>? lines,
+    List<DmCollectionLineModel>? lines,
   }) {
-    return RmCollectionSummaryModel(
+    return DmCollectionSummaryModel(
       id: id,
       receiptNumber: receiptNumber,
       shopId: shopId,

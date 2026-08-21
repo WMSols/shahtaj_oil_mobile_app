@@ -1,7 +1,7 @@
-import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
+﻿import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 
-class RmCollectionLineModel {
-  const RmCollectionLineModel({
+class DmCollectionLineModel {
+  const DmCollectionLineModel({
     required this.invoiceId,
     required this.invoiceNumber,
     required this.amount,
@@ -11,8 +11,8 @@ class RmCollectionLineModel {
   final String invoiceNumber;
   final double amount;
 
-  factory RmCollectionLineModel.fromJson(Map<String, dynamic> json) {
-    return RmCollectionLineModel(
+  factory DmCollectionLineModel.fromJson(Map<String, dynamic> json) {
+    return DmCollectionLineModel(
       invoiceId: ApiMap.asString(json['invoice_id']) ?? '',
       invoiceNumber: ApiMap.asString(json['invoice_number']) ?? '',
       amount: ApiMap.asDouble(json['amount']) ?? 0,

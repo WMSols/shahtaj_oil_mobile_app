@@ -1,8 +1,8 @@
-import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
+﻿import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 
-class RmHandoverSummaryModel {
-  const RmHandoverSummaryModel({
+class DmHandoverSummaryModel {
+  const DmHandoverSummaryModel({
     required this.id,
     required this.reference,
     required this.handedAt,
@@ -27,9 +27,9 @@ class RmHandoverSummaryModel {
   double get total => cashAmount + chequeAmount;
   int get collectionCount => collectionIds.length;
 
-  factory RmHandoverSummaryModel.fromJson(Map<String, dynamic> json) {
+  factory DmHandoverSummaryModel.fromJson(Map<String, dynamic> json) {
     final ids = json['collection_ids'];
-    return RmHandoverSummaryModel(
+    return DmHandoverSummaryModel(
       id: ApiMap.asString(json['id']) ?? '',
       reference: ApiMap.asString(json['reference']) ?? '',
       handedAt: ApiMap.asDateTime(json['handed_at']) ?? DateTime.now(),

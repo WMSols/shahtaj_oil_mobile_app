@@ -1,4 +1,4 @@
-import 'package:get/get.dart';
+﻿import 'package:get/get.dart';
 
 class AppTexts {
   AppTexts._();
@@ -139,26 +139,27 @@ class AppTexts {
   static String get obCombinedTargetHeadlineHint =>
       'obCombinedTargetHeadlineHint'.tr;
   static String get obTargetProductsSection => 'obTargetProductsSection'.tr;
-  static String get rmRecoveryTarget => 'rmRecoveryTarget'.tr;
-  static String get rmTargets => 'rmTargets'.tr;
-  static String get rmDashboardSubtitle => 'rmDashboardSubtitle'.tr;
-  static String get rmSnapshotCollected => 'rmSnapshotCollected'.tr;
-  static String get rmSnapshotStillDue => 'rmSnapshotStillDue'.tr;
-  static String get rmSnapshotCashInBag => 'rmSnapshotCashInBag'.tr;
-  static String get rmRecentCollections => 'rmRecentCollections'.tr;
-  static String get rmNoRecentCollections => 'rmNoRecentCollections'.tr;
-  static String get rmTodayShopsTitle => 'rmTodayShopsTitle'.tr;
-  static String get rmSearchShopHint => 'rmSearchShopHint'.tr;
-  static String get rmFilterHighDue => 'rmFilterHighDue'.tr;
-  static String get rmFilterPartial => 'rmFilterPartial'.tr;
-  static String get rmNoShopsDue => 'rmNoShopsDue'.tr;
-  static String get rmNoShopsMatchSearch => 'rmNoShopsMatchSearch'.tr;
-  static String rmInvoicesCount(int count) =>
-      'rmInvoicesCount'.trParams({'count': '$count'});
-  static String get rmOutstandingLabel => 'rmOutstandingLabel'.tr;
-  static String get rmDueStatusLabel => 'rmDueStatusLabel'.tr;
-  static String get rmHighDueChip => 'rmHighDueChip'.tr;
-  static String get rmPartialChip => 'rmPartialChip'.tr;
+  static String get dmRecoveryTarget => 'dmRecoveryTarget'.tr;
+  static String get dmTargets => 'dmTargets'.tr;
+  static String get dmDashboardSubtitle => 'dmDashboardSubtitle'.tr;
+  static String get dmSnapshotCollected => 'dmSnapshotCollected'.tr;
+  static String get dmSnapshotStillDue => 'dmSnapshotStillDue'.tr;
+  static String get dmSnapshotCashInBag => 'dmSnapshotCashInBag'.tr;
+  static String get dmRecentCollections => 'dmRecentCollections'.tr;
+  static String get dmNoRecentCollections => 'dmNoRecentCollections'.tr;
+  static String get dmTodayShopsTitle => 'dmTodayShopsTitle'.tr;
+  static String get dmCollectionHistoryTitle => 'dmCollectionHistoryTitle'.tr;
+  static String get dmSearchShopHint => 'dmSearchShopHint'.tr;
+  static String get dmFilterHighDue => 'dmFilterHighDue'.tr;
+  static String get dmFilterPartial => 'dmFilterPartial'.tr;
+  static String get dmNoShopsDue => 'dmNoShopsDue'.tr;
+  static String get dmNoShopsMatchSearch => 'dmNoShopsMatchSearch'.tr;
+  static String dmInvoicesCount(int count) =>
+      'dmInvoicesCount'.trParams({'count': '$count'});
+  static String get dmOutstandingLabel => 'dmOutstandingLabel'.tr;
+  static String get dmDueStatusLabel => 'dmDueStatusLabel'.tr;
+  static String get dmHighDueChip => 'dmHighDueChip'.tr;
+  static String get dmPartialChip => 'dmPartialChip'.tr;
   static String get obRecentOrders => 'obRecentOrders'.tr;
   static String get obOpenTodayTasks => 'obOpenTodayTasks'.tr;
   static String get obContinueTodayTasks => 'obContinueTodayTasks'.tr;
@@ -380,7 +381,6 @@ class AppTexts {
   static String get obOrderNumberLabel => 'obOrderNumberLabel'.tr;
 
   // Delivery man screens
-  static String get dmDashboardSubtitle => 'dmDashboardSubtitle'.tr;
   static String get dmPickupTitle => 'dmPickupTitle'.tr;
   static String get dmDeliverTitle => 'dmDeliverTitle'.tr;
   static String get dmDeliveryDetailTitle => 'dmDeliveryDetailTitle'.tr;
@@ -439,112 +439,112 @@ class AppTexts {
   static String dmShiftDateLabel(String date) =>
       'dmShiftDateLabel'.trParams({'date': date});
 
-  // Recovery man screens
-  static String get rmShopInvoicesTitle => 'rmShopInvoicesTitle'.tr;
-  static String get rmShopOutstandingTitle => 'rmShopOutstandingTitle'.tr;
-  static String get rmRecordCollectionTitle => 'rmRecordCollectionTitle'.tr;
-  static String get rmHandoverDetailTitle => 'rmHandoverDetailTitle'.tr;
-  static String get rmTotalOutstanding => 'rmTotalOutstanding'.tr;
-  static String get rmOpenInvoices => 'rmOpenInvoices'.tr;
-  static String get rmNoOpenInvoices => 'rmNoOpenInvoices'.tr;
-  static String get rmNoOpenInvoicesSubtitle => 'rmNoOpenInvoicesSubtitle'.tr;
-  static String get rmCollectSelected => 'rmCollectSelected'.tr;
-  static String get rmBatchPayment => 'rmBatchPayment'.tr;
-  static String get rmSelectAll => 'rmSelectAll'.tr;
-  static String get rmDeselectAll => 'rmDeselectAll'.tr;
-  static String get rmSelectInvoicesHint => 'rmSelectInvoicesHint'.tr;
-  static String rmSelectedCount(int count) =>
-      'rmSelectedCount'.trParams({'count': '$count'});
-  static String get rmInvoiceRemaining => 'rmInvoiceRemaining'.tr;
-  static String get rmInvoiceOriginal => 'rmInvoiceOriginal'.tr;
-  static String get rmCallShop => 'rmCallShop'.tr;
-  static String get rmDirections => 'rmDirections'.tr;
-  static String get rmNoPhoneToCall => 'rmNoPhoneToCall'.tr;
-  static String get rmNoLocationForDirections => 'rmNoLocationForDirections'.tr;
+  // Recovery screens
+  static String get dmShopInvoicesTitle => 'dmShopInvoicesTitle'.tr;
+  static String get dmShopOutstandingTitle => 'dmShopOutstandingTitle'.tr;
+  static String get dmRecordCollectionTitle => 'dmRecordCollectionTitle'.tr;
+  static String get dmHandoverDetailTitle => 'dmHandoverDetailTitle'.tr;
+  static String get dmTotalOutstanding => 'dmTotalOutstanding'.tr;
+  static String get dmOpenInvoices => 'dmOpenInvoices'.tr;
+  static String get dmNoOpenInvoices => 'dmNoOpenInvoices'.tr;
+  static String get dmNoOpenInvoicesSubtitle => 'dmNoOpenInvoicesSubtitle'.tr;
+  static String get dmCollectSelected => 'dmCollectSelected'.tr;
+  static String get dmBatchPayment => 'dmBatchPayment'.tr;
+  static String get dmSelectAll => 'dmSelectAll'.tr;
+  static String get dmDeselectAll => 'dmDeselectAll'.tr;
+  static String get dmSelectInvoicesHint => 'dmSelectInvoicesHint'.tr;
+  static String dmSelectedCount(int count) =>
+      'dmSelectedCount'.trParams({'count': '$count'});
+  static String get dmInvoiceRemaining => 'dmInvoiceRemaining'.tr;
+  static String get dmInvoiceOriginal => 'dmInvoiceOriginal'.tr;
+  static String get dmCallShop => 'dmCallShop'.tr;
+  static String get dmDirections => 'dmDirections'.tr;
+  static String get dmNoPhoneToCall => 'dmNoPhoneToCall'.tr;
+  static String get dmNoLocationForDirections => 'dmNoLocationForDirections'.tr;
   static String get emptyNoInvoicesTitle => 'emptyNoInvoicesTitle'.tr;
-  static String get rmPaymentCash => 'rmPaymentCash'.tr;
-  static String get rmPaymentCheque => 'rmPaymentCheque'.tr;
-  static String get rmPaymentBank => 'rmPaymentBank'.tr;
-  static String get rmModeInvoiceWise => 'rmModeInvoiceWise'.tr;
-  static String get rmModeBatch => 'rmModeBatch'.tr;
-  static String get rmHandoverStatusPending => 'rmHandoverStatusPending'.tr;
-  static String get rmHandoverStatusCompleted => 'rmHandoverStatusCompleted'.tr;
-  static String get rmPaymentMethod => 'rmPaymentMethod'.tr;
-  static String get rmCollectAmount => 'rmCollectAmount'.tr;
-  static String get rmFillRemaining => 'rmFillRemaining'.tr;
-  static String get rmBatchAmountHint => 'rmBatchAmountHint'.tr;
-  static String get rmAmountRequired => 'rmAmountRequired'.tr;
-  static String get rmAmountExceedsRemaining => 'rmAmountExceedsRemaining'.tr;
-  static String get rmChequeNumber => 'rmChequeNumber'.tr;
-  static String get rmChequeNumberHint => 'rmChequeNumberHint'.tr;
-  static String get rmChequeNumberRequired => 'rmChequeNumberRequired'.tr;
-  static String get rmBankReference => 'rmBankReference'.tr;
-  static String get rmBankReferenceHint => 'rmBankReferenceHint'.tr;
-  static String get rmBankReferenceRequired => 'rmBankReferenceRequired'.tr;
-  static String get rmBankScreenshotTitle => 'rmBankScreenshotTitle'.tr;
-  static String get rmBankScreenshotSubtitle => 'rmBankScreenshotSubtitle'.tr;
-  static String get rmCollectionNotes => 'rmCollectionNotes'.tr;
-  static String get rmCollectionNotesHint => 'rmCollectionNotesHint'.tr;
-  static String get rmConfirmCollection => 'rmConfirmCollection'.tr;
-  static String rmConfirmCollectionMessage(
+  static String get dmPaymentCash => 'dmPaymentCash'.tr;
+  static String get dmPaymentCheque => 'dmPaymentCheque'.tr;
+  static String get dmPaymentBank => 'dmPaymentBank'.tr;
+  static String get dmModeInvoiceWise => 'dmModeInvoiceWise'.tr;
+  static String get dmModeBatch => 'dmModeBatch'.tr;
+  static String get dmHandoverStatusPending => 'dmHandoverStatusPending'.tr;
+  static String get dmHandoverStatusCompleted => 'dmHandoverStatusCompleted'.tr;
+  static String get dmPaymentMethod => 'dmPaymentMethod'.tr;
+  static String get dmCollectAmount => 'dmCollectAmount'.tr;
+  static String get dmFillRemaining => 'dmFillRemaining'.tr;
+  static String get dmBatchAmountHint => 'dmBatchAmountHint'.tr;
+  static String get dmAmountRequired => 'dmAmountRequired'.tr;
+  static String get dmAmountExceedsRemaining => 'dmAmountExceedsRemaining'.tr;
+  static String get dmChequeNumber => 'dmChequeNumber'.tr;
+  static String get dmChequeNumberHint => 'dmChequeNumberHint'.tr;
+  static String get dmChequeNumberRequired => 'dmChequeNumberRequired'.tr;
+  static String get dmBankReference => 'dmBankReference'.tr;
+  static String get dmBankReferenceHint => 'dmBankReferenceHint'.tr;
+  static String get dmBankReferenceRequired => 'dmBankReferenceRequired'.tr;
+  static String get dmBankScreenshotTitle => 'dmBankScreenshotTitle'.tr;
+  static String get dmBankScreenshotSubtitle => 'dmBankScreenshotSubtitle'.tr;
+  static String get dmCollectionNotes => 'dmCollectionNotes'.tr;
+  static String get dmCollectionNotesHint => 'dmCollectionNotesHint'.tr;
+  static String get dmConfirmCollection => 'dmConfirmCollection'.tr;
+  static String dmConfirmCollectionMessage(
     String shop,
     String amount,
     String method,
-  ) => 'rmConfirmCollectionMessage'.trParams({
+  ) => 'dmConfirmCollectionMessage'.trParams({
     'shop': shop,
     'amount': amount,
     'method': method,
   });
-  static String rmCollectionRecorded(String receipt) =>
-      'rmCollectionRecorded'.trParams({'receipt': receipt});
-  static String get rmCollectionFailed => 'rmCollectionFailed'.tr;
-  static String get rmCollectionDetailTitle => 'rmCollectionDetailTitle'.tr;
-  static String get rmSearchCollectionHint => 'rmSearchCollectionHint'.tr;
-  static String get rmNoCollectionsMatchSearch =>
-      'rmNoCollectionsMatchSearch'.tr;
-  static String get rmCollectionNotFound => 'rmCollectionNotFound'.tr;
-  static String rmHistoryTotals(int count, String total) =>
-      'rmHistoryTotals'.trParams({'count': '$count', 'total': total});
-  static String get rmReceiptNumber => 'rmReceiptNumber'.tr;
-  static String get rmCollectedAt => 'rmCollectedAt'.tr;
-  static String get rmCollectionStatus => 'rmCollectionStatus'.tr;
-  static String get rmCollectionMode => 'rmCollectionMode'.tr;
-  static String get rmCollectionAllocations => 'rmCollectionAllocations'.tr;
-  static String get rmUnallocatedBatch => 'rmUnallocatedBatch'.tr;
-  static String get rmUnallocatedBatchHint => 'rmUnallocatedBatchHint'.tr;
-  static String get rmHandoverTitle => 'rmHandoverTitle'.tr;
-  static String get rmHandoverConfirmTitle => 'rmHandoverConfirmTitle'.tr;
-  static String get rmBagCash => 'rmBagCash'.tr;
-  static String get rmBagCheque => 'rmBagCheque'.tr;
-  static String get rmBagTotal => 'rmBagTotal'.tr;
-  static String get rmPendingHandover => 'rmPendingHandover'.tr;
-  static String get rmRecentHandovers => 'rmRecentHandovers'.tr;
-  static String get rmNoBagCollections => 'rmNoBagCollections'.tr;
-  static String get rmNoBagCollectionsSubtitle =>
-      'rmNoBagCollectionsSubtitle'.tr;
-  static String get rmNoHandoversYet => 'rmNoHandoversYet'.tr;
-  static String get rmHandOverBag => 'rmHandOverBag'.tr;
-  static String get rmCountedCash => 'rmCountedCash'.tr;
-  static String get rmCountedCashHint => 'rmCountedCashHint'.tr;
-  static String get rmCashierName => 'rmCashierName'.tr;
-  static String get rmCashierNameHint => 'rmCashierNameHint'.tr;
-  static String get rmHandoverNotes => 'rmHandoverNotes'.tr;
-  static String get rmHandoverNotesHint => 'rmHandoverNotesHint'.tr;
-  static String get rmCashCountMismatch => 'rmCashCountMismatch'.tr;
-  static String get rmCashierRequired => 'rmCashierRequired'.tr;
-  static String get rmBagEmpty => 'rmBagEmpty'.tr;
-  static String get rmConfirmHandover => 'rmConfirmHandover'.tr;
-  static String rmConfirmHandoverMessage(String amount, String count) =>
-      'rmConfirmHandoverMessage'.trParams({'amount': amount, 'count': count});
-  static String rmHandoverRecorded(String reference) =>
-      'rmHandoverRecorded'.trParams({'reference': reference});
-  static String get rmHandoverFailed => 'rmHandoverFailed'.tr;
-  static String get rmHandoverNotFound => 'rmHandoverNotFound'.tr;
-  static String get rmHandoverReference => 'rmHandoverReference'.tr;
-  static String get rmHandoverAt => 'rmHandoverAt'.tr;
-  static String get rmHandoverCollections => 'rmHandoverCollections'.tr;
-  static String rmHandoverReceiptsCount(int count) =>
-      'rmHandoverReceiptsCount'.trParams({'count': '$count'});
+  static String dmCollectionRecorded(String receipt) =>
+      'dmCollectionRecorded'.trParams({'receipt': receipt});
+  static String get dmCollectionFailed => 'dmCollectionFailed'.tr;
+  static String get dmCollectionDetailTitle => 'dmCollectionDetailTitle'.tr;
+  static String get dmSearchCollectionHint => 'dmSearchCollectionHint'.tr;
+  static String get dmNoCollectionsMatchSearch =>
+      'dmNoCollectionsMatchSearch'.tr;
+  static String get dmCollectionNotFound => 'dmCollectionNotFound'.tr;
+  static String dmHistoryTotals(int count, String total) =>
+      'dmHistoryTotals'.trParams({'count': '$count', 'total': total});
+  static String get dmReceiptNumber => 'dmReceiptNumber'.tr;
+  static String get dmCollectedAt => 'dmCollectedAt'.tr;
+  static String get dmCollectionStatus => 'dmCollectionStatus'.tr;
+  static String get dmCollectionMode => 'dmCollectionMode'.tr;
+  static String get dmCollectionAllocations => 'dmCollectionAllocations'.tr;
+  static String get dmUnallocatedBatch => 'dmUnallocatedBatch'.tr;
+  static String get dmUnallocatedBatchHint => 'dmUnallocatedBatchHint'.tr;
+  static String get dmHandoverTitle => 'dmHandoverTitle'.tr;
+  static String get dmHandoverConfirmTitle => 'dmHandoverConfirmTitle'.tr;
+  static String get dmBagCash => 'dmBagCash'.tr;
+  static String get dmBagCheque => 'dmBagCheque'.tr;
+  static String get dmBagTotal => 'dmBagTotal'.tr;
+  static String get dmPendingHandover => 'dmPendingHandover'.tr;
+  static String get dmRecentHandovers => 'dmRecentHandovers'.tr;
+  static String get dmNoBagCollections => 'dmNoBagCollections'.tr;
+  static String get dmNoBagCollectionsSubtitle =>
+      'dmNoBagCollectionsSubtitle'.tr;
+  static String get dmNoHandoversYet => 'dmNoHandoversYet'.tr;
+  static String get dmHandOverBag => 'dmHandOverBag'.tr;
+  static String get dmCountedCash => 'dmCountedCash'.tr;
+  static String get dmCountedCashHint => 'dmCountedCashHint'.tr;
+  static String get dmCashierName => 'dmCashierName'.tr;
+  static String get dmCashierNameHint => 'dmCashierNameHint'.tr;
+  static String get dmHandoverNotes => 'dmHandoverNotes'.tr;
+  static String get dmHandoverNotesHint => 'dmHandoverNotesHint'.tr;
+  static String get dmCashCountMismatch => 'dmCashCountMismatch'.tr;
+  static String get dmCashierRequired => 'dmCashierRequired'.tr;
+  static String get dmBagEmpty => 'dmBagEmpty'.tr;
+  static String get dmConfirmHandover => 'dmConfirmHandover'.tr;
+  static String dmConfirmHandoverMessage(String amount, String count) =>
+      'dmConfirmHandoverMessage'.trParams({'amount': amount, 'count': count});
+  static String dmHandoverRecorded(String reference) =>
+      'dmHandoverRecorded'.trParams({'reference': reference});
+  static String get dmHandoverFailed => 'dmHandoverFailed'.tr;
+  static String get dmHandoverNotFound => 'dmHandoverNotFound'.tr;
+  static String get dmHandoverReference => 'dmHandoverReference'.tr;
+  static String get dmHandoverAt => 'dmHandoverAt'.tr;
+  static String get dmHandoverCollections => 'dmHandoverCollections'.tr;
+  static String dmHandoverReceiptsCount(int count) =>
+      'dmHandoverReceiptsCount'.trParams({'count': '$count'});
   static String get emptyNoHandoverTitle => 'emptyNoHandoverTitle'.tr;
 
   // Common labels
@@ -587,8 +587,6 @@ class AppTexts {
   static String get roleOrderBookerSubtitle => 'roleOrderBookerSubtitle'.tr;
   static String get roleDeliveryMan => 'roleDeliveryMan'.tr;
   static String get roleDeliveryManSubtitle => 'roleDeliveryManSubtitle'.tr;
-  static String get roleRecoveryMan => 'roleRecoveryMan'.tr;
-  static String get roleRecoveryManSubtitle => 'roleRecoveryManSubtitle'.tr;
 
   // Date/time
   static String get selectDateTime => 'selectDateTime'.tr;

@@ -40,7 +40,7 @@ class ApiClient extends GetxService {
         onError: (error, handler) async {
           if (error.response?.statusCode == 401) {
             final token = await _storage.getToken();
-            // UI-only DM/RM sessions use a mock token — ignore 401 so we
+            // UI-only DM sessions use a mock token — ignore 401 so we
             // don't kick the user out while building those modules.
             final isUiMock =
                 token != null && token.startsWith('ui-mock-token-');

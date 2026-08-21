@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/storage_service.dart';
 
 /// Disk keys for last-successful payloads and the app-wide sync queue.
-/// Shared by all roles (OB / DM / RM) — do not split into role-specific services.
+/// Shared by all roles (OB / DM) — do not split into role-specific services.
 abstract class OfflineCacheKeys {
   // Order Booker
   static const shopsMine = 'offline_cache_ob_shops_mine';
@@ -35,18 +35,17 @@ abstract class OfflineCacheKeys {
     zones,
   ];
 
-  // Delivery Man
+  // Delivery Man — deliveries
   static const dmOrders = 'offline_cache_dm_orders_v2';
   static const dmPickup = 'offline_cache_dm_pickup_v2';
   static const dmReturn = 'offline_cache_dm_return_v2';
 
-  // Recovery Man
-  static const rmShops = 'offline_cache_rm_shops_v1';
-  static const rmInvoices = 'offline_cache_rm_invoices_v1';
-  static const rmCollections = 'offline_cache_rm_collections_v1';
-  static const rmHandovers = 'offline_cache_rm_handovers_v1';
-  static const rmTargets = 'offline_cache_rm_targets';
-  static const rmDashboard = 'offline_cache_rm_dashboard';
+  // Delivery Man — collections / handover
+  static const dmShops = 'offline_cache_dm_shops_v1';
+  static const dmInvoices = 'offline_cache_dm_invoices_v1';
+  static const dmCollections = 'offline_cache_dm_collections_v1';
+  static const dmHandovers = 'offline_cache_dm_handovers_v1';
+  static const dmCollectionTargets = 'offline_cache_dm_collection_targets_v1';
 
   /// Pending mutation queue for every role.
   static const syncQueue = 'offline_cache_sync_queue';

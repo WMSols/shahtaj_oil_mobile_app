@@ -4,7 +4,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/responsive/app_responsive.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 
-/// Shared shimmer primitives for OB / DM / RM cold loads.
+/// Shared shimmer primitives for OB / DM cold loads.
 ///
 /// Wrap a skeleton tree once with [AppShimmer]; use [box]/[line]/[circle]/
 /// [chip]/[listCard] as plain bones inside that tree.

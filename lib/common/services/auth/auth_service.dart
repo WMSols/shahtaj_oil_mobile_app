@@ -26,8 +26,8 @@ class AuthService extends GetxService {
     required String password,
     required UserRole role,
   }) async {
-    // DM / RM: UI-only mock session — no API until those modules are wired.
-    if (role == UserRole.deliveryMan || role == UserRole.recoveryMan) {
+    // Delivery Man: UI-only mock session — no API until modules are wired.
+    if (role == UserRole.deliveryMan) {
       return _loginUiOnly(email: email, role: role);
     }
 
@@ -81,9 +81,7 @@ class AuthService extends GetxService {
     required UserRole role,
   }) async {
     final trimmed = email.trim();
-    final display = trimmed.isEmpty
-        ? (role == UserRole.recoveryMan ? 'Recovery Man' : 'Delivery Man')
-        : trimmed.split('@').first;
+    final display = trimmed.isEmpty ? 'Delivery Man' : trimmed.split('@').first;
 
     final user = UserModel(
       id: 'ui-${role.name}',

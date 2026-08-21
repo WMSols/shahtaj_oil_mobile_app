@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/images/app_images.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 
-enum UserRole { orderBooker, deliveryMan, recoveryMan }
+enum UserRole { orderBooker, deliveryMan }
 
 enum OrderStatus { draft, submitted, confirmed, delivered, cancelled }
 
@@ -40,19 +40,16 @@ extension UserRoleX on UserRole {
   String get label => switch (this) {
     UserRole.orderBooker => AppTexts.roleOrderBooker,
     UserRole.deliveryMan => AppTexts.roleDeliveryMan,
-    UserRole.recoveryMan => AppTexts.roleRecoveryMan,
   };
 
   String get imageAsset => switch (this) {
     UserRole.orderBooker => AppImages.selectRoleOrderBooker,
     UserRole.deliveryMan => AppImages.selectRoleDeliveryMan,
-    UserRole.recoveryMan => AppImages.selectRoleRecoveryMan,
   };
 
   String get subtitle => switch (this) {
     UserRole.orderBooker => AppTexts.roleOrderBookerSubtitle,
     UserRole.deliveryMan => AppTexts.roleDeliveryManSubtitle,
-    UserRole.recoveryMan => AppTexts.roleRecoveryManSubtitle,
   };
 }
 
@@ -118,9 +115,9 @@ extension CollectionStatusX on CollectionStatus {
 
 extension PaymentMethodX on PaymentMethod {
   String get label => switch (this) {
-    PaymentMethod.cash => AppTexts.rmPaymentCash,
-    PaymentMethod.cheque => AppTexts.rmPaymentCheque,
-    PaymentMethod.bank => AppTexts.rmPaymentBank,
+    PaymentMethod.cash => AppTexts.dmPaymentCash,
+    PaymentMethod.cheque => AppTexts.dmPaymentCheque,
+    PaymentMethod.bank => AppTexts.dmPaymentBank,
   };
 
   Color get chipColor => switch (this) {
@@ -146,8 +143,8 @@ extension PaymentMethodX on PaymentMethod {
 
 extension CollectionModeX on CollectionMode {
   String get label => switch (this) {
-    CollectionMode.invoiceWise => AppTexts.rmModeInvoiceWise,
-    CollectionMode.batch => AppTexts.rmModeBatch,
+    CollectionMode.invoiceWise => AppTexts.dmModeInvoiceWise,
+    CollectionMode.batch => AppTexts.dmModeBatch,
   };
 
   Color get chipColor => switch (this) {
@@ -169,8 +166,8 @@ extension CollectionModeX on CollectionMode {
 
 extension HandoverStatusX on HandoverStatus {
   String get label => switch (this) {
-    HandoverStatus.pending => AppTexts.rmHandoverStatusPending,
-    HandoverStatus.completed => AppTexts.rmHandoverStatusCompleted,
+    HandoverStatus.pending => AppTexts.dmHandoverStatusPending,
+    HandoverStatus.completed => AppTexts.dmHandoverStatusCompleted,
   };
 
   Color get chipColor => switch (this) {
