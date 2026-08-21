@@ -1,13 +1,16 @@
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 
-class RmTargetsModel {
-  const RmTargetsModel({this.recoveryCurrent = 0, this.recoveryTarget = 0});
+class DmCollectionTargetsModel {
+  const DmCollectionTargetsModel({
+    this.recoveryCurrent = 0,
+    this.recoveryTarget = 0,
+  });
 
   final double recoveryCurrent;
   final double recoveryTarget;
 
-  factory RmTargetsModel.fromJson(Map<String, dynamic> json) {
-    return RmTargetsModel(
+  factory DmCollectionTargetsModel.fromJson(Map<String, dynamic> json) {
+    return DmCollectionTargetsModel(
       recoveryCurrent: ApiMap.asDouble(json['recovery_current']) ?? 0,
       recoveryTarget: ApiMap.asDouble(json['recovery_target']) ?? 0,
     );

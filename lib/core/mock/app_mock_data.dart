@@ -6,14 +6,14 @@ import 'package:shahtaj_oil_mobile_app/delivery_man/models/pickup/dm_pickup_mode
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/return/dm_return_model.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/dashboard/dm_stock_item_model.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/orders/dm_timeline_event_model.dart';
-import 'package:shahtaj_oil_mobile_app/recovery_man/models/collections/rm_collection_line_model.dart';
-import 'package:shahtaj_oil_mobile_app/recovery_man/models/collections/rm_collection_summary_model.dart';
-import 'package:shahtaj_oil_mobile_app/recovery_man/models/collections/rm_invoice_model.dart';
-import 'package:shahtaj_oil_mobile_app/recovery_man/models/collections/rm_shop_due_model.dart';
-import 'package:shahtaj_oil_mobile_app/recovery_man/models/dashboard/rm_targets_model.dart';
-import 'package:shahtaj_oil_mobile_app/recovery_man/models/handover/rm_handover_summary_model.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/models/collections/dm_collection_line_model.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/models/collections/dm_collection_summary_model.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/models/collections/dm_invoice_model.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/models/collections/dm_shop_due_model.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/models/dashboard/dm_collection_targets_model.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/models/handover/dm_handover_summary_model.dart';
 
-/// Mock payloads still used by DM/RM stubs.
+/// Mock payloads still used by DM stubs (deliveries + collections).
 /// Order Booker uses live APIs + [OfflineCacheService].
 class AppMockData {
   AppMockData._();
@@ -230,12 +230,15 @@ class AppMockData {
   static DmReturnModel get dmReturnTemplate =>
       const DmReturnModel(id: '', deliveryId: 'shift-20260716', leftover: []);
 
-  static RmTargetsModel get rmTargets =>
-      const RmTargetsModel(recoveryCurrent: 145000, recoveryTarget: 250000);
+  static DmCollectionTargetsModel get dmCollectionTargets =>
+      const DmCollectionTargetsModel(
+        recoveryCurrent: 145000,
+        recoveryTarget: 250000,
+      );
 
-  static List<RmShopDueModel> get rmShops => const [
-    RmShopDueModel(
-      id: 'rm-shop-001',
+  static List<DmShopDueModel> get dmShops => const [
+    DmShopDueModel(
+      id: 'dm-shop-001',
       name: 'Al Madina Store',
       ownerName: 'Ahmed Khan',
       phone: '03001234567',
@@ -245,8 +248,8 @@ class AppMockData {
       latitude: 33.5985,
       longitude: 73.0440,
     ),
-    RmShopDueModel(
-      id: 'rm-shop-002',
+    DmShopDueModel(
+      id: 'dm-shop-002',
       name: 'Khan General Store',
       ownerName: 'Bilal Khan',
       phone: '03115551234',
@@ -256,8 +259,8 @@ class AppMockData {
       latitude: 33.6938,
       longitude: 73.0652,
     ),
-    RmShopDueModel(
-      id: 'rm-shop-003',
+    DmShopDueModel(
+      id: 'dm-shop-003',
       name: 'City Mart',
       ownerName: 'Usman Ali',
       phone: '03219876543',
@@ -267,8 +270,8 @@ class AppMockData {
       latitude: 33.5651,
       longitude: 73.1266,
     ),
-    RmShopDueModel(
-      id: 'rm-shop-004',
+    DmShopDueModel(
+      id: 'dm-shop-004',
       name: 'Fresh Mart',
       ownerName: 'Sara Malik',
       phone: '03337654321',
@@ -280,84 +283,84 @@ class AppMockData {
     ),
   ];
 
-  static List<RmInvoiceModel> get rmInvoices {
+  static List<DmInvoiceModel> get dmInvoices {
     final today = DateTime.now();
     return [
-      RmInvoiceModel(
-        id: 'rm-inv-001',
-        shopId: 'rm-shop-001',
+      DmInvoiceModel(
+        id: 'dm-inv-001',
+        shopId: 'dm-shop-001',
         invoiceNumber: 'INV-24081',
         issuedAt: today.subtract(const Duration(days: 18)),
         originalAmount: 22000,
         remainingAmount: 18000,
       ),
-      RmInvoiceModel(
-        id: 'rm-inv-002',
-        shopId: 'rm-shop-001',
+      DmInvoiceModel(
+        id: 'dm-inv-002',
+        shopId: 'dm-shop-001',
         invoiceNumber: 'INV-24102',
         issuedAt: today.subtract(const Duration(days: 9)),
         originalAmount: 15000,
         remainingAmount: 15000,
       ),
-      RmInvoiceModel(
-        id: 'rm-inv-003',
-        shopId: 'rm-shop-001',
+      DmInvoiceModel(
+        id: 'dm-inv-003',
+        shopId: 'dm-shop-001',
         invoiceNumber: 'INV-24118',
         issuedAt: today.subtract(const Duration(days: 4)),
         originalAmount: 12000,
         remainingAmount: 12000,
       ),
-      RmInvoiceModel(
-        id: 'rm-inv-004',
-        shopId: 'rm-shop-002',
+      DmInvoiceModel(
+        id: 'dm-inv-004',
+        shopId: 'dm-shop-002',
         invoiceNumber: 'INV-24090',
         issuedAt: today.subtract(const Duration(days: 14)),
         originalAmount: 16000,
         remainingAmount: 12500,
       ),
-      RmInvoiceModel(
-        id: 'rm-inv-005',
-        shopId: 'rm-shop-002',
+      DmInvoiceModel(
+        id: 'dm-inv-005',
+        shopId: 'dm-shop-002',
         invoiceNumber: 'INV-24111',
         issuedAt: today.subtract(const Duration(days: 6)),
         originalAmount: 10000,
         remainingAmount: 10000,
       ),
-      RmInvoiceModel(
-        id: 'rm-inv-006',
-        shopId: 'rm-shop-003',
+      DmInvoiceModel(
+        id: 'dm-inv-006',
+        shopId: 'dm-shop-003',
         invoiceNumber: 'INV-24070',
         issuedAt: today.subtract(const Duration(days: 28)),
         originalAmount: 30000,
         remainingAmount: 28000,
       ),
-      RmInvoiceModel(
-        id: 'rm-inv-007',
-        shopId: 'rm-shop-003',
+      DmInvoiceModel(
+        id: 'dm-inv-007',
+        shopId: 'dm-shop-003',
         invoiceNumber: 'INV-24095',
         issuedAt: today.subtract(const Duration(days: 16)),
         originalAmount: 25000,
         remainingAmount: 25000,
       ),
-      RmInvoiceModel(
-        id: 'rm-inv-008',
-        shopId: 'rm-shop-003',
+      DmInvoiceModel(
+        id: 'dm-inv-008',
+        shopId: 'dm-shop-003',
         invoiceNumber: 'INV-24120',
         issuedAt: today.subtract(const Duration(days: 5)),
         originalAmount: 15000,
         remainingAmount: 15000,
       ),
-      RmInvoiceModel(
-        id: 'rm-inv-009',
-        shopId: 'rm-shop-003',
+      DmInvoiceModel(
+        id: 'dm-inv-009',
+        shopId: 'dm-shop-003',
         invoiceNumber: 'INV-24131',
         issuedAt: today.subtract(const Duration(days: 2)),
         originalAmount: 10000,
         remainingAmount: 10000,
       ),
-      RmInvoiceModel(
-        id: 'rm-inv-010',
-        shopId: 'rm-shop-004',
+      DmInvoiceModel(
+        id: 'dm-inv-010',
+        shopId: 'dm-shop-004',
         invoiceNumber: 'INV-24125',
         issuedAt: today.subtract(const Duration(days: 3)),
         originalAmount: 12000,
@@ -366,13 +369,13 @@ class AppMockData {
     ];
   }
 
-  static List<RmCollectionSummaryModel> get rmCollections {
+  static List<DmCollectionSummaryModel> get dmCollections {
     final now = DateTime.now();
     return [
-      RmCollectionSummaryModel(
-        id: 'rm-col-001',
+      DmCollectionSummaryModel(
+        id: 'dm-col-001',
         receiptNumber: 'RC-10021',
-        shopId: 'rm-shop-001',
+        shopId: 'dm-shop-001',
         shopName: 'Al Madina Store',
         amount: 15000,
         collectedAt: now.subtract(const Duration(hours: 2)),
@@ -380,22 +383,22 @@ class AppMockData {
         mode: CollectionMode.invoiceWise,
         status: CollectionStatus.collected,
         lines: const [
-          RmCollectionLineModel(
-            invoiceId: 'rm-inv-001',
+          DmCollectionLineModel(
+            invoiceId: 'dm-inv-001',
             invoiceNumber: 'INV-24081',
             amount: 4000,
           ),
-          RmCollectionLineModel(
-            invoiceId: 'rm-inv-002',
+          DmCollectionLineModel(
+            invoiceId: 'dm-inv-002',
             invoiceNumber: 'INV-24102',
             amount: 11000,
           ),
         ],
       ),
-      RmCollectionSummaryModel(
-        id: 'rm-col-002',
+      DmCollectionSummaryModel(
+        id: 'dm-col-002',
         receiptNumber: 'RC-10022',
-        shopId: 'rm-shop-002',
+        shopId: 'dm-shop-002',
         shopName: 'Khan General Store',
         amount: 8000,
         collectedAt: now.subtract(const Duration(hours: 4)),
@@ -404,22 +407,22 @@ class AppMockData {
         status: CollectionStatus.collected,
         reference: 'CHQ-4412',
         lines: const [
-          RmCollectionLineModel(
-            invoiceId: 'rm-inv-004',
+          DmCollectionLineModel(
+            invoiceId: 'dm-inv-004',
             invoiceNumber: 'INV-24090',
             amount: 3500,
           ),
-          RmCollectionLineModel(
-            invoiceId: 'rm-inv-005',
+          DmCollectionLineModel(
+            invoiceId: 'dm-inv-005',
             invoiceNumber: 'INV-24111',
             amount: 4500,
           ),
         ],
       ),
-      RmCollectionSummaryModel(
-        id: 'rm-col-003',
+      DmCollectionSummaryModel(
+        id: 'dm-col-003',
         receiptNumber: 'RC-10023',
-        shopId: 'rm-shop-003',
+        shopId: 'dm-shop-003',
         shopName: 'City Mart',
         amount: 25000,
         collectedAt: now.subtract(const Duration(hours: 6)),
@@ -429,20 +432,20 @@ class AppMockData {
         reference: 'TRX-7781',
         notes: 'Same-day bank transfer',
       ),
-      RmCollectionSummaryModel(
-        id: 'rm-col-004',
+      DmCollectionSummaryModel(
+        id: 'dm-col-004',
         receiptNumber: 'RC-09988',
-        shopId: 'rm-shop-004',
+        shopId: 'dm-shop-004',
         shopName: 'Fresh Mart',
         amount: 9000,
         collectedAt: now.subtract(const Duration(days: 1, hours: 3)),
         method: PaymentMethod.cash,
         mode: CollectionMode.invoiceWise,
         status: CollectionStatus.handedOver,
-        handoverId: 'rm-ho-001',
+        handoverId: 'dm-ho-001',
         lines: const [
-          RmCollectionLineModel(
-            invoiceId: 'rm-inv-010',
+          DmCollectionLineModel(
+            invoiceId: 'dm-inv-010',
             invoiceNumber: 'INV-24125',
             amount: 9000,
           ),
@@ -451,16 +454,16 @@ class AppMockData {
     ];
   }
 
-  static List<RmHandoverSummaryModel> get rmHandovers {
+  static List<DmHandoverSummaryModel> get dmHandovers {
     final now = DateTime.now();
     return [
-      RmHandoverSummaryModel(
-        id: 'rm-ho-001',
+      DmHandoverSummaryModel(
+        id: 'dm-ho-001',
         reference: 'HO-10001',
         handedAt: now.subtract(const Duration(days: 1, hours: 1)),
         cashAmount: 9000,
         chequeAmount: 0,
-        collectionIds: const ['rm-col-004'],
+        collectionIds: const ['dm-col-004'],
         cashierName: 'Ahmed Khan',
         notes: 'Evening close',
       ),
@@ -468,7 +471,7 @@ class AppMockData {
   }
 
   /// Managers / cashiers the recovery staff can hand the bag over to.
-  static const List<String> rmManagers = [
+  static const List<String> dmManagers = [
     'Ahmed Khan',
     'Sara Ali',
     'Bilal Hussain',

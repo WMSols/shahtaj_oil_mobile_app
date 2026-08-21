@@ -1,7 +1,7 @@
-import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
+﻿import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 
-class RmInvoiceModel {
-  const RmInvoiceModel({
+class DmInvoiceModel {
+  const DmInvoiceModel({
     required this.id,
     required this.shopId,
     required this.invoiceNumber,
@@ -19,8 +19,8 @@ class RmInvoiceModel {
 
   bool get isSettled => remainingAmount <= 0;
 
-  factory RmInvoiceModel.fromJson(Map<String, dynamic> json) {
-    return RmInvoiceModel(
+  factory DmInvoiceModel.fromJson(Map<String, dynamic> json) {
+    return DmInvoiceModel(
       id: ApiMap.asString(json['id']) ?? '',
       shopId: ApiMap.asString(json['shop_id']) ?? '',
       invoiceNumber: ApiMap.asString(json['invoice_number']) ?? '',
@@ -41,8 +41,8 @@ class RmInvoiceModel {
     };
   }
 
-  RmInvoiceModel copyWith({double? remainingAmount}) {
-    return RmInvoiceModel(
+  DmInvoiceModel copyWith({double? remainingAmount}) {
+    return DmInvoiceModel(
       id: id,
       shopId: shopId,
       invoiceNumber: invoiceNumber,

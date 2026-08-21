@@ -98,7 +98,7 @@ class PresenceService extends GetxService with WidgetsBindingObserver {
 
   bool get _hasSession => _session.user.value != null;
 
-  /// Live presence APIs exist only for Order Booker. DM/RM use mock UI sessions.
+  /// Live presence APIs exist only for Order Booker. DM use mock UI sessions.
   bool get _shouldUsePresenceApi =>
       _hasSession && _session.role.value == UserRole.orderBooker;
 

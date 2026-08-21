@@ -81,8 +81,8 @@ class AuthController extends GetxController {
     final login = emailController.text.trim();
     final password = passwordController.text;
 
-    // DM / RM: re-enable this block to toast + stop login while modules are WIP.
-    // if (role == UserRole.deliveryMan || role == UserRole.recoveryMan) {
+    // DM: re-enable this block to toast + stop login while modules are WIP.
+    // if (role == UserRole.deliveryMan) {
     //   AppToast.showInformation(AppTexts.moduleUnderDevelopment);
     //   return;
     // }

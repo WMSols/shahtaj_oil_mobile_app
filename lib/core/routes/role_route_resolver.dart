@@ -9,7 +9,6 @@ class RoleRouteResolver {
   static String homeRoute(UserRole role) => switch (role) {
     UserRole.orderBooker => AppRoutes.orderBooker,
     UserRole.deliveryMan => AppRoutes.deliveryMan,
-    UserRole.recoveryMan => AppRoutes.recoveryMan,
   };
 
   static void goToRoleHome(UserRole role) => Get.offAllNamed(homeRoute(role));

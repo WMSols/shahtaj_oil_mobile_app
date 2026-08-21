@@ -10,7 +10,6 @@ class AppRoutes {
   // Main shells
   static const orderBooker = '/order-booker';
   static const deliveryMan = '/delivery-man';
-  static const recoveryMan = '/recovery-man';
 
   // Order booker (pushed / deep-linkable)
   static const obRouteDetail = '/order-booker/routes/:id';
@@ -22,14 +21,14 @@ class AppRoutes {
   static const obNotes = '/order-booker/notes';
   static const obVisitDetail = '/order-booker/visits/:id';
 
-  // Delivery man (pushed / deep-linkable)
+  // Delivery man — deliveries (pushed / deep-linkable)
   static const dmOrderDetail = '/delivery-man/orders/:id';
   static const dmDeliveryDetail = '/delivery-man/deliveries/:id';
 
-  // Recovery man (pushed / deep-linkable)
-  static const rmShopOutstanding = '/recovery-man/shops/:id/outstanding';
-  static const rmRecordCollection = '/recovery-man/collections/record';
-  static const rmCollectionDetail = '/recovery-man/collections/:id';
-  static const rmHandoverConfirm = '/recovery-man/handover/confirm';
-  static const rmHandoverDetail = '/recovery-man/handover/:id';
+  // Delivery man — collections / handover (pushed / deep-linkable)
+  static const dmShopOutstanding = '/delivery-man/shops/:id/outstanding';
+  static const dmRecordCollection = '/delivery-man/collections/record';
+  static const dmCollectionDetail = '/delivery-man/collections/:id';
+  static const dmHandoverConfirm = '/delivery-man/handover/confirm';
+  static const dmHandoverDetail = '/delivery-man/handover/:id';
 }

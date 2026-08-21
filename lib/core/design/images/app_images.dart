@@ -19,8 +19,6 @@ class AppImages {
       'assets/images/onboarding/select_role_ob.png';
   static const String selectRoleDeliveryMan =
       'assets/images/onboarding/select_role_dm.png';
-  static const String selectRoleRecoveryMan =
-      'assets/images/onboarding/select_role_rm.png';
 
   // Empty — common
   static const String empty = 'assets/images/empty/common/empty.png';
@@ -59,12 +57,10 @@ class AppImages {
       'assets/images/empty/delivery_man/empty_no_returns.png';
   static const String emptyNoDeliveries =
       'assets/images/empty/delivery_man/empty_no_deliveries.png';
-
-  // Empty — recovery man
   static const String emptyNoCollections =
-      'assets/images/empty/recovery_man/empty_no_collections.png';
+      'assets/images/empty/delivery_man/empty_no_collections.png';
   static const String emptyNoHandover =
-      'assets/images/empty/recovery_man/empty_no_handover.png';
+      'assets/images/empty/delivery_man/empty_no_handover.png';
   static const String emptyNoInvoices =
-      'assets/images/empty/recovery_man/empty_no_invoices.png';
+      'assets/images/empty/delivery_man/empty_no_invoices.png';
 }

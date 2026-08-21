@@ -1,7 +1,7 @@
-import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
+﻿import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 
-class RmShopDueModel {
-  const RmShopDueModel({
+class DmShopDueModel {
+  const DmShopDueModel({
     required this.id,
     required this.name,
     this.ownerName = '',
@@ -26,8 +26,8 @@ class RmShopDueModel {
   bool get hasHighDue => outstanding >= 50000;
   bool get isPartial => outstanding > 0 && invoiceCount > 0;
 
-  factory RmShopDueModel.fromJson(Map<String, dynamic> json) {
-    return RmShopDueModel(
+  factory DmShopDueModel.fromJson(Map<String, dynamic> json) {
+    return DmShopDueModel(
       id: ApiMap.asString(json['id']) ?? '',
       name: ApiMap.asString(json['name']) ?? '',
       ownerName: ApiMap.asString(json['owner_name']) ?? '',
@@ -54,8 +54,8 @@ class RmShopDueModel {
     };
   }
 
-  RmShopDueModel copyWith({double? outstanding, int? invoiceCount}) {
-    return RmShopDueModel(
+  DmShopDueModel copyWith({double? outstanding, int? invoiceCount}) {
+    return DmShopDueModel(
       id: id,
       name: name,
       ownerName: ownerName,
