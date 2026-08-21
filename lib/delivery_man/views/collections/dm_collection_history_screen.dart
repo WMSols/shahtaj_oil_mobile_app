@@ -1,0 +1,21 @@
+﻿import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_scaffold.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/collections/dm_collection_history_controller.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/widgets/collections/dm_collection_history_content.dart';
+
+class DmCollectionHistoryScreen extends GetView<DmCollectionHistoryController> {
+  const DmCollectionHistoryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const AppScaffold(
+      body: ColoredBox(
+        color: AppColors.scaffoldBackground,
+        child: DmCollectionHistoryContent(),
+      ),
+    );
+  }
+}
