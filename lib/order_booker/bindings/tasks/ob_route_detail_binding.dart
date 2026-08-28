@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 
-import 'package:shahtaj_oil_mobile_app/order_booker/shell/order_booker_services_binding.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/shell/ob_services_binding.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/controllers/tasks/ob_route_detail_controller.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/tasks/ob_task_service.dart';
 
