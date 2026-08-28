@@ -28,6 +28,7 @@ class DmCollectionStore extends GetxService {
   final handovers = <DmHandoverSummaryModel>[];
 
   bool _hydrated = false;
+  Future<void>? _hydrateFuture;
   static const _role = 'deliveryMan';
 
   @override
@@ -37,9 +38,10 @@ class DmCollectionStore extends GetxService {
     _cache.registerSyncHandler(_role, 'submit_handover', (_) async {});
   }
 
-  Future<void> hydrate() async {
+  Future<void> hydrate() => _hydrateFuture ??= _hydrateFromCache();
+
+  Future<void> _hydrateFromCache() async {
     if (_hydrated) return;
-    _hydrated = true;
 
     final cachedShops = await _cache.readList(OfflineCacheKeys.dmShops);
     final cachedInvoices = await _cache.readList(OfflineCacheKeys.dmInvoices);
@@ -47,6 +49,11 @@ class DmCollectionStore extends GetxService {
       OfflineCacheKeys.dmCollections,
     );
     final cachedHandovers = await _cache.readList(OfflineCacheKeys.dmHandovers);
+
+    shops.clear();
+    invoices.clear();
+    collections.clear();
+    handovers.clear();
 
     if (cachedShops.isNotEmpty &&
         cachedInvoices.isNotEmpty &&
@@ -64,16 +71,7 @@ class DmCollectionStore extends GetxService {
       handovers.addAll(AppMockData.dmHandovers);
       await _persistAll();
     }
-  }
-
-  /// Legacy synchronous seed used by services that do not await [hydrate].
-  void seedIfEmpty() {
-    if (_hydrated || shops.isNotEmpty) return;
     _hydrated = true;
-    shops.addAll(AppMockData.dmShops);
-    invoices.addAll(AppMockData.dmInvoices);
-    collections.addAll(AppMockData.dmCollections);
-    handovers.addAll(AppMockData.dmHandovers);
   }
 
   // ── Persistence helpers ───────────────────────────────────────────────────
@@ -233,7 +231,7 @@ class DmCollectionStore extends GetxService {
     String reference = '',
     String? proofPhotoBase64,
   }) async {
-    seedIfEmpty();
+    await hydrate();
     final shopIndex = shops.indexWhere((shop) => shop.id == shopId);
     if (shopIndex < 0) throw StateError('Shop not found');
 
@@ -316,7 +314,7 @@ class DmCollectionStore extends GetxService {
     String cashierName = '',
     String notes = '',
   }) async {
-    seedIfEmpty();
+    await hydrate();
     final bag = bagCollections;
     if (bag.isEmpty) throw StateError('Bag is empty');
     final expectedCash = _money(cashInBag);
