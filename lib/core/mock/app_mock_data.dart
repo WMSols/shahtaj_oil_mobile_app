@@ -10,7 +10,7 @@ import 'package:shahtaj_oil_mobile_app/delivery_man/models/collections/dm_collec
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/collections/dm_collection_summary_model.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/collections/dm_invoice_model.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/collections/dm_shop_due_model.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/models/dashboard/dm_collection_targets_model.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/models/dashboard/dm_targets_model.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/handover/dm_handover_summary_model.dart';
 
 /// Mock payloads still used by DM stubs (deliveries + collections).
@@ -230,11 +230,12 @@ class AppMockData {
   static DmReturnModel get dmReturnTemplate =>
       const DmReturnModel(id: '', deliveryId: 'shift-20260716', leftover: []);
 
-  static DmCollectionTargetsModel get dmCollectionTargets =>
-      const DmCollectionTargetsModel(
-        recoveryCurrent: 145000,
-        recoveryTarget: 250000,
-      );
+  static DmTargetsModel get dmTargets => const DmTargetsModel(
+    deliveryTarget: 10,
+    deliveryValueTarget: 180000,
+    recoveryCurrent: 145000,
+    recoveryTarget: 250000,
+  );
 
   static List<DmShopDueModel> get dmShops => const [
     DmShopDueModel(
