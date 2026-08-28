@@ -4,7 +4,7 @@ import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/cached_load_mixin.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/shell/order_booker_shell_controller.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/shell/ob_shell_controller.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/dashboard/ob_dashboard_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/schedule/ob_route_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/schedule/ob_weekly_schedule_model.dart';

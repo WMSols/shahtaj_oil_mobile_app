@@ -1,7 +1,7 @@
 import 'package:shahtaj_oil_mobile_app/common/bindings/account/account_binding.dart';
 import 'package:shahtaj_oil_mobile_app/common/controllers/shell/app_shell_controller.dart';
 import 'package:shahtaj_oil_mobile_app/common/views/account/account_screen.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/shell/order_booker_services_binding.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/shell/ob_services_binding.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_drawer_entry.dart';
