@@ -12,12 +12,14 @@ class AppFilterChip extends StatelessWidget {
     required this.selected,
     required this.onTap,
     this.color = AppColors.primary,
+    this.uppercase = true,
   });
 
   final String label;
   final bool selected;
   final VoidCallback onTap;
   final Color color;
+  final bool uppercase;
 
   factory AppFilterChip.shopStatus({
     required ShopStatus status,
@@ -74,7 +76,7 @@ class AppFilterChip extends StatelessWidget {
               vertical: AppSpacing.verticalValue(context, 0.008),
             ),
             child: Text(
-              label.toUpperCase(),
+              uppercase ? label.toUpperCase() : label,
               style: AppTextStyles.caption(context).copyWith(
                 color: textColor,
                 fontWeight: FontWeight.w600,

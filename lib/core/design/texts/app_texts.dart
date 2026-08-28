@@ -1,4 +1,4 @@
-﻿import 'package:get/get.dart';
+import 'package:get/get.dart';
 
 class AppTexts {
   AppTexts._();
@@ -54,6 +54,7 @@ class AppTexts {
   static const String languageUrduButton = 'اردو';
 
   static String get changeLanguage => 'changeLanguage'.tr;
+  static String get accountSettings => 'accountSettings'.tr;
   static String get getStarted => 'getStarted'.tr;
   static String get onboardingIntroTitle => 'onboardingIntroTitle'.tr;
   static String get onboardingIntroBody => 'onboardingIntroBody'.tr;
@@ -87,6 +88,8 @@ class AppTexts {
       'dmStockOnHandSummary'.trParams({'count': '$count'});
   static String dmStockLoadedLabel(int count) =>
       'dmStockLoadedLabel'.trParams({'count': '$count'});
+  static String dmStockOnHandCount(int count) =>
+      'dmStockOnHandCount'.trParams({'count': '$count'});
   static String get dmStockOnHandLabel => 'dmStockOnHandLabel'.tr;
   static String get dmStockOnHandTitle => 'dmStockOnHandTitle'.tr;
   static String get dmOrderIdLabel => 'dmOrderIdLabel'.tr;
@@ -99,6 +102,7 @@ class AppTexts {
   static String get navTodayTasks => 'navTodayTasks'.tr;
   static String get navShops => 'navShops'.tr;
   static String get navHistory => 'navHistory'.tr;
+  static String get navDeliveryHistory => 'navDeliveryHistory'.tr;
   static String get navOrders => 'navOrders'.tr;
   static String get navDeliveries => 'navDeliveries'.tr;
   static String get navCollections => 'navCollections'.tr;
@@ -140,13 +144,30 @@ class AppTexts {
       'obCombinedTargetHeadlineHint'.tr;
   static String get obTargetProductsSection => 'obTargetProductsSection'.tr;
   static String get dmRecoveryTarget => 'dmRecoveryTarget'.tr;
+  static String get dmDeliveryTarget => 'dmDeliveryTarget'.tr;
   static String get dmTargets => 'dmTargets'.tr;
   static String get dmDashboardSubtitle => 'dmDashboardSubtitle'.tr;
   static String get dmSnapshotCollected => 'dmSnapshotCollected'.tr;
   static String get dmSnapshotStillDue => 'dmSnapshotStillDue'.tr;
   static String get dmSnapshotCashInBag => 'dmSnapshotCashInBag'.tr;
   static String get dmRecentCollections => 'dmRecentCollections'.tr;
+  static String get dmRecentActivity => 'dmRecentActivity'.tr;
   static String get dmNoRecentCollections => 'dmNoRecentCollections'.tr;
+  static String get dmNoRecentActivity => 'dmNoRecentActivity'.tr;
+  static String dmShopsDueCount(int count) =>
+      'dmShopsDueCount'.trParams({'count': '$count'});
+  static String dmReceiptsCount(int count) =>
+      'dmReceiptsCount'.trParams({'count': '$count'});
+  static String dmProgressPercent(int percent) =>
+      'dmProgressPercent'.trParams({'percent': '$percent'});
+  static String get dmNextPickupSubtitle => 'dmNextPickupSubtitle'.tr;
+  static String dmHandoverNudgeSubtitle(String amount, String count) =>
+      'dmHandoverNudgeSubtitle'.trParams({'amount': amount, 'count': count});
+  static String get dmNextStopDelivery => 'dmNextStopDelivery'.tr;
+  static String get dmNextStopCollection => 'dmNextStopCollection'.tr;
+  static String get dmTargetsNoneSubtitle => 'dmTargetsNoneSubtitle'.tr;
+  static String get dmStockEmptySubtitle => 'dmStockEmptySubtitle'.tr;
+  static String get emptyNoStockTitle => 'emptyNoStockTitle'.tr;
   static String get dmTodayShopsTitle => 'dmTodayShopsTitle'.tr;
   static String get dmCollectionHistoryTitle => 'dmCollectionHistoryTitle'.tr;
   static String get dmSearchShopHint => 'dmSearchShopHint'.tr;
@@ -382,6 +403,33 @@ class AppTexts {
 
   // Delivery man screens
   static String get dmPickupTitle => 'dmPickupTitle'.tr;
+  static String get dmVanStockTitle => 'dmVanStockTitle'.tr;
+  static String get dmVanStockItems => 'dmVanStockItems'.tr;
+  static String get dmVanStatusLabel => 'dmVanStatusLabel'.tr;
+  static String get dmVanStatusNotLoaded => 'dmVanStatusNotLoaded'.tr;
+  static String get dmVanStatusLoaded => 'dmVanStatusLoaded'.tr;
+  static String get dmVanStatusUnloaded => 'dmVanStatusUnloaded'.tr;
+  static String dmVanExpectedCount(int count) =>
+      'dmVanExpectedCount'.trParams({'count': '$count'});
+  static String get dmVanLoadAll => 'dmVanLoadAll'.tr;
+  static String get dmVanUnloadAll => 'dmVanUnloadAll'.tr;
+  static String get dmVanConfirmLoad => 'dmVanConfirmLoad'.tr;
+  static String get dmVanConfirmUnload => 'dmVanConfirmUnload'.tr;
+  static String get dmVanCloseEmpty => 'dmVanCloseEmpty'.tr;
+  static String get dmVanLoadDone => 'dmVanLoadDone'.tr;
+  static String get dmVanUnloadDone => 'dmVanUnloadDone'.tr;
+  static String get dmVanLoadConfirmed => 'dmVanLoadConfirmed'.tr;
+  static String get dmVanUnloadConfirmed => 'dmVanUnloadConfirmed'.tr;
+  static String get dmVanNotesHint => 'dmVanNotesHint'.tr;
+  static String get dmVanLoadQtyLabel => 'dmVanLoadQtyLabel'.tr;
+  static String get dmVanUnloadQtyLabel => 'dmVanUnloadQtyLabel'.tr;
+  static String get dmVanUnloadQtyHint => 'dmVanUnloadQtyHint'.tr;
+  static String get dmVanHistoryTitle => 'dmVanHistoryTitle'.tr;
+  static String get dmVanHistoryLoad => 'dmVanHistoryLoad'.tr;
+  static String get dmVanHistoryUnload => 'dmVanHistoryUnload'.tr;
+  static String dmVanHistoryQty(int qty, int skus) =>
+      'dmVanHistoryQty'.trParams({'qty': '$qty', 'skus': '$skus'});
+  static String get dmNextUnloadSubtitle => 'dmNextUnloadSubtitle'.tr;
   static String get dmDeliverTitle => 'dmDeliverTitle'.tr;
   static String get dmDeliveryDetailTitle => 'dmDeliveryDetailTitle'.tr;
   static String get dmReturnTitle => 'dmReturnTitle'.tr;
@@ -581,6 +629,46 @@ class AppTexts {
   // Profile
   static String get accountDetails => 'accountDetails'.tr;
   static String get role => 'role'.tr;
+  static String get reportProblemTitle => 'reportProblemTitle'.tr;
+  static String get reportProblemWhatWrong => 'reportProblemWhatWrong'.tr;
+  static String get reportProblemDetailsHint => 'reportProblemDetailsHint'.tr;
+  static String get reportProblemNeedChipOrText =>
+      'reportProblemNeedChipOrText'.tr;
+  static String get reportProblemOtherNeedText =>
+      'reportProblemOtherNeedText'.tr;
+  static String get reportProblemSent => 'reportProblemSent'.tr;
+  static String get reportProblemChipRoadClosed =>
+      'reportProblemChipRoadClosed'.tr;
+  static String get reportProblemChipWrongRoute =>
+      'reportProblemChipWrongRoute'.tr;
+  static String get reportProblemChipShopClosed =>
+      'reportProblemChipShopClosed'.tr;
+  static String get reportProblemChipShopLocationWrong =>
+      'reportProblemChipShopLocationWrong'.tr;
+  static String get reportProblemChipAppNotWorking =>
+      'reportProblemChipAppNotWorking'.tr;
+  static String get reportProblemChipOther => 'reportProblemChipOther'.tr;
+  static String get reportProblemChipNoOrder => 'reportProblemChipNoOrder'.tr;
+  static String get reportProblemChipShopSaidNo =>
+      'reportProblemChipShopSaidNo'.tr;
+  static String get reportProblemChipShopInfoWrong =>
+      'reportProblemChipShopInfoWrong'.tr;
+  static String get reportProblemChipProductProblem =>
+      'reportProblemChipProductProblem'.tr;
+  static String get reportProblemChipStockShort =>
+      'reportProblemChipStockShort'.tr;
+  static String get reportProblemChipStockDamaged =>
+      'reportProblemChipStockDamaged'.tr;
+  static String get reportProblemChipWrongStock =>
+      'reportProblemChipWrongStock'.tr;
+  static String get reportProblemChipVehicleProblem =>
+      'reportProblemChipVehicleProblem'.tr;
+  static String get reportProblemChipShopRefusedDelivery =>
+      'reportProblemChipShopRefusedDelivery'.tr;
+  static String get reportProblemChipCollectionProblem =>
+      'reportProblemChipCollectionProblem'.tr;
+  static String get reportProblemChipHandoverProblem =>
+      'reportProblemChipHandoverProblem'.tr;
 
   // Roles
   static String get roleOrderBooker => 'roleOrderBooker'.tr;
