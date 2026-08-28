@@ -39,6 +39,7 @@ abstract class OfflineCacheKeys {
   static const dmOrders = 'offline_cache_dm_orders_v2';
   static const dmPickup = 'offline_cache_dm_pickup_v2';
   static const dmReturn = 'offline_cache_dm_return_v2';
+  static const dmVanStock = 'offline_cache_dm_van_stock_v1';
 
   // Delivery Man — collections / handover
   static const dmShops = 'offline_cache_dm_shops_v1';

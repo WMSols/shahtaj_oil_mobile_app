@@ -13,8 +13,6 @@ class DmServicesBinding {
         DmCollectionStore(),
         permanent: true,
       );
-      // Kick off cache hydration; controllers await their own load which
-      // implicitly triggers seedIfEmpty as a synchronous fallback if needed.
       store.hydrate();
     }
   }

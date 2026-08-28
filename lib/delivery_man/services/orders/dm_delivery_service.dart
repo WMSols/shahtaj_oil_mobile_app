@@ -223,4 +223,70 @@ class DmDeliveryService extends GetxService {
       receiverName: 'Shop keeper',
     );
   }
+
+  static const _openStatuses = {
+    DeliveryStatus.pending,
+    DeliveryStatus.pickedUp,
+    DeliveryStatus.inTransit,
+  };
+
+  /// Completes open stops when van stock for a product is 0 (or van is empty).
+  ///
+  /// [loadedByProduct] keys are lowercased product names → loaded qty.
+  /// When [forceAll] is true, every open order is completed with delivered 0.
+  Future<int> completeOpenOrdersForZeroStock({
+    required Map<String, int> loadedByProduct,
+    required String reason,
+    bool forceAll = false,
+  }) async {
+    await _ensureHydrated();
+    var completed = 0;
+
+    for (var i = 0; i < _orders.length; i++) {
+      final order = _orders[i];
+      if (!_openStatuses.contains(order.status)) continue;
+
+      final shouldComplete =
+          forceAll ||
+          order.lines.every((line) {
+            final key = line.productName.trim().toLowerCase();
+            final available = loadedByProduct[key] ?? 0;
+            return available <= 0;
+          });
+
+      if (!shouldComplete) continue;
+
+      final lines = order.lines
+          .map((line) {
+            final maxQty = line.loadedQty > 0
+                ? line.loadedQty
+                : line.orderedQty;
+            return line.copyWith(deliveredQty: 0, rejectedQty: maxQty);
+          })
+          .toList(growable: false);
+
+      _orders[i] = order.copyWith(
+        status: DeliveryStatus.returned,
+        lines: lines,
+        receiverName: 'System',
+        deliveryNotes: reason,
+        deliveredAt: DateTime.now(),
+        timeline: [
+          ...order.timeline,
+          _event('Completed', note: reason),
+        ],
+      );
+      completed++;
+      await _enqueue('submit_delivery', {
+        'order_id': order.id,
+        'receiver_name': 'System',
+        'notes': reason,
+        'auto_completed': true,
+        'lines': lines.map((e) => e.toJson()).toList(),
+      });
+    }
+
+    if (completed > 0) await _persist();
+    return completed;
+  }
 }
