@@ -6,6 +6,7 @@ class AppRoutes {
   static const selectRole = '/select-role';
   static const onboarding = '/onboarding';
   static const login = '/login';
+  static const reportProblem = '/account/report-problem';
 
   // Main shells
   static const orderBooker = '/order-booker';

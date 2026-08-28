@@ -138,6 +138,12 @@ class AppIcons {
   static const IconData language = Iconsax.translate;
   static const IconData language5 = Iconsax.translate5;
 
+  static const IconData reportProblem = Iconsax.message_question;
+  static const IconData reportProblem5 = Iconsax.message_question5;
+
+  static const IconData vanStock = Iconsax.box;
+  static const IconData vanStock5 = Iconsax.box5;
+
   /// Returns the filled variant when [active] is true, otherwise [icon].
   static IconData filled(IconData icon, {bool active = true}) {
     if (!active) return icon;
@@ -174,6 +180,8 @@ class AppIcons {
       userAdd => userAdd5,
       cameraAdd => cameraAdd5,
       language => language5,
+      reportProblem => reportProblem5,
+      vanStock => vanStock5,
       block => block5,
       _ => icon,
     };

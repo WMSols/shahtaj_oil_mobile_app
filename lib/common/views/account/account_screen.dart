@@ -7,9 +7,12 @@ import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_primary_button.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_secondary_button.dart';
 import 'package:shahtaj_oil_mobile_app/common/widgets/account/account_details_card.dart';
 import 'package:shahtaj_oil_mobile_app/common/widgets/account/account_language_toggle_section.dart';
 import 'package:shahtaj_oil_mobile_app/common/widgets/account/account_profile_header.dart';
+import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
+import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_loader.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_scaffold.dart';
@@ -72,17 +75,22 @@ class AccountScreen extends GetView<AccountController> {
               AccountDetailsCard(user: profileUser, role: profileRole),
               AppSpacing.vertical(context, 0.025),
               AppSectionHeader(
-                title: AppTexts.changeLanguage,
+                title: AppTexts.accountSettings,
                 bottomSpacing: true,
               ),
+              AppSecondaryButton(
+                label: AppTexts.reportProblemTitle,
+                icon: AppIcons.reportProblem,
+                onPressed: () => Get.toNamed(AppRoutes.reportProblem),
+              ),
+              AppSpacing.vertical(context, 0.015),
               const AccountLanguageToggleSection(),
-              AppSpacing.vertical(context, 0.025),
+              AppSpacing.vertical(context, 0.015),
               AppPrimaryButton(
                 label: AppTexts.logout,
                 isLoading: controller.isLoggingOut.value,
                 onPressed: controller.logout,
               ),
-              AppSpacing.vertical(context, 0.01),
             ],
           ),
         );
