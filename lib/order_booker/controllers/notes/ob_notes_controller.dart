@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/order_booker/shell/ob_shell_controller.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
-import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_confirm_dialog.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/controllers/tasks/ob_route_detail_controller.dart';
@@ -142,15 +140,7 @@ class ObNotesController extends GetxController {
     await _cartService.endWithoutOrder(visitId: id, notes: notes);
     await _taskService.clearActiveVisit(visitId: id);
     AppToast.showSuccess(AppTexts.obVisitClosedSuccess);
-    Get.offAllNamed(AppRoutes.orderBooker);
-    SchedulerBinding.instance.addPostFrameCallback((_) {
-      if (Get.isRegistered<OrderBookerShellController>()) {
-        Get.find<OrderBookerShellController>().selectLeaf('ob_today_tasks');
-      }
-      if (Get.isRegistered<ObRouteDetailController>()) {
-        Get.find<ObRouteDetailController>().loadTasks(force: true);
-      }
-    });
+    OrderBookerShellController.returnToTodayTasks();
   }
 
   Future<void> _saveVisitNotes(String notes) async {
