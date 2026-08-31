@@ -1,4 +1,3 @@
-import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 
@@ -10,7 +9,6 @@ import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/helper/app_helper.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_confirm_dialog.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/controllers/tasks/ob_route_detail_controller.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_active_visit_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/shops/ob_shop_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/visit/ob_product_model.dart';
@@ -501,17 +499,8 @@ class ObOrderCreateController extends GetxController {
     );
   }
 
-  void _navigateToTodayTasks() {
-    Get.offAllNamed(AppRoutes.orderBooker);
-    SchedulerBinding.instance.addPostFrameCallback((_) {
-      if (Get.isRegistered<OrderBookerShellController>()) {
-        Get.find<OrderBookerShellController>().selectLeaf('ob_today_tasks');
-      }
-      if (Get.isRegistered<ObRouteDetailController>()) {
-        Get.find<ObRouteDetailController>().loadTasks(force: true);
-      }
-    });
-  }
+  void _navigateToTodayTasks() =>
+      OrderBookerShellController.returnToTodayTasks();
 
   void resumeActiveVisit() {
     final active = activeVisit.value;

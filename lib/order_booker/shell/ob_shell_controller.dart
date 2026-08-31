@@ -1,9 +1,12 @@
+import 'package:flutter/scheduler.dart';
+
 import 'package:shahtaj_oil_mobile_app/common/bindings/account/account_binding.dart';
 import 'package:shahtaj_oil_mobile_app/common/controllers/shell/app_shell_controller.dart';
 import 'package:shahtaj_oil_mobile_app/common/views/account/account_screen.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/shell/ob_services_binding.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
+import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_drawer_entry.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/bindings/dashboard/ob_dashboard_binding.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/bindings/history/ob_history_binding.dart';
@@ -25,6 +28,27 @@ import 'package:shahtaj_oil_mobile_app/order_booker/views/schedule/ob_weekly_sch
 import 'package:get/get.dart';
 
 class OrderBookerShellController extends AppShellController {
+  /// Pops pushed OB routes back to the shell without recreating it.
+  ///
+  /// [Get.offAllNamed] on the same shell route destroys and rebuilds the
+  /// navigator root, which can leave a black screen on release builds.
+  static void returnToTodayTasks() {
+    while (Get.currentRoute != AppRoutes.orderBooker &&
+        (Get.key.currentState?.canPop() ?? false)) {
+      Get.back();
+    }
+
+    if (Get.currentRoute != AppRoutes.orderBooker) {
+      Get.offAllNamed(AppRoutes.orderBooker);
+    }
+
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      if (Get.isRegistered<OrderBookerShellController>()) {
+        Get.find<OrderBookerShellController>().selectLeaf('ob_today_tasks');
+      }
+    });
+  }
+
   @override
   void onInit() {
     OrderBookerServicesBinding.ensureRegistered();
