@@ -127,7 +127,8 @@ class ObVisitHistoryContent extends GetView<ObHistoryController> {
                 title: AppTexts.emptyLoadFailedTitle,
                 subtitle: controller.error.value!,
                 image: AppImages.emptyError,
-                onRefresh: () => controller.loadVisits(reset: true),
+                onRefresh: () =>
+                    controller.loadVisits(reset: true, force: true),
               );
             }
 
@@ -139,12 +140,13 @@ class ObVisitHistoryContent extends GetView<ObHistoryController> {
                     ? AppTexts.obNoVisitsFound
                     : AppTexts.obNoVisitsMatchSearch,
                 image: AppImages.emptyNoVisits,
-                onRefresh: () => controller.loadVisits(reset: true),
+                onRefresh: () =>
+                    controller.loadVisits(reset: true, force: true),
               );
             }
 
             return RefreshIndicator(
-              onRefresh: () => controller.loadVisits(reset: true),
+              onRefresh: () => controller.loadVisits(reset: true, force: true),
               child: NotificationListener<ScrollNotification>(
                 onNotification: (notification) {
                   if (notification.metrics.pixels >=

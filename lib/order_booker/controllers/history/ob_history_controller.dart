@@ -73,7 +73,7 @@ class ObHistoryController extends GetxController {
     super.onClose();
   }
 
-  Future<void> loadVisits({bool reset = false}) async {
+  Future<void> loadVisits({bool reset = false, bool force = false}) async {
     final hadCache = visits.isNotEmpty;
     if (reset && !hadCache) {
       isLoading.value = true;
@@ -88,6 +88,7 @@ class ObHistoryController extends GetxController {
         offset: reset ? 0 : _offset,
         dateFrom: dateFrom.value,
         dateTo: dateTo.value,
+        forceNetwork: force && reset,
       );
       _total = result.total;
       if (reset) {

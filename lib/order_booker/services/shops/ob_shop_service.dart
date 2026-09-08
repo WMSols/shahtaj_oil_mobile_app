@@ -27,11 +27,12 @@ class ObShopService extends GetxService {
   /// `shops/get?include_photos` on every reopen in the same session.
   final Map<String, ObShopModel> _shopDetailMemory = {};
 
-  Future<List<ObShopModel>> fetchShops() {
+  Future<List<ObShopModel>> fetchShops({bool forceNetwork = false}) {
     return _cache.readThrough(
       key: OfflineCacheKeys.shopsMine,
       fetch: () => _api.postData(ApiEndpoints.obShopsMine),
       parse: _parseShops,
+      cacheFirst: _cache.cacheFirstFor(forceNetwork: forceNetwork),
     );
   }
 
@@ -123,6 +124,7 @@ class ObShopService extends GetxService {
       key: OfflineCacheKeys.zones,
       fetch: () => _api.postData(ApiEndpoints.obZonesList),
       parse: _parseZones,
+      cacheFirst: _cache.cacheFirstFor(forceNetwork: force),
     );
     _zonesCache = zones;
     return zones;
@@ -142,6 +144,7 @@ class ObShopService extends GetxService {
       fetch: () =>
           _api.postData(ApiEndpoints.obRoutesList, data: {'zone_id': ?zoneId}),
       parse: _parseRoutes,
+      cacheFirst: _cache.cacheFirstFor(forceNetwork: force),
     );
     if (zoneId != null) {
       routes = routes

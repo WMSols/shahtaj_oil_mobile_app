@@ -13,11 +13,12 @@ class ObTargetsService extends GetxService {
   final ApiClient _api;
   final OfflineCacheService _cache;
 
-  Future<List<ObTargetItemModel>> fetchTargets() {
+  Future<List<ObTargetItemModel>> fetchTargets({bool forceNetwork = false}) {
     return _cache.readThrough(
       key: OfflineCacheKeys.targetsMine,
       fetch: () => _api.postData(ApiEndpoints.obTargetsMine),
       parse: _parseTargets,
+      cacheFirst: _cache.cacheFirstFor(forceNetwork: forceNetwork),
     );
   }
 

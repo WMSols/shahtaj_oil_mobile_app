@@ -20,6 +20,7 @@ class ObVisitService extends GetxService {
     int offset = 0,
     DateTime? dateFrom,
     DateTime? dateTo,
+    bool forceNetwork = false,
   }) async {
     final cacheable =
         offset == 0 && dateFrom == null && dateTo == null && limit <= 50;
@@ -40,6 +41,7 @@ class ObVisitService extends GetxService {
       key: OfflineCacheKeys.visitsMine,
       fetch: () => _api.postData(ApiEndpoints.obVisitsMine, data: body),
       parse: ObVisitListResult.fromJson,
+      cacheFirst: _cache.cacheFirstFor(forceNetwork: forceNetwork),
     );
   }
 
