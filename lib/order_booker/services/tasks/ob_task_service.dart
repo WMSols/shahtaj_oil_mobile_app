@@ -3,7 +3,9 @@ import 'package:get/get.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/api_endpoints.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/connectivity_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/sync_outbox_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_active_visit_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_check_in_result.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/schedule/ob_route_model.dart';
@@ -154,15 +156,71 @@ class ObTaskService extends GetxService {
     await fetchTodayTasks();
   }
 
-  Future<void> saveTaskNotes({
+  /// Returns true when notes were queued for later sync.
+  Future<bool> saveTaskNotes({
     required int taskId,
     required String notes,
   }) async {
+    final trimmed = notes.trim();
+    final task = await findTaskById(taskId);
+    final payload = {
+      'task_id': taskId,
+      'notes': trimmed,
+      if (task != null) ...{'shop_id': task.shopId, 'shop_name': task.shopName},
+    };
+
+    if (_shouldQueueWrites() && Get.isRegistered<SyncOutboxService>()) {
+      await Get.find<SyncOutboxService>().enqueue(
+        role: 'orderBooker',
+        action: 'task_notes',
+        payload: payload,
+      );
+      await _applyLocalTaskNotes(taskId, trimmed);
+      return true;
+    }
+
     await _api.postData(
       ApiEndpoints.obTasksNotes,
-      data: {'task_id': taskId, 'notes': notes.trim()},
+      data: {'task_id': taskId, 'notes': trimmed},
     );
+    await _applyLocalTaskNotes(taskId, trimmed);
     await fetchTodayTasks();
+    return false;
+  }
+
+  Future<void> _applyLocalTaskNotes(int taskId, String notes) async {
+    _tasks = _tasks
+        .map((task) => task.id == taskId ? task.copyWith(notes: notes) : task)
+        .toList(growable: false);
+
+    final cached = await _cache.readMap(OfflineCacheKeys.tasksToday);
+    if (cached == null) return;
+
+    final rawTasks = cached['tasks'];
+    if (rawTasks is! List) return;
+
+    final updated = rawTasks
+        .map((raw) {
+          if (raw is! Map) return raw;
+          final map = Map<String, dynamic>.from(raw);
+          final id = ApiMap.asInt(map['task_id']) ?? ApiMap.asInt(map['id']);
+          if (id == taskId) {
+            map['notes'] = notes;
+          }
+          return map;
+        })
+        .toList(growable: false);
+
+    await _cache.saveMap(OfflineCacheKeys.tasksToday, {
+      ...cached,
+      'tasks': updated,
+    });
+  }
+
+  bool _shouldQueueWrites() {
+    if (!Get.isRegistered<ConnectivityService>()) return false;
+    final c = Get.find<ConnectivityService>();
+    return !c.isOnline.value || c.quality.value == NetworkQuality.weak;
   }
 
   Future<void> startRoute(String routeId) async {

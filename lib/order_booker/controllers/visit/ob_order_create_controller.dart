@@ -512,14 +512,18 @@ class ObOrderCreateController extends GetxController {
     );
   }
 
-  void promptSaveVisitNotes() {
+  Future<void> promptSaveVisitNotes() async {
     final active = activeVisit.value;
     if (active == null) return;
+    final cachedNotes = await _cartService.readVisitNotes(active.visitId);
     Get.toNamed(
       AppRoutes.obNotes,
       arguments: {
         'purpose': ObNotesPurpose.visitNotes,
         'visitId': active.visitId,
+        'taskId': active.taskId,
+        'shopId': active.shopId,
+        'initialNotes': cachedNotes ?? '',
       },
     );
   }

@@ -123,14 +123,24 @@ class ObNotesController extends GetxController {
   Future<void> _saveTaskNotes(String notes) async {
     final id = taskId;
     if (id == null) return;
-    await _taskService.saveTaskNotes(taskId: id, notes: notes);
-    AppToast.showSuccess(AppTexts.save);
-    if (Get.isRegistered<ObRouteDetailController>()) {
-      await Get.find<ObRouteDetailController>().loadTasks(
-        silent: true,
-        force: true,
-      );
+    final queued = await _taskService.saveTaskNotes(taskId: id, notes: notes);
+    AppToast.showSuccess(
+      queued ? AppTexts.obNotesQueuedForSync : AppTexts.save,
+    );
+    if (!Get.isRegistered<ObRouteDetailController>()) return;
+    final route = Get.find<ObRouteDetailController>();
+    if (queued) {
+      final current = route.todayTasks.value;
+      if (current != null) {
+        route.todayTasks.value = current.copyWith(
+          tasks: current.tasks
+              .map((task) => task.id == id ? task.copyWith(notes: notes) : task)
+              .toList(growable: false),
+        );
+      }
+      return;
     }
+    await route.loadTasks(silent: true, force: true);
   }
 
   Future<void> _endVisitWithoutOrder(String notes) async {
@@ -150,6 +160,7 @@ class ObNotesController extends GetxController {
       visitId: id,
       taskId: resolvedTaskId,
       shopId: resolvedShopId,
+      shopName: active?.shopName,
       notes: notes,
     );
     await _taskService.clearActiveVisit(visitId: id);
@@ -164,7 +175,16 @@ class ObNotesController extends GetxController {
   Future<void> _saveVisitNotes(String notes) async {
     final id = visitId;
     if (id == null) return;
-    await _cartService.saveVisitNotes(visitId: id, notes: notes);
-    AppToast.showSuccess(AppTexts.save);
+    final active = _taskService.activeVisitSync;
+    final queued = await _cartService.saveVisitNotes(
+      visitId: id,
+      notes: notes,
+      taskId: taskId ?? active?.taskId,
+      shopId: shopId ?? active?.shopId,
+      shopName: active?.shopName,
+    );
+    AppToast.showSuccess(
+      queued ? AppTexts.obNotesQueuedForSync : AppTexts.save,
+    );
   }
 }

@@ -10,6 +10,7 @@ import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/connectivity_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/sync_outbox_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/visit/ob_product_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/visit/ob_visit_cart_line_model.dart';
@@ -18,11 +19,17 @@ import 'package:shahtaj_oil_mobile_app/order_booker/models/visit/ob_visit_cart_m
 /// Local-first visit cart backed by SQLite. Network is used on initial load
 /// and when flushing the submit outbox — not on every cart tap.
 class ObVisitCartService extends GetxService {
-  ObVisitCartService(this._api, this._db, this._outbox);
+  ObVisitCartService(
+    this._api,
+    this._db,
+    this._outbox, {
+    OfflineCacheService? cache,
+  }) : _cache = cache ?? Get.find<OfflineCacheService>();
 
   final ApiClient _api;
   final AppDatabase _db;
   final SyncOutboxService _outbox;
+  final OfflineCacheService _cache;
 
   int _nextLocalLineId = -1;
 
@@ -238,6 +245,7 @@ class ObVisitCartService extends GetxService {
       'visit_id': visitId,
       'task_id': taskId,
       'shop_id': shopId,
+      'shop_name': shopName,
       'latitude': latitude,
       'longitude': longitude,
       'lines': cart.lines.map((l) => l.toJson()).toList(growable: false),
@@ -283,11 +291,13 @@ class ObVisitCartService extends GetxService {
     required int taskId,
     required String shopId,
     required String notes,
+    String? shopName,
   }) async {
     final payload = {
       'visit_id': visitId,
       'task_id': taskId,
       'shop_id': shopId,
+      if (shopName != null && shopName.isNotEmpty) 'shop_name': shopName,
       'notes': notes.trim(),
     };
 
@@ -316,22 +326,64 @@ class ObVisitCartService extends GetxService {
     }
   }
 
-  Future<void> saveVisitNotes({
+  Future<bool> saveVisitNotes({
     required int visitId,
     required String notes,
+    int? taskId,
+    String? shopId,
+    String? shopName,
   }) async {
+    final trimmed = notes.trim();
+    await _persistVisitNotesLocally(
+      visitId: visitId,
+      notes: trimmed,
+      taskId: taskId,
+      shopId: shopId,
+      shopName: shopName,
+    );
+
+    final payload = {
+      'visit_id': visitId,
+      'notes': trimmed,
+      'task_id': ?taskId,
+      if (shopId != null && shopId.isNotEmpty) 'shop_id': shopId,
+      if (shopName != null && shopName.isNotEmpty) 'shop_name': shopName,
+    };
+
     if (_shouldServeCacheOnly()) {
       await _outbox.enqueue(
         role: 'orderBooker',
         action: 'visit_notes',
-        payload: {'visit_id': visitId, 'notes': notes.trim()},
+        payload: payload,
       );
-      return;
+      return true;
     }
     await _api.postData(
       ApiEndpoints.obVisitsNotes,
-      data: {'visit_id': visitId, 'notes': notes.trim()},
+      data: {'visit_id': visitId, 'notes': trimmed},
     );
+    return false;
+  }
+
+  Future<String?> readVisitNotes(int visitId) async {
+    final cached = await _cache.readMap(OfflineCacheKeys.visitNotes(visitId));
+    return ApiMap.asString(cached?['notes']);
+  }
+
+  Future<void> _persistVisitNotesLocally({
+    required int visitId,
+    required String notes,
+    int? taskId,
+    String? shopId,
+    String? shopName,
+  }) async {
+    await _cache.saveMap(OfflineCacheKeys.visitNotes(visitId), {
+      'visit_id': visitId,
+      'notes': notes,
+      'task_id': ?taskId,
+      'shop_id': ?shopId,
+      'shop_name': ?shopName,
+    });
   }
 
   Future<String?> _readOrderNumber(int visitId) async {

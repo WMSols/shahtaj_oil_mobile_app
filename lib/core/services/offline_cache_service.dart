@@ -19,11 +19,14 @@ abstract class OfflineCacheKeys {
   static const dashboard = 'offline_cache_ob_dashboard';
   static const zones = 'offline_cache_ob_zones';
   static const shopDetailPrefix = 'offline_cache_ob_shop_detail_';
+  static const visitNotesPrefix = 'offline_cache_ob_visit_notes_';
 
   static String routes(int? zoneId) =>
       'offline_cache_ob_routes_${zoneId ?? 'all'}';
 
   static String shopDetail(String id) => '$shopDetailPrefix$id';
+
+  static String visitNotes(int visitId) => '$visitNotesPrefix$visitId';
 
   /// Keys wiped on OB logout so a new session cannot show a previous route.
   static const List<String> orderBookerSessionKeys = [
