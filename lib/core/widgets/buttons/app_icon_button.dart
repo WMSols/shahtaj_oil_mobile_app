@@ -28,7 +28,7 @@ class AppIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = iconSize ?? AppResponsive.iconSize(context);
-    final radius = BorderRadius.circular(AppResponsive.radius(context));
+    final radius = BorderRadius.circular(AppResponsive.radius(context) * 5);
 
     return Material(
       color: backgroundColor,
@@ -61,7 +61,7 @@ class AppIconButton extends StatelessWidget {
                       AppResponsive.scaleSize(context, 4),
                     ),
                     decoration: const BoxDecoration(
-                      color: AppColors.error,
+                      color: AppColors.warning,
                       shape: BoxShape.circle,
                     ),
                     child: Text(

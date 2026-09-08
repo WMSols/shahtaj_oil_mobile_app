@@ -10,6 +10,8 @@ import 'package:shahtaj_oil_mobile_app/common/views/auth/login_screen.dart';
 import 'package:shahtaj_oil_mobile_app/common/views/onboarding/onboarding_screen.dart';
 import 'package:shahtaj_oil_mobile_app/common/views/select_role/select_role_screen.dart';
 import 'package:shahtaj_oil_mobile_app/common/views/splash/splash_screen.dart';
+import 'package:shahtaj_oil_mobile_app/common/bindings/sync/sync_center_binding.dart';
+import 'package:shahtaj_oil_mobile_app/common/views/sync/sync_center_screen.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_shell.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/shell/dm_shell_binding.dart';
@@ -45,6 +47,11 @@ class CommonRoutes {
       name: AppRoutes.reportProblem,
       page: ReportProblemScreen.new,
       binding: ReportProblemBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.syncCenter,
+      page: () => const SyncCenterScreen(),
+      binding: SyncCenterBinding(),
     ),
     GetPage(
       name: AppRoutes.orderBooker,

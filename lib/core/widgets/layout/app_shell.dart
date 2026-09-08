@@ -16,6 +16,8 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_icon_button.dart
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_network_signal_bars.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_drawer.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_profile_avatar.dart';
+import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/sync_outbox_service.dart';
 
 class AppShell<T extends AppShellController> extends GetView<T> {
   const AppShell({super.key});
@@ -60,16 +62,32 @@ class AppShell<T extends AppShellController> extends GetView<T> {
               currentLeaf.label,
               style: AppTextStyles.heading(context),
             ),
-            leadingWidth: AppResponsive.screenWidth(context) * 0.1,
-            leading: SizedBox(
-              width: AppResponsive.screenWidth(context) * 0.1,
-              child: Center(
-                child: AppIconButton(
-                  icon: AppIcons.menu,
-                  iconColor: AppColors.primary,
-                  iconSize: iconSize,
-                  onTap: controller.openDrawer,
-                ),
+            leadingWidth: AppResponsive.screenWidth(context) * 0.28,
+            leading: Padding(
+              padding: EdgeInsets.only(
+                left: AppSpacing.horizontalValue(context, 0.01),
+              ),
+              child: Row(
+                children: [
+                  AppIconButton(
+                    icon: AppIcons.menu,
+                    iconColor: AppColors.primary,
+                    iconSize: iconSize,
+                    onTap: controller.openDrawer,
+                  ),
+                  Obx(() {
+                    final count = Get.isRegistered<SyncOutboxService>()
+                        ? Get.find<SyncOutboxService>().pendingCount.value
+                        : 0;
+                    return AppIconButton(
+                      icon: AppIcons.cloudUpload,
+                      iconColor: AppColors.warning,
+                      iconSize: iconSize,
+                      badge: count > 0 ? '$count' : null,
+                      onTap: () => Get.toNamed(AppRoutes.syncCenter),
+                    );
+                  }),
+                ],
               ),
             ),
             actions: [
