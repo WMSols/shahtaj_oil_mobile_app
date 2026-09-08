@@ -7,6 +7,7 @@ class AppRoutes {
   static const onboarding = '/onboarding';
   static const login = '/login';
   static const reportProblem = '/account/report-problem';
+  static const syncCenter = '/sync-center';
 
   // Main shells
   static const orderBooker = '/order-booker';

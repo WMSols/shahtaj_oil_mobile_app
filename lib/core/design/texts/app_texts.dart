@@ -302,6 +302,26 @@ class AppTexts {
   static String get obShopNotOnRouteToday => 'obShopNotOnRouteToday'.tr;
   static String get obShopCheckInBeforeOrder => 'obShopCheckInBeforeOrder'.tr;
   static String get backOnline => 'backOnline'.tr;
+  static String get showingOfflineData => 'showingOfflineData'.tr;
+  static String showingOfflineDataUpdated(String age) =>
+      'showingOfflineDataUpdated'.trParams({'age': age});
+  static String get syncCenterTitle => 'syncCenterTitle'.tr;
+  static String get syncNow => 'syncNow'.tr;
+  static String get syncPendingBadge => 'syncPendingBadge'.tr;
+  static String syncPendingCount(int count) =>
+      'syncPendingCount'.trParams({'count': '$count'});
+  static String get syncStatusQueued => 'syncStatusQueued'.tr;
+  static String get syncStatusSyncing => 'syncStatusSyncing'.tr;
+  static String get syncStatusSynced => 'syncStatusSynced'.tr;
+  static String get syncStatusFailed => 'syncStatusFailed'.tr;
+  static String get syncStatusNeedsReview => 'syncStatusNeedsReview'.tr;
+  static String get syncWillSyncWhenOnline => 'syncWillSyncWhenOnline'.tr;
+  static String get syncEmptyTitle => 'syncEmptyTitle'.tr;
+  static String get syncEmptySubtitle => 'syncEmptySubtitle'.tr;
+  static String get logoutPendingSyncTitle => 'logoutPendingSyncTitle'.tr;
+  static String get logoutPendingSyncMessage => 'logoutPendingSyncMessage'.tr;
+  static String get obOrderQueuedForSync => 'obOrderQueuedForSync'.tr;
+  static String get obVisitQueuedForSync => 'obVisitQueuedForSync'.tr;
   static String get statusOnline => 'statusOnline'.tr;
   static String get statusAway => 'statusAway'.tr;
   static String get statusOffline => 'statusOffline'.tr;

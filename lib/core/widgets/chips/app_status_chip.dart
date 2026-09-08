@@ -29,6 +29,9 @@ class AppStatusChip extends StatelessWidget {
   factory AppStatusChip.order(OrderStatus status) =>
       AppStatusChip(label: status.label, color: status.chipColor);
 
+  factory AppStatusChip.sync(SyncStatus status) =>
+      AppStatusChip(label: status.label, color: status.chipColor, soft: true);
+
   factory AppStatusChip.delivery(DeliveryStatus status) =>
       AppStatusChip(label: status.label, color: status.chipColor);
 
@@ -55,6 +58,13 @@ class AppStatusChip extends StatelessWidget {
 
   factory AppStatusChip.shopType(ShopType type) =>
       AppStatusChip(label: type.label, color: type.chipColor);
+
+  factory AppStatusChip.willSync({bool fullWidth = false}) => AppStatusChip(
+    label: AppTexts.syncWillSyncWhenOnline,
+    color: AppColors.warning,
+    soft: true,
+    fullWidth: fullWidth,
+  );
 
   factory AppStatusChip.task(TaskStatus status, {bool fullWidth = false}) =>
       AppStatusChip(

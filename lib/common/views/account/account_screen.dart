@@ -84,6 +84,12 @@ class AccountScreen extends GetView<AccountController> {
                 onPressed: () => Get.toNamed(AppRoutes.reportProblem),
               ),
               AppSpacing.vertical(context, 0.015),
+              AppSecondaryButton(
+                label: AppTexts.syncCenterTitle,
+                icon: AppIcons.cloudUpload,
+                onPressed: () => Get.toNamed(AppRoutes.syncCenter),
+              ),
+              AppSpacing.vertical(context, 0.015),
               const AccountLanguageToggleSection(),
               AppSpacing.vertical(context, 0.015),
               AppPrimaryButton(

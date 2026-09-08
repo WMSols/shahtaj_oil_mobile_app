@@ -8,6 +8,7 @@ import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/sync_outbox_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/presence_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/storage_service.dart';
@@ -108,6 +109,9 @@ class AuthService extends GetxService {
     }
     if (Get.isRegistered<ObVisitCartService>()) {
       await Get.delete<ObVisitCartService>(force: true);
+    }
+    if (Get.isRegistered<SyncOutboxService>()) {
+      await Get.find<SyncOutboxService>().clearSessionData();
     }
     await _session.clearSession();
   }

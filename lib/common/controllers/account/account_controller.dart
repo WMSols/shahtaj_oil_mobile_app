@@ -7,7 +7,9 @@ import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/sync_outbox_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_confirm_dialog.dart';
 
 class AccountController extends GetxController {
   AccountController(this._session, this._profileService, this._authService);
@@ -58,6 +60,20 @@ class AccountController extends GetxController {
   }
 
   Future<void> logout() async {
+    if (Get.isRegistered<SyncOutboxService>()) {
+      final pending = Get.find<SyncOutboxService>().pendingCount.value;
+      if (pending > 0) {
+        final confirmed = await Get.dialog<bool>(
+          AppConfirmDialog(
+            title: AppTexts.logoutPendingSyncTitle,
+            message: AppTexts.logoutPendingSyncMessage,
+            confirmLabel: AppTexts.logout,
+          ),
+        );
+        if (confirmed != true) return;
+      }
+    }
+
     isLoggingOut.value = true;
     try {
       await _authService.logout();

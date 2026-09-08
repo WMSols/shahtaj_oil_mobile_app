@@ -36,6 +36,37 @@ enum TaskStatus { pending, inVisit, completed }
 
 enum ObNotesPurpose { taskNotes, endVisitWithoutOrder, visitNotes }
 
+enum SyncStatus { queued, syncing, synced, failed, needsReview }
+
+extension SyncStatusX on SyncStatus {
+  String get label => switch (this) {
+    SyncStatus.queued => AppTexts.syncStatusQueued,
+    SyncStatus.syncing => AppTexts.syncStatusSyncing,
+    SyncStatus.synced => AppTexts.syncStatusSynced,
+    SyncStatus.failed => AppTexts.syncStatusFailed,
+    SyncStatus.needsReview => AppTexts.syncStatusNeedsReview,
+  };
+
+  Color get chipColor => switch (this) {
+    SyncStatus.synced => AppColors.success,
+    SyncStatus.syncing => AppColors.primary,
+    SyncStatus.queued => AppColors.warning,
+    SyncStatus.failed || SyncStatus.needsReview => AppColors.error,
+  };
+
+  static SyncStatus? fromOutboxStatus(String? raw) {
+    if (raw == null) return null;
+    return switch (raw) {
+      'queued' => SyncStatus.queued,
+      'syncing' => SyncStatus.syncing,
+      'synced' => SyncStatus.synced,
+      'failed' => SyncStatus.failed,
+      'needsReview' => SyncStatus.needsReview,
+      _ => null,
+    };
+  }
+}
+
 extension UserRoleX on UserRole {
   String get label => switch (this) {
     UserRole.orderBooker => AppTexts.roleOrderBooker,
