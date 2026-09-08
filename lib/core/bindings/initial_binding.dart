@@ -7,6 +7,7 @@ import 'package:shahtaj_oil_mobile_app/core/services/location_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/presence_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/app_cache_storage.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/storage_service.dart';
 
 class InitialBinding extends Bindings {
@@ -17,8 +18,17 @@ class InitialBinding extends Bindings {
     if (!Get.isRegistered<StorageService>()) {
       Get.put(StorageService(), permanent: true);
     }
+    if (!Get.isRegistered<AppCacheStorage>()) {
+      Get.put(AppCacheStorage(), permanent: true);
+    }
     if (!Get.isRegistered<OfflineCacheService>()) {
-      Get.put(OfflineCacheService(Get.find<StorageService>()), permanent: true);
+      Get.put(
+        OfflineCacheService(
+          Get.find<StorageService>(),
+          Get.find<AppCacheStorage>(),
+        ),
+        permanent: true,
+      );
     }
     if (!Get.isRegistered<SessionService>()) {
       Get.put(SessionService(Get.find<StorageService>()), permanent: true);

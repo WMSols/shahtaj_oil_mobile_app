@@ -9,6 +9,7 @@ import 'package:get/get.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/sync_outbox_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 
 enum NetworkQuality { offline, weak, medium, good }
@@ -56,6 +57,9 @@ class ConnectivityService extends GetxService {
     if (isOnline.value && Get.isRegistered<OfflineCacheService>()) {
       unawaited(Get.find<OfflineCacheService>().flushSyncQueue());
     }
+    if (isOnline.value && Get.isRegistered<SyncOutboxService>()) {
+      unawaited(Get.find<SyncOutboxService>().flush(force: true));
+    }
     if (_canProbeQuality) {
       unawaited(_probeQuality());
       _probeTimer = Timer.periodic(
@@ -87,6 +91,9 @@ class ConnectivityService extends GetxService {
       AppToast.showSuccess(AppTexts.backOnline);
       if (Get.isRegistered<OfflineCacheService>()) {
         unawaited(Get.find<OfflineCacheService>().flushSyncQueue());
+      }
+      if (Get.isRegistered<SyncOutboxService>()) {
+        unawaited(Get.find<SyncOutboxService>().flush(force: true));
       }
     }
     if (_canProbeQuality) {

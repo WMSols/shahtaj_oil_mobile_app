@@ -5,6 +5,11 @@ mixin CachedLoadMixin on GetxController {
   final RxBool isLoading = true.obs;
   final RxnString error = RxnString();
 
+  bool _forceRefresh = false;
+
+  /// True while [loadCached] is running with `force: true` (e.g. pull-to-refresh).
+  bool get isForceRefresh => _forceRefresh;
+
   /// Returns true when in-memory data is already available.
   bool get hasCachedData;
 
@@ -25,6 +30,7 @@ mixin CachedLoadMixin on GetxController {
       isLoading.value = true;
     }
 
+    _forceRefresh = force;
     try {
       await fetchData();
       error.value = null;
@@ -33,6 +39,7 @@ mixin CachedLoadMixin on GetxController {
         error.value = loadFailedMessage;
       }
     } finally {
+      _forceRefresh = false;
       isLoading.value = false;
     }
   }

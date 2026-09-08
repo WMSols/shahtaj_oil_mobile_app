@@ -1,7 +1,9 @@
-import 'dart:convert';
+import 'dart:async';
 
 import 'package:get/get.dart';
 
+import 'package:shahtaj_oil_mobile_app/core/services/app_cache_storage.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/connectivity_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/storage_service.dart';
 
 /// Disk keys for last-successful payloads and the app-wide sync queue.
@@ -48,7 +50,7 @@ abstract class OfflineCacheKeys {
   static const dmHandovers = 'offline_cache_dm_handovers_v1';
   static const dmCollectionTargets = 'offline_cache_dm_collection_targets_v1';
 
-  /// Pending mutation queue for every role.
+  /// Pending mutation queue for every role (legacy JSON; drift outbox is primary).
   static const syncQueue = 'offline_cache_sync_queue';
 }
 
@@ -107,29 +109,29 @@ class OfflineSyncItem {
 
 typedef OfflineSyncHandler = Future<void> Function(OfflineSyncItem item);
 
-/// Persists JSON maps so screens stay usable after offline restart,
-/// and holds a cross-role mutation queue flushed when connectivity returns.
+/// Persists JSON maps so screens stay usable after offline restart.
 class OfflineCacheService extends GetxService {
-  OfflineCacheService(this._storage);
+  OfflineCacheService(this._storage, this._cache);
 
   final StorageService _storage;
+  final AppCacheStorage _cache;
   final Map<String, OfflineSyncHandler> _handlers = {};
   final RxInt pendingSyncCount = 0.obs;
+  final RxMap<String, DateTime?> cacheUpdatedAt = <String, DateTime?>{}.obs;
+  final RxBool isRefreshingCache = false.obs;
   bool _flushing = false;
+  final Set<String> _backgroundRefreshKeys = {};
+
+  static const _defaultTtl = Duration(minutes: 15);
 
   Future<void> saveMap(String key, Map<String, dynamic> data) async {
-    await _storage.writeValue(key, jsonEncode(data));
+    await _cache.saveMap(key, data);
+    cacheUpdatedAt[key] = DateTime.now();
   }
 
   Future<Map<String, dynamic>?> readMap(String key) async {
-    final raw = await _storage.readValue(key);
-    if (raw == null || raw.trim().isEmpty) return null;
-    try {
-      final decoded = jsonDecode(raw);
-      if (decoded is Map<String, dynamic>) return decoded;
-      if (decoded is Map) return Map<String, dynamic>.from(decoded);
-    } catch (_) {}
-    return null;
+    await _migrateLegacyIfNeeded(key);
+    return _cache.readMap(key);
   }
 
   Future<void> saveList(String key, List<Map<String, dynamic>> items) async {
@@ -147,39 +149,123 @@ class OfflineCacheService extends GetxService {
         .toList(growable: false);
   }
 
-  /// Fetches, saves, and parses. On failure, returns last saved payload if any.
-  ///
-  /// Set [allowStaleFallback] to false (e.g. pull-to-refresh) so a failed
-  /// network call cannot silently keep showing an outdated zone/route.
+  /// Cache-first: return saved data immediately, refresh in background when online.
   Future<T> readThrough<T>({
     required String key,
     required Future<Map<String, dynamic>> Function() fetch,
     required T Function(Map<String, dynamic> json) parse,
     bool persist = true,
     bool allowStaleFallback = true,
+    bool cacheFirst = true,
+    Duration? ttl,
   }) async {
+    await _migrateLegacyIfNeeded(key);
+    final updatedAt = await _cache.readUpdatedAt(key);
+    cacheUpdatedAt[key] = updatedAt;
+    final cached = await _cache.readMap(key);
+    final effectiveTtl = ttl ?? _defaultTtl;
+    final isFresh =
+        updatedAt != null &&
+        DateTime.now().difference(updatedAt) < effectiveTtl;
+    final shouldDefer = _shouldDeferBackgroundRefresh();
+
+    if (cacheFirst && cached != null && !shouldDefer) {
+      final parsed = parse(cached);
+      if (!isFresh &&
+          allowStaleFallback &&
+          !_backgroundRefreshKeys.contains(key)) {
+        unawaited(
+          _refreshInBackground(
+            key: key,
+            fetch: fetch,
+            parse: parse,
+            persist: persist,
+            allowStaleFallback: allowStaleFallback,
+          ),
+        );
+      }
+      return parsed;
+    }
+
+    if (cacheFirst && cached != null && shouldDefer) {
+      return parse(cached);
+    }
+
     try {
       final data = await fetch();
       if (persist) await saveMap(key, data);
       return parse(data);
     } catch (_) {
       if (!allowStaleFallback) rethrow;
-      final cached = await readMap(key);
       if (cached != null) return parse(cached);
       rethrow;
     }
   }
 
-  Future<void> clearKeys(Iterable<String> keys) async {
-    for (final key in keys) {
-      await _storage.deleteValue(key);
+  Future<void> _refreshInBackground<T>({
+    required String key,
+    required Future<Map<String, dynamic>> Function() fetch,
+    required T Function(Map<String, dynamic> json) parse,
+    required bool persist,
+    required bool allowStaleFallback,
+  }) async {
+    if (_backgroundRefreshKeys.contains(key) ||
+        _shouldDeferBackgroundRefresh()) {
+      return;
+    }
+    _backgroundRefreshKeys.add(key);
+    isRefreshingCache.value = true;
+    try {
+      final data = await fetch();
+      if (persist) await saveMap(key, data);
+    } catch (_) {
+      // Keep stale cache silently.
+    } finally {
+      _backgroundRefreshKeys.remove(key);
+      isRefreshingCache.value = _backgroundRefreshKeys.isNotEmpty;
     }
   }
 
-  Future<void> clearOrderBookerSessionCache() =>
-      _clearOrderBookerSessionCache();
+  bool _shouldDeferBackgroundRefresh() {
+    if (!Get.isRegistered<ConnectivityService>()) return false;
+    final connectivity = Get.find<ConnectivityService>();
+    if (!connectivity.isOnline.value) return true;
+    return connectivity.quality.value == NetworkQuality.weak;
+  }
 
-  Future<void> _clearOrderBookerSessionCache() async {
+  /// Use disk cache first only when offline or on a weak link.
+  bool shouldServeCacheFirst() {
+    if (!Get.isRegistered<ConnectivityService>()) return false;
+    final connectivity = Get.find<ConnectivityService>();
+    if (!connectivity.isOnline.value) return true;
+    return connectivity.quality.value == NetworkQuality.weak;
+  }
+
+  /// Whether [readThrough] should return disk cache before hitting the network.
+  bool cacheFirstFor({
+    bool allowStaleFallback = true,
+    bool forceNetwork = false,
+  }) {
+    if (forceNetwork) return false;
+    if (!allowStaleFallback) return false;
+    return shouldServeCacheFirst();
+  }
+
+  Future<void> _migrateLegacyIfNeeded(String key) async {
+    await _cache.importFromSecureStorage(
+      key: key,
+      readLegacy: () => _storage.readValue(key),
+    );
+  }
+
+  Future<void> clearKeys(Iterable<String> keys) async {
+    await _cache.clearKeys(keys);
+    for (final key in keys) {
+      cacheUpdatedAt.remove(key);
+    }
+  }
+
+  Future<void> clearOrderBookerSessionCache() async {
     await clearKeys(OfflineCacheKeys.orderBookerSessionKeys);
     final all = await _storage.readAllValues();
     final dynamicKeys = all.keys.where(
@@ -192,10 +278,6 @@ class OfflineCacheService extends GetxService {
     }
   }
 
-  /// Register a handler for `role.action` (e.g. `deliveryMan.confirm_pickup`).
-  ///
-  /// DM services register no-op handlers until live APIs land; when a handler
-  /// is missing, [flushSyncQueue] still drains items as synced.
   void registerSyncHandler(
     String role,
     String action,
@@ -222,7 +304,6 @@ class OfflineCacheService extends GetxService {
     pendingSyncCount.value = items.where((e) => !e.synced).length;
   }
 
-  /// Enqueues a mutation for later sync. Local UI should already apply the change.
   Future<OfflineSyncItem> enqueueSync({
     required String role,
     required String action,
@@ -241,7 +322,6 @@ class OfflineCacheService extends GetxService {
     return item;
   }
 
-  /// Flushes unsynced items. Handlers perform role-specific API work when online.
   Future<void> flushSyncQueue() async {
     if (_flushing) return;
     _flushing = true;
@@ -253,8 +333,7 @@ class OfflineCacheService extends GetxService {
         if (item.synced) continue;
         final handler = _handlers['${item.role}.${item.action}'];
         if (handler == null) {
-          // No handler yet (e.g. mock DM) — treat as synced so queue drains.
-          items[i] = item.copyWith(synced: true);
+          items[i] = item.copyWith(synced: false);
           changed = true;
           continue;
         }
@@ -263,7 +342,6 @@ class OfflineCacheService extends GetxService {
           items[i] = item.copyWith(synced: true);
           changed = true;
         } catch (_) {
-          // Keep pending; retry on next online event.
           break;
         }
       }
@@ -274,5 +352,13 @@ class OfflineCacheService extends GetxService {
     } finally {
       _flushing = false;
     }
+  }
+
+  DateTime? updatedAtFor(String key) => cacheUpdatedAt[key];
+
+  bool isStale(String key, {Duration? ttl}) {
+    final at = cacheUpdatedAt[key];
+    if (at == null) return true;
+    return DateTime.now().difference(at) > (ttl ?? _defaultTtl);
   }
 }

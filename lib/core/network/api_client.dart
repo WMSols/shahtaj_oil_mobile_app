@@ -14,8 +14,9 @@ class ApiClient extends GetxService {
     _dio = Dio(
       BaseOptions(
         baseUrl: dotenv.env['API_BASE_URL'] ?? '',
-        connectTimeout: const Duration(seconds: 30),
-        receiveTimeout: const Duration(seconds: 30),
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 15),
+        sendTimeout: const Duration(seconds: 15),
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
