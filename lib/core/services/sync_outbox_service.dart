@@ -205,6 +205,7 @@ class SyncOutboxService extends GetxService {
       _handleObEndWithoutOrder,
     );
     registerHandler('orderBooker', 'visit_notes', _handleObVisitNotes);
+    registerHandler('orderBooker', 'task_notes', _handleObTaskNotes);
   }
 
   Future<void> _handleObSubmitOrder(
@@ -273,6 +274,21 @@ class SyncOutboxService extends GetxService {
       ApiEndpoints.obVisitsNotes,
       data: {
         'visit_id': visitId,
+        'notes': ApiMap.asString(payload['notes']) ?? '',
+      },
+    );
+  }
+
+  Future<void> _handleObTaskNotes(
+    OutboxEntry entry,
+    Map<String, dynamic> payload,
+  ) async {
+    final taskId = ApiMap.asInt(payload['task_id']);
+    if (taskId == null) throw ApiException(message: 'Missing task_id');
+    await _api.postData(
+      ApiEndpoints.obTasksNotes,
+      data: {
+        'task_id': taskId,
         'notes': ApiMap.asString(payload['notes']) ?? '',
       },
     );
