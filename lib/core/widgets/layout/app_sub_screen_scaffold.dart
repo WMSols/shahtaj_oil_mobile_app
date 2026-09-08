@@ -27,7 +27,7 @@ class AppSubScreenScaffold extends StatelessWidget {
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
         scrolledUnderElevation: 0,
-        centerTitle: false,
+        centerTitle: true,
         leading: IconButton(
           icon: Icon(
             AppIcons.back,
@@ -37,7 +37,7 @@ class AppSubScreenScaffold extends StatelessWidget {
           // maybePop respects PopScope (e.g. leave-visit confirm); Get.back force-pops.
           onPressed: () => Navigator.of(context).maybePop(),
         ),
-        title: Text(title, style: AppTextStyles.heading(context)),
+        title: Text(title, style: AppTextStyles.screenTitle(context)),
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
           child: Divider(height: 1, color: AppColors.cardBorder),

@@ -6,7 +6,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/responsive/app_responsive.dar
 
 class AppTextStyles {
   static TextStyle screenTitle(BuildContext context) => TextStyle(
-    fontSize: AppResponsive.screenWidth(context) * 0.055,
+    fontSize: AppResponsive.screenWidth(context) * 0.042,
     fontFamily: AppFonts.mainFont,
     fontWeight: FontWeight.w700,
     color: AppColors.textPrimary,

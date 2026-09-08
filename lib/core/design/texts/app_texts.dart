@@ -307,6 +307,14 @@ class AppTexts {
       'showingOfflineDataUpdated'.trParams({'age': age});
   static String get syncCenterTitle => 'syncCenterTitle'.tr;
   static String get syncNow => 'syncNow'.tr;
+  static String get syncSuccessful => 'syncSuccessful'.tr;
+  static String syncQueuedAt(String time) =>
+      'syncQueuedAt'.trParams({'time': time});
+  static String syncAttempts(int count) =>
+      'syncAttempts'.trParams({'count': '$count'});
+  static String syncVisitId(int id) => 'syncVisitId'.trParams({'id': '$id'});
+  static String syncLinesCount(int count) =>
+      'syncLinesCount'.trParams({'count': '$count'});
   static String get syncPendingBadge => 'syncPendingBadge'.tr;
   static String syncPendingCount(int count) =>
       'syncPendingCount'.trParams({'count': '$count'});
@@ -322,6 +330,7 @@ class AppTexts {
   static String get logoutPendingSyncMessage => 'logoutPendingSyncMessage'.tr;
   static String get obOrderQueuedForSync => 'obOrderQueuedForSync'.tr;
   static String get obVisitQueuedForSync => 'obVisitQueuedForSync'.tr;
+  static String get obNotesQueuedForSync => 'obNotesQueuedForSync'.tr;
   static String get statusOnline => 'statusOnline'.tr;
   static String get statusAway => 'statusAway'.tr;
   static String get statusOffline => 'statusOffline'.tr;
