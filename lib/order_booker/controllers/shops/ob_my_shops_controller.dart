@@ -78,7 +78,9 @@ class ObMyShopsController extends GetxController with CachedLoadMixin {
 
   @override
   Future<void> fetchData() async {
-    shops.assignAll(await _shopService.fetchShops());
+    shops.assignAll(
+      await _shopService.fetchShops(forceNetwork: isForceRefresh),
+    );
   }
 
   void upsertShop(ObShopModel shop) {

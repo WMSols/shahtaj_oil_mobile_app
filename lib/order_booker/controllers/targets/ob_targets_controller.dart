@@ -78,7 +78,9 @@ class ObTargetsController extends GetxController with CachedLoadMixin {
 
   @override
   Future<void> fetchData() async {
-    targets.assignAll(await _service.fetchTargets());
+    targets.assignAll(
+      await _service.fetchTargets(forceNetwork: isForceRefresh),
+    );
   }
 
   void selectTypeFilter(ObTargetType? type) => typeFilter.value = type;

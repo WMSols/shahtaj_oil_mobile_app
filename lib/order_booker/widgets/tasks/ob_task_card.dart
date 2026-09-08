@@ -20,6 +20,7 @@ class ObTaskCard extends StatelessWidget {
     this.onNotes,
     this.onTap,
     this.isCheckingIn = false,
+    this.willSync = false,
   });
 
   final ObTaskModel task;
@@ -27,8 +28,9 @@ class ObTaskCard extends StatelessWidget {
   final VoidCallback? onNotes;
   final VoidCallback? onTap;
   final bool isCheckingIn;
+  final bool willSync;
 
-  bool get _canCheckIn => task.status == TaskStatus.pending;
+  bool get _canCheckIn => !willSync && task.status == TaskStatus.pending;
 
   bool get _hasNotes => task.notes != null && task.notes!.trim().isNotEmpty;
 
@@ -42,10 +44,11 @@ class ObTaskCard extends StatelessWidget {
       color: AppColors.black,
       fontSize: AppResponsive.scaleSize(context, 13),
     );
+    final statusColor = willSync ? AppColors.warning : task.status.chipColor;
 
     return AppOutlineCard(
       onTap: onTap,
-      statusColor: task.status.chipColor,
+      statusColor: statusColor,
       padding: AppSpacing.symmetric(context, h: 0.035, v: 0.016),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -58,15 +61,14 @@ class ObTaskCard extends StatelessWidget {
                 height: AppResponsive.scaleSize(context, 28),
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: task.status.chipColor.withValues(alpha: 0.2),
+                  color: statusColor.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: Text(
                   '${task.sequence}',
-                  style: AppTextStyles.caption(context).copyWith(
-                    color: task.status.chipColor,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: AppTextStyles.caption(
+                    context,
+                  ).copyWith(color: statusColor, fontWeight: FontWeight.w700),
                 ),
               ),
               AppSpacing.horizontal(context, 0.02),
@@ -183,7 +185,10 @@ class ObTaskCard extends StatelessWidget {
             ),
           ],
           AppSpacing.vertical(context, 0.012),
-          AppStatusChip.task(task.status, fullWidth: true),
+          if (willSync)
+            AppStatusChip.willSync(fullWidth: true)
+          else
+            AppStatusChip.task(task.status, fullWidth: true),
         ],
       ),
     );

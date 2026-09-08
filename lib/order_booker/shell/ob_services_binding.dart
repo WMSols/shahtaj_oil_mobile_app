@@ -1,6 +1,8 @@
 import 'package:get/get.dart';
 
+import 'package:shahtaj_oil_mobile_app/core/database/app_database.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/sync_outbox_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/tasks/ob_task_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/visit/ob_visit_cart_service.dart';
 
@@ -17,7 +19,11 @@ class OrderBookerServicesBinding {
     }
     if (!Get.isRegistered<ObVisitCartService>()) {
       Get.put<ObVisitCartService>(
-        ObVisitCartService(Get.find<ApiClient>()),
+        ObVisitCartService(
+          Get.find<ApiClient>(),
+          Get.find<AppDatabase>(),
+          Get.find<SyncOutboxService>(),
+        ),
         permanent: true,
       );
     }

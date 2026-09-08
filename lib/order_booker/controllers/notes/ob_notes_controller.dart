@@ -23,6 +23,7 @@ class ObNotesController extends GetxController {
   late final ObNotesPurpose purpose;
   int? taskId;
   int? visitId;
+  String? shopId;
   late final String _initialNotes;
 
   Map<String, dynamic> get _args => Get.arguments is Map
@@ -58,6 +59,7 @@ class ObNotesController extends GetxController {
     purpose = args['purpose'] as ObNotesPurpose? ?? ObNotesPurpose.taskNotes;
     taskId = args['taskId'] as int?;
     visitId = args['visitId'] as int?;
+    shopId = args['shopId'] as String?;
     _initialNotes = args['initialNotes'] as String? ?? '';
     notesController = TextEditingController(text: _initialNotes);
   }
@@ -137,9 +139,25 @@ class ObNotesController extends GetxController {
       if (!isClosed) isSaving.value = false;
       return;
     }
-    await _cartService.endWithoutOrder(visitId: id, notes: notes);
+    final active = _taskService.activeVisitSync;
+    final resolvedTaskId = taskId ?? active?.taskId;
+    final resolvedShopId = shopId ?? active?.shopId ?? '';
+    if (resolvedTaskId == null) {
+      AppToast.showError(AppTexts.error);
+      return;
+    }
+    final result = await _cartService.endWithoutOrder(
+      visitId: id,
+      taskId: resolvedTaskId,
+      shopId: resolvedShopId,
+      notes: notes,
+    );
     await _taskService.clearActiveVisit(visitId: id);
-    AppToast.showSuccess(AppTexts.obVisitClosedSuccess);
+    AppToast.showSuccess(
+      result.queued
+          ? AppTexts.obVisitQueuedForSync
+          : AppTexts.obVisitClosedSuccess,
+    );
     OrderBookerShellController.returnToTodayTasks();
   }
 

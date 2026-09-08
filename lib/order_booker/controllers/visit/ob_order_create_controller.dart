@@ -148,10 +148,24 @@ class ObOrderCreateController extends GetxController {
   }
 
   Future<void> _loadProductsAndCart(ObActiveVisitModel active, int id) async {
-    products.assignAll(await _cartService.fetchProducts(visitId: id));
+    products.assignAll(
+      await _cartService.fetchProducts(visitId: id, forceRefresh: false),
+    );
     cart.value = await _cartService.fetchCart(
       visitId: id,
       shopName: active.shopName,
+      mergeFromServer: true,
+    );
+    _pruneQtyStateToCurrentLines();
+  }
+
+  Future<void> _refreshLocalCart() async {
+    final active = activeVisit.value;
+    if (active == null) return;
+    cart.value = await _cartService.fetchCart(
+      visitId: active.visitId,
+      shopName: active.shopName,
+      mergeFromServer: false,
     );
     _pruneQtyStateToCurrentLines();
   }
@@ -193,7 +207,7 @@ class ObOrderCreateController extends GetxController {
         visitId: active.visitId,
         productId: product.id,
       );
-      await _reloadCart();
+      await _refreshLocalCart();
     } on ApiException catch (e) {
       AppToast.showError(e.message);
     } catch (_) {
@@ -356,12 +370,14 @@ class ObOrderCreateController extends GetxController {
         lineId: lineId,
         quantity: quantity,
       );
-      await _reloadCart();
+      qtyDrafts.remove(lineId);
+      qtyPreviews.remove(lineId);
+      await _refreshLocalCart();
     } on ApiException catch (e) {
-      await _reloadCart();
+      await _refreshLocalCart();
       AppToast.showError(e.message);
     } catch (_) {
-      await _reloadCart();
+      await _refreshLocalCart();
       AppToast.showError(AppTexts.error);
     }
   }
@@ -376,7 +392,7 @@ class ObOrderCreateController extends GetxController {
     qtyPreviews.remove(lineId);
     try {
       await _cartService.removeLine(visitId: active.visitId, lineId: lineId);
-      await _reloadCart();
+      await _refreshLocalCart();
     } on ApiException catch (e) {
       AppToast.showError(e.message);
     } catch (_) {
@@ -439,13 +455,20 @@ class ObOrderCreateController extends GetxController {
     isPlacingOrder.value = true;
     try {
       final position = await AppHelper.requireCurrentPosition(showGuide: true);
-      await _cartService.placeOrder(
+      final result = await _cartService.submitOrder(
         visitId: active.visitId,
+        taskId: active.taskId,
+        shopId: active.shopId,
+        shopName: active.shopName,
         latitude: position.latitude,
         longitude: position.longitude,
       );
       await _taskService.completeActiveVisit(visitId: active.visitId);
-      AppToast.showSuccess(AppTexts.obOrderPlacedSuccess);
+      AppToast.showSuccess(
+        result.queued
+            ? AppTexts.obOrderQueuedForSync
+            : AppTexts.obOrderPlacedSuccess,
+      );
       _navigateToTodayTasks();
     } on ApiException catch (e) {
       AppToast.showError(e.message);
@@ -483,6 +506,8 @@ class ObOrderCreateController extends GetxController {
       arguments: {
         'purpose': ObNotesPurpose.endVisitWithoutOrder,
         'visitId': active.visitId,
+        'taskId': active.taskId,
+        'shopId': active.shopId,
       },
     );
   }
@@ -528,11 +553,5 @@ class ObOrderCreateController extends GetxController {
 
   Future<void> leave() async {
     if (await confirmLeave()) Get.back();
-  }
-
-  Future<void> _reloadCart() async {
-    final active = activeVisit.value;
-    if (active == null) return;
-    await _loadProductsAndCart(active, active.visitId);
   }
 }

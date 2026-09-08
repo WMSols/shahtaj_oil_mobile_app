@@ -21,12 +21,19 @@ class ObTaskService extends GetxService {
   ObRouteModel? _route;
   ObActiveVisitModel? _activeVisit;
 
-  Future<ObTodayTasksModel> fetchTodayTasks({bool allowStaleFallback = true}) {
+  Future<ObTodayTasksModel> fetchTodayTasks({
+    bool allowStaleFallback = true,
+    bool forceNetwork = false,
+  }) {
     return _cache.readThrough(
       key: OfflineCacheKeys.tasksToday,
       fetch: () => _api.postData(ApiEndpoints.obTasksToday),
       parse: (data) => _applyToday(ObTodayTasksModel.fromJson(data)),
       allowStaleFallback: allowStaleFallback,
+      cacheFirst: _cache.cacheFirstFor(
+        allowStaleFallback: allowStaleFallback,
+        forceNetwork: forceNetwork,
+      ),
     );
   }
 
@@ -65,7 +72,7 @@ class ObTaskService extends GetxService {
     bool forceRefresh = false,
   }) async {
     if (forceRefresh) {
-      await fetchTodayTasks(allowStaleFallback: false);
+      await fetchTodayTasks(allowStaleFallback: false, forceNetwork: true);
     }
     try {
       return _tasks.firstWhere((task) => task.id == taskId);
@@ -84,7 +91,7 @@ class ObTaskService extends GetxService {
     bool forceRefresh = false,
   }) async {
     if (forceRefresh) {
-      await fetchTodayTasks(allowStaleFallback: false);
+      await fetchTodayTasks(allowStaleFallback: false, forceNetwork: true);
     }
     try {
       return _tasks.firstWhere((task) => task.shopId == shopId);

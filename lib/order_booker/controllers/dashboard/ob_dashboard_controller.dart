@@ -57,11 +57,13 @@ class ObDashboardController extends GetxController with CachedLoadMixin {
   ObTargetsModel get targets =>
       dashboard.value?.targets ?? const ObTargetsModel();
 
-  /// Prefer network; only used by [loadCached]. Force refresh rejects stale disk.
+  /// Prefer network on force refresh; keep stale fallback unless forcing strict load.
   bool _allowStaleFallback = true;
+  bool _forceNetwork = false;
 
   Future<void> loadDashboard({bool force = false}) async {
     _allowStaleFallback = !force;
+    _forceNetwork = force;
     await loadCached(force: force);
     await _refreshActiveVisit();
   }
@@ -70,6 +72,7 @@ class ObDashboardController extends GetxController with CachedLoadMixin {
   Future<void> fetchData() async {
     dashboard.value = await _service.fetchDashboard(
       allowStaleFallback: _allowStaleFallback,
+      forceNetwork: _forceNetwork,
     );
   }
 

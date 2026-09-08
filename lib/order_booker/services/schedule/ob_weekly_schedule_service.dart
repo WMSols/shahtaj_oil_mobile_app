@@ -12,11 +12,14 @@ class ObWeeklyScheduleService extends GetxService {
   final ApiClient _api;
   final OfflineCacheService _cache;
 
-  Future<ObWeeklyScheduleModel> fetchWeeklySchedule() {
+  Future<ObWeeklyScheduleModel> fetchWeeklySchedule({
+    bool forceNetwork = false,
+  }) {
     return _cache.readThrough(
       key: OfflineCacheKeys.scheduleWeekly,
       fetch: () => _api.postData(ApiEndpoints.obScheduleWeekly),
       parse: ObWeeklyScheduleModel.fromJson,
+      cacheFirst: _cache.cacheFirstFor(forceNetwork: forceNetwork),
     );
   }
 }

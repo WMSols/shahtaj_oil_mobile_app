@@ -44,9 +44,10 @@ class ObWeeklyScheduleController extends GetxController with CachedLoadMixin {
 
   @override
   Future<void> fetchData() async {
+    final force = isForceRefresh;
     final results = await Future.wait([
-      _weeklyScheduleService.fetchWeeklySchedule(),
-      _dashboardService.fetchDashboard(),
+      _weeklyScheduleService.fetchWeeklySchedule(forceNetwork: force),
+      _dashboardService.fetchDashboard(forceNetwork: force),
     ]);
     final schedule = results[0] as ObWeeklyScheduleModel;
     final dashboard = results[1] as ObDashboardModel;

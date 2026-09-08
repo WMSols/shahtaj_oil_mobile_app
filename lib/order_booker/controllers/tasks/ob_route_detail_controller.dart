@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/sync_outbox_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_active_visit_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_task_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_today_tasks_model.dart';
@@ -30,12 +31,24 @@ class ObRouteDetailController extends GetxController {
     TaskStatus.completed,
   ];
 
+  bool isQueuedForSync(ObTaskModel task) {
+    if (!Get.isRegistered<SyncOutboxService>()) return false;
+    return Get.find<SyncOutboxService>().isTaskQueuedForSync(task.id);
+  }
+
+  /// Display status: queued local submits look completed until sync finishes.
+  TaskStatus displayStatusFor(ObTaskModel task) {
+    if (isQueuedForSync(task)) return TaskStatus.completed;
+    return task.status;
+  }
+
   List<ObTaskModel> get filteredSortedTasks {
     final tasks = todayTasks.value?.tasks ?? const <ObTaskModel>[];
     final filter = statusFilter.value;
     final query = searchQuery.value.trim().toLowerCase();
     final filtered = tasks.where((task) {
-      if (filter != null && task.status != filter) return false;
+      final status = displayStatusFor(task);
+      if (filter != null && status != filter) return false;
       if (query.isEmpty) return true;
       return task.shopName.toLowerCase().contains(query) ||
           (task.ownerName?.toLowerCase().contains(query) ?? false);
@@ -48,7 +61,9 @@ class ObRouteDetailController extends GetxController {
     };
 
     filtered.sort((a, b) {
-      final byStatus = rank(a.status).compareTo(rank(b.status));
+      final byStatus = rank(
+        displayStatusFor(a),
+      ).compareTo(rank(displayStatusFor(b)));
       if (byStatus != 0) return byStatus;
       return a.sequence.compareTo(b.sequence);
     });
@@ -90,6 +105,7 @@ class ObRouteDetailController extends GetxController {
     try {
       final data = await _taskService.fetchTodayTasks(
         allowStaleFallback: !force,
+        forceNetwork: force,
       );
       todayTasks.value = data;
       activeVisit.value = await _taskService.fetchActiveVisit();
@@ -100,6 +116,7 @@ class ObRouteDetailController extends GetxController {
         await _taskService.startRoute(routeId);
         todayTasks.value = await _taskService.fetchTodayTasks(
           allowStaleFallback: !force,
+          forceNetwork: force,
         );
       }
       error.value = null;

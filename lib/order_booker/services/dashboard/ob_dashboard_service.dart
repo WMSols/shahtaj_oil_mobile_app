@@ -19,10 +19,17 @@ class ObDashboardService extends GetxService {
   final ApiClient _api;
   final OfflineCacheService _cache;
 
-  Future<ObDashboardModel> fetchDashboard({bool allowStaleFallback = true}) {
+  Future<ObDashboardModel> fetchDashboard({
+    bool allowStaleFallback = true,
+    bool forceNetwork = false,
+  }) {
     return _cache.readThrough(
       key: OfflineCacheKeys.dashboard,
       allowStaleFallback: allowStaleFallback,
+      cacheFirst: _cache.cacheFirstFor(
+        allowStaleFallback: allowStaleFallback,
+        forceNetwork: forceNetwork,
+      ),
       fetch: () async {
         final results = await Future.wait([
           _api.postData(ApiEndpoints.obTasksToday),

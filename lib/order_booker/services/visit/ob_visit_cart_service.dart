@@ -1,24 +1,65 @@
-import 'package:get/get.dart';
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:drift/drift.dart';
+import 'package:get/get.dart' hide Value;
 
 import 'package:shahtaj_oil_mobile_app/core/constants/api_endpoints.dart';
+import 'package:shahtaj_oil_mobile_app/core/database/app_database.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/connectivity_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/sync_outbox_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/visit/ob_product_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/visit/ob_visit_cart_line_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/visit/ob_visit_cart_model.dart';
 
+/// Local-first visit cart backed by SQLite. Network is used on initial load
+/// and when flushing the submit outbox — not on every cart tap.
 class ObVisitCartService extends GetxService {
-  ObVisitCartService(this._api);
+  ObVisitCartService(this._api, this._db, this._outbox);
 
   final ApiClient _api;
-  final Map<int, List<ObVisitCartLineModel>> _linesByVisit = {};
-  final Map<int, List<ObProductModel>> _productsByVisit = {};
+  final AppDatabase _db;
+  final SyncOutboxService _outbox;
+
+  int _nextLocalLineId = -1;
 
   Future<List<ObProductModel>> fetchProducts({
     required int visitId,
     int limit = 500,
     int offset = 0,
+    bool forceRefresh = false,
+  }) async {
+    if (!forceRefresh) {
+      final cached = await _readProductsFromDb(visitId);
+      if (cached.isNotEmpty && _shouldServeCacheOnly()) return cached;
+      if (cached.isNotEmpty && !forceRefresh) {
+        unawaited(
+          _fetchProductsFromNetwork(visitId, limit: limit, offset: offset),
+        );
+        return cached;
+      }
+    }
+
+    try {
+      return await _fetchProductsFromNetwork(
+        visitId,
+        limit: limit,
+        offset: offset,
+      );
+    } catch (_) {
+      final cached = await _readProductsFromDb(visitId);
+      if (cached.isNotEmpty) return cached;
+      rethrow;
+    }
+  }
+
+  Future<List<ObProductModel>> _fetchProductsFromNetwork(
+    int visitId, {
+    required int limit,
+    required int offset,
   }) async {
     final data = await _api.postData(
       ApiEndpoints.obProductsList,
@@ -28,14 +69,55 @@ class ObVisitCartService extends GetxService {
       data,
       'products',
     ).map(ObProductModel.fromJson).toList(growable: false);
-    _productsByVisit[visitId] = List<ObProductModel>.from(products);
+
+    await _db.replaceProductsForVisit(
+      visitId,
+      products
+          .map(
+            (p) => VisitProductsCompanion.insert(
+              visitId: visitId,
+              productId: p.id,
+              jsonPayload: jsonEncode(p.toJson()),
+            ),
+          )
+          .toList(growable: false),
+    );
     return products;
+  }
+
+  Future<List<ObProductModel>> _readProductsFromDb(int visitId) async {
+    final rows = await _db.productsForVisit(visitId);
+    return rows
+        .map((row) {
+          try {
+            final json = jsonDecode(row.jsonPayload) as Map<String, dynamic>;
+            return ObProductModel.fromJson(json);
+          } catch (_) {
+            return null;
+          }
+        })
+        .whereType<ObProductModel>()
+        .toList(growable: false);
   }
 
   Future<ObVisitCartModel> fetchCart({
     required int visitId,
     required String shopName,
+    bool mergeFromServer = true,
   }) async {
+    if (mergeFromServer && !_shouldServeCacheOnly()) {
+      try {
+        await _mergeServerCart(visitId: visitId);
+      } catch (_) {
+        // Continue with local lines.
+      }
+    }
+
+    final lines = await _readLinesFromDb(visitId);
+    return ObVisitCartModel(visitId: visitId, shopName: shopName, lines: lines);
+  }
+
+  Future<void> _mergeServerCart({required int visitId}) async {
     final data = await _api.postData(
       ApiEndpoints.obVisitsGet,
       data: {'visit_id': visitId},
@@ -45,8 +127,22 @@ class ObVisitCartService extends GetxService {
       visitJson,
       'lines',
     ).map(ObVisitCartLineModel.fromJson).toList(growable: false);
-    _linesByVisit[visitId] = List<ObVisitCartLineModel>.from(lines);
-    return ObVisitCartModel(visitId: visitId, shopName: shopName, lines: lines);
+
+    await _db.clearVisitCart(visitId);
+    for (final line in lines) {
+      await _db.upsertCartLine(
+        VisitCartLinesCompanion.insert(
+          visitId: visitId,
+          lineId: line.lineId,
+          productId: line.productId,
+          productName: line.productName,
+          quantity: line.quantity,
+          priceUnit: line.priceUnit,
+          unit: Value(line.unit),
+          isLocalOnly: const Value(false),
+        ),
+      );
+    }
   }
 
   Future<ObVisitCartLineModel> addLine({
@@ -54,16 +150,48 @@ class ObVisitCartService extends GetxService {
     required int productId,
     double quantity = 1,
   }) async {
-    final data = await _api.postData(
-      ApiEndpoints.obVisitsLineAdd,
-      data: {
-        'visit_id': visitId,
-        'product_id': productId,
-        'quantity': quantity,
-      },
+    final existing = await _findLineByProduct(visitId, productId);
+    if (existing != null) {
+      return updateLine(
+        visitId: visitId,
+        lineId: existing.lineId,
+        quantity: existing.quantity + quantity,
+      );
+    }
+
+    final products = await _readProductsFromDb(visitId);
+    ObProductModel? product;
+    for (final item in products) {
+      if (item.id == productId) {
+        product = item;
+        break;
+      }
+    }
+    if (product == null && !_shouldServeCacheOnly()) {
+      final fresh = await _fetchProductsFromNetwork(
+        visitId,
+        limit: 500,
+        offset: 0,
+      );
+      for (final item in fresh) {
+        if (item.id == productId) product = item;
+      }
+    }
+    if (product == null) {
+      throw ApiException(message: 'Product not found in local catalog.');
+    }
+
+    final lineId = _nextLocalLineId--;
+    final line = ObVisitCartLineModel(
+      lineId: lineId,
+      productId: product.id,
+      productName: product.name,
+      quantity: quantity,
+      priceUnit: product.priceUnit,
+      unit: product.unit,
     );
-    _cacheVisitLines(visitId, data);
-    return _lineFromResponse(data);
+    await _persistLine(visitId, line, localOnly: true);
+    return line;
   }
 
   Future<ObVisitCartLineModel> updateLine({
@@ -72,94 +200,224 @@ class ObVisitCartService extends GetxService {
     double? quantity,
     double? priceUnit,
   }) async {
-    final payload = <String, dynamic>{'line_id': lineId};
-    if (quantity != null) payload['quantity'] = quantity;
-    if (priceUnit != null) payload['price_unit'] = priceUnit;
-
-    final data = await _api.postData(
-      ApiEndpoints.obVisitsLineUpdate,
-      data: payload,
+    final current = await _findLine(visitId, lineId);
+    if (current == null) {
+      throw ApiException(message: 'Cart line not found locally.');
+    }
+    final updated = current.copyWith(
+      quantity: quantity ?? current.quantity,
+      priceUnit: priceUnit ?? current.priceUnit,
     );
-    _cacheVisitLines(visitId, data);
-    return _lineFromResponse(data);
+    await _persistLine(visitId, updated, localOnly: lineId < 0);
+    return updated;
   }
 
   Future<void> removeLine({required int visitId, required int lineId}) async {
-    final data = await _api.postData(
-      ApiEndpoints.obVisitsLineRemove,
-      data: {'line_id': lineId},
-    );
-    _cacheVisitLines(visitId, data);
+    await _db.deleteCartLine(visitId: visitId, lineId: lineId);
   }
 
-  Future<String> placeOrder({
+  /// Queues or immediately syncs order submit. Returns order number when synced.
+  Future<ObOrderSubmitResult> submitOrder({
     required int visitId,
+    required int taskId,
+    required String shopId,
+    required String shopName,
     required double latitude,
     required double longitude,
   }) async {
-    final data = await _api.postData(
-      ApiEndpoints.obVisitsPlaceOrder,
-      data: {'visit_id': visitId, 'latitude': latitude, 'longitude': longitude},
+    final cart = await fetchCart(
+      visitId: visitId,
+      shopName: shopName,
+      mergeFromServer: false,
     );
-    _linesByVisit[visitId] = [];
-    _productsByVisit.remove(visitId);
-
-    final visit = ApiMap.asMap(data['visit']);
-    final order =
-        ApiMap.asString(data['sale_order_name']) ??
-        ApiMap.asString(data['order_number']) ??
-        ApiMap.asString(data['order_id']) ??
-        ApiMap.asString(visit?['sale_order_name']) ??
-        ApiMap.asString(visit?['order_number']) ??
-        ApiMap.asString(visit?['order_id']);
-    if (order == null || order.isEmpty) {
-      throw ApiException(message: 'Order placed but no order id was returned.');
+    if (cart.lines.isEmpty) {
+      throw ApiException(message: 'Cart is empty.');
     }
-    return order;
+
+    final payload = {
+      'visit_id': visitId,
+      'task_id': taskId,
+      'shop_id': shopId,
+      'latitude': latitude,
+      'longitude': longitude,
+      'lines': cart.lines.map((l) => l.toJson()).toList(growable: false),
+    };
+
+    if (_shouldServeCacheOnly()) {
+      await _outbox.enqueue(
+        role: 'orderBooker',
+        action: 'submit_order',
+        payload: payload,
+      );
+      return const ObOrderSubmitResult(queued: true, orderNumber: null);
+    }
+
+    try {
+      await _outbox.enqueue(
+        role: 'orderBooker',
+        action: 'submit_order',
+        payload: payload,
+      );
+      await _outbox.flush(force: true);
+      final orderNumber = await _readOrderNumber(visitId);
+      if (orderNumber != null) {
+        await _db.clearVisitCart(visitId);
+        return ObOrderSubmitResult(queued: false, orderNumber: orderNumber);
+      }
+      return const ObOrderSubmitResult(queued: true, orderNumber: null);
+    } on ApiException catch (e) {
+      final existing = await _readOrderNumber(visitId);
+      if (existing != null) {
+        await _db.clearVisitCart(visitId);
+        return ObOrderSubmitResult(queued: false, orderNumber: existing);
+      }
+      if (_isAmbiguousError(e)) {
+        return const ObOrderSubmitResult(queued: true, orderNumber: null);
+      }
+      rethrow;
+    }
   }
 
-  Future<void> endWithoutOrder({
+  Future<ObOrderSubmitResult> endWithoutOrder({
     required int visitId,
+    required int taskId,
+    required String shopId,
     required String notes,
   }) async {
-    await _api.postData(
-      ApiEndpoints.obVisitsEndWithoutOrder,
-      data: {'visit_id': visitId, 'notes': notes.trim()},
-    );
-    _linesByVisit[visitId] = [];
-    _productsByVisit.remove(visitId);
+    final payload = {
+      'visit_id': visitId,
+      'task_id': taskId,
+      'shop_id': shopId,
+      'notes': notes.trim(),
+    };
+
+    if (_shouldServeCacheOnly()) {
+      await _outbox.enqueue(
+        role: 'orderBooker',
+        action: 'end_visit_without_order',
+        payload: payload,
+      );
+      return const ObOrderSubmitResult(queued: true, orderNumber: null);
+    }
+
+    try {
+      await _outbox.enqueue(
+        role: 'orderBooker',
+        action: 'end_visit_without_order',
+        payload: payload,
+      );
+      await _outbox.flush(force: true);
+      return const ObOrderSubmitResult(queued: false, orderNumber: null);
+    } on ApiException catch (e) {
+      if (_isAmbiguousError(e)) {
+        return const ObOrderSubmitResult(queued: true, orderNumber: null);
+      }
+      rethrow;
+    }
   }
 
   Future<void> saveVisitNotes({
     required int visitId,
     required String notes,
   }) async {
+    if (_shouldServeCacheOnly()) {
+      await _outbox.enqueue(
+        role: 'orderBooker',
+        action: 'visit_notes',
+        payload: {'visit_id': visitId, 'notes': notes.trim()},
+      );
+      return;
+    }
     await _api.postData(
       ApiEndpoints.obVisitsNotes,
       data: {'visit_id': visitId, 'notes': notes.trim()},
     );
   }
 
-  void _cacheVisitLines(int visitId, Map<String, dynamic> data) {
-    final visit = ApiMap.asMap(data['visit']);
-    if (visit == null) return;
-    _linesByVisit[visitId] = ApiMap.listOf(
-      visit,
-      'lines',
-    ).map(ObVisitCartLineModel.fromJson).toList();
-  }
-
-  ObVisitCartLineModel _lineFromResponse(Map<String, dynamic> data) {
-    final line = ApiMap.asMap(data['line']);
-    if (line != null) return ObVisitCartLineModel.fromJson(line);
-
-    final visit = ApiMap.asMap(data['visit']);
-    final lines = visit == null
-        ? const <Map<String, dynamic>>[]
-        : ApiMap.listOf(visit, 'lines');
-    if (lines.isNotEmpty) {
-      return ObVisitCartLineModel.fromJson(lines.last);
+  Future<String?> _readOrderNumber(int visitId) async {
+    try {
+      final data = await _api.postData(
+        ApiEndpoints.obVisitsGet,
+        data: {'visit_id': visitId},
+      );
+      final visit = ApiMap.asMap(data['visit']) ?? data;
+      return ApiMap.asString(visit['sale_order_name']) ??
+          ApiMap.asString(visit['order_number']);
+    } catch (_) {
+      return null;
     }
-    throw ApiException(message: 'Cart line response was empty.');
   }
+
+  bool _shouldServeCacheOnly() {
+    if (!Get.isRegistered<ConnectivityService>()) return false;
+    final c = Get.find<ConnectivityService>();
+    return !c.isOnline.value || c.quality.value == NetworkQuality.weak;
+  }
+
+  bool _isAmbiguousError(ApiException e) {
+    final msg = e.message.toLowerCase();
+    return msg.contains('timed out') ||
+        msg.contains('timeout') ||
+        msg.contains('internet') ||
+        msg.contains('connection');
+  }
+
+  Future<void> _persistLine(
+    int visitId,
+    ObVisitCartLineModel line, {
+    required bool localOnly,
+  }) async {
+    await _db.upsertCartLine(
+      VisitCartLinesCompanion.insert(
+        visitId: visitId,
+        lineId: line.lineId,
+        productId: line.productId,
+        productName: line.productName,
+        quantity: line.quantity,
+        priceUnit: line.priceUnit,
+        unit: Value(line.unit),
+        isLocalOnly: Value(localOnly),
+      ),
+    );
+  }
+
+  Future<ObVisitCartLineModel?> _findLine(int visitId, int lineId) async {
+    final rows = await _db.linesForVisit(visitId);
+    for (final row in rows) {
+      if (row.lineId == lineId) return _mapLine(row);
+    }
+    return null;
+  }
+
+  Future<ObVisitCartLineModel?> _findLineByProduct(
+    int visitId,
+    int productId,
+  ) async {
+    final rows = await _db.linesForVisit(visitId);
+    for (final row in rows) {
+      if (row.productId == productId) return _mapLine(row);
+    }
+    return null;
+  }
+
+  Future<List<ObVisitCartLineModel>> _readLinesFromDb(int visitId) async {
+    final rows = await _db.linesForVisit(visitId);
+    return rows.map(_mapLine).toList(growable: false);
+  }
+
+  ObVisitCartLineModel _mapLine(VisitCartLine row) => ObVisitCartLineModel(
+    lineId: row.lineId,
+    productId: row.productId,
+    productName: row.productName,
+    quantity: row.quantity,
+    priceUnit: row.priceUnit,
+    unit: row.unit,
+  );
+}
+
+class ObOrderSubmitResult {
+  const ObOrderSubmitResult({required this.queued, this.orderNumber});
+
+  final bool queued;
+  final String? orderNumber;
 }
