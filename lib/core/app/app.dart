@@ -43,7 +43,7 @@ class ShahtajOilApp extends StatelessWidget {
               fit: StackFit.expand,
               children: [
                 child ?? const SizedBox.shrink(),
-                const AppTopFeedbackOverlay(),
+                const AppBottomFeedbackOverlay(),
               ],
             ),
           ),

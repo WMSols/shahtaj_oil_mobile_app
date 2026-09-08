@@ -12,7 +12,7 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_icon_button.dart
 
 enum AppToastStatus { success, information, warning, error }
 
-/// Top feedback bar hosted in the app [Stack] (see [AppTopFeedbackOverlay]).
+/// Bottom feedback bar hosted in the app [Stack] (see [AppBottomFeedbackOverlay]).
 ///
 /// Not backed by GetX snackbars — those caused [LateInitializationError] when
 /// closing sticky errors or navigating with [Get.back].
@@ -27,7 +27,7 @@ abstract class AppToast {
   static Timer? _timer;
   static bool _isExiting = false;
 
-  /// Bumped whenever toast visibility changes — observe in [AppTopFeedbackOverlay].
+  /// Bumped whenever toast visibility changes — observe in feedback overlay.
   static int get overlayEpoch => _overlayEpoch.value;
 
   static bool get hasToast => _payload.value != null;
@@ -151,8 +151,7 @@ abstract class AppToastColors {
   }
 }
 
-/// Slides [child] in from the top when [visible] becomes true, and out to the
-/// top when it becomes false. Collapses height with the same animation.
+/// Slides [child] in from the bottom (or top) when [visible] becomes true.
 class AppSlideInBar extends StatefulWidget {
   const AppSlideInBar({
     super.key,
@@ -160,12 +159,14 @@ class AppSlideInBar extends StatefulWidget {
     required this.child,
     this.onExitComplete,
     this.duration = AppToast.slideDuration,
+    this.fromBottom = false,
   });
 
   final bool visible;
   final Widget child;
   final VoidCallback? onExitComplete;
   final Duration duration;
+  final bool fromBottom;
 
   @override
   State<AppSlideInBar> createState() => _AppSlideInBarState();
@@ -174,7 +175,7 @@ class AppSlideInBar extends StatefulWidget {
 class _AppSlideInBarState extends State<AppSlideInBar>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
-  late final Animation<Offset> _slide;
+  late Animation<Offset> _slide;
   late final Animation<double> _size;
 
   @override
@@ -187,7 +188,7 @@ class _AppSlideInBarState extends State<AppSlideInBar>
       reverseCurve: Curves.easeInCubic,
     );
     _slide = Tween<Offset>(
-      begin: const Offset(0, -1),
+      begin: Offset(0, widget.fromBottom ? 1 : -1),
       end: Offset.zero,
     ).animate(curved);
     _size = curved;
@@ -206,6 +207,17 @@ class _AppSlideInBarState extends State<AppSlideInBar>
     super.didUpdateWidget(oldWidget);
     if (widget.duration != oldWidget.duration) {
       _controller.duration = widget.duration;
+    }
+    if (widget.fromBottom != oldWidget.fromBottom) {
+      final curved = CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeOutCubic,
+        reverseCurve: Curves.easeInCubic,
+      );
+      _slide = Tween<Offset>(
+        begin: Offset(0, widget.fromBottom ? 1 : -1),
+        end: Offset.zero,
+      ).animate(curved);
     }
     if (widget.visible == oldWidget.visible) return;
 
@@ -233,7 +245,9 @@ class _AppSlideInBarState extends State<AppSlideInBar>
         child: SizeTransition(
           sizeFactor: _size,
           axis: Axis.vertical,
-          alignment: Alignment.topCenter,
+          alignment: widget.fromBottom
+              ? Alignment.bottomCenter
+              : Alignment.topCenter,
           child: widget.child,
         ),
       ),
@@ -241,10 +255,10 @@ class _AppSlideInBarState extends State<AppSlideInBar>
   }
 }
 
-/// Full-width top bar with message (and close only for sticky errors).
+/// Full-width bar with message (and close only for sticky errors).
 ///
-/// Does not pad for the status bar — wrap a stack of bars in [SafeArea]
-/// (see [AppTopFeedbackOverlay]) so color does not bleed into the system bar.
+/// Does not pad for system insets — wrap stacks in [SafeArea]
+/// (see [AppBottomFeedbackOverlay]).
 class AppToastBar extends StatelessWidget {
   const AppToastBar({
     super.key,

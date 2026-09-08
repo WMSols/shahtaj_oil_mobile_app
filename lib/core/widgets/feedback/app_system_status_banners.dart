@@ -6,10 +6,10 @@ import 'package:shahtaj_oil_mobile_app/core/services/connectivity_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/location_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 
-/// Sticky location/offline banners + transient toasts, stacked under the status
-/// bar (same SafeArea + slide-from-top look for every message).
-class AppTopFeedbackOverlay extends StatelessWidget {
-  const AppTopFeedbackOverlay({super.key});
+/// Sticky location/offline banners + transient toasts, stacked above the
+/// system nav bar (slide-from-bottom).
+class AppBottomFeedbackOverlay extends StatelessWidget {
+  const AppBottomFeedbackOverlay({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -28,29 +28,16 @@ class AppTopFeedbackOverlay extends StatelessWidget {
       return Positioned(
         left: 0,
         right: 0,
-        top: 0,
+        bottom: 0,
         child: SafeArea(
-          bottom: false,
+          top: false,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               AppSlideInBar(
-                visible: locationOff,
-                child: AppToastBar(
-                  message: AppTexts.locationServicesOff,
-                  style: AppToastStyle.warning,
-                ),
-              ),
-              AppSlideInBar(
-                visible: offline,
-                child: AppToastBar(
-                  message: AppTexts.noInternet,
-                  style: AppToastStyle.error,
-                ),
-              ),
-              AppSlideInBar(
                 key: ValueKey('app-toast-slide-${AppToast.toastToken}'),
                 visible: AppToast.isVisible,
+                fromBottom: true,
                 onExitComplete: AppToast.completeClose,
                 child: hasToast
                     ? AppToastBar(
@@ -63,6 +50,22 @@ class AppTopFeedbackOverlay extends StatelessWidget {
                       )
                     : const SizedBox.shrink(),
               ),
+              AppSlideInBar(
+                visible: offline,
+                fromBottom: true,
+                child: AppToastBar(
+                  message: AppTexts.noInternet,
+                  style: AppToastStyle.error,
+                ),
+              ),
+              AppSlideInBar(
+                visible: locationOff,
+                fromBottom: true,
+                child: AppToastBar(
+                  message: AppTexts.locationServicesOff,
+                  style: AppToastStyle.warning,
+                ),
+              ),
             ],
           ),
         ),
@@ -70,3 +73,7 @@ class AppTopFeedbackOverlay extends StatelessWidget {
     });
   }
 }
+
+/// @deprecated Use [AppBottomFeedbackOverlay]. Kept as a typedef alias name
+/// for older references during rename.
+typedef AppTopFeedbackOverlay = AppBottomFeedbackOverlay;
