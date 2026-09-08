@@ -54,8 +54,8 @@ class AppIconButton extends StatelessWidget {
                 Icon(icon, color: iconColor, size: size),
               if (!isLoading && badge != null && badge!.isNotEmpty)
                 Positioned(
-                  right: -2,
-                  top: -2,
+                  right: 0,
+                  bottom: -5,
                   child: Container(
                     padding: EdgeInsets.all(
                       AppResponsive.scaleSize(context, 4),

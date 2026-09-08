@@ -54,11 +54,8 @@ class ConnectivityService extends GetxService {
     }
 
     _connectivity.onConnectivityChanged.listen(_onConnectivityChanged);
-    if (isOnline.value && Get.isRegistered<OfflineCacheService>()) {
-      unawaited(Get.find<OfflineCacheService>().flushSyncQueue());
-    }
-    if (isOnline.value && Get.isRegistered<SyncOutboxService>()) {
-      unawaited(Get.find<SyncOutboxService>().flush(force: true));
+    if (isOnline.value) {
+      _flushOutboxIfReady();
     }
     if (_canProbeQuality) {
       unawaited(_probeQuality());
@@ -66,11 +63,28 @@ class ConnectivityService extends GetxService {
         const Duration(seconds: 12),
         (_) => unawaited(_probeQuality()),
       );
+    } else if (isOnline.value) {
+      quality.value = NetworkQuality.good;
     }
     return this;
   }
 
   bool get _canProbeQuality => !kIsWeb && Platform.isAndroid;
+
+  bool get _isReadyToSync =>
+      isOnline.value &&
+      (quality.value == NetworkQuality.medium ||
+          quality.value == NetworkQuality.good);
+
+  void _flushOutboxIfReady() {
+    if (!_isReadyToSync) return;
+    if (Get.isRegistered<OfflineCacheService>()) {
+      unawaited(Get.find<OfflineCacheService>().flushSyncQueue());
+    }
+    if (Get.isRegistered<SyncOutboxService>()) {
+      unawaited(Get.find<SyncOutboxService>().flush(force: true));
+    }
+  }
 
   void _onConnectivityChanged(List<ConnectivityResult> result) {
     final online = _hasConnection(result);
@@ -89,17 +103,16 @@ class ConnectivityService extends GetxService {
     if (_wasOffline || !wasOnline) {
       _wasOffline = false;
       AppToast.showSuccess(AppTexts.backOnline);
-      if (Get.isRegistered<OfflineCacheService>()) {
-        unawaited(Get.find<OfflineCacheService>().flushSyncQueue());
-      }
-      if (Get.isRegistered<SyncOutboxService>()) {
-        unawaited(Get.find<SyncOutboxService>().flush(force: true));
+      if (!_canProbeQuality) {
+        quality.value = NetworkQuality.good;
+        _flushOutboxIfReady();
       }
     }
     if (_canProbeQuality) {
       unawaited(_probeQuality());
     } else {
       quality.value = NetworkQuality.good;
+      _flushOutboxIfReady();
     }
   }
 
@@ -111,6 +124,7 @@ class ConnectivityService extends GetxService {
     }
 
     _probing = true;
+    final previous = quality.value;
     final stopwatch = Stopwatch()..start();
     try {
       await _probe.get<void>(_probeUrl);
@@ -125,6 +139,14 @@ class ConnectivityService extends GetxService {
       if (isOnline.value) quality.value = NetworkQuality.weak;
     } finally {
       _probing = false;
+    }
+
+    final becameReady =
+        (previous == NetworkQuality.offline ||
+            previous == NetworkQuality.weak) &&
+        _isReadyToSync;
+    if (becameReady) {
+      _flushOutboxIfReady();
     }
   }
 

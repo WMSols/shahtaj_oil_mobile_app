@@ -60,7 +60,7 @@ class AppShell<T extends AppShellController> extends GetView<T> {
             centerTitle: true,
             title: Text(
               currentLeaf.label,
-              style: AppTextStyles.heading(context),
+              style: AppTextStyles.screenTitle(context),
             ),
             leadingWidth: AppResponsive.screenWidth(context) * 0.28,
             leading: Padding(
@@ -80,8 +80,8 @@ class AppShell<T extends AppShellController> extends GetView<T> {
                         ? Get.find<SyncOutboxService>().pendingCount.value
                         : 0;
                     return AppIconButton(
-                      icon: AppIcons.cloudUpload,
-                      iconColor: AppColors.warning,
+                      icon: count > 0 ? AppIcons.doSync : AppIcons.syncDone,
+                      iconColor: AppColors.primary,
                       iconSize: iconSize,
                       badge: count > 0 ? '$count' : null,
                       onTap: () => Get.toNamed(AppRoutes.syncCenter),

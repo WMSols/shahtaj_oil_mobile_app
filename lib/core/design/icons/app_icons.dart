@@ -126,6 +126,12 @@ class AppIcons {
   static const IconData cloudUpload = Iconsax.cloud_add;
   static const IconData cloudUpload5 = Iconsax.cloud_add5;
 
+  static const IconData doSync = Iconsax.cloud_change;
+  static const IconData doSync5 = Iconsax.cloud_change5;
+
+  static const IconData syncDone = Iconsax.cloud_add;
+  static const IconData syncDone5 = Iconsax.cloud_add5;
+
   static const IconData gps = Iconsax.gps;
   static const IconData gps5 = Iconsax.gps5;
 
@@ -176,6 +182,8 @@ class AppIcons {
       map => map5,
       wallet => wallet5,
       cloudUpload => cloudUpload5,
+      doSync => doSync5,
+      syncDone => syncDone5,
       gps => gps5,
       userAdd => userAdd5,
       cameraAdd => cameraAdd5,
