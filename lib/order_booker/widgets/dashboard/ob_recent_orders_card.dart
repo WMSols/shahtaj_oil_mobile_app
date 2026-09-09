@@ -41,7 +41,7 @@ class _RecentOrderRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppOutlineCard(
       onTap: onTap,
-      statusColor: order.status.chipColor,
+      statusColor: order.approval.state.chipColor,
       padding: AppSpacing.symmetric(context, h: 0.04, v: 0.015),
       child: Row(
         children: [
@@ -60,7 +60,7 @@ class _RecentOrderRow extends StatelessWidget {
                   ).copyWith(color: AppColors.grey),
                 ),
                 AppSpacing.vertical(context, 0.006),
-                AppStatusChip.order(order.status),
+                AppStatusChip.orderApprovalInfo(order.approval),
               ],
             ),
           ),

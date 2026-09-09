@@ -1,5 +1,6 @@
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/orders/ob_order_approval_info.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/shops/ob_shop_missing_field.dart';
 
 class ObTaskModel {
@@ -21,6 +22,7 @@ class ObTaskModel {
     this.visitTag = ShopVisitTag.visited,
     this.missingFields = const [],
     this.shopType,
+    this.orderApproval = ObOrderApprovalInfo.empty,
   });
 
   final int id;
@@ -40,6 +42,10 @@ class ObTaskModel {
   final ShopVisitTag visitTag;
   final List<ObShopMissingField> missingFields;
   final ShopType? shopType;
+  final ObOrderApprovalInfo orderApproval;
+
+  bool get hasPendingOrderVerification =>
+      orderApproval.state == ObOrderApprovalState.toApprove;
 
   bool get hasShopCoordinates =>
       shopLatitude != null &&
@@ -66,6 +72,7 @@ class ObTaskModel {
     ShopVisitTag? visitTag,
     List<ObShopMissingField>? missingFields,
     ShopType? shopType,
+    ObOrderApprovalInfo? orderApproval,
   }) => ObTaskModel(
     id: id ?? this.id,
     shopId: shopId ?? this.shopId,
@@ -84,10 +91,13 @@ class ObTaskModel {
     visitTag: visitTag ?? this.visitTag,
     missingFields: missingFields ?? this.missingFields,
     shopType: shopType ?? this.shopType,
+    orderApproval: orderApproval ?? this.orderApproval,
   );
 
   factory ObTaskModel.fromJson(Map<String, dynamic> json) {
     final shop = ApiMap.asMap(json['shop']) ?? const <String, dynamic>{};
+    final visit = ApiMap.asMap(json['visit']);
+    final order = ApiMap.asMap(json['order']) ?? ApiMap.asMap(visit?['order']);
     final needsShopSetup =
         json['needs_shop_setup'] == true ||
         shop['needs_shop_setup'] == true ||
@@ -142,6 +152,10 @@ class ObTaskModel {
             json['shopCategory'] ??
             shop['shop_category'] ??
             shop['shopCategory'],
+      ),
+      orderApproval: ObOrderApprovalInfo.fromOrderAndVisit(
+        order: order,
+        visit: visit ?? json,
       ),
     );
   }

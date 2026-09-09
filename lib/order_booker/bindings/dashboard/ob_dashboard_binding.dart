@@ -5,10 +5,12 @@ import 'package:shahtaj_oil_mobile_app/order_booker/services/dashboard/ob_dashbo
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/tasks/ob_task_service.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/shell/ob_services_binding.dart';
 
 class ObDashboardBinding extends Bindings {
   @override
   void dependencies() {
+    OrderBookerServicesBinding.ensureRegistered();
     Get.lazyPut<ObDashboardService>(
       () => ObDashboardService(Get.find<ApiClient>()),
     );

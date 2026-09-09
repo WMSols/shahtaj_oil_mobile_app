@@ -187,8 +187,18 @@ class ObTaskCard extends StatelessWidget {
           AppSpacing.vertical(context, 0.012),
           if (willSync)
             AppStatusChip.willSync(fullWidth: true)
-          else
+          else ...[
             AppStatusChip.task(task.status, fullWidth: true),
+            if (task.status == TaskStatus.completed &&
+                task.hasPendingOrderVerification) ...[
+              AppSpacing.vertical(context, 0.008),
+              AppStatusChip(
+                label: task.orderApproval.displayLabel,
+                color: task.orderApproval.state.chipColor,
+                fullWidth: true,
+              ),
+            ],
+          ],
         ],
       ),
     );
