@@ -50,6 +50,7 @@ class ObDashboardController extends GetxController with CachedLoadMixin {
   int get totalTasks => dashboard.value?.totalTasks ?? 0;
   int get ordersTodayCount => dashboard.value?.ordersTodayCount ?? 0;
   double get ordersTodayValue => dashboard.value?.ordersTodayValue ?? 0;
+  int get pendingApprovalCount => dashboard.value?.pendingApprovalCount ?? 0;
   List<ObOrderSummaryModel> get recentOrders =>
       (dashboard.value?.recentOrders ?? const [])
           .take(3)
@@ -115,16 +116,16 @@ class ObDashboardController extends GetxController with CachedLoadMixin {
     }
   }
 
-  void goToOrderHistory({VisitOutcome? outcome}) {
+  void goToOrderHistory({VisitOutcome? outcome, ObOrderApprovalState? status}) {
     if (Get.isRegistered<OrderBookerShellController>()) {
       Get.find<OrderBookerShellController>().selectLeaf('ob_history');
-      if (outcome != null) {
-        Future.microtask(() {
-          if (Get.isRegistered<ObHistoryController>()) {
-            Get.find<ObHistoryController>().selectOutcomeFilter(outcome);
-          }
-        });
-      }
+      Future.microtask(() {
+        if (Get.isRegistered<ObHistoryController>()) {
+          final history = Get.find<ObHistoryController>();
+          if (outcome != null) history.selectOutcomeFilter(outcome);
+          if (status != null) history.selectApprovalFilter(status);
+        }
+      });
     }
   }
 

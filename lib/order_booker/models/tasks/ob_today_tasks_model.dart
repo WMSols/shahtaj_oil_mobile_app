@@ -9,6 +9,9 @@ class ObTodayTasksModel {
   final ObRouteModel route;
   final List<ObTaskModel> tasks;
 
+  ObTodayTasksModel copyWith({ObRouteModel? route, List<ObTaskModel>? tasks}) =>
+      ObTodayTasksModel(route: route ?? this.route, tasks: tasks ?? this.tasks);
+
   int get completedCount =>
       tasks.where((task) => task.status == TaskStatus.completed).length;
 
@@ -79,7 +82,4 @@ class ObTodayTasksModel {
           : status,
     );
   }
-
-  ObTodayTasksModel copyWith({ObRouteModel? route, List<ObTaskModel>? tasks}) =>
-      ObTodayTasksModel(route: route ?? this.route, tasks: tasks ?? this.tasks);
 }

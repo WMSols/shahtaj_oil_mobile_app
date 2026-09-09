@@ -14,6 +14,7 @@ class ObDashboardModel {
     this.totalTasks = 0,
     this.ordersTodayCount = 0,
     this.ordersTodayValue = 0,
+    this.pendingApprovalCount = 0,
   });
 
   final ObRouteModel? todaysRoute;
@@ -25,6 +26,7 @@ class ObDashboardModel {
   final int totalTasks;
   final int ordersTodayCount;
   final double ordersTodayValue;
+  final int pendingApprovalCount;
 
   factory ObDashboardModel.fromJson(Map<String, dynamic> json) {
     final routeJson = json['todays_route'] ?? json['route'];
@@ -44,6 +46,7 @@ class ObDashboardModel {
       totalTasks: ApiMap.asInt(json['total_tasks']) ?? 0,
       ordersTodayCount: ApiMap.asInt(json['orders_today_count']) ?? 0,
       ordersTodayValue: ApiMap.asDouble(json['orders_today_value']) ?? 0,
+      pendingApprovalCount: ApiMap.asInt(json['pending_approval_count']) ?? 0,
     );
   }
 
@@ -58,6 +61,7 @@ class ObDashboardModel {
       'total_tasks': totalTasks,
       'orders_today_count': ordersTodayCount,
       'orders_today_value': ordersTodayValue,
+      'pending_approval_count': pendingApprovalCount,
     };
   }
 }

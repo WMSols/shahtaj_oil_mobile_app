@@ -1,16 +1,16 @@
 import 'package:get/get.dart';
 
-import 'package:shahtaj_oil_mobile_app/core/constants/api_endpoints.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
+import 'package:shahtaj_oil_mobile_app/core/constants/api_endpoints.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/dashboard/ob_dashboard_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/history/ob_visit_summary_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/orders/ob_order_summary_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/targets/ob_target_item_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/targets/ob_targets_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_today_tasks_model.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/history/ob_visit_summary_model.dart';
 
 class ObDashboardService extends GetxService {
   ObDashboardService(this._api, {OfflineCacheService? cache})
@@ -62,6 +62,12 @@ class ObDashboardService extends GetxService {
             })
             .toList(growable: false);
 
+        final pendingApprovalCount = orderVisits
+            .where(
+              (visit) => visit.approval.state == ObOrderApprovalState.toApprove,
+            )
+            .length;
+
         return ObDashboardModel(
           todaysRoute: today.route.id.isEmpty ? null : today.route,
           completedTasks: today.completedCount,
@@ -73,6 +79,7 @@ class ObDashboardService extends GetxService {
             0,
             (sum, visit) => sum + (visit.subtotal ?? 0),
           ),
+          pendingApprovalCount: pendingApprovalCount,
           recentOrders: orderVisits
               .map(_orderFromVisit)
               .toList(growable: false),
@@ -90,21 +97,15 @@ class ObDashboardService extends GetxService {
   ObOrderSummaryModel _orderFromVisit(ObVisitSummaryModel visit) {
     final number = visit.orderNumber ?? 'SO-${visit.visitId}';
     return ObOrderSummaryModel(
-      // Route param for order detail is visit_id (via visits/get).
       id: '${visit.visitId}',
       orderNumber: number,
       shopName: visit.shopName,
       amount: visit.subtotal ?? 0,
-      // Dashboard recent orders are always visit outcomes with an order.
-      status: OrderStatus.submitted,
+      approval: visit.approval,
     );
   }
 
-  Future<void> startRoute(String routeId) async {
-    // No dedicated start-route API in Shahtaj v1.
-  }
+  Future<void> startRoute(String routeId) async {}
 
-  Future<void> continueRoute(String routeId) async {
-    // No dedicated continue-route API in Shahtaj v1.
-  }
+  Future<void> continueRoute(String routeId) async {}
 }
