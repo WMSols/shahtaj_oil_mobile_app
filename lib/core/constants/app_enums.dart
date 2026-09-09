@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/images/app_images.dart';
@@ -7,6 +7,12 @@ import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 enum UserRole { orderBooker, deliveryMan }
 
 enum OrderStatus { draft, submitted, confirmed, delivered, cancelled }
+
+/// Backend order.approval_state / visit.order_approval_state.
+enum ObOrderApprovalState { none, toApprove, approved, rejected }
+
+/// Backend approval_reasons values.
+enum ObOrderApprovalReason { discount, credit }
 
 enum DeliveryStatus { pending, pickedUp, inTransit, delivered, returned }
 
@@ -99,6 +105,66 @@ extension OrderStatusX on OrderStatus {
     OrderStatus.cancelled => AppColors.error,
     OrderStatus.draft => AppColors.textMuted,
   };
+}
+
+extension ObOrderApprovalStateX on ObOrderApprovalState {
+  String get label => switch (this) {
+    ObOrderApprovalState.none => AppTexts.obOrderApprovalStandard,
+    ObOrderApprovalState.toApprove =>
+      AppTexts.obOrderApprovalPendingVerification,
+    ObOrderApprovalState.approved => AppTexts.obOrderApprovalVerified,
+    ObOrderApprovalState.rejected => AppTexts.obOrderApprovalRejected,
+  };
+
+  Color get chipColor => switch (this) {
+    ObOrderApprovalState.approved => AppColors.success,
+    ObOrderApprovalState.none => AppColors.primary,
+    ObOrderApprovalState.toApprove => AppColors.warning,
+    ObOrderApprovalState.rejected => AppColors.error,
+  };
+
+  static ObOrderApprovalState? tryParse(String? raw) {
+    if (raw == null || raw.trim().isEmpty) return null;
+    final normalized = raw.trim().toLowerCase().replaceAll('-', '_');
+    return switch (normalized) {
+      'none' || 'standard' => ObOrderApprovalState.none,
+      'to_approve' ||
+      'toapprove' ||
+      'pending' ||
+      'pending_verification' ||
+      'pendingverification' => ObOrderApprovalState.toApprove,
+      'approved' || 'verified' => ObOrderApprovalState.approved,
+      'rejected' => ObOrderApprovalState.rejected,
+      _ => null,
+    };
+  }
+}
+
+extension ObOrderApprovalReasonX on ObOrderApprovalReason {
+  String get label => switch (this) {
+    ObOrderApprovalReason.discount => AppTexts.obApprovalReasonDiscount,
+    ObOrderApprovalReason.credit => AppTexts.obApprovalReasonCredit,
+  };
+
+  static ObOrderApprovalReason? tryParse(String? raw) {
+    if (raw == null || raw.trim().isEmpty) return null;
+    final normalized = raw.trim().toLowerCase();
+    return switch (normalized) {
+      'discount' => ObOrderApprovalReason.discount,
+      'credit' => ObOrderApprovalReason.credit,
+      _ => null,
+    };
+  }
+
+  static List<ObOrderApprovalReason> parseList(dynamic raw) {
+    if (raw is! List) return const [];
+    final out = <ObOrderApprovalReason>[];
+    for (final item in raw) {
+      final parsed = tryParse(item?.toString());
+      if (parsed != null && !out.contains(parsed)) out.add(parsed);
+    }
+    return out;
+  }
 }
 
 extension DeliveryStatusX on DeliveryStatus {

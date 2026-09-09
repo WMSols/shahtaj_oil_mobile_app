@@ -6,6 +6,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/responsive/app_responsive.dar
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/orders/ob_order_approval_info.dart';
 
 class AppStatusChip extends StatelessWidget {
   const AppStatusChip({
@@ -28,6 +29,12 @@ class AppStatusChip extends StatelessWidget {
 
   factory AppStatusChip.order(OrderStatus status) =>
       AppStatusChip(label: status.label, color: status.chipColor);
+
+  factory AppStatusChip.orderApproval(ObOrderApprovalState status) =>
+      AppStatusChip(label: status.label, color: status.chipColor);
+
+  factory AppStatusChip.orderApprovalInfo(ObOrderApprovalInfo info) =>
+      AppStatusChip(label: info.displayLabel, color: info.state.chipColor);
 
   factory AppStatusChip.sync(SyncStatus status) =>
       AppStatusChip(label: status.label, color: status.chipColor, soft: true);

@@ -375,8 +375,84 @@ class AppTexts {
   static String get obAddToCart => 'obAddToCart'.tr;
   static String get obAlreadyInCart => 'obAlreadyInCart'.tr;
   static String get obPlaceOrder => 'obPlaceOrder'.tr;
+  static String get obSubmitOrder => 'obSubmitOrder'.tr;
   static String get obPlaceOrderConfirmMessage =>
       'obPlaceOrderConfirmMessage'.tr;
+  static String get obSubmitOrderStandardMessage =>
+      'obSubmitOrderStandardMessage'.tr;
+  static String get obSubmitOrderDiscountMessage =>
+      'obSubmitOrderDiscountMessage'.tr;
+  static String get obSubmitOrderCreditMessage =>
+      'obSubmitOrderCreditMessage'.tr;
+  static String get obSubmitOrderDiscountAndCreditMessage =>
+      'obSubmitOrderDiscountAndCreditMessage'.tr;
+  static String get obSubmitOrderExceptionMessage =>
+      'obSubmitOrderDiscountMessage'.tr;
+  static String get obOrderSubmitSummaryTitle => 'obOrderSubmitSummaryTitle'.tr;
+  static String get obAppRateTotal => 'obAppRateTotal'.tr;
+  static String get obProposedTotal => 'obProposedTotal'.tr;
+  static String get obDiscountTotal => 'obDiscountTotal'.tr;
+  static String get obExceptionOrderBadge =>
+      'obOrderApprovalPendingVerification'.tr;
+  static String get obOrderSentToKpo => 'obOrderSentToKpo'.tr;
+  static String get obOrderPendingApprovalNote =>
+      'obOrderPendingApprovalNote'.tr;
+  static String get obOrderApprovalSection => 'obOrderApprovalSection'.tr;
+  static String get obOrderApprovalStatusLabel =>
+      'obOrderApprovalStatusLabel'.tr;
+  static String get obOrderApprovalFilterAll => 'obOrderApprovalFilterAll'.tr;
+  static String get obOrderApprovalStandard => 'obOrderApprovalStandard'.tr;
+  static String get obOrderApprovalPendingVerification =>
+      'obOrderApprovalPendingVerification'.tr;
+  static String get obOrderApprovalVerified => 'obOrderApprovalVerified'.tr;
+  static String get obOrderApprovalRejected => 'obOrderApprovalRejected'.tr;
+  static String get obApprovalReasonDiscount => 'obApprovalReasonDiscount'.tr;
+  static String get obApprovalReasonCredit => 'obApprovalReasonCredit'.tr;
+  static String get obApprovalReasonsLabel => 'obApprovalReasonsLabel'.tr;
+  static String get obApprovalLabel => 'obApprovalLabel'.tr;
+  static String get obRejectionReason => 'obRejectionReason'.tr;
+  static String get obApproverLabel => 'obApproverLabel'.tr;
+  static String get obApprovedAtLabel => 'obApprovedAtLabel'.tr;
+  static String get obVerifiedAtLabel => 'obVerifiedAtLabel'.tr;
+  static String get obAppRateLabel => 'obAppRateLabel'.tr;
+  static String get obProposedRateLabel => 'obProposedRateLabel'.tr;
+  static String get obProposedRateHint => 'obProposedRateHint'.tr;
+  static String get obProposedRateAboveAppRate =>
+      'obProposedRateAboveAppRate'.tr;
+  static String get obApprovedRateLabel => 'obApprovedRateLabel'.tr;
+  static String get obCartAppRateHint => 'obCartAppRateHint'.tr;
+  static String get obRateVariance => 'obRateVariance'.tr;
+  static String get obResubmitOrder => 'obResubmitOrder'.tr;
+  static String get obResubmitOrderNote => 'obResubmitOrderNote'.tr;
+  static String get obSnapshotPendingApproval =>
+      'obOrderApprovalPendingVerification'.tr;
+  static String get obOrderProcessingFilterAll => 'obOrderApprovalFilterAll'.tr;
+  static String get obOrderProcessingStatusLabel =>
+      'obOrderApprovalStatusLabel'.tr;
+  static String get obOrderStatusBooked => 'obOrderApprovalStandard'.tr;
+  static String get obOrderStatusPendingApproval =>
+      'obOrderApprovalPendingVerification'.tr;
+  static String get obOrderStatusApproved => 'obOrderApprovalVerified'.tr;
+  static String get obOrderStatusRejected => 'obOrderApprovalRejected'.tr;
+  static String get obOrderStatusProcessed => 'obOrderApprovalVerified'.tr;
+  static String get obOrderPlacedPendingApproval =>
+      'obOrderPlacedPendingVerification'.tr;
+  static String get obOrderPlacedPendingVerification =>
+      'obOrderPlacedPendingVerification'.tr;
+  static String get obCreditCheckSection => 'obCreditCheckSection'.tr;
+  static String get obCreditReviewSection => 'obCreditReviewSection'.tr;
+  static String get obCreditFlagsInfoNote => 'obCreditFlagsInfoNote'.tr;
+  static String get obCreditFlagsForManager => 'obCreditFlagsForManager'.tr;
+  static String get obCreditFlagDataIncomplete =>
+      'obCreditFlagDataIncomplete'.tr;
+  static String get obCreditFlagExceedsLimit => 'obCreditFlagExceedsLimit'.tr;
+  static String get obCreditFlagLowRemaining => 'obCreditFlagLowRemaining'.tr;
+  static String get obCreditWouldExceedWarning =>
+      'obCreditWouldExceedWarning'.tr;
+  static String get obOrderAmountLabel => 'obOrderAmountLabel'.tr;
+  static String get obProjectedExposureLabel => 'obProjectedExposureLabel'.tr;
+  static String get obRemainingAfterOrderLabel =>
+      'obRemainingAfterOrderLabel'.tr;
   static String get obEndVisitWithoutOrder => 'obEndVisitWithoutOrder'.tr;
 
   static String get obEndVisitRequiresEmptyCart =>
