@@ -31,6 +31,7 @@ class ObShopModel {
     this.creditLimit,
     this.outstandingBalance,
     this.creditRemaining,
+    this.creditWouldExceed = false,
     this.legacyBalance,
     this.latitude,
     this.longitude,
@@ -57,6 +58,7 @@ class ObShopModel {
   final double? creditLimit;
   final double? outstandingBalance;
   final double? creditRemaining;
+  final bool creditWouldExceed;
   final double? legacyBalance;
   final double? latitude;
   final double? longitude;
@@ -138,6 +140,7 @@ class ObShopModel {
       creditLimit: creditLimit,
       outstandingBalance: ApiMap.asDouble(json['outstanding_balance']),
       creditRemaining: ApiMap.asDouble(json['credit_remaining']),
+      creditWouldExceed: json['credit_would_exceed'] == true,
       legacyBalance: ApiMap.asDouble(json['legacy_balance']),
       latitude: ApiMap.asDouble(json['latitude']),
       longitude: ApiMap.asDouble(json['longitude']),
@@ -207,6 +210,7 @@ class ObShopModel {
     'credit_limit': creditLimit,
     'outstanding_balance': outstandingBalance,
     'credit_remaining': creditRemaining,
+    'credit_would_exceed': creditWouldExceed,
     'legacy_balance': legacyBalance,
     'latitude': latitude,
     'longitude': longitude,

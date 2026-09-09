@@ -371,7 +371,13 @@ class SyncOutboxService extends GetxService {
       if (server == null) {
         await _api.postData(
           ApiEndpoints.obVisitsLineAdd,
-          data: {'visit_id': visitId, 'product_id': productId, 'quantity': qty},
+          data: {
+            'visit_id': visitId,
+            'product_id': productId,
+            'quantity': qty,
+            // Proposed/selling rate — required for discount approval path.
+            'price_unit': price,
+          },
         );
         continue;
       }
@@ -386,13 +392,51 @@ class SyncOutboxService extends GetxService {
           (serverPrice - price).abs() > 0.001) {
         await _api.postData(
           ApiEndpoints.obVisitsLineUpdate,
-          data: {
-            'line_id': lineId,
-            'quantity': qty,
-            if ((serverPrice - price).abs() > 0.001) 'price_unit': price,
-          },
+          data: {'line_id': lineId, 'quantity': qty, 'price_unit': price},
         );
       }
+    }
+
+    // Line/add may ignore price_unit — reconcile proposed rates after adds.
+    await _reconcileLinePrices(
+      visitId: visitId,
+      localByProduct: localByProduct,
+    );
+  }
+
+  Future<void> _reconcileLinePrices({
+    required int visitId,
+    required Map<int, Map<String, dynamic>> localByProduct,
+  }) async {
+    final data = await _api.postData(
+      ApiEndpoints.obVisitsGet,
+      data: {'visit_id': visitId},
+    );
+    final visit = ApiMap.asMap(data['visit']) ?? data;
+    final serverLines = ApiMap.listOf(visit, 'lines');
+
+    for (final server in serverLines) {
+      final productId = ApiMap.asInt(server['product_id']);
+      if (productId == null) continue;
+      final local = localByProduct[productId];
+      if (local == null) continue;
+
+      final price = ApiMap.asDouble(local['price_unit']) ?? 0;
+      final serverPrice = ApiMap.asDouble(server['price_unit']) ?? 0;
+      if ((serverPrice - price).abs() <= 0.001) continue;
+
+      final lineId =
+          ApiMap.asInt(server['line_id']) ?? ApiMap.asInt(server['id']);
+      if (lineId == null) continue;
+
+      final qty =
+          ApiMap.asDouble(local['quantity']) ??
+          ApiMap.asDouble(server['quantity']) ??
+          0;
+      await _api.postData(
+        ApiEndpoints.obVisitsLineUpdate,
+        data: {'line_id': lineId, 'quantity': qty, 'price_unit': price},
+      );
     }
   }
 

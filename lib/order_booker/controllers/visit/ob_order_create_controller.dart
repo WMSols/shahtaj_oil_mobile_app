@@ -18,6 +18,35 @@ import 'package:shahtaj_oil_mobile_app/order_booker/services/shops/ob_shop_servi
 import 'package:shahtaj_oil_mobile_app/order_booker/services/tasks/ob_task_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/visit/ob_visit_cart_service.dart';
 
+/// Client-side pre-submit preview (API remains source of truth after submit).
+class ObOrderSubmitPreview {
+  const ObOrderSubmitPreview({
+    required this.appTotal,
+    required this.proposedTotal,
+    required this.hasDiscount,
+    required this.hasCreditWarning,
+  });
+
+  final double appTotal;
+  final double proposedTotal;
+  final bool hasDiscount;
+  final bool hasCreditWarning;
+
+  double get discountTotal =>
+      hasDiscount ? (appTotal - proposedTotal).clamp(0, double.infinity) : 0;
+
+  bool get needsVerification => hasDiscount || hasCreditWarning;
+
+  String get confirmMessage {
+    if (hasDiscount && hasCreditWarning) {
+      return AppTexts.obSubmitOrderDiscountAndCreditMessage;
+    }
+    if (hasDiscount) return AppTexts.obSubmitOrderDiscountMessage;
+    if (hasCreditWarning) return AppTexts.obSubmitOrderCreditMessage;
+    return AppTexts.obSubmitOrderStandardMessage;
+  }
+}
+
 class ObOrderCreateController extends GetxController {
   ObOrderCreateController(
     this._taskService,
@@ -46,6 +75,59 @@ class ObOrderCreateController extends GetxController {
   final RxMap<int, String> qtyDrafts = <int, String>{}.obs;
   final RxMap<int, String?> qtyErrors = <int, String?>{}.obs;
   final RxMap<int, double?> qtyPreviews = <int, double?>{}.obs;
+  final RxMap<int, String> rateDrafts = <int, String>{}.obs;
+  final RxMap<int, String?> rateErrors = <int, String?>{}.obs;
+
+  ObOrderSubmitPreview? get submitPreview {
+    // Touch observables so Obx rebuilds when rates / qty / shop change.
+    cart.value;
+    shop.value;
+    products.length;
+    rateDrafts.length;
+    qtyDrafts.length;
+    qtyPreviews.length;
+
+    final currentCart = cart.value;
+    if (currentCart == null || currentCart.lines.isEmpty) return null;
+
+    var appTotal = 0.0;
+    var proposedTotal = 0.0;
+    var hasDiscount = false;
+
+    for (final line in currentCart.lines) {
+      final qty = displayQuantity(line);
+      final appRate = appRateForLine(line);
+      final proposed = proposedRateForLine(line);
+      appTotal += qty * appRate;
+      proposedTotal += qty * proposed;
+      if (proposed < appRate - 0.001) hasDiscount = true;
+    }
+
+    return ObOrderSubmitPreview(
+      appTotal: appTotal,
+      proposedTotal: proposedTotal,
+      hasDiscount: hasDiscount,
+      hasCreditWarning: creditWouldExceedForAmount(proposedTotal),
+    );
+  }
+
+  /// Live credit-exceed check for create-order UI (warn only, never blocks).
+  bool creditWouldExceedForAmount(double orderAmount) {
+    final currentShop = shop.value;
+    if (currentShop == null || !currentShop.isCreditShop) return false;
+    if (currentShop.creditWouldExceed) return true;
+
+    final remaining = currentShop.resolvedCreditRemaining;
+    if (remaining != null) {
+      return orderAmount > remaining + 0.001;
+    }
+    final limit = currentShop.creditLimit;
+    if (limit != null) {
+      final outstanding = currentShop.outstandingBalance ?? 0;
+      return (outstanding + orderAmount) > limit + 0.001;
+    }
+    return false;
+  }
 
   int? get visitId {
     final raw = Get.arguments is Map ? (Get.arguments as Map)['visitId'] : null;
@@ -128,14 +210,14 @@ class ObOrderCreateController extends GetxController {
     if (active.shopId.isEmpty) return;
 
     try {
-      shop.value = await _shopService.fetchShop(active.shopId);
+      shop.value = await _shopService.fetchShop(active.shopId, force: true);
       return;
     } catch (_) {
       // Fall through to shops/mine.
     }
 
     try {
-      final shops = await _shopService.fetchShops();
+      final shops = await _shopService.fetchShops(forceNetwork: true);
       for (final item in shops) {
         if (item.id == active.shopId) {
           shop.value = item;
@@ -177,6 +259,8 @@ class ObOrderCreateController extends GetxController {
     qtyDrafts.removeWhere((id, _) => !ids.contains(id));
     qtyErrors.removeWhere((id, _) => !ids.contains(id));
     qtyPreviews.removeWhere((id, _) => !ids.contains(id));
+    rateDrafts.removeWhere((id, _) => !ids.contains(id));
+    rateErrors.removeWhere((id, _) => !ids.contains(id));
 
     for (final line in lines) {
       final draft = qtyDrafts[line.lineId];
@@ -232,7 +316,9 @@ class ObOrderCreateController extends GetxController {
   }
 
   String quantityFieldText(ObVisitCartLineModel line) {
-    return qtyDrafts[line.lineId] ?? '';
+    final draft = qtyDrafts[line.lineId];
+    if (draft != null) return draft;
+    return formatQuantity(line.quantity);
   }
 
   String? quantityError(int lineId) => qtyErrors[lineId];
@@ -242,7 +328,89 @@ class ObOrderCreateController extends GetxController {
   }
 
   double displayLineTotal(ObVisitCartLineModel line) {
-    return displayQuantity(line) * line.priceUnit;
+    return displayQuantity(line) * proposedRateForLine(line);
+  }
+
+  double appRateForLine(ObVisitCartLineModel line) {
+    for (final item in products) {
+      if (item.id == line.productId) return item.priceUnit;
+    }
+    return line.priceUnit;
+  }
+
+  double proposedRateForLine(ObVisitCartLineModel line) {
+    final appRate = appRateForLine(line);
+    final draft = rateDrafts[line.lineId];
+    if (draft != null && draft.trim().isNotEmpty) {
+      final parsed = double.tryParse(draft.trim());
+      if (parsed != null && parsed >= 0) return parsed;
+    }
+    // After persist, cart may already hold the proposed unit price.
+    if ((line.priceUnit - appRate).abs() > 0.001) return line.priceUnit;
+    return appRate;
+  }
+
+  String rateFieldText(ObVisitCartLineModel line) {
+    final draft = rateDrafts[line.lineId];
+    if (draft != null) return draft;
+    return formatRate(proposedRateForLine(line));
+  }
+
+  String? rateError(int lineId) => rateErrors[lineId];
+
+  String formatRate(double rate) {
+    if (rate == rate.roundToDouble()) return rate.round().toString();
+    return rate.toStringAsFixed(2);
+  }
+
+  void onRateInputChanged(int lineId, String raw) {
+    rateDrafts[lineId] = raw;
+    final parsed = double.tryParse(raw.trim());
+    final line = lineById(lineId);
+    final appRate = line == null ? null : appRateForLine(line);
+    if (raw.trim().isEmpty) {
+      rateErrors[lineId] = null;
+    } else if (parsed == null || parsed < 0) {
+      rateErrors[lineId] = AppTexts.error;
+    } else if (appRate != null && parsed > appRate + 0.001) {
+      rateErrors[lineId] = AppTexts.obProposedRateAboveAppRate;
+    } else {
+      rateErrors[lineId] = null;
+    }
+    rateDrafts.refresh();
+    rateErrors.refresh();
+  }
+
+  Future<void> commitRateInput(int lineId) async {
+    final line = lineById(lineId);
+    if (line == null) return;
+
+    final raw = (rateDrafts[lineId] ?? '').trim();
+    if (raw.isEmpty) {
+      rateDrafts.remove(lineId);
+      rateErrors[lineId] = null;
+      rateDrafts.refresh();
+      rateErrors.refresh();
+      return;
+    }
+
+    final parsed = double.tryParse(raw);
+    final appRate = appRateForLine(line);
+    if (parsed == null || parsed < 0) {
+      rateErrors[lineId] = AppTexts.error;
+      rateErrors.refresh();
+      return;
+    }
+    if (parsed > appRate + 0.001) {
+      rateErrors[lineId] = AppTexts.obProposedRateAboveAppRate;
+      rateErrors.refresh();
+      return;
+    }
+
+    rateErrors[lineId] = null;
+    rateDrafts[lineId] = formatRate(parsed);
+    rateDrafts.refresh();
+    rateErrors.refresh();
   }
 
   /// Live cart subtotal from quantity drafts / previews (not only API cart).
@@ -251,6 +419,7 @@ class ObOrderCreateController extends GetxController {
     if (current == null) return 0;
     // Touch map so Obx rebuilds while typing.
     qtyPreviews.length;
+    rateDrafts.length;
     return current.lines.fold<double>(
       0,
       (sum, line) => sum + displayLineTotal(line),
@@ -390,6 +559,8 @@ class ObOrderCreateController extends GetxController {
     qtyDrafts.remove(lineId);
     qtyErrors.remove(lineId);
     qtyPreviews.remove(lineId);
+    rateDrafts.remove(lineId);
+    rateErrors.remove(lineId);
     try {
       await _cartService.removeLine(visitId: active.visitId, lineId: lineId);
       await _refreshLocalCart();
@@ -402,59 +573,127 @@ class ObOrderCreateController extends GetxController {
     }
   }
 
-  bool _hasQuantityInputIssues() {
+  bool _hasInputIssues() {
     final lines = cart.value?.lines ?? const <ObVisitCartLineModel>[];
     for (final line in lines) {
       final maxQty = maxQuantityForLine(line);
       if (line.quantity < 1 || line.quantity > maxQty) return true;
 
-      final error = qtyErrors[line.lineId];
-      if (error != null && error.isNotEmpty) return true;
+      final qtyError = qtyErrors[line.lineId];
+      if (qtyError != null && qtyError.isNotEmpty) return true;
+
+      final rateError = rateErrors[line.lineId];
+      if (rateError != null && rateError.isNotEmpty) return true;
 
       final draft = qtyDrafts[line.lineId];
-      if (draft == null) continue;
-      final parsed = double.tryParse(draft.trim());
-      if (parsed != null && parsed > maxQty) return true;
+      if (draft != null) {
+        final parsed = double.tryParse(draft.trim());
+        if (parsed != null && parsed > maxQty) return true;
+      }
+
+      final rateDraft = rateDrafts[line.lineId];
+      if (rateDraft != null && rateDraft.trim().isNotEmpty) {
+        final parsedRate = double.tryParse(rateDraft.trim());
+        if (parsedRate == null || parsedRate < 0) return true;
+        final appRate = appRateForLine(line);
+        if (parsedRate > appRate + 0.001) return true;
+      }
+
+      if (proposedRateForLine(line) > appRateForLine(line) + 0.001) {
+        return true;
+      }
     }
     return false;
+  }
+
+  String? _firstRateValidationError() {
+    final lines = cart.value?.lines ?? const <ObVisitCartLineModel>[];
+    for (final line in lines) {
+      final rateError = rateErrors[line.lineId];
+      if (rateError != null && rateError.isNotEmpty) return rateError;
+
+      final rateDraft = rateDrafts[line.lineId];
+      if (rateDraft != null && rateDraft.trim().isNotEmpty) {
+        final parsedRate = double.tryParse(rateDraft.trim());
+        final appRate = appRateForLine(line);
+        if (parsedRate != null && parsedRate > appRate + 0.001) {
+          return AppTexts.obProposedRateAboveAppRate;
+        }
+      }
+
+      if (proposedRateForLine(line) > appRateForLine(line) + 0.001) {
+        return AppTexts.obProposedRateAboveAppRate;
+      }
+    }
+    return null;
+  }
+
+  String? _firstQuantityValidationError() {
+    final lines = cart.value?.lines ?? const <ObVisitCartLineModel>[];
+    for (final line in lines) {
+      final maxQty = maxQuantityForLine(line);
+      final qtyError = qtyErrors[line.lineId];
+      if (qtyError != null && qtyError.isNotEmpty) return qtyError;
+
+      final draft = qtyDrafts[line.lineId];
+      final parsed = draft == null ? null : double.tryParse(draft.trim());
+      if ((parsed != null && parsed > maxQty) || line.quantity > maxQty) {
+        return AppTexts.obNotEnoughStock(maxQty.toString());
+      }
+      if (line.quantity < 1) return AppTexts.error;
+    }
+    return null;
+  }
+
+  Future<void> _commitOpenEdits() async {
+    final lines = cart.value?.lines ?? const <ObVisitCartLineModel>[];
+    for (final line in lines) {
+      await commitQuantityInput(line.lineId);
+      await commitRateInput(line.lineId);
+    }
   }
 
   Future<void> promptPlaceOrder() async {
     final currentCart = cart.value;
     if (currentCart == null || currentCart.lines.isEmpty) return;
 
-    if (_hasQuantityInputIssues()) {
-      // Prefer a concrete line error when present.
-      for (final line in currentCart.lines) {
-        final maxQty = maxQuantityForLine(line);
-        final draft = qtyDrafts[line.lineId];
-        final parsed = draft == null ? null : double.tryParse(draft.trim());
-        if ((parsed != null && parsed > maxQty) ||
-            (qtyErrors[line.lineId]?.isNotEmpty ?? false) ||
-            line.quantity > maxQty) {
-          AppToast.showError(AppTexts.obNotEnoughStock(maxQty.toString()));
-          return;
-        }
+    await _commitOpenEdits();
+
+    if (_hasInputIssues()) {
+      final rateError = _firstRateValidationError();
+      if (rateError != null) {
+        AppToast.showError(rateError);
+        return;
+      }
+      final qtyError = _firstQuantityValidationError();
+      if (qtyError != null) {
+        AppToast.showError(qtyError);
+        return;
       }
       AppToast.showError(AppTexts.error);
       return;
     }
 
+    final preview = submitPreview;
+    if (preview == null) return;
+
     final confirmed = await AppConfirmSheet.show(
-      title: AppTexts.obPlaceOrder,
-      message: AppTexts.obPlaceOrderConfirmMessage,
-      confirmLabel: AppTexts.obPlaceOrder,
+      title: AppTexts.obSubmitOrder,
+      message: preview.confirmMessage,
+      confirmLabel: AppTexts.obSubmitOrder,
     );
     if (confirmed != true) return;
-    await placeOrder();
+    await placeOrder(preview);
   }
 
-  Future<void> placeOrder() async {
+  Future<void> placeOrder(ObOrderSubmitPreview preview) async {
     final active = activeVisit.value;
     if (active == null) return;
     isPlacingOrder.value = true;
     try {
       final position = await AppHelper.requireCurrentPosition(showGuide: true);
+      // Persist proposed selling rates into local cart before outbox submit.
+      await _persistProposedRatesToCart();
       final result = await _cartService.submitOrder(
         visitId: active.visitId,
         taskId: active.taskId,
@@ -467,6 +706,8 @@ class ObOrderCreateController extends GetxController {
       AppToast.showSuccess(
         result.queued
             ? AppTexts.obOrderQueuedForSync
+            : preview.needsVerification
+            ? AppTexts.obOrderPlacedPendingVerification
             : AppTexts.obOrderPlacedSuccess,
       );
       _navigateToTodayTasks();
@@ -477,6 +718,25 @@ class ObOrderCreateController extends GetxController {
     } finally {
       isPlacingOrder.value = false;
     }
+  }
+
+  Future<void> _persistProposedRatesToCart() async {
+    final active = activeVisit.value;
+    final current = cart.value;
+    if (active == null || current == null) return;
+
+    var changed = false;
+    for (final line in current.lines) {
+      final rate = proposedRateForLine(line);
+      if ((rate - line.priceUnit).abs() <= 0.0001) continue;
+      await _cartService.updateLine(
+        visitId: active.visitId,
+        lineId: line.lineId,
+        priceUnit: rate,
+      );
+      changed = true;
+    }
+    if (changed) await _refreshLocalCart();
   }
 
   /// Remaining free qty from product catalog (excludes this line's qty).
