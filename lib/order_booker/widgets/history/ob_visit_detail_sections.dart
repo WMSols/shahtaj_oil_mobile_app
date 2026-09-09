@@ -73,6 +73,15 @@ class ObVisitDetailInfoSection extends StatelessWidget {
                 AppDetailRow(
                   label: AppTexts.obOrderNumberLabel,
                   value: visit.orderNumber!,
+                  showDivider:
+                      visit.outcome == VisitOutcome.orderPlaced &&
+                      visit.approval.state != ObOrderApprovalState.none,
+                ),
+              if (visit.outcome == VisitOutcome.orderPlaced &&
+                  visit.approval.state != ObOrderApprovalState.none)
+                AppDetailRow(
+                  label: AppTexts.obOrderApprovalStatusLabel,
+                  trailing: AppStatusChip.orderApprovalInfo(visit.approval),
                   showDivider: false,
                 ),
             ],

@@ -25,6 +25,7 @@ class ObHistoryController extends GetxController {
   final Rxn<DateTime> dateFrom = Rxn<DateTime>();
   final Rxn<DateTime> dateTo = Rxn<DateTime>();
   final Rxn<VisitOutcome> outcomeFilter = Rxn<VisitOutcome>();
+  final Rxn<ObOrderApprovalState> approvalFilter = Rxn<ObOrderApprovalState>();
   final searchController = TextEditingController();
   final RxString searchQuery = ''.obs;
 
@@ -39,11 +40,25 @@ class ObHistoryController extends GetxController {
     VisitOutcome.endedWithoutOrder,
   ];
 
+  static const approvalFilters = <ObOrderApprovalState?>[
+    null,
+    ObOrderApprovalState.none,
+    ObOrderApprovalState.toApprove,
+    ObOrderApprovalState.approved,
+    ObOrderApprovalState.rejected,
+  ];
+
   List<ObVisitSummaryModel> get filteredVisits {
     final filter = outcomeFilter.value;
+    final approval = approvalFilter.value;
     final query = searchQuery.value.trim().toLowerCase();
     return visits.where((visit) {
       if (filter != null && visit.outcome != filter) return false;
+      if (approval != null &&
+          visit.outcome == VisitOutcome.orderPlaced &&
+          visit.approval.state != approval) {
+        return false;
+      }
       if (query.isEmpty) return true;
       return visit.shopName.toLowerCase().contains(query) ||
           (visit.ownerName?.toLowerCase().contains(query) ?? false) ||
@@ -145,9 +160,28 @@ class ObHistoryController extends GetxController {
 
   void selectOutcomeFilter(VisitOutcome? outcome) {
     outcomeFilter.value = outcome;
+    if (outcome != VisitOutcome.orderPlaced) {
+      approvalFilter.value = null;
+    }
     if (outcome != null) {
       unawaitedFill();
     }
+  }
+
+  void selectApprovalFilter(ObOrderApprovalState? status) {
+    approvalFilter.value = status;
+    if (status != null) {
+      outcomeFilter.value = VisitOutcome.orderPlaced;
+      unawaitedFill();
+    }
+  }
+
+  bool isApprovalSelected(ObOrderApprovalState? status) =>
+      approvalFilter.value == status;
+
+  String approvalFilterLabel(ObOrderApprovalState? status) {
+    if (status == null) return AppTexts.obOrderApprovalFilterAll;
+    return status.label;
   }
 
   void unawaitedFill() {

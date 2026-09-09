@@ -1,6 +1,7 @@
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/history/ob_visit_summary_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/orders/ob_order_approval_info.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/visit/ob_visit_cart_line_model.dart';
 
 class ObVisitDetailModel {
@@ -21,6 +22,8 @@ class ObVisitDetailModel {
     this.orderNumber,
     this.latitude,
     this.longitude,
+    this.approval = ObOrderApprovalInfo.empty,
+    this.creditWouldExceed = false,
   });
 
   final int visitId;
@@ -39,6 +42,8 @@ class ObVisitDetailModel {
   final String? orderNumber;
   final double? latitude;
   final double? longitude;
+  final ObOrderApprovalInfo approval;
+  final bool creditWouldExceed;
 
   bool get hasOrder =>
       outcome == VisitOutcome.orderPlaced &&
@@ -46,7 +51,12 @@ class ObVisitDetailModel {
 
   factory ObVisitDetailModel.fromJson(Map<String, dynamic> json) {
     final shop = ApiMap.asMap(json['shop']) ?? const <String, dynamic>{};
+    final order = ApiMap.asMap(json['order']);
     final linesJson = ApiMap.listOf(json, 'lines');
+    final approval = ObOrderApprovalInfo.fromOrderAndVisit(
+      order: order,
+      visit: json,
+    );
     return ObVisitDetailModel(
       visitId: ApiMap.asInt(json['visit_id']) ?? ApiMap.asInt(json['id']) ?? 0,
       shopId:
@@ -82,17 +92,21 @@ class ObVisitDetailModel {
       subtotal:
           ApiMap.asDouble(json['subtotal']) ??
           ApiMap.asDouble(json['order_amount']) ??
+          approval.amountTotal ??
           0,
-      orderId: ApiMap.asInt(json['order_id']),
+      orderId: ApiMap.asInt(json['order_id']) ?? ApiMap.asInt(order?['id']),
       orderNumber:
           ApiMap.asString(json['order_number']) ??
-          ApiMap.asString(json['sale_order_name']),
+          ApiMap.asString(json['sale_order_name']) ??
+          ApiMap.asString(order?['name']),
       latitude:
           ApiMap.asDouble(json['latitude']) ??
           ApiMap.asDouble(shop['latitude']),
       longitude:
           ApiMap.asDouble(json['longitude']) ??
           ApiMap.asDouble(shop['longitude']),
+      approval: approval,
+      creditWouldExceed: shop['credit_would_exceed'] == true,
     );
   }
 }

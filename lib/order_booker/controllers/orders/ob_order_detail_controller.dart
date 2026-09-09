@@ -3,8 +3,8 @@ import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/orders/ob_order_detail_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/history/ob_visit_detail_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/orders/ob_order_detail_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/orders/ob_order_detail_service.dart';
 
 class ObOrderDetailController extends GetxController {
@@ -16,7 +16,6 @@ class ObOrderDetailController extends GetxController {
   final RxnString error = RxnString();
   final Rxn<ObOrderDetailModel> order = Rxn<ObOrderDetailModel>();
 
-  /// Route `:id` / arguments carry the **visit id** (orders come from visits/get).
   String? get visitIdParam {
     final fromParams = Get.parameters['id']?.trim();
     if (fromParams != null && fromParams.isNotEmpty) return fromParams;
@@ -33,7 +32,6 @@ class ObOrderDetailController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    // Ensure Get.parameters / arguments are available after navigation.
     SchedulerBinding.instance.addPostFrameCallback((_) => load());
   }
 
@@ -44,7 +42,7 @@ class ObOrderDetailController extends GetxController {
     try {
       final args = Get.arguments;
       if (args is Map && args['visitDetail'] is ObVisitDetailModel) {
-        order.value = _service.fromVisitDetail(
+        order.value = await _service.fromVisitDetail(
           args['visitDetail'] as ObVisitDetailModel,
         );
         return;

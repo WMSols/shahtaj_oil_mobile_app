@@ -1,13 +1,12 @@
 import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/constants/api_endpoints.dart';
-import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/history/ob_visit_detail_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/orders/ob_order_detail_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/orders/ob_order_line_model.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/history/ob_visit_detail_model.dart';
 
 /// Order detail is served by `visits/get` (no dedicated orders API).
 class ObOrderDetailService extends GetxService {
@@ -15,13 +14,12 @@ class ObOrderDetailService extends GetxService {
 
   final ApiClient _api;
 
-  ObOrderDetailModel fromVisitDetail(ObVisitDetailModel visit) {
+  Future<ObOrderDetailModel> fromVisitDetail(ObVisitDetailModel visit) async {
     return ObOrderDetailModel(
       id: visit.orderId?.toString() ?? visit.orderNumber ?? '${visit.visitId}',
       orderNumber: visit.orderNumber ?? 'SO-${visit.visitId}',
       shopId: visit.shopId,
       shopName: visit.shopName,
-      status: OrderStatus.submitted,
       lines: visit.lines
           .map(
             (line) => ObOrderLineModel(
@@ -29,12 +27,15 @@ class ObOrderDetailService extends GetxService {
               productName: line.productName,
               quantity: line.quantity,
               unitPrice: line.priceUnit,
+              listPrice: line.priceUnit,
             ),
           )
           .toList(growable: false),
       subtotal: visit.subtotal,
       createdAt: visit.checkedOutAt ?? visit.checkedInAt,
       visitId: visit.visitId,
+      approval: visit.approval,
+      creditWouldExceed: visit.creditWouldExceed,
     );
   }
 
