@@ -2,15 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
+import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/controllers/orders/ob_order_detail_controller.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/orders/ob_order_approval_section.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/orders/ob_order_credit_section.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
-import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/widgets/orders/ob_order_line_tile.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/info/app_detail_row.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/controllers/orders/ob_order_detail_controller.dart';
 
 class ObOrderDetailContent extends GetView<ObOrderDetailController> {
   const ObOrderDetailContent({super.key});
@@ -24,7 +26,7 @@ class ObOrderDetailContent extends GetView<ObOrderDetailController> {
         padding: AppSpacing.screenPadding(context),
         children: [
           AppOutlineCard(
-            statusColor: order.status.chipColor,
+            statusColor: order.approval.state.chipColor,
             padding: EdgeInsets.zero,
             child: Column(
               children: [
@@ -37,14 +39,27 @@ class ObOrderDetailContent extends GetView<ObOrderDetailController> {
                   value: order.shopName,
                 ),
                 AppDetailRow(
-                  label: AppTexts.obVisitOutcomeLabel,
-                  trailing: AppStatusChip.order(order.status),
+                  label: AppTexts.obOrderApprovalStatusLabel,
+                  trailing: AppStatusChip.orderApprovalInfo(order.approval),
                   showDivider: false,
                 ),
               ],
             ),
           ),
-          AppSpacing.vertical(context, 0.02),
+          if (order.showsApprovalSection) ...[
+            AppSpacing.vertical(context, 0.016),
+            ObOrderApprovalSection(order: order),
+          ],
+          if (order.showsCreditSection) ...[
+            AppSpacing.vertical(context, 0.016),
+            ObOrderCreditSection(
+              approval: order.approval,
+              creditWouldExceed: order.creditWouldExceed,
+              orderAmount: order.subtotal,
+              forManagerReview: true,
+            ),
+          ],
+          AppSpacing.vertical(context, 0.016),
           Text(
             AppTexts.obVisitLinesSection,
             style: AppTextStyles.sectionTitle(context),

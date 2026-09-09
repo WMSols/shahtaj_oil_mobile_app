@@ -96,6 +96,25 @@ class ObVisitHistoryContent extends GetView<ObHistoryController> {
             ),
           ),
         ),
+        AppSpacing.vertical(context, 0.005),
+        Obx(
+          () => SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: AppSpacing.screenPadding(
+              context,
+            ).copyWith(top: 0, bottom: 0),
+            child: Row(
+              children: [
+                for (final status in ObHistoryController.approvalFilters)
+                  AppFilterChip(
+                    label: controller.approvalFilterLabel(status),
+                    selected: controller.isApprovalSelected(status),
+                    onTap: () => controller.selectApprovalFilter(status),
+                  ),
+              ],
+            ),
+          ),
+        ),
         Obx(() {
           final visits = controller.filteredVisits;
           if (controller.isLoading.value || visits.isEmpty) {

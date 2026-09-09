@@ -1,5 +1,6 @@
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/orders/ob_order_approval_info.dart';
 
 class ObVisitSummaryModel {
   const ObVisitSummaryModel({
@@ -7,14 +8,19 @@ class ObVisitSummaryModel {
     required this.shopName,
     required this.checkedInAt,
     required this.outcome,
+    this.shopId,
+    this.taskId,
     this.ownerName,
     this.checkedOutAt,
     this.orderId,
     this.orderNumber,
     this.subtotal,
+    this.approval = ObOrderApprovalInfo.empty,
   });
 
   final int visitId;
+  final String? shopId;
+  final int? taskId;
   final String shopName;
   final String? ownerName;
   final DateTime checkedInAt;
@@ -23,14 +29,26 @@ class ObVisitSummaryModel {
   final int? orderId;
   final String? orderNumber;
   final double? subtotal;
+  final ObOrderApprovalInfo approval;
 
   factory ObVisitSummaryModel.fromJson(Map<String, dynamic> json) {
     final shop = ApiMap.asMap(json['shop']) ?? const <String, dynamic>{};
+    final order = ApiMap.asMap(json['order']);
+    final approval = ObOrderApprovalInfo.fromOrderAndVisit(
+      order: order,
+      visit: json,
+    );
     final orderNumber =
         ApiMap.asString(json['order_number']) ??
-        ApiMap.asString(json['sale_order_name']);
+        ApiMap.asString(json['sale_order_name']) ??
+        ApiMap.asString(order?['name']);
     return ObVisitSummaryModel(
       visitId: ApiMap.asInt(json['visit_id']) ?? ApiMap.asInt(json['id']) ?? 0,
+      shopId:
+          ApiMap.asString(json['shop_id']) ??
+          ApiMap.asString(shop['shop_id']) ??
+          ApiMap.asString(shop['id']),
+      taskId: ApiMap.asInt(json['task_id']),
       shopName:
           ApiMap.asString(json['shop_name']) ??
           ApiMap.asString(shop['name']) ??
@@ -46,11 +64,13 @@ class ObVisitSummaryModel {
           ApiMap.asDateTime(json['checked_out_at']) ??
           ApiMap.asDateTime(json['ended_at']),
       outcome: parseOutcome(ApiMap.asString(json['outcome'])),
-      orderId: ApiMap.asInt(json['order_id']),
+      orderId: ApiMap.asInt(json['order_id']) ?? ApiMap.asInt(order?['id']),
       orderNumber: orderNumber,
       subtotal:
           ApiMap.asDouble(json['subtotal']) ??
-          ApiMap.asDouble(json['order_amount']),
+          ApiMap.asDouble(json['order_amount']) ??
+          approval.amountTotal,
+      approval: approval,
     );
   }
 

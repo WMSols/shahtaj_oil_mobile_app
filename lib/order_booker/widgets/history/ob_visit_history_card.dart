@@ -52,7 +52,12 @@ class ObVisitHistoryCard extends StatelessWidget {
                         style: AppTextStyles.sectionTitle(context),
                       ),
                     ),
-                    AppStatusChip.visitOutcome(visit.outcome),
+                    // One chip only: approval when not standard, else visit outcome.
+                    if (visit.outcome == VisitOutcome.orderPlaced &&
+                        visit.approval.state != ObOrderApprovalState.none)
+                      AppStatusChip.orderApprovalInfo(visit.approval)
+                    else
+                      AppStatusChip.visitOutcome(visit.outcome),
                   ],
                 ),
                 if (visit.ownerName != null) ...[
