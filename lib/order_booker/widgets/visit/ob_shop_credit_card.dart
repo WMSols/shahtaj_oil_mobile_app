@@ -13,9 +13,18 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/info/app_detail_row.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/shops/ob_shop_model.dart';
 
 class ObShopCreditCard extends StatelessWidget {
-  const ObShopCreditCard({super.key, required this.shop});
+  const ObShopCreditCard({
+    super.key,
+    required this.shop,
+    this.liveOrderAmount,
+    this.wouldExceedCredit = false,
+  });
 
   final ObShopModel shop;
+
+  /// Live cart / proposed order total for create-order screen.
+  final double? liveOrderAmount;
+  final bool wouldExceedCredit;
 
   @override
   Widget build(BuildContext context) {
@@ -24,6 +33,11 @@ class ObShopCreditCard extends StatelessWidget {
     final remainingColor = remaining != null && remaining < 0
         ? AppColors.error
         : AppColors.success;
+    final showExceed =
+        isCredit && (wouldExceedCredit || shop.creditWouldExceed);
+    final remainingAfter = remaining != null && liveOrderAmount != null
+        ? remaining - liveOrderAmount!
+        : null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -87,6 +101,54 @@ class ObShopCreditCard extends StatelessWidget {
               valueColor: remainingColor,
               valueWeight: FontWeight.w700,
               showDivider: false,
+            ),
+          ),
+        ],
+        if (isCredit && liveOrderAmount != null) ...[
+          AppSpacing.vertical(context, 0.008),
+          AppOutlineCard(
+            statusColor: showExceed ? AppColors.warning : AppColors.primary,
+            statusStripeEdge: AppStatusStripeEdge.bottom,
+            statusStripeThicknessFactor: 0.004,
+            padding: EdgeInsets.zero,
+            child: AppDetailRow(
+              label: AppTexts.obOrderAmountLabel,
+              value: AppFormatter.currencyWhole(liveOrderAmount!),
+              valueColor: showExceed ? AppColors.warning : AppColors.primary,
+              valueWeight: FontWeight.w700,
+              showDivider: remainingAfter != null,
+            ),
+          ),
+          if (remainingAfter != null) ...[
+            AppSpacing.vertical(context, 0.008),
+            AppOutlineCard(
+              statusColor: remainingAfter < 0
+                  ? AppColors.warning
+                  : AppColors.success,
+              statusStripeEdge: AppStatusStripeEdge.bottom,
+              statusStripeThicknessFactor: 0.004,
+              padding: EdgeInsets.zero,
+              child: AppDetailRow(
+                label: AppTexts.obRemainingAfterOrderLabel,
+                value: AppFormatter.currencyWhole(remainingAfter),
+                valueColor: remainingAfter < 0
+                    ? AppColors.warning
+                    : AppColors.success,
+                valueWeight: FontWeight.w700,
+                showDivider: false,
+              ),
+            ),
+          ],
+        ],
+        if (showExceed) ...[
+          AppSpacing.vertical(context, 0.008),
+          AppOutlineCard(
+            statusColor: AppColors.warning,
+            child: Text(
+              AppTexts.obCreditWouldExceedWarning,
+              style: AppTextStyles.caption(
+                context,
+              ).copyWith(color: AppColors.warning, fontWeight: FontWeight.w600),
             ),
           ),
         ],

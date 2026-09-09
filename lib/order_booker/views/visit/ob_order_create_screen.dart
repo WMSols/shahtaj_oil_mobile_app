@@ -70,7 +70,18 @@ class ObOrderCreateScreen extends GetView<ObOrderCreateController> {
                 ),
                 if (controller.shop.value != null) ...[
                   AppSpacing.vertical(context, 0.016),
-                  ObShopCreditCard(shop: controller.shop.value!),
+                  Obx(() {
+                    final preview = controller.submitPreview;
+                    final orderAmount =
+                        preview?.proposedTotal ?? controller.displaySubtotal();
+                    return ObShopCreditCard(
+                      shop: controller.shop.value!,
+                      liveOrderAmount: orderAmount > 0 ? orderAmount : null,
+                      wouldExceedCredit:
+                          preview?.hasCreditWarning == true ||
+                          controller.creditWouldExceedForAmount(orderAmount),
+                    );
+                  }),
                 ],
                 AppSpacing.vertical(context, 0.016),
                 Text(AppTexts.obProductsSection),

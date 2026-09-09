@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -30,7 +32,9 @@ class ObCartLineTile extends StatefulWidget {
 
 class _ObCartLineTileState extends State<ObCartLineTile> {
   late final TextEditingController _qtyController;
-  late final FocusNode _focusNode;
+  late final TextEditingController _rateController;
+  late final FocusNode _qtyFocusNode;
+  late final FocusNode _rateFocusNode;
 
   ObOrderCreateController get _c => widget.controller;
 
@@ -40,31 +44,60 @@ class _ObCartLineTileState extends State<ObCartLineTile> {
     _qtyController = TextEditingController(
       text: _c.quantityFieldText(widget.line),
     );
-    _focusNode = FocusNode()..addListener(_onFocusChange);
+    _rateController = TextEditingController(
+      text: _c.rateFieldText(widget.line),
+    );
+    _qtyFocusNode = FocusNode()..addListener(_onQtyFocusChange);
+    _rateFocusNode = FocusNode()..addListener(_onRateFocusChange);
   }
 
   @override
   void didUpdateWidget(covariant ObCartLineTile oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (_focusNode.hasFocus) return;
-
-    final next = _c.quantityFieldText(widget.line);
-    if (_qtyController.text != next) {
-      _qtyController.text = next;
+    if (!_qtyFocusNode.hasFocus) {
+      final nextQty = _c.quantityFieldText(widget.line);
+      if (_qtyController.text != nextQty) _qtyController.text = nextQty;
+    }
+    if (!_rateFocusNode.hasFocus) {
+      final nextRate = _c.rateFieldText(widget.line);
+      if (_rateController.text != nextRate) _rateController.text = nextRate;
     }
   }
 
   @override
   void dispose() {
-    _focusNode.removeListener(_onFocusChange);
-    _focusNode.dispose();
+    _qtyFocusNode.removeListener(_onQtyFocusChange);
+    _rateFocusNode.removeListener(_onRateFocusChange);
+    _qtyFocusNode.dispose();
+    _rateFocusNode.dispose();
     _qtyController.dispose();
+    _rateController.dispose();
     super.dispose();
   }
 
-  void _onFocusChange() {
-    if (!_focusNode.hasFocus) {
-      _c.commitQuantityInput(widget.line.lineId);
+  void _onQtyFocusChange() {
+    if (!_qtyFocusNode.hasFocus) {
+      unawaited(_commitQtyAndSyncField());
+    }
+  }
+
+  Future<void> _commitQtyAndSyncField() async {
+    final lineId = widget.line.lineId;
+    await _c.commitQuantityInput(lineId);
+    if (!mounted || _qtyFocusNode.hasFocus) return;
+    final line = _c.lineById(lineId) ?? widget.line;
+    final next = _c.quantityFieldText(line);
+    if (_qtyController.text != next) {
+      _qtyController.value = TextEditingValue(
+        text: next,
+        selection: TextSelection.collapsed(offset: next.length),
+      );
+    }
+  }
+
+  void _onRateFocusChange() {
+    if (!_rateFocusNode.hasFocus) {
+      _c.commitRateInput(widget.line.lineId);
     }
   }
 
@@ -77,8 +110,11 @@ class _ObCartLineTileState extends State<ObCartLineTile> {
       final maxQuantity = _c.maxQuantityForLine(line);
       final bookableLabel = _c.bookableLabel(line);
       final errorText = _c.quantityError(lineId);
+      final rateError = _c.rateError(lineId);
       final displayTotal = _c.displayLineTotal(line);
       final isRemoving = _c.removingLineId.value == lineId;
+      final appRate = _c.appRateForLine(line);
+      final isDiscounted = _c.proposedRateForLine(line) < appRate - 0.001;
 
       return AppOutlineCard(
         color: AppColors.grey.withValues(alpha: 0.08),
@@ -114,9 +150,9 @@ class _ObCartLineTileState extends State<ObCartLineTile> {
             ),
             AppSpacing.vertical(context, 0.01),
             _LabeledValue(
-              label: AppTexts.obCartPriceHint,
+              label: AppTexts.obCartAppRateHint,
               child: Text(
-                AppFormatter.currencyWhole(line.priceUnit),
+                AppFormatter.currencyWhole(appRate),
                 style: AppTextStyles.bodyText(
                   context,
                 ).copyWith(fontWeight: FontWeight.w600),
@@ -124,8 +160,35 @@ class _ObCartLineTileState extends State<ObCartLineTile> {
             ),
             AppSpacing.vertical(context, 0.01),
             AppTextField(
+              controller: _rateController,
+              focusNode: _rateFocusNode,
+              label: AppTexts.obProposedRateLabel,
+              hint: AppTexts.obProposedRateHint,
+              prefixIcon: AppIcons.orders,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+              ],
+              textInputAction: TextInputAction.next,
+              onChanged: (raw) => _c.onRateInputChanged(lineId, raw),
+              onSubmitted: (_) => _c.commitRateInput(lineId),
+              errorText: rateError,
+            ),
+            if (isDiscounted) ...[
+              AppSpacing.vertical(context, 0.006),
+              Text(
+                '${AppTexts.obRateVariance}: ${AppFormatter.currencyWhole(appRate - _c.proposedRateForLine(line))}',
+                style: AppTextStyles.caption(
+                  context,
+                ).copyWith(color: AppColors.warning),
+              ),
+            ],
+            AppSpacing.vertical(context, 0.01),
+            AppTextField(
               controller: _qtyController,
-              focusNode: _focusNode,
+              focusNode: _qtyFocusNode,
               label: AppTexts.obCartQuantityHint,
               hint: AppTexts.obCartQuantityInputHint(
                 '$maxQuantity',
@@ -140,7 +203,7 @@ class _ObCartLineTileState extends State<ObCartLineTile> {
               ],
               textInputAction: TextInputAction.done,
               onChanged: (raw) => _c.onQuantityInputChanged(lineId, raw),
-              onSubmitted: (_) => _c.commitQuantityInput(lineId),
+              onSubmitted: (_) => unawaited(_commitQtyAndSyncField()),
               errorText: errorText,
               textColor: AppColors.primary,
             ),

@@ -11,6 +11,7 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_primary_button.d
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_secondary_button.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_amount_summary_bar.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/widgets/orders/ob_order_submit_summary_card.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/widgets/visit/ob_cart_line_tile.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/controllers/visit/ob_order_create_controller.dart';
@@ -65,6 +66,8 @@ class ObVisitCartPanel extends StatelessWidget {
             }),
           ],
           AppSpacing.vertical(context, 0.01),
+          ObOrderSubmitSummaryCard(controller: controller),
+          AppSpacing.vertical(context, 0.01),
           Obx(
             () => AppAmountSummaryBar(
               label: AppTexts.obSubtotal,
@@ -74,7 +77,7 @@ class ObVisitCartPanel extends StatelessWidget {
           AppSpacing.vertical(context, 0.02),
           Obx(
             () => AppPrimaryButton(
-              label: AppTexts.obPlaceOrder,
+              label: AppTexts.obSubmitOrder,
               isLoading: controller.isPlacingOrder.value,
               onPressed: hasLines ? controller.promptPlaceOrder : null,
             ),
