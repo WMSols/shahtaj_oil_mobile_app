@@ -12,6 +12,7 @@ import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/connectivity_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/sync_outbox_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/utils/helper/app_helper.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/visit/ob_product_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/visit/ob_visit_cart_line_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/visit/ob_visit_cart_model.dart';
@@ -231,7 +232,18 @@ class ObVisitCartService extends GetxService {
     required String shopName,
     required double latitude,
     required double longitude,
+    double? shopLatitude,
+    double? shopLongitude,
   }) async {
+    if (shopLatitude != null && shopLongitude != null) {
+      AppHelper.ensureWithinPlaceOrderRange(
+        currentLat: latitude,
+        currentLng: longitude,
+        shopLat: shopLatitude,
+        shopLng: shopLongitude,
+      );
+    }
+
     final cart = await fetchCart(
       visitId: visitId,
       shopName: shopName,

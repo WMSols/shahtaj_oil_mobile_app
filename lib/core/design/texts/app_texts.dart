@@ -211,6 +211,8 @@ class AppTexts {
   static String get obSectionCreditBalance => 'obSectionCreditBalance'.tr;
   static String get obSectionDocumentsPhotos => 'obSectionDocumentsPhotos'.tr;
   static String get obShopNameLabel => 'obShopNameLabel'.tr;
+  static String get obShopLicenseNumberLabel => 'obShopLicenseNumberLabel'.tr;
+  static String get obShopLicenseNumberHint => 'obShopLicenseNumberHint'.tr;
   static String get obShopTypeLabel => 'obShopTypeLabel'.tr;
   static String get obShopTypeHint => 'obShopTypeHint'.tr;
   static String get shopTypeCash => 'shopTypeCash'.tr;
@@ -329,6 +331,9 @@ class AppTexts {
   static String get logoutPendingSyncTitle => 'logoutPendingSyncTitle'.tr;
   static String get logoutPendingSyncMessage => 'logoutPendingSyncMessage'.tr;
   static String get obOrderQueuedForSync => 'obOrderQueuedForSync'.tr;
+  static String obOrderTooFarFromShop(int meters) =>
+      'obOrderTooFarFromShop'.trParams({'meters': '$meters'});
+  static String get obShopLocationMissing => 'obShopLocationMissing'.tr;
   static String get obVisitQueuedForSync => 'obVisitQueuedForSync'.tr;
   static String get obNotesQueuedForSync => 'obNotesQueuedForSync'.tr;
   static String get statusOnline => 'statusOnline'.tr;
@@ -351,6 +356,7 @@ class AppTexts {
   static String get obResumeVisit => 'obResumeVisit'.tr;
   static String get obNoTasksToday => 'obNoTasksToday'.tr;
   static String get obCheckInSuccess => 'obCheckInSuccess'.tr;
+  static String get obCheckInTimedOut => 'obCheckInTimedOut'.tr;
   static String get obTaskNotFound => 'obTaskNotFound'.tr;
   static String get obVisitTagVisited => 'obVisitTagVisited'.tr;
   static String get obVisitTagNotVisited => 'obVisitTagNotVisited'.tr;

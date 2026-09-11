@@ -54,8 +54,8 @@ class ObOrderApprovalInfo {
       requiresCreditApproval || reasons.contains(ObOrderApprovalReason.credit);
 
   String get displayLabel {
-    final fromApi = label?.trim();
-    if (fromApi != null && fromApi.isNotEmpty) return fromApi;
+    // Prefer localized labels so API "Pending verification" does not collide
+    // with visit/task "Pending".
     return state.label;
   }
 

@@ -118,8 +118,8 @@ extension ObOrderApprovalStateX on ObOrderApprovalState {
 
   Color get chipColor => switch (this) {
     ObOrderApprovalState.approved => AppColors.success,
-    ObOrderApprovalState.none => AppColors.primary,
-    ObOrderApprovalState.toApprove => AppColors.warning,
+    ObOrderApprovalState.none => AppColors.grey,
+    ObOrderApprovalState.toApprove => AppColors.statPurple,
     ObOrderApprovalState.rejected => AppColors.error,
   };
 
@@ -144,6 +144,11 @@ extension ObOrderApprovalReasonX on ObOrderApprovalReason {
   String get label => switch (this) {
     ObOrderApprovalReason.discount => AppTexts.obApprovalReasonDiscount,
     ObOrderApprovalReason.credit => AppTexts.obApprovalReasonCredit,
+  };
+
+  Color get chipColor => switch (this) {
+    ObOrderApprovalReason.discount => AppColors.accentBlue,
+    ObOrderApprovalReason.credit => AppColors.primary,
   };
 
   static ObOrderApprovalReason? tryParse(String? raw) {

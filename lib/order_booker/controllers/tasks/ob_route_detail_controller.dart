@@ -13,8 +13,7 @@ import 'package:shahtaj_oil_mobile_app/order_booker/services/tasks/ob_task_servi
 import 'package:shahtaj_oil_mobile_app/order_booker/services/tasks/ob_check_in_flow.dart';
 
 class ObRouteDetailController extends GetxController {
-  ObRouteDetailController(this._taskService, {ObVisitService? visitService})
-    : _visitService = visitService;
+  ObRouteDetailController(this._taskService, {this._visitService});
 
   final ObTaskService _taskService;
   final ObVisitService? _visitService;
@@ -217,8 +216,9 @@ class ObRouteDetailController extends GetxController {
             final fromShop = byShopId[task.shopId];
             final approval = fromTask ?? fromShop;
             if (approval == null) return task;
-            if (task.orderApproval.state != ObOrderApprovalState.none)
+            if (task.orderApproval.state != ObOrderApprovalState.none) {
               return task;
+            }
             return task.copyWith(orderApproval: approval);
           })
           .toList(growable: false);

@@ -65,7 +65,46 @@ class AppHelper {
     return '${text.substring(0, maxLength)}…';
   }
 
+  static const _positionTimeout = Duration(seconds: 10);
+  static const _lastKnownMaxAge = Duration(minutes: 2);
+
+  /// Client gate for place-order; keep aligned with backend geofence when known.
+  static const placeOrderMaxDistanceMeters = 250.0;
+
+  /// Straight-line distance in meters between two WGS84 points.
+  static double distanceMetersBetween({
+    required double fromLat,
+    required double fromLng,
+    required double toLat,
+    required double toLng,
+  }) => Geolocator.distanceBetween(fromLat, fromLng, toLat, toLng);
+
+  /// Throws when the booker is farther than [placeOrderMaxDistanceMeters]
+  /// from the shop, so we never queue an order the server would reject.
+  static void ensureWithinPlaceOrderRange({
+    required double currentLat,
+    required double currentLng,
+    required double shopLat,
+    required double shopLng,
+  }) {
+    final meters = distanceMetersBetween(
+      fromLat: currentLat,
+      fromLng: currentLng,
+      toLat: shopLat,
+      toLng: shopLng,
+    );
+    if (meters > placeOrderMaxDistanceMeters) {
+      throw ApiException(
+        message: AppTexts.obOrderTooFarFromShop(meters.round()),
+      );
+    }
+  }
+
   /// Ensures location service + permission, then returns current position.
+  ///
+  /// Uses a hard [timeLimit] so callers (e.g. check-in) cannot hang forever on
+  /// weak GPS / network-assisted location. Falls back to a recent last-known
+  /// fix when a fresh fix times out.
   ///
   /// When [showGuide] is true, opens a bottom sheet to enable location /
   /// permission on the device instead of only throwing.
@@ -94,6 +133,22 @@ class AppHelper {
       throw ApiException(message: AppTexts.obLocationPermissionDenied);
     }
 
-    return Geolocator.getCurrentPosition();
+    try {
+      return await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.medium,
+          timeLimit: _positionTimeout,
+        ),
+      );
+    } catch (_) {
+      final last = await Geolocator.getLastKnownPosition();
+      if (last != null) {
+        final age = DateTime.now().difference(last.timestamp);
+        if (!age.isNegative && age <= _lastKnownMaxAge) {
+          return last;
+        }
+      }
+      throw ApiException(message: AppTexts.obLocationFetchFailed);
+    }
   }
 }

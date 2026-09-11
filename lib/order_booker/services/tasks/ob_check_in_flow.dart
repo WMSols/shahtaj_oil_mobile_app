@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/connectivity_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/helper/app_helper.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_active_visit_model.dart';
@@ -13,6 +16,10 @@ import 'package:shahtaj_oil_mobile_app/order_booker/services/tasks/ob_task_servi
 /// Shared GPS + check-in + verify-on-site / order-create navigation for OB.
 abstract class ObCheckInFlow {
   ObCheckInFlow._();
+
+  static const _activeVisitTimeout = Duration(seconds: 12);
+  static const _checkInTimeoutWeak = Duration(seconds: 12);
+  static const _checkInTimeoutOk = Duration(seconds: 20);
 
   static Future<void> run({
     required ObTaskService taskService,
@@ -51,9 +58,18 @@ abstract class ObCheckInFlow {
     }
 
     try {
-      final position = await AppHelper.requireCurrentPosition(showGuide: true);
+      if (_isOffline()) {
+        AppToast.showError(AppTexts.noInternet);
+        return;
+      }
 
-      final latestActive = await taskService.fetchActiveVisit();
+      final position = await AppHelper.requireCurrentPosition(showGuide: true);
+      final weakLink = _isWeakLink();
+
+      final latestActive = weakLink
+          ? await taskService.loadCachedActiveVisit()
+          : await taskService.fetchActiveVisit().timeout(_activeVisitTimeout);
+
       if (latestActive != null &&
           latestActive.taskId != task.id &&
           latestActive.shopId != task.shopId) {
@@ -61,11 +77,13 @@ abstract class ObCheckInFlow {
         return;
       }
 
-      final result = await taskService.checkIn(
-        taskId: task.id,
-        latitude: position.latitude,
-        longitude: position.longitude,
-      );
+      final result = await taskService
+          .checkIn(
+            taskId: task.id,
+            latitude: position.latitude,
+            longitude: position.longitude,
+          )
+          .timeout(weakLink ? _checkInTimeoutWeak : _checkInTimeoutOk);
 
       if (result.needsShopSetup) {
         await Get.toNamed(
@@ -96,10 +114,24 @@ abstract class ObCheckInFlow {
         arguments: {'visitId': result.visit!.visitId},
       );
       await onDone();
+    } on TimeoutException {
+      AppToast.showError(AppTexts.obCheckInTimedOut);
     } on ApiException catch (e) {
       AppToast.showError(e.message);
     } catch (_) {
       AppToast.showError(AppTexts.error);
     }
+  }
+
+  static bool _isOffline() {
+    if (!Get.isRegistered<ConnectivityService>()) return false;
+    final c = Get.find<ConnectivityService>();
+    return !c.isOnline.value || c.quality.value == NetworkQuality.offline;
+  }
+
+  static bool _isWeakLink() {
+    if (!Get.isRegistered<ConnectivityService>()) return false;
+    final c = Get.find<ConnectivityService>();
+    return !c.isOnline.value || c.quality.value == NetworkQuality.weak;
   }
 }

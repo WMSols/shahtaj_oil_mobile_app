@@ -7,6 +7,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.d
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/info/app_detail_row.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/orders/ob_order_detail_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/orders/ob_order_line_model.dart';
@@ -55,13 +56,46 @@ class ObOrderApprovalSection extends StatelessWidget {
             child: Column(
               children: [
                 if (approval.reasons.isNotEmpty)
-                  AppDetailRow(
-                    label: AppTexts.obApprovalReasonsLabel,
-                    value: approval.reasons.map((r) => r.label).join(', '),
-                    showDivider:
-                        order.discountTotal > 0 ||
-                        approval.verifiedAt != null ||
-                        approval.rejectionReason != null,
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      AppSpacing.horizontalValue(context, 0.04),
+                      AppSpacing.verticalValue(context, 0.012),
+                      AppSpacing.horizontalValue(context, 0.04),
+                      AppSpacing.verticalValue(context, 0.008),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppTexts.obApprovalReasonsLabel,
+                          style: AppTextStyles.caption(
+                            context,
+                          ).copyWith(color: AppColors.grey),
+                        ),
+                        AppSpacing.vertical(context, 0.006),
+                        Wrap(
+                          spacing: AppSpacing.horizontalValue(context, 0.02),
+                          runSpacing: AppSpacing.verticalValue(context, 0.006),
+                          children: [
+                            for (final reason in approval.reasons)
+                              AppStatusChip(
+                                label: reason.label,
+                                color: reason.chipColor,
+                                soft: true,
+                              ),
+                          ],
+                        ),
+                        if (order.discountTotal > 0 ||
+                            approval.verifiedAt != null ||
+                            approval.rejectionReason != null)
+                          Padding(
+                            padding: EdgeInsets.only(
+                              top: AppSpacing.verticalValue(context, 0.01),
+                            ),
+                            child: const Divider(height: 1),
+                          ),
+                      ],
+                    ),
                   ),
                 if (order.discountTotal > 0)
                   AppDetailRow(
