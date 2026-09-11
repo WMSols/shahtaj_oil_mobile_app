@@ -45,7 +45,15 @@ class ObRegisterShopForm extends StatelessWidget {
                   required: true,
                   borderless: true,
                   validator: controller.validateRequired,
-                  // Next control is a dropdown, not a text field.
+                  textInputAction: TextInputAction.next,
+                ),
+                AppSpacing.vertical(context, 0.01),
+                AppTextField(
+                  controller: controller.licenseNumberController,
+                  label: AppTexts.obShopLicenseNumberLabel,
+                  hint: AppTexts.obShopLicenseNumberHint,
+                  prefixIcon: AppIcons.personalCard,
+                  borderless: true,
                   textInputAction: TextInputAction.done,
                 ),
                 AppSpacing.vertical(context, 0.01),

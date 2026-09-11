@@ -6,6 +6,7 @@ import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/helper/app_helper.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_confirm_dialog.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
@@ -204,28 +205,49 @@ class ObOrderCreateController extends GetxController {
     }
   }
 
-  /// Credit fields come from shop APIs only (`shops/get`, fallback `shops/mine`).
+  /// Credit fields: `shops/get`, then today's task nested shop, then my-shops.
   Future<void> _loadShop(ObActiveVisitModel active) async {
     shop.value = null;
     if (active.shopId.isEmpty) return;
+    final wantId = active.shopId.trim();
 
+    // Seed from cached today-tasks so distributor shops keep credit_limit even
+    // when shops/get returns a thin payload.
     try {
-      shop.value = await _shopService.fetchShop(active.shopId, force: true);
-      return;
+      final cached = await Get.find<OfflineCacheService>().readMap(
+        OfflineCacheKeys.tasksToday,
+      );
+      if (cached != null) {
+        _shopService.rememberShopsFromTasksPayload(cached);
+      }
+    } catch (_) {}
+
+    ObShopModel? loaded;
+    try {
+      loaded = await _shopService.fetchShop(wantId, force: true);
     } catch (_) {
-      // Fall through to shops/mine.
+      // Fall through.
     }
 
-    try {
-      final shops = await _shopService.fetchShops(forceNetwork: true);
-      for (final item in shops) {
-        if (item.id == active.shopId) {
-          shop.value = item;
-          return;
+    loaded ??= await _shopService.peekShop(wantId);
+
+    if (loaded == null) {
+      try {
+        final shops = await _shopService.fetchShops(forceNetwork: true);
+        for (final item in shops) {
+          if (item.id.trim() == wantId ||
+              int.tryParse(item.id) == int.tryParse(wantId)) {
+            loaded = item;
+            break;
+          }
         }
-      }
-    } catch (_) {
-      // Credit summary is optional for order placement.
+      } catch (_) {}
+    }
+
+    if (loaded != null) {
+      final peeked = await _shopService.peekShop(wantId);
+      shop.value = loaded.mergeCreditFrom(peeked);
+      _shopService.rememberShop(shop.value!);
     }
   }
 
@@ -692,6 +714,16 @@ class ObOrderCreateController extends GetxController {
     isPlacingOrder.value = true;
     try {
       final position = await AppHelper.requireCurrentPosition(showGuide: true);
+      final shopModel = shop.value;
+      if (shopModel == null || !shopModel.hasCoordinates) {
+        throw ApiException(message: AppTexts.obShopLocationMissing);
+      }
+      AppHelper.ensureWithinPlaceOrderRange(
+        currentLat: position.latitude,
+        currentLng: position.longitude,
+        shopLat: shopModel.latitude!,
+        shopLng: shopModel.longitude!,
+      );
       // Persist proposed selling rates into local cart before outbox submit.
       await _persistProposedRatesToCart();
       final result = await _cartService.submitOrder(
@@ -701,6 +733,8 @@ class ObOrderCreateController extends GetxController {
         shopName: active.shopName,
         latitude: position.latitude,
         longitude: position.longitude,
+        shopLatitude: shopModel.latitude,
+        shopLongitude: shopModel.longitude,
       );
       await _taskService.completeActiveVisit(visitId: active.visitId);
       AppToast.showSuccess(

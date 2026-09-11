@@ -6,6 +6,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_secondary_button.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
@@ -63,6 +64,13 @@ class SyncCenterScreen extends GetView<SyncCenterController> {
                         context,
                       ).copyWith(color: AppColors.grey),
                     ),
+                    if (controller.canRetry(entry)) ...[
+                      AppSpacing.vertical(context, 0.012),
+                      AppSecondaryButton(
+                        label: AppTexts.retry,
+                        onPressed: () => controller.retry(entry),
+                      ),
+                    ],
                   ],
                 ),
               );

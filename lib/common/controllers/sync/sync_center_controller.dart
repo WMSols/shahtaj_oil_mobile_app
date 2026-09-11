@@ -9,6 +9,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/sync_outbox_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 
 class SyncCenterController extends GetxController {
   SyncCenterController(this._outbox);
@@ -106,6 +107,18 @@ class SyncCenterController extends GetxController {
 
     return lines.join('\n');
   }
+
+  Future<void> retry(OutboxEntry entry) async {
+    try {
+      await _outbox.retryEntry(entry.id);
+      await load();
+    } catch (_) {
+      AppToast.showError(AppTexts.error);
+    }
+  }
+
+  bool canRetry(OutboxEntry entry) =>
+      entry.status == 'failed' || entry.status == 'needsReview';
 
   SyncStatus statusFor(OutboxEntry entry) =>
       SyncStatusX.fromOutboxStatus(entry.status) ?? SyncStatus.queued;

@@ -45,24 +45,37 @@ class ObShopService extends GetxService {
   /// Instant seed: memory → disk detail → my-shops list. Never hits network.
   Future<ObShopModel?> peekShop(String id) async {
     if (id.isEmpty) return null;
-    final mem = _shopDetailMemory[id];
+    final mem = _shopDetailMemory[id] ?? _shopDetailMemory[_altId(id)];
     if (mem != null) return mem;
 
-    final detail = await _cache.readMap(OfflineCacheKeys.shopDetail(id));
-    if (detail != null) {
-      final shop = ObShopModel.fromJson(detail);
-      _shopDetailMemory[id] = shop;
-      return shop;
+    for (final key in {id, _altId(id)}) {
+      if (key.isEmpty) continue;
+      final detail = await _cache.readMap(OfflineCacheKeys.shopDetail(key));
+      if (detail != null) {
+        final shop = ObShopModel.fromJson(detail);
+        rememberShop(shop);
+        return shop;
+      }
     }
 
     return _shopFromMineList(id);
   }
 
+  String _altId(String id) {
+    final asInt = int.tryParse(id.trim());
+    if (asInt == null) return id.trim();
+    return asInt.toString();
+  }
+
   Future<ObShopModel?> _shopFromMineList(String id) async {
     final cached = await _cache.readMap(OfflineCacheKeys.shopsMine);
     if (cached == null) return null;
+    final want = id.trim();
+    final wantInt = int.tryParse(want);
     for (final shop in _parseShops(cached)) {
-      if (shop.id == id) {
+      if (shop.id == want ||
+          shop.id.trim() == want ||
+          (wantInt != null && int.tryParse(shop.id) == wantInt)) {
         rememberShop(shop);
         return shop;
       }
@@ -90,19 +103,30 @@ class ObShopService extends GetxService {
       }
     }
 
+    final prior = _shopDetailMemory[id] ?? await peekShop(id);
+
     final shopId = int.tryParse(id) ?? id;
     final data = await _api.postData(
       ApiEndpoints.obShopsGet,
       data: {'shop_id': shopId, 'include_photos': includePhotos},
     );
     final shopJson = ApiMap.asMap(data['shop']) ?? data;
-    final shop = ObShopModel.fromJson(shopJson);
+    // Distributor / panel shops often have full credit on tasks/today but a
+    // thinner shops/get payload — keep prior credit numbers when missing.
+    final shop = ObShopModel.fromJson(shopJson).mergeCreditFrom(prior);
     _shopDetailMemory[id] = shop;
+    _shopDetailMemory[shop.id] = shop;
     // Persist metadata for offline reopen; strip huge base64 photo payloads.
     await _cache.saveMap(
       OfflineCacheKeys.shopDetail(id),
       shop.toJson(includePhotos: false),
     );
+    if (shop.id.isNotEmpty && shop.id != id) {
+      await _cache.saveMap(
+        OfflineCacheKeys.shopDetail(shop.id),
+        shop.toJson(includePhotos: false),
+      );
+    }
     return shop;
   }
 
@@ -112,9 +136,24 @@ class ObShopService extends GetxService {
     if (existing != null &&
         _hasLoadablePhotos(existing) &&
         !_hasLoadablePhotos(shop)) {
+      final merged = shop.mergeCreditFrom(existing);
+      _shopDetailMemory[shop.id] = merged;
       return;
     }
-    _shopDetailMemory[shop.id] = shop;
+    final merged = shop.mergeCreditFrom(existing);
+    _shopDetailMemory[shop.id] = merged;
+  }
+
+  /// Seeds session shop memory from nested `shop` objects on today's tasks.
+  void rememberShopsFromTasksPayload(Map<String, dynamic> data) {
+    final rawTasks = data['tasks'];
+    if (rawTasks is! List) return;
+    for (final raw in rawTasks) {
+      if (raw is! Map) continue;
+      final shopJson = ApiMap.asMap(raw['shop']);
+      if (shopJson == null) continue;
+      rememberShop(ObShopModel.fromJson(shopJson));
+    }
   }
 
   Future<List<ObZoneOption>> fetchZones({bool force = false}) async {

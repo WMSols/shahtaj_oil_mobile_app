@@ -9,6 +9,7 @@ class ObShopRegisterRequest {
     required this.latitude,
     required this.longitude,
     required this.shopType,
+    this.licenseNumber,
     this.zoneId,
     this.routeId,
     this.creditLimit,
@@ -20,6 +21,7 @@ class ObShopRegisterRequest {
   });
 
   final String name;
+  final String? licenseNumber;
   final String ownerName;
   final String ownerCnic;
   final String ownerPhone;
@@ -43,6 +45,8 @@ class ObShopRegisterRequest {
     'longitude': longitude,
     'shop_category': shopType.name,
     if (ownerCnic.trim().isNotEmpty) 'owner_cnic_number': ownerCnic.trim(),
+    if (licenseNumber != null && licenseNumber!.trim().isNotEmpty)
+      'shop_license_number': licenseNumber!.trim(),
     if (zoneId != null) 'zone_id': zoneId,
     if (routeId != null) 'route_id': routeId,
     if (creditLimit != null) 'credit_limit': creditLimit,

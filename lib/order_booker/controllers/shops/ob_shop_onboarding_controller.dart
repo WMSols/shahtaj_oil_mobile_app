@@ -33,6 +33,7 @@ class ObShopOnboardingController extends GetxController {
   final _picker = ImagePicker();
 
   final shopNameController = TextEditingController();
+  final licenseNumberController = TextEditingController();
   final ownerNameController = TextEditingController();
   final ownerCnicController = TextEditingController();
   final ownerPhoneController = TextEditingController();
@@ -88,6 +89,7 @@ class ObShopOnboardingController extends GetxController {
   @override
   void onClose() {
     shopNameController.dispose();
+    licenseNumberController.dispose();
     ownerNameController.dispose();
     ownerCnicController.dispose();
     ownerPhoneController.dispose();
@@ -267,6 +269,7 @@ class ObShopOnboardingController extends GetxController {
   Future<void> _submitRegister() async {
     final request = ObShopRegisterRequest(
       name: shopNameController.text.trim(),
+      licenseNumber: licenseNumberController.text.trim(),
       ownerName: ownerNameController.text.trim(),
       ownerCnic: _normalizedCnic(),
       ownerPhone: _normalizedPhone(),
@@ -338,6 +341,7 @@ class ObShopOnboardingController extends GetxController {
 
   void clearForm() {
     shopNameController.clear();
+    licenseNumberController.clear();
     ownerNameController.clear();
     ownerCnicController.clear();
     ownerPhoneController.clear();

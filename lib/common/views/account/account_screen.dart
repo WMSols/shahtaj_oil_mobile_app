@@ -15,6 +15,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_loader.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_scaffold.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/connectivity_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
@@ -81,7 +82,9 @@ class AccountScreen extends GetView<AccountController> {
               AppSecondaryButton(
                 label: AppTexts.reportProblemTitle,
                 icon: AppIcons.reportProblem,
-                onPressed: () => Get.toNamed(AppRoutes.reportProblem),
+                onPressed: () =>
+                    AppToast.showInformation(AppTexts.moduleUnderDevelopment),
+                // onPressed: () => Get.toNamed(AppRoutes.reportProblem),
               ),
               AppSpacing.vertical(context, 0.015),
               AppSecondaryButton(

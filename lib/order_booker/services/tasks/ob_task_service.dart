@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/constants/api_endpoints.dart';
@@ -11,6 +13,7 @@ import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_check_in_res
 import 'package:shahtaj_oil_mobile_app/order_booker/models/schedule/ob_route_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_task_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_today_tasks_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/shops/ob_shop_service.dart';
 
 class ObTaskService extends GetxService {
   ObTaskService(this._api, {OfflineCacheService? cache})
@@ -30,13 +33,21 @@ class ObTaskService extends GetxService {
     return _cache.readThrough(
       key: OfflineCacheKeys.tasksToday,
       fetch: () => _api.postData(ApiEndpoints.obTasksToday),
-      parse: (data) => _applyToday(ObTodayTasksModel.fromJson(data)),
+      parse: (data) {
+        _seedShopsFromTasks(data);
+        return _applyToday(ObTodayTasksModel.fromJson(data));
+      },
       allowStaleFallback: allowStaleFallback,
       cacheFirst: _cache.cacheFirstFor(
         allowStaleFallback: allowStaleFallback,
         forceNetwork: forceNetwork,
       ),
     );
+  }
+
+  void _seedShopsFromTasks(Map<String, dynamic> data) {
+    if (!Get.isRegistered<ObShopService>()) return;
+    Get.find<ObShopService>().rememberShopsFromTasksPayload(data);
   }
 
   ObTodayTasksModel _applyToday(ObTodayTasksModel today) {
@@ -51,11 +62,17 @@ class ObTaskService extends GetxService {
       await _cache.saveMap(OfflineCacheKeys.activeVisit, data);
       return _applyActiveVisit(data);
     } catch (_) {
-      final cached = await _cache.readMap(OfflineCacheKeys.activeVisit);
-      if (cached != null) return _applyActiveVisit(cached);
-      // Don't fail tasks/screens solely because visit probe failed.
-      return _activeVisit;
+      return loadCachedActiveVisit();
     }
+  }
+
+  /// Memory + disk only — no network. Used on weak links so check-in
+  /// does not stall on the active-visit probe.
+  Future<ObActiveVisitModel?> loadCachedActiveVisit() async {
+    if (_activeVisit != null) return _activeVisit;
+    final cached = await _cache.readMap(OfflineCacheKeys.activeVisit);
+    if (cached != null) return _applyActiveVisit(cached);
+    return _activeVisit;
   }
 
   ObActiveVisitModel? _applyActiveVisit(Map<String, dynamic> data) {
@@ -125,7 +142,9 @@ class ObTaskService extends GetxService {
         'visit': result.visit!.toJson(),
       });
     }
-    await fetchTodayTasks();
+    // Refresh tasks in the background so check-in UI is not blocked on a
+    // second slow list call after a successful check-in.
+    unawaited(fetchTodayTasks(allowStaleFallback: true));
     return result;
   }
 

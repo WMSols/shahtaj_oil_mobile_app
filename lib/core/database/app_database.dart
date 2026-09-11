@@ -55,16 +55,41 @@ class AppDatabase extends _$AppDatabase {
   @override
   int get schemaVersion => 1;
 
+  /// Local outbox/cart cache only. Explicit strategy so opening an existing
+  /// DB (or rolling back after a higher-schema test build) does not crash.
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (Migrator m) async {
+      await m.createAll();
+    },
+    onUpgrade: (Migrator m, int from, int to) async {
+      if (from > to) {
+        // Downgrade (e.g. after testing a higher-schema build): wipe local
+        // tables and recreate current schema. Safe for outbox/cart cache.
+        for (final table in allTables) {
+          await m.deleteTable(table.actualTableName);
+        }
+        await m.createAll();
+        return;
+      }
+      // Upgrade to v1 baseline — create any missing tables.
+      if (from < 1) {
+        await m.createAll();
+      }
+    },
+  );
+
+  /// Statuses shown in Sync Center and counted on the shell badge.
+  static const _openOutboxStatuses = ['queued', 'failed', 'needsReview'];
+
   Future<List<OutboxEntry>> pendingOutbox() =>
       (select(outboxEntries)
-            ..where((t) => t.status.isIn(['queued', 'failed']))
+            ..where((t) => t.status.isIn(_openOutboxStatuses))
             ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
           .get();
 
   Future<int> pendingOutboxCount() async {
-    final rows = await (select(
-      outboxEntries,
-    )..where((t) => t.status.isIn(['queued', 'failed', 'needsReview']))).get();
+    final rows = await pendingOutbox();
     return rows.length;
   }
 

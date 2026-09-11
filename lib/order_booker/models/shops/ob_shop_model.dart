@@ -86,6 +86,87 @@ class ObShopModel {
     return creditLimit! - outstandingBalance!;
   }
 
+  /// True when credit numbers are present enough to show the create-order card.
+  bool get hasCreditSummary =>
+      isCreditShop &&
+      (creditLimit != null ||
+          outstandingBalance != null ||
+          creditRemaining != null);
+
+  ObShopModel copyWith({
+    String? id,
+    String? name,
+    String? ownerName,
+    String? ownerCnicNumber,
+    String? phone,
+    String? locationLabel,
+    String? address,
+    String? zoneName,
+    String? routeName,
+    ShopType? shopType,
+    double? creditLimit,
+    double? outstandingBalance,
+    double? creditRemaining,
+    bool? creditWouldExceed,
+    double? legacyBalance,
+    double? latitude,
+    double? longitude,
+    String? heroImageAsset,
+    ObShopVerificationPhotos? verificationPhotos,
+    ShopStatus? status,
+    bool? isHighlighted,
+    bool? fieldVerified,
+    bool? needsShopSetup,
+    ShopVisitTag? visitTag,
+    List<ObShopMissingField>? missingFields,
+  }) => ObShopModel(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    ownerName: ownerName ?? this.ownerName,
+    ownerCnicNumber: ownerCnicNumber ?? this.ownerCnicNumber,
+    phone: phone ?? this.phone,
+    locationLabel: locationLabel ?? this.locationLabel,
+    address: address ?? this.address,
+    zoneName: zoneName ?? this.zoneName,
+    routeName: routeName ?? this.routeName,
+    shopType: shopType ?? this.shopType,
+    creditLimit: creditLimit ?? this.creditLimit,
+    outstandingBalance: outstandingBalance ?? this.outstandingBalance,
+    creditRemaining: creditRemaining ?? this.creditRemaining,
+    creditWouldExceed: creditWouldExceed ?? this.creditWouldExceed,
+    legacyBalance: legacyBalance ?? this.legacyBalance,
+    latitude: latitude ?? this.latitude,
+    longitude: longitude ?? this.longitude,
+    heroImageAsset: heroImageAsset ?? this.heroImageAsset,
+    verificationPhotos: verificationPhotos ?? this.verificationPhotos,
+    status: status ?? this.status,
+    isHighlighted: isHighlighted ?? this.isHighlighted,
+    fieldVerified: fieldVerified ?? this.fieldVerified,
+    needsShopSetup: needsShopSetup ?? this.needsShopSetup,
+    visitTag: visitTag ?? this.visitTag,
+    missingFields: missingFields ?? this.missingFields,
+  );
+
+  /// Keeps credit numbers from [other] when this instance is missing them.
+  ObShopModel mergeCreditFrom(ObShopModel? other) {
+    if (other == null) return this;
+    if (hasCreditSummary) {
+      // Still prefer a known credit type from the richer source.
+      if (!isCreditShop && other.isCreditShop) {
+        return copyWith(shopType: other.shopType);
+      }
+      return this;
+    }
+    return copyWith(
+      shopType: other.isCreditShop ? other.shopType : shopType,
+      creditLimit: other.creditLimit ?? creditLimit,
+      outstandingBalance: other.outstandingBalance ?? outstandingBalance,
+      creditRemaining: other.creditRemaining ?? creditRemaining,
+      creditWouldExceed: other.creditWouldExceed || creditWouldExceed,
+      legacyBalance: other.legacyBalance ?? legacyBalance,
+    );
+  }
+
   factory ObShopModel.fromJson(Map<String, dynamic> json) {
     final photoFlags =
         ApiMap.asMap(json['photos']) ??
@@ -94,7 +175,26 @@ class ObShopModel {
     final photoData = ApiMap.asMap(json['photo_data']);
     final zone = ApiMap.asMap(json['zone']);
     final route = ApiMap.asMap(json['route']);
-    final creditLimit = ApiMap.asDouble(json['credit_limit']);
+    final credit = ApiMap.asMap(json['credit']);
+    final creditLimit =
+        ApiMap.asDouble(json['credit_limit']) ??
+        ApiMap.asDouble(json['credit_limit_amount']) ??
+        ApiMap.asDouble(json['creditLimit']) ??
+        ApiMap.asDouble(credit?['limit']) ??
+        ApiMap.asDouble(credit?['credit_limit']);
+    final outstanding =
+        ApiMap.asDouble(json['outstanding_balance']) ??
+        ApiMap.asDouble(json['outstanding']) ??
+        ApiMap.asDouble(json['balance']) ??
+        ApiMap.asDouble(json['due_amount']) ??
+        ApiMap.asDouble(credit?['outstanding_balance']) ??
+        ApiMap.asDouble(credit?['outstanding']);
+    final remaining =
+        ApiMap.asDouble(json['credit_remaining']) ??
+        ApiMap.asDouble(json['available_credit']) ??
+        ApiMap.asDouble(json['remaining_credit']) ??
+        ApiMap.asDouble(credit?['remaining']) ??
+        ApiMap.asDouble(credit?['credit_remaining']);
 
     String? photo(String key, [List<String> aliases = const []]) {
       for (final name in [key, ...aliases]) {
@@ -136,12 +236,22 @@ class ObShopModel {
       routeName:
           ApiMap.asString(json['route_name']) ??
           ApiMap.asString(route?['name']),
-      shopType: _parseShopType(json['shop_category']),
+      shopType: _parseShopType(
+        json['shop_category'] ??
+            json['shop_type'] ??
+            json['payment_type'] ??
+            json['category'] ??
+            credit?['shop_category'],
+      ),
       creditLimit: creditLimit,
-      outstandingBalance: ApiMap.asDouble(json['outstanding_balance']),
-      creditRemaining: ApiMap.asDouble(json['credit_remaining']),
-      creditWouldExceed: json['credit_would_exceed'] == true,
-      legacyBalance: ApiMap.asDouble(json['legacy_balance']),
+      outstandingBalance: outstanding,
+      creditRemaining: remaining,
+      creditWouldExceed:
+          json['credit_would_exceed'] == true ||
+          credit?['would_exceed'] == true,
+      legacyBalance:
+          ApiMap.asDouble(json['legacy_balance']) ??
+          ApiMap.asDouble(credit?['legacy_balance']),
       latitude: ApiMap.asDouble(json['latitude']),
       longitude: ApiMap.asDouble(json['longitude']),
       heroImageAsset: ApiMap.asString(json['hero_image_asset']) ?? exterior,
@@ -190,9 +300,19 @@ class ObShopModel {
   }
 
   static ShopType _parseShopType(dynamic value) {
-    final raw = value?.toString().trim().toLowerCase();
-    if (raw == ShopType.cash.name) return ShopType.cash;
-    if (raw == ShopType.credit.name) return ShopType.credit;
+    final raw = value?.toString().trim().toLowerCase() ?? '';
+    if (raw.isEmpty) return ShopType.credit;
+    final normalized = raw.replaceAll(RegExp(r'[\s\-]+'), '_');
+    if (normalized == ShopType.cash.name ||
+        normalized == 'cash_shop' ||
+        normalized.contains('cash')) {
+      return ShopType.cash;
+    }
+    if (normalized == ShopType.credit.name ||
+        normalized == 'credit_shop' ||
+        normalized.contains('credit')) {
+      return ShopType.credit;
+    }
     return ShopType.credit;
   }
 
