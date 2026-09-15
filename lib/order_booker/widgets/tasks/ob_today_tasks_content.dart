@@ -56,8 +56,8 @@ class ObTodayTasksContent extends GetView<ObRouteDetailController> {
             ObRouteCard(route: data.route, showAction: false),
             AppSpacing.vertical(context, 0.016),
             ObTodayTasksProgress(
-              completed: data.completedCount,
-              total: data.totalCount,
+              completed: controller.displayCompletedCount,
+              total: controller.displayTotalCount,
             ),
             Obx(() {
               final activeVisit = controller.activeVisit.value;
@@ -111,6 +111,8 @@ class ObTodayTasksContent extends GetView<ObRouteDetailController> {
               if (Get.isRegistered<SyncOutboxService>()) {
                 // Rebuild chips when outbox pending set changes.
                 Get.find<SyncOutboxService>().pendingSyncByTaskId.length;
+                Get.find<SyncOutboxService>().needsReviewByTaskId.length;
+                Get.find<SyncOutboxService>().queuedActionsByTaskId.length;
               }
               final tasks = controller.filteredSortedTasks;
               if (tasks.isEmpty) {
@@ -131,7 +133,8 @@ class ObTodayTasksContent extends GetView<ObRouteDetailController> {
                       ),
                       child: ObTaskCard(
                         task: task,
-                        willSync: controller.isQueuedForSync(task),
+                        willSync: controller.hasQueuedSyncWork(task),
+                        syncNeedsReview: controller.needsSyncReview(task),
                         isCheckingIn:
                             controller.checkingInTaskId.value == task.id,
                         onCheckIn:

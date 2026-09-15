@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/shell/ob_shell_controller.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/cached_load_mixin.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/sync_outbox_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
@@ -71,10 +72,53 @@ class ObDashboardController extends GetxController with CachedLoadMixin {
 
   @override
   Future<void> fetchData() async {
-    dashboard.value = await _service.fetchDashboard(
+    final remote = await _service.fetchDashboard(
       allowStaleFallback: _allowStaleFallback,
       forceNetwork: _forceNetwork,
     );
+    // Task counts must match Today’s Visits (local pending sync), not the
+    // raw server snapshot that still says 0 after an offline day.
+    try {
+      final today = await _taskService.fetchTodayTasks(
+        allowStaleFallback: true,
+        forceNetwork: _forceNetwork,
+      );
+      var completed = 0;
+      var pending = 0;
+      var inVisit = 0;
+      final outbox = Get.isRegistered<SyncOutboxService>()
+          ? Get.find<SyncOutboxService>()
+          : null;
+      for (final task in today.tasks) {
+        final queued = outbox?.isTaskQueuedForSync(task.id) ?? false;
+        if (queued) {
+          inVisit++;
+          continue;
+        }
+        switch (task.status) {
+          case TaskStatus.completed:
+            completed++;
+          case TaskStatus.inVisit:
+            inVisit++;
+          case TaskStatus.pending:
+            pending++;
+        }
+      }
+      dashboard.value = ObDashboardModel(
+        todaysRoute: remote.todaysRoute ?? today.route,
+        recentOrders: remote.recentOrders,
+        targets: remote.targets,
+        completedTasks: completed,
+        pendingTasks: pending,
+        inVisitTasks: inVisit,
+        totalTasks: today.totalCount,
+        ordersTodayCount: remote.ordersTodayCount,
+        ordersTodayValue: remote.ordersTodayValue,
+        pendingApprovalCount: remote.pendingApprovalCount,
+      );
+    } catch (_) {
+      dashboard.value = remote;
+    }
   }
 
   Future<void> onRouteAction() async {
@@ -86,7 +130,9 @@ class ObDashboardController extends GetxController with CachedLoadMixin {
     } else if (route.status == RouteStatus.inProgress) {
       await _service.continueRoute(route.id);
     }
-    Get.toNamed(_routeWithId(AppRoutes.obRouteDetail, route.id));
+    // Stay inside the shell when possible — pushing route detail on top of
+    // AppShell can briefly mount two scaffolds with the same GlobalKey.
+    goToRouteDetail();
   }
 
   void goToRouteDetail({TaskStatus? filter}) {

@@ -252,8 +252,8 @@ class ObShopModel {
       legacyBalance:
           ApiMap.asDouble(json['legacy_balance']) ??
           ApiMap.asDouble(credit?['legacy_balance']),
-      latitude: ApiMap.asDouble(json['latitude']),
-      longitude: ApiMap.asDouble(json['longitude']),
+      latitude: _parseCoordinate(json, isLatitude: true),
+      longitude: _parseCoordinate(json, isLatitude: false),
       heroImageAsset: ApiMap.asString(json['hero_image_asset']) ?? exterior,
       verificationPhotos: ObShopVerificationPhotos(
         cnicFront: photo('owner_cnic_front', ['cnic_front']),
@@ -286,6 +286,26 @@ class ObShopModel {
           _photoRef(map['src']) ??
           _photoRef(map['path']) ??
           _photoRef(map['data']);
+    }
+    return null;
+  }
+
+  /// Same aliases as today's tasks (`shop_latitude` / nested `shop` / `location`).
+  static double? _parseCoordinate(
+    Map<String, dynamic> json, {
+    required bool isLatitude,
+  }) {
+    final shop = ApiMap.asMap(json['shop']);
+    final location = ApiMap.asMap(json['location']);
+    final keys = isLatitude
+        ? const ['latitude', 'shop_latitude', 'lat', 'geo_lat']
+        : const ['longitude', 'shop_longitude', 'lng', 'lon', 'geo_lng'];
+    for (final key in keys) {
+      final value =
+          ApiMap.asDouble(json[key]) ??
+          ApiMap.asDouble(shop?[key]) ??
+          ApiMap.asDouble(location?[key]);
+      if (value != null) return value;
     }
     return null;
   }

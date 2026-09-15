@@ -6,34 +6,74 @@ import 'package:get/get.dart' hide Value;
 import 'package:uuid/uuid.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/constants/api_endpoints.dart';
+import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/database/app_database.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/connectivity_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/local_media_store.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/sync/outbox_payload.dart';
+import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_check_in_result.dart';
 
 typedef SyncHandler =
     Future<void> Function(OutboxEntry entry, Map<String, dynamic> payload);
 
-/// Drift-backed outbox with read-before-retry reconciliation.
+/// Outbox statuses.
+///
+/// * `queued` — waiting for a flush.
+/// * `syncing` — in flight.
+/// * `synced` — accepted by the server.
+/// * `failed` — transient problem, retried on the next flush.
+/// * `blocked` — waiting on [OutboxEntry.dependsOn] or an unmapped local id.
+/// * `needsReview` — the server rejected it; a human has to look.
+abstract class OutboxStatus {
+  static const queued = 'queued';
+  static const syncing = 'syncing';
+  static const synced = 'synced';
+  static const failed = 'failed';
+  static const blocked = 'blocked';
+  static const needsReview = 'needsReview';
+}
+
+/// Drift-backed outbox with dependency ordering, local id remapping and
+/// read-before-write reconciliation so a retry never duplicates server data.
 class SyncOutboxService extends GetxService {
-  SyncOutboxService(this._db, this._api);
+  SyncOutboxService(this._db, this._api, this._media);
 
   final AppDatabase _db;
   final ApiClient _api;
+  final LocalMediaStore _media;
   final Map<String, SyncHandler> _handlers = {};
   final RxInt pendingCount = 0.obs;
 
   /// Task ids with a queued place-order / end-visit waiting to sync.
   final RxMap<int, String> pendingSyncByTaskId = <int, String>{}.obs;
 
-  bool _flushing = false;
+  /// Closing actions that need a manual retry.
+  final RxMap<int, String> needsReviewByTaskId = <int, String>{}.obs;
+
+  /// Every queued OB action per task id (check-in, verify, notes, order...).
+  final RxMap<int, List<String>> queuedActionsByTaskId =
+      <int, List<String>>{}.obs;
+
+  /// Queued work that belongs to a different signed-in user.
+  final RxInt otherUserPendingCount = 0.obs;
+
+  /// True while [flush] is walking the outbox.
+  final RxBool isFlushing = false.obs;
+
+  /// Owned entries in `failed` or `needsReview` (banner / Sync Center).
+  final RxInt attentionCount = 0.obs;
+
   static const _maxAttempts = 3;
   static const _uuid = Uuid();
 
   Future<SyncOutboxService> init() async {
-    await refreshPendingCount();
     _registerObHandlers();
+    await refreshPendingCount();
     return this;
   }
 
@@ -44,37 +84,86 @@ class SyncOutboxService extends GetxService {
   bool isTaskQueuedForSync(int taskId) =>
       pendingSyncByTaskId.containsKey(taskId);
 
+  bool isTaskNeedsReview(int taskId) => needsReviewByTaskId.containsKey(taskId);
+
   String? queuedActionForTask(int taskId) => pendingSyncByTaskId[taskId];
 
-  Future<void> refreshPendingCount() async {
-    pendingCount.value = await _db.pendingOutboxCount();
-    await _refreshPendingSyncByTask();
+  bool hasQueuedWorkForTask(int taskId) =>
+      (queuedActionsByTaskId[taskId] ?? const []).isNotEmpty;
+
+  String? get _currentUserId {
+    if (!Get.isRegistered<SessionService>()) return null;
+    final id = Get.find<SessionService>().user.value?.id;
+    return (id == null || id.isEmpty) ? null : id;
   }
 
-  Future<void> _refreshPendingSyncByTask() async {
-    final pending = await _db.pendingOutbox();
-    final map = <int, String>{};
-    for (final entry in pending) {
-      if (entry.role != 'orderBooker') continue;
-      if (entry.action != 'submit_order' &&
-          entry.action != 'end_visit_without_order') {
+  /// Legacy null-owner rows are claimed on login; until then they must not
+  /// flush or badge under a different booker.
+  bool _isOwnedByCurrentUser(OutboxEntry entry) {
+    final owner = entry.userId;
+    if (owner == null || owner.isEmpty) return false;
+    final current = _currentUserId;
+    if (current == null) return false;
+    return owner == current;
+  }
+
+  /// Counts only the signed-in user's work, so the badge and the logout
+  /// prompt never talk about another booker's queue.
+  Future<void> refreshPendingCount() async {
+    final open = await _db.openOutbox();
+    final submits = <int, String>{};
+    final reviews = <int, String>{};
+    final actions = <int, List<String>>{};
+    var otherUser = 0;
+    var own = 0;
+    var attention = 0;
+
+    for (final entry in open) {
+      if (!_isOwnedByCurrentUser(entry)) {
+        otherUser++;
         continue;
       }
+      own++;
+      if (entry.status == OutboxStatus.failed ||
+          entry.status == OutboxStatus.needsReview) {
+        attention++;
+      }
+      if (entry.role != 'orderBooker') continue;
+
+      int? taskId;
       try {
         final payload = Map<String, dynamic>.from(
           jsonDecode(entry.payloadJson) as Map,
         );
-        final taskId = ApiMap.asInt(payload['task_id']);
-        if (taskId != null) {
-          map[taskId] = entry.action;
-        }
+        taskId = ApiMap.asInt(payload['task_id']);
       } catch (_) {
-        // Ignore malformed payloads for UI overlay.
+        continue;
+      }
+      if (taskId == null) continue;
+
+      (actions[taskId] ??= <String>[]).add(entry.action);
+      if (entry.action == 'submit_order' ||
+          entry.action == 'end_visit_without_order') {
+        submits[taskId] = entry.action;
+        if (entry.status == OutboxStatus.needsReview ||
+            entry.status == OutboxStatus.failed) {
+          reviews[taskId] = entry.action;
+        }
       }
     }
+
     pendingSyncByTaskId
       ..clear()
-      ..addAll(map);
+      ..addAll(submits);
+    needsReviewByTaskId
+      ..clear()
+      ..addAll(reviews);
+    queuedActionsByTaskId
+      ..clear()
+      ..addAll(actions);
+    otherUserPendingCount.value = otherUser;
+    pendingCount.value = own;
+    attentionCount.value = attention;
   }
 
   Future<OutboxEntry> enqueue({
@@ -82,16 +171,25 @@ class SyncOutboxService extends GetxService {
     required String action,
     required Map<String, dynamic> payload,
     String? clientRequestId,
+    String? dependsOn,
+    String? entityType,
+    int? localEntityId,
   }) async {
     final id = 'sync-${DateTime.now().millisecondsSinceEpoch}-${_uuid.v4()}';
+    final mediaIds = OutboxPayload.collectMediaIds(payload);
     final entry = OutboxEntriesCompanion.insert(
       id: id,
       role: role,
       action: action,
       payloadJson: jsonEncode(payload),
       clientRequestId: clientRequestId ?? _uuid.v4(),
-      status: const Value('queued'),
+      status: const Value(OutboxStatus.queued),
       createdAt: DateTime.now(),
+      dependsOn: Value(dependsOn),
+      userId: Value(_currentUserId),
+      entityType: Value(entityType),
+      localEntityId: Value(localEntityId),
+      mediaIds: Value(mediaIds.isEmpty ? null : mediaIds.join(',')),
     );
     await _db.into(_db.outboxEntries).insert(entry);
     await refreshPendingCount();
@@ -100,56 +198,193 @@ class SyncOutboxService extends GetxService {
     )..where((t) => t.id.equals(id))).getSingle());
   }
 
+  /// Queues [payload] and, when the link is good enough, tries it right away.
+  ///
+  /// Returns true when the server has accepted it, false when it stays queued.
+  /// Callers use this to pick between "saved" and "will sync" wording.
+  Future<bool> enqueueAndFlush({
+    required String role,
+    required String action,
+    required Map<String, dynamic> payload,
+    String? clientRequestId,
+    String? dependsOn,
+    String? entityType,
+    int? localEntityId,
+  }) async {
+    final entry = await enqueue(
+      role: role,
+      action: action,
+      payload: payload,
+      clientRequestId: clientRequestId,
+      dependsOn: dependsOn,
+      entityType: entityType,
+      localEntityId: localEntityId,
+    );
+    if (!_isReadyForImmediateSync) return false;
+    await flush(force: true);
+    final after = await _db.outboxById(entry.id);
+    return after == null || after.status == OutboxStatus.synced;
+  }
+
+  bool get _isReadyForImmediateSync {
+    if (!Get.isRegistered<ConnectivityService>()) return true;
+    final connectivity = Get.find<ConnectivityService>();
+    if (!connectivity.isOnline.value) return false;
+    return connectivity.quality.value != NetworkQuality.weak;
+  }
+
   Future<void> flush({bool force = false}) async {
-    if (_flushing) return;
+    if (isFlushing.value) return;
     if (!force && Get.isRegistered<ConnectivityService>()) {
       final connectivity = Get.find<ConnectivityService>();
       if (!connectivity.isOnline.value) return;
     }
 
-    _flushing = true;
+    isFlushing.value = true;
     try {
       final pending = await _db.pendingOutbox();
+      // Statuses reached during this pass, so a child sees its parent's result
+      // without re-reading the database.
+      final resolvedStatus = <String, String>{};
+
       for (final entry in pending) {
+        if (!_isOwnedByCurrentUser(entry)) continue;
+
         final handler = _handlers['${entry.role}.${entry.action}'];
         if (handler == null) {
           await _mark(
             entry,
-            status: 'failed',
+            status: OutboxStatus.needsReview,
             error: 'No sync handler registered',
           );
+          resolvedStatus[entry.id] = OutboxStatus.needsReview;
           continue;
         }
 
-        await _mark(entry, status: 'syncing');
+        final blockedReason = await _dependencyBlockReason(
+          entry,
+          resolvedStatus,
+        );
+        if (blockedReason != null) {
+          await _mark(
+            entry,
+            status: OutboxStatus.blocked,
+            error: blockedReason,
+          );
+          resolvedStatus[entry.id] = OutboxStatus.blocked;
+          continue;
+        }
+
+        Map<String, dynamic> raw;
+        try {
+          raw = Map<String, dynamic>.from(jsonDecode(entry.payloadJson) as Map);
+        } catch (_) {
+          await _mark(
+            entry,
+            status: OutboxStatus.needsReview,
+            error: 'Invalid payload',
+          );
+          resolvedStatus[entry.id] = OutboxStatus.needsReview;
+          continue;
+        }
+
         Map<String, dynamic> payload;
         try {
-          payload = Map<String, dynamic>.from(
-            jsonDecode(entry.payloadJson) as Map,
+          payload = await OutboxPayload.resolve(
+            raw,
+            lookupServerId: _db.serverIdFor,
+            readMediaBase64: _media.readBase64,
           );
-        } catch (_) {
-          await _mark(entry, status: 'failed', error: 'Invalid payload');
+        } on UnresolvedLocalIdException catch (e) {
+          await _mark(entry, status: OutboxStatus.blocked, error: e.toString());
+          resolvedStatus[entry.id] = OutboxStatus.blocked;
+          continue;
+        } on MissingMediaException catch (e) {
+          await _mark(
+            entry,
+            status: OutboxStatus.needsReview,
+            error: e.toString(),
+          );
+          resolvedStatus[entry.id] = OutboxStatus.needsReview;
           continue;
         }
 
+        await _mark(entry, status: OutboxStatus.syncing);
         try {
           await handler(entry, payload);
-          await _mark(entry, status: 'synced', syncedAt: DateTime.now());
+          await _mark(
+            entry,
+            status: OutboxStatus.synced,
+            syncedAt: DateTime.now(),
+            error: '',
+          );
+          await _discardMedia(entry);
+          resolvedStatus[entry.id] = OutboxStatus.synced;
         } on ApiException catch (e) {
-          await _handleFailure(entry, e.message);
+          resolvedStatus[entry.id] = await _handleFailure(entry, e.message);
         } catch (e) {
-          await _handleFailure(entry, e.toString());
+          resolvedStatus[entry.id] = await _handleFailure(entry, e.toString());
         }
       }
     } finally {
-      _flushing = false;
+      isFlushing.value = false;
       await refreshPendingCount();
     }
   }
 
-  Future<void> _handleFailure(OutboxEntry entry, String message) async {
-    final attempts = entry.attempts + 1;
-    final status = attempts >= _maxAttempts ? 'needsReview' : 'failed';
+  /// Returns a reason when [entry] must wait, or null when it may run.
+  Future<String?> _dependencyBlockReason(
+    OutboxEntry entry,
+    Map<String, String> resolvedStatus,
+  ) async {
+    final dependsOn = entry.dependsOn;
+    if (dependsOn == null || dependsOn.isEmpty) return null;
+
+    final status =
+        resolvedStatus[dependsOn] ?? (await _db.outboxById(dependsOn))?.status;
+
+    // Parent row is gone: its mapping either exists (id resolution proves it)
+    // or the payload resolver will block this entry anyway.
+    if (status == null) return null;
+    if (status == OutboxStatus.synced) return null;
+    if (status == OutboxStatus.needsReview) {
+      return 'Waiting on an earlier step that needs review.';
+    }
+    return 'Waiting for an earlier step to sync.';
+  }
+
+  Future<void> _discardMedia(OutboxEntry entry) async {
+    final ids = entry.mediaIds;
+    if (ids == null || ids.isEmpty) return;
+    await _media.discard(
+      ids.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty),
+    );
+  }
+
+  /// Network noise must never strand real work, so only genuine server
+  /// rejections count against [_maxAttempts].
+  bool _isTransient(String message) {
+    final msg = message.toLowerCase();
+    return msg.contains('timed out') ||
+        msg.contains('timeout') ||
+        msg.contains('internet') ||
+        msg.contains('connection') ||
+        msg.contains('socket') ||
+        msg.contains('network') ||
+        msg.contains('host') ||
+        msg.contains('502') ||
+        msg.contains('503') ||
+        msg.contains('504') ||
+        msg.contains('bad gateway') ||
+        msg.contains('unavailable');
+  }
+
+  Future<String> _handleFailure(OutboxEntry entry, String message) async {
+    final transient = _isTransient(message);
+    final attempts = transient ? entry.attempts : entry.attempts + 1;
+    final status = attempts >= _maxAttempts
+        ? OutboxStatus.needsReview
+        : OutboxStatus.failed;
     await (_db.update(
       _db.outboxEntries,
     )..where((t) => t.id.equals(entry.id))).write(
@@ -159,6 +394,7 @@ class SyncOutboxService extends GetxService {
         lastError: Value(message),
       ),
     );
+    return status;
   }
 
   Future<void> _mark(
@@ -172,32 +408,43 @@ class SyncOutboxService extends GetxService {
     )..where((t) => t.id.equals(entry.id))).write(
       OutboxEntriesCompanion(
         status: Value(status),
-        lastError: error == null ? const Value.absent() : Value(error),
+        lastError: error == null
+            ? const Value.absent()
+            : Value(error.isEmpty ? null : error),
         syncedAt: syncedAt == null ? const Value.absent() : Value(syncedAt),
       ),
     );
   }
 
-  Future<List<OutboxEntry>> listPending() => _db.pendingOutbox();
+  Future<List<OutboxEntry>> listPending() => _db.openOutbox();
 
+  /// Explicit "clear local data" only. Never called on logout.
   Future<void> clearSessionData() async {
-    await _db.clearOutbox();
-    await _db.clearVisitLocalData();
+    await _db.clearAllLocalWork();
     pendingSyncByTaskId.clear();
+    needsReviewByTaskId.clear();
+    queuedActionsByTaskId.clear();
+    attentionCount.value = 0;
+    pendingCount.value = 0;
+    otherUserPendingCount.value = 0;
     await refreshPendingCount();
   }
 
   Future<void> retryEntry(String id) async {
     await (_db.update(_db.outboxEntries)..where((t) => t.id.equals(id))).write(
       const OutboxEntriesCompanion(
-        status: Value('queued'),
+        status: Value(OutboxStatus.queued),
         lastError: Value(null),
+        attempts: Value(0),
       ),
     );
     await flush(force: true);
   }
 
   void _registerObHandlers() {
+    registerHandler('orderBooker', 'register_shop', _handleObRegisterShop);
+    registerHandler('orderBooker', 'verify_on_site', _handleObVerifyOnSite);
+    registerHandler('orderBooker', 'check_in', _handleObCheckIn);
     registerHandler('orderBooker', 'submit_order', _handleObSubmitOrder);
     registerHandler(
       'orderBooker',
@@ -208,6 +455,289 @@ class SyncOutboxService extends GetxService {
     registerHandler('orderBooker', 'task_notes', _handleObTaskNotes);
   }
 
+  // ------------------------------------------------------------- shop setup
+
+  Future<void> _handleObRegisterShop(
+    OutboxEntry entry,
+    Map<String, dynamic> payload,
+  ) async {
+    final localShopId = entry.localEntityId;
+    if (localShopId != null &&
+        await _db.serverIdFor('shop', localShopId) != null) {
+      return;
+    }
+
+    // `shops/register` has no idempotency key, so look before creating.
+    final existing = await _findRegisteredShopId(payload);
+    if (existing != null) {
+      await _bindShop(localShopId, existing);
+      return;
+    }
+
+    final data = await _api.postData(
+      ApiEndpoints.obShopsRegister,
+      data: payload,
+    );
+    final shopJson = ApiMap.asMap(data['shop']);
+    if (shopJson == null) {
+      throw ApiException(message: 'Shop registered but response was empty.');
+    }
+    final serverId =
+        ApiMap.asInt(shopJson['shop_id']) ?? ApiMap.asInt(shopJson['id']);
+    if (serverId == null || serverId <= 0) {
+      throw ApiException(message: 'Shop registered without an id.');
+    }
+    await _bindShop(localShopId, serverId);
+  }
+
+  /// Matches an already-registered shop on CNIC or phone, or on name plus
+  /// coordinates. Name alone is never enough — adopting the wrong shop would
+  /// send orders somewhere else.
+  Future<int?> _findRegisteredShopId(Map<String, dynamic> payload) async {
+    String digits(Object? value) =>
+        (value?.toString() ?? '').replaceAll(RegExp(r'\D'), '');
+
+    final cnic = digits(payload['owner_cnic_number']);
+    final phone = digits(payload['owner_phone']);
+    final name = (payload['name']?.toString() ?? '').trim().toLowerCase();
+    final lat = ApiMap.asDouble(payload['latitude']);
+    final lng = ApiMap.asDouble(payload['longitude']);
+
+    try {
+      final data = await _api.postData(ApiEndpoints.obShopsMine);
+      for (final row in ApiMap.listOf(data, 'shops')) {
+        final id = ApiMap.asInt(row['shop_id']) ?? ApiMap.asInt(row['id']);
+        if (id == null || id <= 0) continue;
+
+        final rowCnic = digits(row['owner_cnic_number']);
+        final rowPhone = digits(row['owner_phone']);
+        if (cnic.length >= 13 && cnic == rowCnic) return id;
+        if (phone.length >= 10 && phone == rowPhone) return id;
+
+        final rowName = (row['name']?.toString() ?? '').trim().toLowerCase();
+        if (name.isEmpty || rowName != name) continue;
+        final rowLat = ApiMap.asDouble(row['latitude']);
+        final rowLng = ApiMap.asDouble(row['longitude']);
+        if (lat == null || lng == null || rowLat == null || rowLng == null) {
+          continue;
+        }
+        // ~0.0005 degrees is roughly 55 metres.
+        if ((rowLat - lat).abs() < 0.0005 && (rowLng - lng).abs() < 0.0005) {
+          return id;
+        }
+      }
+    } catch (_) {
+      // Treat lookup failure as "not found"; the POST is still guarded by the
+      // id mapping check on the next attempt.
+    }
+    return null;
+  }
+
+  Future<void> _bindShop(int? localShopId, int serverShopId) async {
+    if (localShopId == null) return;
+    await _db.putIdMapping(
+      entityType: 'shop',
+      localId: localShopId,
+      serverId: serverShopId,
+    );
+    await _db.patchLocalShop(
+      localShopId,
+      LocalShopsCompanion(
+        serverShopId: Value(serverShopId),
+        status: const Value('synced'),
+      ),
+    );
+  }
+
+  Future<void> _handleObVerifyOnSite(
+    OutboxEntry entry,
+    Map<String, dynamic> payload,
+  ) async {
+    final localVisitId = entry.localEntityId;
+    if (localVisitId != null &&
+        await _db.serverIdFor('visit', localVisitId) != null) {
+      return;
+    }
+
+    final shopId = ApiMap.asInt(payload['shop_id']);
+    final taskId = ApiMap.asInt(payload['task_id']);
+    if (shopId == null || taskId == null) {
+      throw ApiException(message: 'Missing shop or task for verification');
+    }
+
+    if (await _shopAlreadyVerified(shopId)) {
+      final adopted =
+          await _serverVisitIdForTask(taskId, openOnly: true) ??
+          await _serverVisitIdForTask(taskId, openOnly: false);
+      if (adopted != null) await _bindVisit(localVisitId, adopted);
+      return;
+    }
+
+    final data = await _api.postData(
+      ApiEndpoints.obShopsVerifyOnSite,
+      data: payload,
+    );
+    final result = ObCheckInResult.fromJson(data);
+    // Verification may or may not open the visit. When it does, the dependent
+    // check-in entry short-circuits on the mapping written here.
+    if (result.hasVisit) {
+      await _bindVisit(localVisitId, result.visit!.visitId);
+    }
+  }
+
+  Future<bool> _shopAlreadyVerified(int shopId) async {
+    try {
+      final data = await _api.postData(
+        ApiEndpoints.obShopsGet,
+        data: {'shop_id': shopId, 'include_photos': false},
+      );
+      final shop = ApiMap.asMap(data['shop']) ?? data;
+      if (shop['needs_shop_setup'] == true) return false;
+      return shop['field_verified'] == true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // ---------------------------------------------------------------- check-in
+
+  Future<void> _handleObCheckIn(
+    OutboxEntry entry,
+    Map<String, dynamic> payload,
+  ) async {
+    final localVisitId = entry.localEntityId;
+    if (localVisitId != null &&
+        await _db.serverIdFor('visit', localVisitId) != null) {
+      return;
+    }
+
+    final taskId = ApiMap.asInt(payload['task_id']);
+    if (taskId == null) throw ApiException(message: 'Missing task_id');
+
+    // Only adopt an *open* visit. Adopting a closed one made end-visit fail
+    // with "This visit is not in progress" while check-in looked synced.
+    final adoptedOpen = await _serverVisitIdForTask(taskId, openOnly: true);
+    if (adoptedOpen != null) {
+      await _bindVisit(localVisitId, adoptedOpen);
+      return;
+    }
+
+    final lat = ApiMap.asDouble(payload['latitude']);
+    final lng = ApiMap.asDouble(payload['longitude']);
+    if (lat == null || lng == null) {
+      throw ApiException(message: 'Missing GPS for check-in');
+    }
+
+    try {
+      final data = await _api.postData(
+        ApiEndpoints.obTasksCheckIn,
+        data: {'task_id': taskId, 'latitude': lat, 'longitude': lng},
+      );
+      final result = ObCheckInResult.fromJson(data);
+      if (result.hasVisit) {
+        await _bindVisit(localVisitId, result.visit!.visitId);
+        return;
+      }
+    } on ApiException {
+      // Already checked in — adopt whatever the server has (open preferred).
+      final existing = await _serverVisitIdForTask(taskId, openOnly: false);
+      if (existing != null) {
+        await _bindVisit(localVisitId, existing);
+        return;
+      }
+      rethrow;
+    }
+
+    final adoptedAfterPost = await _serverVisitIdForTask(
+      taskId,
+      openOnly: false,
+    );
+    if (adoptedAfterPost != null) {
+      await _bindVisit(localVisitId, adoptedAfterPost);
+      return;
+    }
+    throw ApiException(message: 'Check-in did not return a visit');
+  }
+
+  /// Server visit for [taskId] today.
+  ///
+  /// [openOnly] avoids binding a finished visit to a fresh offline check-in.
+  Future<int?> _serverVisitIdForTask(
+    int taskId, {
+    required bool openOnly,
+  }) async {
+    try {
+      final data = await _api.postData(ApiEndpoints.obVisitsActive);
+      final visit = ApiMap.asMap(data['visit']);
+      if (visit != null) {
+        final id = ApiMap.asInt(visit['visit_id']) ?? ApiMap.asInt(visit['id']);
+        if (ApiMap.asInt(visit['task_id']) == taskId && id != null && id > 0) {
+          return id;
+        }
+      }
+    } catch (_) {
+      // Fall through to the day list.
+    }
+
+    try {
+      final today = AppFormatter.apiDate(DateTime.now());
+      final data = await _api.postData(
+        ApiEndpoints.obVisitsMine,
+        data: {'limit': 100, 'offset': 0, 'date_from': today, 'date_to': today},
+      );
+      int? closedId;
+      for (final row in ApiMap.listOf(data, 'visits')) {
+        if (ApiMap.asInt(row['task_id']) != taskId) continue;
+        final id = ApiMap.asInt(row['visit_id']) ?? ApiMap.asInt(row['id']);
+        if (id == null || id <= 0) continue;
+        if (_visitRowIsOpen(row)) return id;
+        closedId ??= id;
+      }
+      if (!openOnly) return closedId;
+    } catch (_) {
+      // No adoption possible; caller will create the visit.
+    }
+    return null;
+  }
+
+  bool _visitRowIsOpen(Map<String, dynamic> visit) {
+    final outcome = ApiMap.asString(visit['outcome'])?.toLowerCase();
+    if (outcome == 'order_placed' ||
+        outcome == 'ended_without_order' ||
+        outcome == 'no_order' ||
+        outcome == 'no_sale') {
+      return false;
+    }
+    final state = ApiMap.asString(visit['state'])?.toLowerCase();
+    if (state == 'completed' ||
+        state == 'closed' ||
+        state == 'done' ||
+        state == 'cancel' ||
+        state == 'cancelled') {
+      return false;
+    }
+    return true;
+  }
+
+  Future<void> _bindVisit(int? localVisitId, int serverVisitId) async {
+    if (localVisitId == null || serverVisitId <= 0) return;
+    await _db.putIdMapping(
+      entityType: 'visit',
+      localId: localVisitId,
+      serverId: serverVisitId,
+    );
+    await _db.patchLocalVisit(
+      localVisitId,
+      LocalVisitsCompanion(serverVisitId: Value(serverVisitId)),
+    );
+    await _db.remapVisitLocalData(
+      localVisitId: localVisitId,
+      serverVisitId: serverVisitId,
+    );
+  }
+
+  // ------------------------------------------------------------------ orders
+
   Future<void> _handleObSubmitOrder(
     OutboxEntry entry,
     Map<String, dynamic> payload,
@@ -215,7 +745,10 @@ class SyncOutboxService extends GetxService {
     final visitId = ApiMap.asInt(payload['visit_id']);
     if (visitId == null) throw ApiException(message: 'Missing visit_id');
 
-    if (await _visitHasOrder(visitId)) return;
+    if (await _visitHasOrder(visitId)) {
+      await _markLocalVisitSynced(visitId);
+      return;
+    }
 
     final lines = _linesFromPayload(payload['lines']);
     await _syncCartToServer(visitId: visitId, lines: lines);
@@ -232,36 +765,169 @@ class SyncOutboxService extends GetxService {
         data: {'visit_id': visitId, 'latitude': lat, 'longitude': lng},
       );
     } on ApiException {
-      if (await _visitHasOrder(visitId)) return;
+      if (await _visitHasOrder(visitId)) {
+        await _markLocalVisitSynced(visitId);
+        return;
+      }
       rethrow;
     }
 
     if (!await _visitHasOrder(visitId)) {
       throw ApiException(message: 'Order submit did not produce an order');
     }
+    await _markLocalVisitSynced(visitId);
   }
 
   Future<void> _handleObEndWithoutOrder(
     OutboxEntry entry,
     Map<String, dynamic> payload,
   ) async {
-    final visitId = ApiMap.asInt(payload['visit_id']);
+    var visitId = ApiMap.asInt(payload['visit_id']);
     if (visitId == null) throw ApiException(message: 'Missing visit_id');
 
-    if (await _visitAlreadyClosed(visitId)) return;
+    if (await _visitAlreadyClosed(visitId)) {
+      await _markLocalVisitSynced(visitId);
+      return;
+    }
+
+    final notes = ApiMap.asString(payload['notes']) ?? '';
 
     try {
       await _api.postData(
         ApiEndpoints.obVisitsEndWithoutOrder,
-        data: {
-          'visit_id': visitId,
-          'notes': ApiMap.asString(payload['notes']) ?? '',
-        },
+        data: {'visit_id': visitId, 'notes': notes},
       );
-    } on ApiException {
-      if (await _visitAlreadyClosed(visitId)) return;
+    } on ApiException catch (e) {
+      if (await _visitAlreadyClosed(visitId)) {
+        await _markLocalVisitSynced(visitId);
+        return;
+      }
+
+      // Check-in sometimes bound a finished visit, or the open visit moved.
+      // Recover by ending the real open visit, or re-opening then ending.
+      if (_isVisitNotInProgressMessage(e.message)) {
+        final recovered = await _recoverEndWithoutOrder(
+          entry: entry,
+          payload: payload,
+          notes: notes,
+          failedVisitId: visitId,
+        );
+        if (recovered) return;
+      }
       rethrow;
     }
+    await _markLocalVisitSynced(visitId);
+  }
+
+  bool _isVisitNotInProgressMessage(String message) {
+    final msg = message.toLowerCase();
+    return msg.contains('not in progress') ||
+        msg.contains('not checked in') ||
+        msg.contains('no active visit') ||
+        msg.contains('visit is closed') ||
+        msg.contains('already closed') ||
+        msg.contains('already ended');
+  }
+
+  /// Ends an open visit for the task, or check-in then end, so a stuck
+  /// "Visit #-N / not in progress" entry can finish on retry.
+  Future<bool> _recoverEndWithoutOrder({
+    required OutboxEntry entry,
+    required Map<String, dynamic> payload,
+    required String notes,
+    required int failedVisitId,
+  }) async {
+    final taskId = ApiMap.asInt(payload['task_id']);
+    if (taskId == null) return false;
+
+    final localForTask = await _db.localVisitForTask(
+      taskId,
+      userId: _currentUserId ?? '',
+    );
+    final localVisitId = entry.localEntityId ?? localForTask?.localVisitId;
+
+    final openId = await _serverVisitIdForTask(taskId, openOnly: true);
+    if (openId != null) {
+      await _bindVisit(localVisitId, openId);
+      await _api.postData(
+        ApiEndpoints.obVisitsEndWithoutOrder,
+        data: {'visit_id': openId, 'notes': notes},
+      );
+      await _markLocalVisitSynced(openId);
+      return true;
+    }
+
+    if (await _visitAlreadyClosed(failedVisitId)) {
+      await _markLocalVisitSynced(failedVisitId);
+      return true;
+    }
+
+    final local = localVisitId == null
+        ? null
+        : await _db.localVisitById(localVisitId);
+    final lat = ApiMap.asDouble(payload['latitude']) ?? local?.latitude;
+    final lng = ApiMap.asDouble(payload['longitude']) ?? local?.longitude;
+    if (lat == null || lng == null) return false;
+
+    try {
+      final data = await _api.postData(
+        ApiEndpoints.obTasksCheckIn,
+        data: {'task_id': taskId, 'latitude': lat, 'longitude': lng},
+      );
+      final result = ObCheckInResult.fromJson(data);
+      final newVisitId = result.hasVisit
+          ? result.visit!.visitId
+          : await _serverVisitIdForTask(taskId, openOnly: true);
+      if (newVisitId == null || newVisitId <= 0) return false;
+
+      await _bindVisit(localVisitId, newVisitId);
+      await _api.postData(
+        ApiEndpoints.obVisitsEndWithoutOrder,
+        data: {'visit_id': newVisitId, 'notes': notes},
+      );
+      await _markLocalVisitSynced(newVisitId);
+      return true;
+    } on ApiException catch (e) {
+      final existing = await _serverVisitIdForTask(taskId, openOnly: true);
+      if (existing == null) {
+        // Last resort: if server insists nothing is open and the bound visit
+        // is finished, treat end as done so the queue can clear.
+        if (_isVisitNotInProgressMessage(e.message) &&
+            await _visitAlreadyClosed(failedVisitId)) {
+          await _markLocalVisitSynced(failedVisitId);
+          return true;
+        }
+        return false;
+      }
+      await _bindVisit(localVisitId, existing);
+      await _api.postData(
+        ApiEndpoints.obVisitsEndWithoutOrder,
+        data: {'visit_id': existing, 'notes': notes},
+      );
+      await _markLocalVisitSynced(existing);
+      return true;
+    }
+  }
+
+  Future<void> _markLocalVisitSynced(int serverVisitId) async {
+    final local = await _db.localVisitByAnyId(
+      serverVisitId,
+      userId: _currentUserId,
+    );
+    if (local == null) return;
+    await _db.patchLocalVisit(
+      local.localVisitId,
+      const LocalVisitsCompanion(status: Value('completed')),
+    );
+    // Only now mark the task completed — local end/order must not look done
+    // on the server until this outbox step succeeds.
+    await _db.upsertTaskOverride(
+      LocalTaskOverridesCompanion.insert(
+        taskId: Value(local.taskId),
+        status: Value(TaskStatus.completed.name),
+        updatedAt: DateTime.now(),
+      ),
+    );
   }
 
   Future<void> _handleObVisitNotes(
@@ -313,12 +979,7 @@ class SyncOutboxService extends GetxService {
         data: {'visit_id': visitId},
       );
       final visit = ApiMap.asMap(data['visit']) ?? data;
-      final state = ApiMap.asString(visit['state'])?.toLowerCase();
-      final outcome = ApiMap.asString(visit['outcome'])?.toLowerCase();
-      return state == 'completed' ||
-          state == 'closed' ||
-          outcome == 'order_placed' ||
-          outcome == 'ended_without_order';
+      return !_visitRowIsOpen(visit);
     } catch (_) {
       return false;
     }

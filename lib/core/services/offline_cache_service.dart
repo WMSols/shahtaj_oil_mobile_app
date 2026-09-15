@@ -270,14 +270,14 @@ class OfflineCacheService extends GetxService {
 
   Future<void> clearOrderBookerSessionCache() async {
     await clearKeys(OfflineCacheKeys.orderBookerSessionKeys);
-    final all = await _storage.readAllValues();
-    final dynamicKeys = all.keys.where(
-      (key) =>
-          key.startsWith('offline_cache_ob_routes_') ||
-          key.startsWith(OfflineCacheKeys.shopDetailPrefix),
-    );
-    if (dynamicKeys.isNotEmpty) {
-      await clearKeys(dynamicKeys);
+    final prefixes = [
+      'offline_cache_ob_routes_',
+      OfflineCacheKeys.shopDetailPrefix,
+      OfflineCacheKeys.visitNotesPrefix,
+    ];
+    for (final prefix in prefixes) {
+      final keys = await _cache.keysWithPrefix(prefix);
+      if (keys.isNotEmpty) await clearKeys(keys);
     }
   }
 

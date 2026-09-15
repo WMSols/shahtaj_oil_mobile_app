@@ -11,8 +11,10 @@ import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/connectivity_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/sync_outbox_service.dart';
-import 'package:shahtaj_oil_mobile_app/core/utils/helper/app_helper.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/sync/ob_day_bootstrap_service.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/visit/ob_visit_session_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/visit/ob_product_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/visit/ob_visit_cart_line_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/visit/ob_visit_cart_model.dart';
@@ -34,20 +36,64 @@ class ObVisitCartService extends GetxService {
 
   int _nextLocalLineId = -1;
 
+  ObVisitSessionService? get _session =>
+      Get.isRegistered<ObVisitSessionService>()
+      ? Get.find<ObVisitSessionService>()
+      : null;
+
+  /// Server id when the check-in has synced, otherwise the local id.
+  Future<int> resolveVisitId(int visitId) async {
+    final session = _session;
+    if (session == null) return visitId;
+    return session.effectiveVisitId(visitId);
+  }
+
+  /// A visit the server has never seen cannot be read from or written to.
+  Future<bool> _isLocalOnly(int visitId) async {
+    if (visitId >= 0) return false;
+    final session = _session;
+    if (session == null) return true;
+    return session.isLocalOnlyVisit(visitId);
+  }
+
   Future<List<ObProductModel>> fetchProducts({
     required int visitId,
     int limit = 500,
     int offset = 0,
     bool forceRefresh = false,
   }) async {
+    final localOnly = await _isLocalOnly(visitId);
+
+    if (localOnly) {
+      // No server visit yet, so serve the catalog captured at day bootstrap.
+      final cached = await _readProductsFromDb(visitId);
+      if (cached.isNotEmpty) return cached;
+      final catalog = await _readCatalogFromDb();
+      if (catalog.isNotEmpty) {
+        await _persistProductsForVisit(visitId, catalog);
+        return catalog;
+      }
+      throw ApiException(message: AppTexts.obProductCatalogUnavailable);
+    }
+
     if (!forceRefresh) {
       final cached = await _readProductsFromDb(visitId);
       if (cached.isNotEmpty && _shouldServeCacheOnly()) return cached;
-      if (cached.isNotEmpty && !forceRefresh) {
+      if (cached.isNotEmpty) {
         unawaited(
           _fetchProductsFromNetwork(visitId, limit: limit, offset: offset),
         );
         return cached;
+      }
+    }
+
+    if (_shouldServeCacheOnly()) {
+      final cached = await _readProductsFromDb(visitId);
+      if (cached.isNotEmpty) return cached;
+      final catalog = await _readCatalogFromDb();
+      if (catalog.isNotEmpty) {
+        await _persistProductsForVisit(visitId, catalog);
+        return catalog;
       }
     }
 
@@ -60,24 +106,35 @@ class ObVisitCartService extends GetxService {
     } catch (_) {
       final cached = await _readProductsFromDb(visitId);
       if (cached.isNotEmpty) return cached;
+      final catalog = await _readCatalogFromDb();
+      if (catalog.isNotEmpty) {
+        await _persistProductsForVisit(visitId, catalog);
+        return catalog;
+      }
       rethrow;
     }
   }
 
-  Future<List<ObProductModel>> _fetchProductsFromNetwork(
-    int visitId, {
-    required int limit,
-    required int offset,
-  }) async {
-    final data = await _api.postData(
-      ApiEndpoints.obProductsList,
-      data: {'visit_id': visitId, 'limit': limit, 'offset': offset},
-    );
-    final products = ApiMap.listOf(
-      data,
-      'products',
-    ).map(ObProductModel.fromJson).toList(growable: false);
+  Future<List<ObProductModel>> _readCatalogFromDb() async {
+    final rows = await _db.catalogFor(ObDayCatalog.globalScope);
+    return rows
+        .map((row) {
+          try {
+            return ObProductModel.fromJson(
+              jsonDecode(row.jsonPayload) as Map<String, dynamic>,
+            );
+          } catch (_) {
+            return null;
+          }
+        })
+        .whereType<ObProductModel>()
+        .toList(growable: false);
+  }
 
+  Future<void> _persistProductsForVisit(
+    int visitId,
+    List<ObProductModel> products,
+  ) async {
     await _db.replaceProductsForVisit(
       visitId,
       products
@@ -90,6 +147,29 @@ class ObVisitCartService extends GetxService {
           )
           .toList(growable: false),
     );
+  }
+
+  Future<List<ObProductModel>> _fetchProductsFromNetwork(
+    int visitId, {
+    required int limit,
+    required int offset,
+  }) async {
+    final data = await _api.postData(
+      ApiEndpoints.obProductsList,
+      data: {'visit_id': visitId, 'limit': limit, 'offset': offset},
+    );
+    final rawProducts = ApiMap.listOf(data, 'products');
+    final products = rawProducts
+        .map(ObProductModel.fromJson)
+        .toList(growable: false);
+
+    await _persistProductsForVisit(visitId, products);
+
+    // Every successful fetch also refreshes the offline catalog, which is what
+    // keeps rates current for shops checked into without connectivity.
+    if (rawProducts.isNotEmpty && Get.isRegistered<ObDayBootstrapService>()) {
+      await Get.find<ObDayBootstrapService>().saveGlobalCatalog(rawProducts);
+    }
     return products;
   }
 
@@ -113,7 +193,8 @@ class ObVisitCartService extends GetxService {
     required String shopName,
     bool mergeFromServer = true,
   }) async {
-    if (mergeFromServer && !_shouldServeCacheOnly()) {
+    final localOnly = await _isLocalOnly(visitId);
+    if (mergeFromServer && !localOnly && !_shouldServeCacheOnly()) {
       try {
         await _mergeServerCart(visitId: visitId);
       } catch (_) {
@@ -175,7 +256,17 @@ class ObVisitCartService extends GetxService {
         break;
       }
     }
-    if (product == null && !_shouldServeCacheOnly()) {
+    if (product == null) {
+      for (final item in await _readCatalogFromDb()) {
+        if (item.id == productId) {
+          product = item;
+          break;
+        }
+      }
+    }
+    if (product == null &&
+        !_shouldServeCacheOnly() &&
+        !await _isLocalOnly(visitId)) {
       final fresh = await _fetchProductsFromNetwork(
         visitId,
         limit: 500,
@@ -232,18 +323,7 @@ class ObVisitCartService extends GetxService {
     required String shopName,
     required double latitude,
     required double longitude,
-    double? shopLatitude,
-    double? shopLongitude,
   }) async {
-    if (shopLatitude != null && shopLongitude != null) {
-      AppHelper.ensureWithinPlaceOrderRange(
-        currentLat: latitude,
-        currentLng: longitude,
-        shopLat: shopLatitude,
-        shopLng: shopLongitude,
-      );
-    }
-
     final cart = await fetchCart(
       visitId: visitId,
       shopName: shopName,
@@ -263,31 +343,35 @@ class ObVisitCartService extends GetxService {
       'lines': cart.lines.map((l) => l.toJson()).toList(growable: false),
     };
 
-    if (_shouldServeCacheOnly()) {
-      await _outbox.enqueue(
-        role: 'orderBooker',
+    if (_shouldServeCacheOnly() || await _isLocalOnly(visitId)) {
+      await _enqueueVisitClosingAction(
         action: 'submit_order',
+        visitId: visitId,
         payload: payload,
       );
       return const ObOrderSubmitResult(queued: true, orderNumber: null);
     }
 
     try {
-      await _outbox.enqueue(
-        role: 'orderBooker',
+      await _enqueueVisitClosingAction(
         action: 'submit_order',
+        visitId: visitId,
         payload: payload,
       );
       await _outbox.flush(force: true);
-      final orderNumber = await _readOrderNumber(visitId);
+      final serverVisitId = await resolveVisitId(visitId);
+      final orderNumber = await _readOrderNumber(serverVisitId);
       if (orderNumber != null) {
+        await _db.clearVisitCart(serverVisitId);
         await _db.clearVisitCart(visitId);
         return ObOrderSubmitResult(queued: false, orderNumber: orderNumber);
       }
       return const ObOrderSubmitResult(queued: true, orderNumber: null);
     } on ApiException catch (e) {
-      final existing = await _readOrderNumber(visitId);
+      final serverVisitId = await resolveVisitId(visitId);
+      final existing = await _readOrderNumber(serverVisitId);
       if (existing != null) {
+        await _db.clearVisitCart(serverVisitId);
         await _db.clearVisitCart(visitId);
         return ObOrderSubmitResult(queued: false, orderNumber: existing);
       }
@@ -305,28 +389,33 @@ class ObVisitCartService extends GetxService {
     required String notes,
     String? shopName,
   }) async {
+    final local = await _session?.visitByAnyId(visitId);
     final payload = {
       'visit_id': visitId,
       'task_id': taskId,
       'shop_id': shopId,
       if (shopName != null && shopName.isNotEmpty) 'shop_name': shopName,
       'notes': notes.trim(),
+      if (local != null) 'latitude': local.latitude,
+      if (local != null) 'longitude': local.longitude,
     };
 
-    if (_shouldServeCacheOnly()) {
-      await _outbox.enqueue(
-        role: 'orderBooker',
+    if (_shouldServeCacheOnly() || await _isLocalOnly(visitId)) {
+      await _enqueueVisitClosingAction(
         action: 'end_visit_without_order',
+        visitId: visitId,
         payload: payload,
+        localVisitId: local?.localVisitId,
       );
       return const ObOrderSubmitResult(queued: true, orderNumber: null);
     }
 
     try {
-      await _outbox.enqueue(
-        role: 'orderBooker',
+      await _enqueueVisitClosingAction(
         action: 'end_visit_without_order',
+        visitId: visitId,
         payload: payload,
+        localVisitId: local?.localVisitId,
       );
       await _outbox.flush(force: true);
       return const ObOrderSubmitResult(queued: false, orderNumber: null);
@@ -336,6 +425,39 @@ class ObVisitCartService extends GetxService {
       }
       rethrow;
     }
+  }
+
+  /// Queues a visit close behind that visit's check-in, and retargets any
+  /// later check-ins so they wait on this close (one open visit on server).
+  Future<OutboxEntry> _enqueueVisitClosingAction({
+    required String action,
+    required int visitId,
+    required Map<String, dynamic> payload,
+    int? localVisitId,
+  }) async {
+    final session = _session;
+    final localId =
+        localVisitId ?? (await session?.visitByAnyId(visitId))?.localVisitId;
+    final dependsOn = session == null
+        ? null
+        : await session.checkInGateEntryIdForVisit(visitId);
+
+    final entry = await _outbox.enqueue(
+      role: 'orderBooker',
+      action: action,
+      payload: payload,
+      entityType: 'visit',
+      localEntityId: localId,
+      dependsOn: dependsOn,
+    );
+
+    if (session != null && localId != null) {
+      await session.retargetOpeningsOntoClose(
+        closeEntry: entry,
+        localVisitId: localId,
+      );
+    }
+    return entry;
   }
 
   Future<bool> saveVisitNotes({
@@ -362,19 +484,12 @@ class ObVisitCartService extends GetxService {
       if (shopName != null && shopName.isNotEmpty) 'shop_name': shopName,
     };
 
-    if (_shouldServeCacheOnly()) {
-      await _outbox.enqueue(
-        role: 'orderBooker',
-        action: 'visit_notes',
-        payload: payload,
-      );
-      return true;
-    }
-    await _api.postData(
-      ApiEndpoints.obVisitsNotes,
-      data: {'visit_id': visitId, 'notes': trimmed},
+    final synced = await _outbox.enqueueAndFlush(
+      role: 'orderBooker',
+      action: 'visit_notes',
+      payload: payload,
     );
-    return false;
+    return !synced;
   }
 
   Future<String?> readVisitNotes(int visitId) async {

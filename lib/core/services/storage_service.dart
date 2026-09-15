@@ -8,6 +8,7 @@ class StorageService {
   static const _userKey = 'user_profile';
   static const _localeKey = 'app_locale';
   static const _onboardingCompletedKey = 'onboarding_completed';
+  static const _localDataOwnerKey = 'local_data_owner_user_id';
   static const _readTimeout = Duration(seconds: 5);
 
   final FlutterSecureStorage _storage = const FlutterSecureStorage(
@@ -38,6 +39,12 @@ class StorageService {
       _storage.write(key: _userKey, value: userJson);
 
   Future<void> clearUser() => _storage.delete(key: _userKey);
+
+  /// Which user the offline data on this device belongs to.
+  Future<String?> getLocalDataOwner() => _read(_localDataOwnerKey);
+
+  Future<void> saveLocalDataOwner(String userId) =>
+      _storage.write(key: _localDataOwnerKey, value: userId);
 
   Future<String?> getLocale() => _read(_localeKey);
 

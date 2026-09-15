@@ -7,6 +7,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/system/app_system_ui.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/app_cache_storage.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/connectivity_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/locale_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/local_media_store.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/location_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
@@ -46,7 +47,10 @@ class AppInitializer {
 
     Get.put(ApiClient(storage, sessionService), permanent: true);
 
-    final syncOutbox = SyncOutboxService(db, Get.find<ApiClient>());
+    final mediaStore = LocalMediaStore(db);
+    Get.put(mediaStore, permanent: true);
+
+    final syncOutbox = SyncOutboxService(db, Get.find<ApiClient>(), mediaStore);
     await syncOutbox.init();
     Get.put(syncOutbox, permanent: true);
 

@@ -290,16 +290,32 @@ class ObShopOnboardingController extends GetxController {
       shopExteriorPhoto: _encodePhoto(shopExteriorPhoto.value),
     );
 
-    final shop = await _shopService.registerShop(request);
+    final result = await _shopService.registerShop(
+      request,
+      photos: {
+        if (shopExteriorPhoto.value != null)
+          'shop_exterior_photo': shopExteriorPhoto.value!,
+        if (ownerPhoto.value != null) 'owner_photo': ownerPhoto.value!,
+        if (cnicFront.value != null) 'owner_cnic_front': cnicFront.value!,
+        if (cnicBack.value != null) 'owner_cnic_back': cnicBack.value!,
+      },
+    );
     clearForm();
-    _showMessage(AppTexts.obShopRegisteredSuccess, isError: false);
+    _showMessage(
+      result.queued
+          ? AppTexts.obShopRegisterQueuedOffline
+          : AppTexts.obShopRegisteredSuccess,
+      isError: false,
+    );
 
     if (Get.isRegistered<ObMyShopsController>()) {
       final myShops = Get.find<ObMyShopsController>();
-      await myShops.loadShops(force: true);
+      if (!result.queued) {
+        await myShops.loadShops(force: true);
+      }
       // shops/mine can lag or return empty right after register; keep the
       // submitted shop visible from the register response.
-      myShops.upsertShop(shop);
+      myShops.upsertShop(result.shop);
     }
 
     _navigateToMyShops();

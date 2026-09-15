@@ -18,6 +18,7 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_drawer.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_profile_avatar.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/sync_outbox_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_sync_status_banner.dart';
 
 class AppShell<T extends AppShellController> extends GetView<T> {
   const AppShell({super.key});
@@ -30,21 +31,22 @@ class AppShell<T extends AppShellController> extends GetView<T> {
     final roleLabel = session.role.value?.label ?? '';
     final iconSize = AppResponsive.iconSize(context, factor: 1.5);
 
-    return Obx(() {
-      final currentLeaf = controller.currentLeaf;
-
-      return PopScope(
-        canPop: false,
-        onPopInvokedWithResult: (didPop, _) {
-          if (didPop) return;
-          if (controller.handleSystemBack()) {
-            SystemNavigator.pop();
-          }
-        },
-        child: Scaffold(
-          key: controller.scaffoldKey,
-          backgroundColor: AppColors.scaffoldBackground,
-          drawer: AppDrawer(
+    // Keep PopScope + keyed Scaffold outside Obx. Rebuilding them on every
+    // leaf change while a pushed route is transitioning duplicates the
+    // GlobalKey and crashes ("Multiple widgets used the same GlobalKey").
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        if (controller.handleSystemBack()) {
+          SystemNavigator.pop();
+        }
+      },
+      child: Scaffold(
+        key: controller.scaffoldKey,
+        backgroundColor: AppColors.scaffoldBackground,
+        drawer: Obx(
+          () => AppDrawer(
             entries: controller.drawerEntries,
             selectedLeafId: controller.selectedLeafId.value,
             expandedGroupIds: controller.expandedGroupIds.toSet(),
@@ -52,98 +54,110 @@ class AppShell<T extends AppShellController> extends GetView<T> {
             onGroupToggle: controller.toggleGroup,
             roleLabel: roleLabel,
           ),
-          appBar: AppBar(
-            backgroundColor: AppColors.white,
-            foregroundColor: AppColors.textPrimary,
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            centerTitle: true,
-            title: Text(
-              currentLeaf.label,
+        ),
+        appBar: AppBar(
+          backgroundColor: AppColors.white,
+          foregroundColor: AppColors.textPrimary,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          centerTitle: true,
+          title: Obx(
+            () => Text(
+              controller.currentLeaf.label,
               style: AppTextStyles.screenTitle(context),
             ),
-            leadingWidth: AppResponsive.screenWidth(context) * 0.28,
-            leading: Padding(
-              padding: EdgeInsets.only(
-                left: AppSpacing.horizontalValue(context, 0.01),
-              ),
-              child: Row(
-                children: [
-                  AppIconButton(
-                    icon: AppIcons.menu,
+          ),
+          leadingWidth: AppResponsive.screenWidth(context) * 0.28,
+          leading: Padding(
+            padding: EdgeInsets.only(
+              left: AppSpacing.horizontalValue(context, 0.01),
+            ),
+            child: Row(
+              children: [
+                AppIconButton(
+                  icon: AppIcons.menu,
+                  iconColor: AppColors.primary,
+                  iconSize: iconSize,
+                  onTap: controller.openDrawer,
+                ),
+                Obx(() {
+                  final count = Get.isRegistered<SyncOutboxService>()
+                      ? Get.find<SyncOutboxService>().pendingCount.value
+                      : 0;
+                  return AppIconButton(
+                    icon: count > 0 ? AppIcons.doSync : AppIcons.syncDone,
                     iconColor: AppColors.primary,
                     iconSize: iconSize,
-                    onTap: controller.openDrawer,
-                  ),
-                  Obx(() {
-                    final count = Get.isRegistered<SyncOutboxService>()
-                        ? Get.find<SyncOutboxService>().pendingCount.value
-                        : 0;
-                    return AppIconButton(
-                      icon: count > 0 ? AppIcons.doSync : AppIcons.syncDone,
-                      iconColor: AppColors.primary,
-                      iconSize: iconSize,
-                      badge: count > 0 ? '$count' : null,
-                      onTap: () => Get.toNamed(AppRoutes.syncCenter),
-                    );
-                  }),
-                ],
-              ),
-            ),
-            actions: [
-              const Center(child: AppNetworkSignalBars()),
-              AppSpacing.horizontal(context, 0.02),
-              Center(
-                child: Obx(() {
-                  final connectivity = Get.find<ConnectivityService>();
-                  final user = session.user.value;
-                  final name =
-                      user?.displayName(AppTexts.defaultUserName) ??
-                      AppTexts.defaultUserName;
-                  final presence = !connectivity.isOnline.value
-                      ? PresenceStatus.offline
-                      : (user?.presenceStatus ?? PresenceStatus.away);
-
-                  return AppProfileAvatar(
-                    size: 34,
-                    name: name,
-                    presenceStatus: presence,
-                    showPresenceDot: true,
-                    onTap: controller.openAccount,
+                    badge: count > 0 ? '$count' : null,
+                    onTap: () => Get.toNamed(AppRoutes.syncCenter),
                   );
                 }),
-              ),
-              AppSpacing.horizontal(context, 0.03),
-            ],
-          ),
-          body: AnimatedSwitcher(
-            duration: _transitionDuration,
-            switchInCurve: Curves.easeOutCubic,
-            switchOutCurve: Curves.easeInCubic,
-            transitionBuilder: (child, animation) {
-              final slide =
-                  Tween<Offset>(
-                    begin: const Offset(0.04, 0),
-                    end: Offset.zero,
-                  ).animate(
-                    CurvedAnimation(
-                      parent: animation,
-                      curve: Curves.easeOutCubic,
-                    ),
-                  );
-
-              return FadeTransition(
-                opacity: animation,
-                child: SlideTransition(position: slide, child: child),
-              );
-            },
-            child: KeyedSubtree(
-              key: ValueKey<String>(currentLeaf.id),
-              child: currentLeaf.screen,
+              ],
             ),
           ),
+          actions: [
+            const Center(child: AppNetworkSignalBars()),
+            AppSpacing.horizontal(context, 0.02),
+            Center(
+              child: Obx(() {
+                final connectivity = Get.find<ConnectivityService>();
+                final user = session.user.value;
+                final name =
+                    user?.displayName(AppTexts.defaultUserName) ??
+                    AppTexts.defaultUserName;
+                final presence = !connectivity.isOnline.value
+                    ? PresenceStatus.offline
+                    : (user?.presenceStatus ?? PresenceStatus.away);
+
+                return AppProfileAvatar(
+                  size: 34,
+                  name: name,
+                  presenceStatus: presence,
+                  showPresenceDot: true,
+                  onTap: controller.openAccount,
+                );
+              }),
+            ),
+            AppSpacing.horizontal(context, 0.03),
+          ],
         ),
-      );
-    });
+        body: Obx(() {
+          final currentLeaf = controller.currentLeaf;
+          return Column(
+            children: [
+              const AppSyncStatusBanner(),
+              Expanded(
+                child: AnimatedSwitcher(
+                  duration: _transitionDuration,
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (child, animation) {
+                    final slide =
+                        Tween<Offset>(
+                          begin: const Offset(0.04, 0),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          ),
+                        );
+
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(position: slide, child: child),
+                    );
+                  },
+                  child: KeyedSubtree(
+                    key: ValueKey<String>(currentLeaf.id),
+                    child: currentLeaf.screen,
+                  ),
+                ),
+              ),
+            ],
+          );
+        }),
+      ),
+    );
   }
 }

@@ -19,6 +19,19 @@ class OutboxEntries extends Table {
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get syncedAt => dateTime().nullable()();
 
+  /// Outbox id this entry must wait for (verify-on-site before check-in).
+  TextColumn get dependsOn => text().nullable()();
+
+  /// Owner of the queued work. Flush only runs entries for the signed-in user.
+  TextColumn get userId => text().nullable()();
+
+  /// Local record this entry creates on the server (`visit` / `shop`).
+  TextColumn get entityType => text().nullable()();
+  IntColumn get localEntityId => integer().nullable()();
+
+  /// Comma separated [MediaFiles] ids referenced by the payload.
+  TextColumn get mediaIds => text().nullable()();
+
   @override
   Set<Column<Object>> get primaryKey => {id};
 }
@@ -46,52 +59,281 @@ class VisitProducts extends Table {
   Set<Column<Object>> get primaryKey => {visitId, productId};
 }
 
-@DriftDatabase(tables: [OutboxEntries, VisitCartLines, VisitProducts])
+/// Local negative id to server id translation for anything created offline.
+class IdMappings extends Table {
+  TextColumn get entityType => text()();
+  IntColumn get localId => integer()();
+  IntColumn get serverId => integer()();
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {entityType, localId};
+}
+
+/// One row per check-in. [localVisitId] is negative until the server replies.
+class LocalVisits extends Table {
+  IntColumn get localVisitId => integer()();
+  IntColumn get serverVisitId => integer().nullable()();
+  IntColumn get taskId => integer()();
+  TextColumn get shopId => text()();
+  TextColumn get shopName => text()();
+  RealColumn get latitude => real()();
+  RealColumn get longitude => real()();
+  DateTimeColumn get checkedInAt => dateTime()();
+
+  /// `check_in` or `verify_then_check_in`.
+  TextColumn get kind => text().withDefault(const Constant('check_in'))();
+
+  /// `active` or `completed`.
+  TextColumn get status => text().withDefault(const Constant('active'))();
+
+  /// `order_placed` or `ended_without_order`.
+  TextColumn get outcome => text().nullable()();
+  TextColumn get notes => text().nullable()();
+  TextColumn get orderNumber => text().nullable()();
+  TextColumn get userId => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get completedAt => dateTime().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {localVisitId};
+}
+
+/// Shops registered offline. Not visitable until [serverShopId] is known.
+class LocalShops extends Table {
+  IntColumn get localShopId => integer()();
+  IntColumn get serverShopId => integer().nullable()();
+  TextColumn get name => text()();
+  TextColumn get ownerName => text().nullable()();
+  TextColumn get ownerPhone => text().nullable()();
+  TextColumn get ownerCnic => text().nullable()();
+  RealColumn get latitude => real().nullable()();
+  RealColumn get longitude => real().nullable()();
+  TextColumn get shopCategory => text().nullable()();
+  TextColumn get payloadJson => text()();
+  TextColumn get status => text().withDefault(const Constant('pending'))();
+  TextColumn get userId => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {localShopId};
+}
+
+/// Local edits layered on top of the server task snapshot.
+class LocalTaskOverrides extends Table {
+  IntColumn get taskId => integer()();
+  TextColumn get status => text().nullable()();
+  TextColumn get notes => text().nullable()();
+  TextColumn get visitTag => text().nullable()();
+  BoolColumn get needsShopSetup => boolean().nullable()();
+  BoolColumn get fieldVerified => boolean().nullable()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {taskId};
+}
+
+/// Generic offline snapshot store for API payloads (tasks, shops, visits...).
+class CachedDocs extends Table {
+  TextColumn get key => text()();
+  TextColumn get jsonPayload => text()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {key};
+}
+
+/// Product catalog. `scope` is `global` today; per-shop scopes stay possible.
+class CatalogProducts extends Table {
+  TextColumn get scope => text().withDefault(const Constant('global'))();
+  IntColumn get productId => integer()();
+  TextColumn get jsonPayload => text()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {scope, productId};
+}
+
+/// Photos captured offline. Files live on disk; only paths are stored here.
+class MediaFiles extends Table {
+  TextColumn get id => text()();
+  TextColumn get path => text()();
+  TextColumn get purpose => text()();
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
+@DriftDatabase(
+  tables: [
+    OutboxEntries,
+    VisitCartLines,
+    VisitProducts,
+    IdMappings,
+    LocalVisits,
+    LocalShops,
+    LocalTaskOverrides,
+    CachedDocs,
+    CatalogProducts,
+    MediaFiles,
+  ],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
-  /// Local outbox/cart cache only. Explicit strategy so opening an existing
-  /// DB (or rolling back after a higher-schema test build) does not crash.
+  /// Devices already carry queued orders in v1, so upgrades must be additive.
   @override
   MigrationStrategy get migration => MigrationStrategy(
-    onCreate: (Migrator m) async {
-      await m.createAll();
-    },
-    onUpgrade: (Migrator m, int from, int to) async {
-      if (from > to) {
-        // Downgrade (e.g. after testing a higher-schema build): wipe local
-        // tables and recreate current schema. Safe for outbox/cart cache.
-        for (final table in allTables) {
-          await m.deleteTable(table.actualTableName);
-        }
-        await m.createAll();
-        return;
-      }
-      // Upgrade to v1 baseline — create any missing tables.
-      if (from < 1) {
-        await m.createAll();
+    onCreate: (m) => m.createAll(),
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        await m.createTable(idMappings);
+        await m.createTable(localVisits);
+        await m.createTable(localShops);
+        await m.createTable(localTaskOverrides);
+        await m.createTable(cachedDocs);
+        await m.createTable(catalogProducts);
+        await m.createTable(mediaFiles);
+        await m.addColumn(outboxEntries, outboxEntries.dependsOn);
+        await m.addColumn(outboxEntries, outboxEntries.userId);
+        await m.addColumn(outboxEntries, outboxEntries.entityType);
+        await m.addColumn(outboxEntries, outboxEntries.localEntityId);
+        await m.addColumn(outboxEntries, outboxEntries.mediaIds);
       }
     },
   );
 
-  /// Statuses shown in Sync Center and counted on the shell badge.
-  static const _openOutboxStatuses = ['queued', 'failed', 'needsReview'];
+  // ---------------------------------------------------------------- outbox
+
+  static const _pendingStatuses = ['queued', 'failed', 'blocked'];
+  static const _openStatuses = ['queued', 'failed', 'blocked', 'needsReview'];
 
   Future<List<OutboxEntry>> pendingOutbox() =>
       (select(outboxEntries)
-            ..where((t) => t.status.isIn(_openOutboxStatuses))
+            ..where((t) => t.status.isIn(_pendingStatuses))
+            ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
+          .get();
+
+  Future<List<OutboxEntry>> openOutbox() =>
+      (select(outboxEntries)
+            ..where((t) => t.status.isIn(_openStatuses))
             ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
           .get();
 
   Future<int> pendingOutboxCount() async {
-    final rows = await pendingOutbox();
+    final rows = await (select(
+      outboxEntries,
+    )..where((t) => t.status.isIn(_openStatuses))).get();
     return rows.length;
   }
+
+  Future<OutboxEntry?> outboxById(String id) =>
+      (select(outboxEntries)..where((t) => t.id.equals(id))).getSingleOrNull();
+
+  static const visitClosingActions = [
+    'submit_order',
+    'end_visit_without_order',
+  ];
+
+  static const visitOpeningActions = ['verify_on_site', 'check_in'];
+
+  /// Newest unsynced entry that closes a visit on the server.
+  ///
+  /// The next check-in must wait for it, because the API allows only one open
+  /// visit at a time. Without this, a day of offline shops could be rejected
+  /// as "visit already in progress".
+  Future<OutboxEntry?> latestOpenVisitClosingEntry({
+    int? excludingLocalVisitId,
+  }) async {
+    final rows =
+        await (select(outboxEntries)
+              ..where(
+                (t) =>
+                    t.action.isIn(visitClosingActions) &
+                    t.status.equals('synced').not(),
+              )
+              ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
+            .get();
+    for (final row in rows) {
+      if (excludingLocalVisitId != null &&
+          row.localEntityId == excludingLocalVisitId) {
+        continue;
+      }
+      return row;
+    }
+    return null;
+  }
+
+  /// Newest unsynced verify/check-in (used when a prior visit has no close yet).
+  Future<OutboxEntry?> latestOpenVisitOpeningEntry({
+    int? excludingLocalVisitId,
+  }) async {
+    final rows =
+        await (select(outboxEntries)
+              ..where(
+                (t) =>
+                    t.action.isIn(visitOpeningActions) &
+                    t.status.equals('synced').not(),
+              )
+              ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
+            .get();
+    for (final row in rows) {
+      if (excludingLocalVisitId != null &&
+          row.localEntityId == excludingLocalVisitId) {
+        continue;
+      }
+      return row;
+    }
+    return null;
+  }
+
+  /// Unsynced check-in for a local visit (close steps depend on this).
+  Future<OutboxEntry?> openCheckInEntryForVisit(int localVisitId) =>
+      (select(outboxEntries)
+            ..where(
+              (t) =>
+                  t.localEntityId.equals(localVisitId) &
+                  t.action.equals('check_in') &
+                  t.status.equals('synced').not(),
+            )
+            ..orderBy([(t) => OrderingTerm.desc(t.createdAt)])
+            ..limit(1))
+          .getSingleOrNull();
+
+  /// Points later openings that waited on [fromIds] at [toId] instead
+  /// (e.g. after a close is queued, next check-ins must wait on the close).
+  Future<void> retargetOutboxDependsOn({
+    required Set<String> fromIds,
+    required String toId,
+    int? excludingLocalVisitId,
+    List<String> onlyActions = visitOpeningActions,
+  }) async {
+    if (fromIds.isEmpty) return;
+    final open = await (select(
+      outboxEntries,
+    )..where((t) => t.status.equals('synced').not())).get();
+    for (final entry in open) {
+      if (entry.id == toId) continue;
+      if (excludingLocalVisitId != null &&
+          entry.localEntityId == excludingLocalVisitId) {
+        continue;
+      }
+      if (!onlyActions.contains(entry.action)) continue;
+      final dep = entry.dependsOn;
+      if (dep == null || !fromIds.contains(dep)) continue;
+      await (update(outboxEntries)..where((t) => t.id.equals(entry.id))).write(
+        OutboxEntriesCompanion(dependsOn: Value(toId)),
+      );
+    }
+  }
+
+  // ------------------------------------------------------------ cart lines
 
   Future<void> upsertCartLine(VisitCartLinesCompanion row) =>
       into(visitCartLines).insertOnConflictUpdate(row);
@@ -106,6 +348,34 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> clearVisitCart(int visitId) =>
       (delete(visitCartLines)..where((t) => t.visitId.equals(visitId))).go();
+
+  /// Moves locally captured rows onto the server visit id after check-in syncs.
+  Future<void> remapVisitLocalData({
+    required int localVisitId,
+    required int serverVisitId,
+  }) async {
+    if (localVisitId == serverVisitId) return;
+    await transaction(() async {
+      // OR REPLACE keeps the local rows if the server visit somehow already
+      // has a row with the same primary key.
+      await customUpdate(
+        'UPDATE OR REPLACE visit_cart_lines SET visit_id = ? WHERE visit_id = ?',
+        variables: [
+          Variable.withInt(serverVisitId),
+          Variable.withInt(localVisitId),
+        ],
+        updates: {visitCartLines},
+      );
+      await customUpdate(
+        'UPDATE OR REPLACE visit_products SET visit_id = ? WHERE visit_id = ?',
+        variables: [
+          Variable.withInt(serverVisitId),
+          Variable.withInt(localVisitId),
+        ],
+        updates: {visitProducts},
+      );
+    });
+  }
 
   Future<void> replaceProductsForVisit(
     int visitId,
@@ -124,6 +394,227 @@ class AppDatabase extends _$AppDatabase {
   Future<List<VisitProduct>> productsForVisit(int visitId) =>
       (select(visitProducts)..where((t) => t.visitId.equals(visitId))).get();
 
+  // ----------------------------------------------------------- id mappings
+
+  Future<int?> serverIdFor(String entityType, int localId) async {
+    final row =
+        await (select(idMappings)..where(
+              (t) =>
+                  t.entityType.equals(entityType) & t.localId.equals(localId),
+            ))
+            .getSingleOrNull();
+    return row?.serverId;
+  }
+
+  Future<void> putIdMapping({
+    required String entityType,
+    required int localId,
+    required int serverId,
+  }) => into(idMappings).insertOnConflictUpdate(
+    IdMappingsCompanion.insert(
+      entityType: entityType,
+      localId: localId,
+      serverId: serverId,
+      createdAt: DateTime.now(),
+    ),
+  );
+
+  // ---------------------------------------------------------- local visits
+
+  Future<int> nextLocalVisitId() async {
+    final row =
+        await (select(localVisits)
+              ..orderBy([(t) => OrderingTerm.asc(t.localVisitId)])
+              ..limit(1))
+            .getSingleOrNull();
+    final lowest = row?.localVisitId ?? 0;
+    return lowest <= 0 ? lowest - 1 : -1;
+  }
+
+  Future<void> upsertLocalVisit(LocalVisitsCompanion row) =>
+      into(localVisits).insertOnConflictUpdate(row);
+
+  Future<void> patchLocalVisit(int localVisitId, LocalVisitsCompanion row) =>
+      (update(
+        localVisits,
+      )..where((t) => t.localVisitId.equals(localVisitId))).write(row);
+
+  Future<LocalVisit?> localVisitById(int localVisitId) => (select(
+    localVisits,
+  )..where((t) => t.localVisitId.equals(localVisitId))).getSingleOrNull();
+
+  Future<LocalVisit?> localVisitByAnyId(int visitId, {String? userId}) async {
+    final byLocal = await localVisitById(visitId);
+    final row =
+        byLocal ??
+        await (select(
+          localVisits,
+        )..where((t) => t.serverVisitId.equals(visitId))).getSingleOrNull();
+    if (row == null) return null;
+    if (userId != null &&
+        userId.isNotEmpty &&
+        row.userId != null &&
+        row.userId != userId) {
+      return null;
+    }
+    return row;
+  }
+
+  /// Active visit for [userId] only — never another booker on this device.
+  Future<LocalVisit?> activeLocalVisit({required String userId}) {
+    if (userId.isEmpty) return Future.value(null);
+    return (select(localVisits)
+          ..where((t) => t.status.equals('active') & t.userId.equals(userId))
+          ..orderBy([(t) => OrderingTerm.desc(t.checkedInAt)])
+          ..limit(1))
+        .getSingleOrNull();
+  }
+
+  Future<LocalVisit?> localVisitForTask(int taskId, {required String userId}) {
+    if (userId.isEmpty) return Future.value(null);
+    return (select(localVisits)
+          ..where((t) => t.taskId.equals(taskId) & t.userId.equals(userId))
+          ..orderBy([(t) => OrderingTerm.desc(t.checkedInAt)])
+          ..limit(1))
+        .getSingleOrNull();
+  }
+
+  Future<List<LocalVisit>> allLocalVisits({required String userId}) {
+    if (userId.isEmpty) return Future.value(const []);
+    return (select(localVisits)
+          ..where((t) => t.userId.equals(userId))
+          ..orderBy([(t) => OrderingTerm.desc(t.checkedInAt)]))
+        .get();
+  }
+
+  // ----------------------------------------------------------- local shops
+
+  Future<int> nextLocalShopId() async {
+    final row =
+        await (select(localShops)
+              ..orderBy([(t) => OrderingTerm.asc(t.localShopId)])
+              ..limit(1))
+            .getSingleOrNull();
+    final lowest = row?.localShopId ?? 0;
+    return lowest <= 0 ? lowest - 1 : -1;
+  }
+
+  Future<void> upsertLocalShop(LocalShopsCompanion row) =>
+      into(localShops).insertOnConflictUpdate(row);
+
+  Future<void> patchLocalShop(int localShopId, LocalShopsCompanion row) =>
+      (update(
+        localShops,
+      )..where((t) => t.localShopId.equals(localShopId))).write(row);
+
+  Future<List<LocalShop>> allLocalShops({required String userId}) {
+    if (userId.isEmpty) return Future.value(const []);
+    return (select(localShops)
+          ..where((t) => t.userId.equals(userId))
+          ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
+        .get();
+  }
+
+  Future<LocalShop?> localShopById(int localShopId, {String? userId}) async {
+    final row = await (select(
+      localShops,
+    )..where((t) => t.localShopId.equals(localShopId))).getSingleOrNull();
+    if (row == null) return null;
+    if (userId != null &&
+        userId.isNotEmpty &&
+        row.userId != null &&
+        row.userId != userId) {
+      return null;
+    }
+    return row;
+  }
+
+  // ------------------------------------------------------- task overrides
+
+  Future<void> upsertTaskOverride(LocalTaskOverridesCompanion row) =>
+      into(localTaskOverrides).insertOnConflictUpdate(row);
+
+  Future<List<LocalTaskOverride>> taskOverrides() =>
+      select(localTaskOverrides).get();
+
+  Future<void> clearTaskOverrides() => delete(localTaskOverrides).go();
+
+  /// Rows written before ownership tracking get stamped to [userId] so they
+  /// never silently attach to the next booker on this device.
+  Future<void> claimOrphanLocalOwnership(String userId) async {
+    if (userId.isEmpty) return;
+    await transaction(() async {
+      await (update(localVisits)..where((t) => t.userId.isNull())).write(
+        LocalVisitsCompanion(userId: Value(userId)),
+      );
+      await (update(localShops)..where((t) => t.userId.isNull())).write(
+        LocalShopsCompanion(userId: Value(userId)),
+      );
+      await (update(outboxEntries)..where((t) => t.userId.isNull())).write(
+        OutboxEntriesCompanion(userId: Value(userId)),
+      );
+    });
+  }
+
+  Future<LocalTaskOverride?> taskOverrideFor(int taskId) => (select(
+    localTaskOverrides,
+  )..where((t) => t.taskId.equals(taskId))).getSingleOrNull();
+
+  Future<void> clearTaskOverride(int taskId) =>
+      (delete(localTaskOverrides)..where((t) => t.taskId.equals(taskId))).go();
+
+  // ---------------------------------------------------------- cached docs
+
+  Future<void> saveDoc(String key, String jsonPayload) =>
+      into(cachedDocs).insertOnConflictUpdate(
+        CachedDocsCompanion.insert(
+          key: key,
+          jsonPayload: jsonPayload,
+          updatedAt: DateTime.now(),
+        ),
+      );
+
+  Future<CachedDoc?> readDoc(String key) =>
+      (select(cachedDocs)..where((t) => t.key.equals(key))).getSingleOrNull();
+
+  Future<void> deleteDoc(String key) =>
+      (delete(cachedDocs)..where((t) => t.key.equals(key))).go();
+
+  Future<void> deleteDocsWithPrefix(String prefix) =>
+      (delete(cachedDocs)..where((t) => t.key.like('$prefix%'))).go();
+
+  // ------------------------------------------------------------- catalog
+
+  Future<void> replaceCatalog(
+    String scope,
+    List<CatalogProductsCompanion> rows,
+  ) async {
+    await transaction(() async {
+      await (delete(catalogProducts)..where((t) => t.scope.equals(scope))).go();
+      if (rows.isNotEmpty) {
+        await batch((b) => b.insertAll(catalogProducts, rows));
+      }
+    });
+  }
+
+  Future<List<CatalogProduct>> catalogFor(String scope) =>
+      (select(catalogProducts)..where((t) => t.scope.equals(scope))).get();
+
+  // --------------------------------------------------------------- media
+
+  Future<void> insertMedia(MediaFilesCompanion row) =>
+      into(mediaFiles).insertOnConflictUpdate(row);
+
+  Future<MediaFile?> mediaById(String id) =>
+      (select(mediaFiles)..where((t) => t.id.equals(id))).getSingleOrNull();
+
+  Future<void> deleteMedia(Iterable<String> ids) async {
+    if (ids.isEmpty) return;
+    await (delete(mediaFiles)..where((t) => t.id.isIn(ids))).go();
+  }
+
+  // --------------------------------------------------------------- resets
+
   Future<void> clearVisitLocalData() async {
     await transaction(() async {
       await delete(visitCartLines).go();
@@ -132,6 +623,28 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> clearOutbox() => delete(outboxEntries).go();
+
+  /// Explicit "clear local data" action. Never runs on logout.
+  Future<void> clearAllLocalWork() async {
+    await transaction(() async {
+      await delete(outboxEntries).go();
+      await delete(visitCartLines).go();
+      await delete(visitProducts).go();
+      await delete(localVisits).go();
+      await delete(localShops).go();
+      await delete(localTaskOverrides).go();
+      await delete(idMappings).go();
+      await delete(mediaFiles).go();
+    });
+  }
+
+  /// Snapshot-only reset, keeps queued work and local records intact.
+  Future<void> clearSnapshots() async {
+    await transaction(() async {
+      await delete(cachedDocs).go();
+      await delete(catalogProducts).go();
+    });
+  }
 }
 
 LazyDatabase _openConnection() {

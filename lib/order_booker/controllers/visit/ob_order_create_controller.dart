@@ -180,12 +180,17 @@ class ObOrderCreateController extends GetxController {
     try {
       final fallback = await _taskService.fetchActiveVisit();
       final active = fallback;
-      final resolvedVisitId = visitId ?? active?.visitId;
+      // A check-in that syncs mid-visit swaps the local id for the server one,
+      // so compare against the resolved id instead of the raw argument.
+      final argVisitId = visitId == null
+          ? null
+          : await _cartService.resolveVisitId(visitId!);
+      final resolvedVisitId = argVisitId ?? active?.visitId;
       if (active == null || resolvedVisitId == null) {
         error.value = AppTexts.obActiveVisitMissing;
         return;
       }
-      if (visitId != null && active.visitId != visitId) {
+      if (argVisitId != null && active.visitId != argVisitId) {
         hasVisitMismatch.value = true;
         error.value = AppTexts.obVisitMismatch;
         activeVisit.value = active;
@@ -205,14 +210,13 @@ class ObOrderCreateController extends GetxController {
     }
   }
 
-  /// Credit fields: `shops/get`, then today's task nested shop, then my-shops.
+  /// Credit fields come from shop APIs only (`shops/get`, fallback `shops/mine`).
+  /// Seeds from cached today-tasks so thin shops/get still keeps credit_limit.
   Future<void> _loadShop(ObActiveVisitModel active) async {
     shop.value = null;
     if (active.shopId.isEmpty) return;
     final wantId = active.shopId.trim();
 
-    // Seed from cached today-tasks so distributor shops keep credit_limit even
-    // when shops/get returns a thin payload.
     try {
       final cached = await Get.find<OfflineCacheService>().readMap(
         OfflineCacheKeys.tasksToday,
@@ -248,6 +252,43 @@ class ObOrderCreateController extends GetxController {
       final peeked = await _shopService.peekShop(wantId);
       shop.value = loaded.mergeCreditFrom(peeked);
       _shopService.rememberShop(shop.value!);
+    }
+
+    await _enrichShopCoordinatesFromTask(active);
+  }
+
+  /// When shop detail has no GPS, copy today's task coords (check-in source).
+  Future<void> _enrichShopCoordinatesFromTask(ObActiveVisitModel active) async {
+    final current = shop.value;
+    if (current != null && current.hasCoordinates) return;
+
+    try {
+      final today = await _taskService.fetchTodayTasks(
+        allowStaleFallback: true,
+        forceNetwork: false,
+      );
+      for (final task in today.tasks) {
+        if (task.id != active.taskId && task.shopId != active.shopId) {
+          continue;
+        }
+        if (!task.hasShopCoordinates) continue;
+        if (current == null) {
+          shop.value = ObShopModel(
+            id: active.shopId,
+            name: active.shopName,
+            latitude: task.shopLatitude,
+            longitude: task.shopLongitude,
+          );
+        } else {
+          shop.value = current.copyWith(
+            latitude: task.shopLatitude,
+            longitude: task.shopLongitude,
+          );
+        }
+        return;
+      }
+    } catch (_) {
+      // Place-order gate will still try task lookup at submit time.
     }
   }
 
@@ -714,15 +755,12 @@ class ObOrderCreateController extends GetxController {
     isPlacingOrder.value = true;
     try {
       final position = await AppHelper.requireCurrentPosition(showGuide: true);
-      final shopModel = shop.value;
-      if (shopModel == null || !shopModel.hasCoordinates) {
-        throw ApiException(message: AppTexts.obShopLocationMissing);
-      }
-      AppHelper.ensureWithinPlaceOrderRange(
+      final shopCoords = await _resolveShopCoordinates(active);
+      AppHelper.ensureWithinShopRange(
         currentLat: position.latitude,
         currentLng: position.longitude,
-        shopLat: shopModel.latitude!,
-        shopLng: shopModel.longitude!,
+        shopLat: shopCoords.$1,
+        shopLng: shopCoords.$2,
       );
       // Persist proposed selling rates into local cart before outbox submit.
       await _persistProposedRatesToCart();
@@ -733,8 +771,6 @@ class ObOrderCreateController extends GetxController {
         shopName: active.shopName,
         latitude: position.latitude,
         longitude: position.longitude,
-        shopLatitude: shopModel.latitude,
-        shopLongitude: shopModel.longitude,
       );
       await _taskService.completeActiveVisit(visitId: active.visitId);
       AppToast.showSuccess(
@@ -752,6 +788,35 @@ class ObOrderCreateController extends GetxController {
     } finally {
       isPlacingOrder.value = false;
     }
+  }
+
+  /// Prefer shop detail coords; fall back to today's task (same as check-in).
+  Future<(double?, double?)> _resolveShopCoordinates(
+    ObActiveVisitModel active,
+  ) async {
+    final currentShop = shop.value;
+    if (currentShop != null && currentShop.hasCoordinates) {
+      return (currentShop.latitude, currentShop.longitude);
+    }
+
+    try {
+      final today = await _taskService.fetchTodayTasks(
+        allowStaleFallback: true,
+        forceNetwork: false,
+      );
+      for (final task in today.tasks) {
+        if (task.id != active.taskId && task.shopId != active.shopId) {
+          continue;
+        }
+        if (task.hasShopCoordinates) {
+          return (task.shopLatitude, task.shopLongitude);
+        }
+      }
+    } catch (_) {
+      // Keep whatever the shop model has.
+    }
+
+    return (currentShop?.latitude, currentShop?.longitude);
   }
 
   Future<void> _persistProposedRatesToCart() async {

@@ -21,6 +21,7 @@ class ObTaskCard extends StatelessWidget {
     this.onTap,
     this.isCheckingIn = false,
     this.willSync = false,
+    this.syncNeedsReview = false,
   });
 
   final ObTaskModel task;
@@ -29,6 +30,7 @@ class ObTaskCard extends StatelessWidget {
   final VoidCallback? onTap;
   final bool isCheckingIn;
   final bool willSync;
+  final bool syncNeedsReview;
 
   bool get _canCheckIn => !willSync && task.status == TaskStatus.pending;
 
@@ -44,7 +46,11 @@ class ObTaskCard extends StatelessWidget {
       color: AppColors.black,
       fontSize: AppResponsive.scaleSize(context, 13),
     );
-    final statusColor = willSync ? AppColors.warning : task.status.chipColor;
+    final statusColor = syncNeedsReview
+        ? AppColors.error
+        : willSync
+        ? AppColors.warning
+        : task.status.chipColor;
 
     return AppOutlineCard(
       onTap: onTap,
@@ -185,7 +191,14 @@ class ObTaskCard extends StatelessWidget {
             ),
           ],
           AppSpacing.vertical(context, 0.012),
-          if (willSync)
+          if (syncNeedsReview)
+            AppStatusChip(
+              label: AppTexts.obSyncNeedsReview,
+              color: AppColors.error,
+              soft: true,
+              fullWidth: true,
+            )
+          else if (willSync)
             AppStatusChip.willSync(fullWidth: true)
           else ...[
             AppStatusChip.task(task.status, fullWidth: true),

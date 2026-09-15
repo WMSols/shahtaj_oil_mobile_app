@@ -42,7 +42,7 @@ enum TaskStatus { pending, inVisit, completed }
 
 enum ObNotesPurpose { taskNotes, endVisitWithoutOrder, visitNotes }
 
-enum SyncStatus { queued, syncing, synced, failed, needsReview }
+enum SyncStatus { queued, syncing, synced, failed, blocked, needsReview }
 
 extension SyncStatusX on SyncStatus {
   String get label => switch (this) {
@@ -50,13 +50,14 @@ extension SyncStatusX on SyncStatus {
     SyncStatus.syncing => AppTexts.syncStatusSyncing,
     SyncStatus.synced => AppTexts.syncStatusSynced,
     SyncStatus.failed => AppTexts.syncStatusFailed,
+    SyncStatus.blocked => AppTexts.obSyncBlocked,
     SyncStatus.needsReview => AppTexts.syncStatusNeedsReview,
   };
 
   Color get chipColor => switch (this) {
     SyncStatus.synced => AppColors.success,
     SyncStatus.syncing => AppColors.primary,
-    SyncStatus.queued => AppColors.warning,
+    SyncStatus.queued || SyncStatus.blocked => AppColors.warning,
     SyncStatus.failed || SyncStatus.needsReview => AppColors.error,
   };
 
@@ -67,6 +68,7 @@ extension SyncStatusX on SyncStatus {
       'syncing' => SyncStatus.syncing,
       'synced' => SyncStatus.synced,
       'failed' => SyncStatus.failed,
+      'blocked' => SyncStatus.blocked,
       'needsReview' => SyncStatus.needsReview,
       _ => null,
     };

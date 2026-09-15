@@ -4,6 +4,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/responsive/app_responsive.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_sync_status_banner.dart';
 
 class AppSubScreenScaffold extends StatelessWidget {
   const AppSubScreenScaffold({
@@ -43,7 +44,14 @@ class AppSubScreenScaffold extends StatelessWidget {
           child: Divider(height: 1, color: AppColors.cardBorder),
         ),
       ),
-      body: SafeArea(child: body),
+      body: SafeArea(
+        child: Column(
+          children: [
+            const AppSyncStatusBanner(),
+            Expanded(child: body),
+          ],
+        ),
+      ),
       floatingActionButton: floatingActionButton,
     );
   }

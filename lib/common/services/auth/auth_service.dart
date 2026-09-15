@@ -6,14 +6,18 @@ import 'package:shahtaj_oil_mobile_app/common/models/account/user_model.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/api_endpoints.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
+import 'package:shahtaj_oil_mobile_app/core/database/app_database.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/sync_outbox_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/presence_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/storage_service.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/sync/ob_day_bootstrap_service.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/shops/ob_shop_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/tasks/ob_task_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/visit/ob_visit_cart_service.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/visit/ob_visit_session_service.dart';
 
 class AuthService extends GetxService {
   AuthService(this._api, this._storage, this._session);
@@ -68,6 +72,7 @@ class AuthService extends GetxService {
     await _storage.saveToken(apiKey);
     await _storage.saveRole(role.name);
     await _session.setSession(userModel: user, userRole: role);
+    await _reconcileLocalDataOwner(user.id);
 
     if (Get.isRegistered<PresenceService>()) {
       unawaited(Get.find<PresenceService>().markOnlineNow());
@@ -98,21 +103,70 @@ class AuthService extends GetxService {
     return user;
   }
 
+  /// Logout clears the session only.
+  ///
+  /// Queued work, local visits, offline shops, carts and captured photos stay
+  /// on the device so a day's field work survives a logout and resumes when
+  /// the same booker signs back in. Snapshots are only dropped when a
+  /// *different* user signs in (see [_reconcileLocalDataOwner]).
   Future<void> logout() async {
     // No logout endpoint in Shahtaj v1 yet — clear local session only.
-    // Skip API for non-OB (UI-only mock sessions).
-    if (Get.isRegistered<OfflineCacheService>()) {
-      await Get.find<OfflineCacheService>().clearOrderBookerSessionCache();
-    }
     if (Get.isRegistered<ObTaskService>()) {
       await Get.delete<ObTaskService>(force: true);
     }
     if (Get.isRegistered<ObVisitCartService>()) {
       await Get.delete<ObVisitCartService>(force: true);
     }
-    if (Get.isRegistered<SyncOutboxService>()) {
-      await Get.find<SyncOutboxService>().clearSessionData();
+    if (Get.isRegistered<ObVisitSessionService>()) {
+      await Get.delete<ObVisitSessionService>(force: true);
+    }
+    if (Get.isRegistered<ObDayBootstrapService>()) {
+      await Get.delete<ObDayBootstrapService>(force: true);
+    }
+    if (Get.isRegistered<ObShopService>()) {
+      Get.find<ObShopService>().clearSessionMemory();
+      await Get.delete<ObShopService>(force: true);
     }
     await _session.clearSession();
+  }
+
+  /// Keeps one booker's offline data from ever showing up for another.
+  ///
+  /// The previous user's queued work and local visits stay on disk so they can
+  /// resume after signing back in. Reads are scoped by user id; on switch we
+  /// only wipe shared snapshots / task overrides that are not user-stamped.
+  Future<void> _reconcileLocalDataOwner(String userId) async {
+    if (userId.isEmpty) return;
+    final previous = await _storage.getLocalDataOwner();
+
+    if (Get.isRegistered<AppDatabase>()) {
+      final db = Get.find<AppDatabase>();
+      if (previous != null && previous.isNotEmpty && previous != userId) {
+        // Stamp null-owner rows to the outgoing booker before switching.
+        await db.claimOrphanLocalOwnership(previous);
+        if (Get.isRegistered<OfflineCacheService>()) {
+          await Get.find<OfflineCacheService>().clearOrderBookerSessionCache();
+        }
+        await db.clearSnapshots();
+        await db.clearTaskOverrides();
+        if (Get.isRegistered<ObShopService>()) {
+          Get.find<ObShopService>().clearSessionMemory();
+        }
+        // Keep visit carts/products on disk — they stay keyed to visit ids and
+        // only surface when that booker's visit is active again.
+      } else {
+        // Same booker (or first owner): orphans belong to them.
+        await db.claimOrphanLocalOwnership(userId);
+      }
+    } else if (previous != null && previous != userId) {
+      if (Get.isRegistered<OfflineCacheService>()) {
+        await Get.find<OfflineCacheService>().clearOrderBookerSessionCache();
+      }
+    }
+
+    await _storage.saveLocalDataOwner(userId);
+    if (Get.isRegistered<SyncOutboxService>()) {
+      await Get.find<SyncOutboxService>().refreshPendingCount();
+    }
   }
 }

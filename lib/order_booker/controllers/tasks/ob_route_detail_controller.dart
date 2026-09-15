@@ -39,7 +39,19 @@ class ObRouteDetailController extends GetxController {
     return Get.find<SyncOutboxService>().isTaskQueuedForSync(task.id);
   }
 
-  /// Display status: queued local submits look completed until sync finishes.
+  /// Any pending outbox work for this task (check-in, notes, order, …).
+  bool hasQueuedSyncWork(ObTaskModel task) {
+    if (!Get.isRegistered<SyncOutboxService>()) return false;
+    return Get.find<SyncOutboxService>().hasQueuedWorkForTask(task.id);
+  }
+
+  bool needsSyncReview(ObTaskModel task) {
+    if (!Get.isRegistered<SyncOutboxService>()) return false;
+    return Get.find<SyncOutboxService>().isTaskNeedsReview(task.id);
+  }
+
+  /// Queued closes look completed with a will-sync chip; nothing looks
+  /// completed from local data alone until the outbox step succeeds.
   TaskStatus displayStatusFor(ObTaskModel task) {
     if (isQueuedForSync(task)) return TaskStatus.completed;
     return task.status;
@@ -72,6 +84,17 @@ class ObRouteDetailController extends GetxController {
     });
     return filtered;
   }
+
+  /// Counts for the progress bar — queued sync does not count as completed.
+  int get displayCompletedCount {
+    final tasks = todayTasks.value?.tasks ?? const <ObTaskModel>[];
+    return tasks.where((task) {
+      if (isQueuedForSync(task)) return false;
+      return displayStatusFor(task) == TaskStatus.completed;
+    }).length;
+  }
+
+  int get displayTotalCount => todayTasks.value?.totalCount ?? 0;
 
   bool isFilterSelected(TaskStatus? status) => statusFilter.value == status;
 

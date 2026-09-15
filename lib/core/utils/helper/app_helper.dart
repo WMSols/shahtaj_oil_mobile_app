@@ -68,8 +68,8 @@ class AppHelper {
   static const _positionTimeout = Duration(seconds: 10);
   static const _lastKnownMaxAge = Duration(minutes: 2);
 
-  /// Client gate for place-order; keep aligned with backend geofence when known.
-  static const placeOrderMaxDistanceMeters = 250.0;
+  /// Max distance from shop GPS for check-in and place-order (meters).
+  static const shopActionMaxDistanceMeters = 250.0;
 
   /// Straight-line distance in meters between two WGS84 points.
   static double distanceMetersBetween({
@@ -79,21 +79,30 @@ class AppHelper {
     required double toLng,
   }) => Geolocator.distanceBetween(fromLat, fromLng, toLat, toLng);
 
-  /// Throws when the booker is farther than [placeOrderMaxDistanceMeters]
-  /// from the shop, so we never queue an order the server would reject.
-  static void ensureWithinPlaceOrderRange({
+  /// Blocks when the shop has no usable coords, or the user is too far away.
+  static void ensureWithinShopRange({
     required double currentLat,
     required double currentLng,
-    required double shopLat,
-    required double shopLng,
+    double? shopLat,
+    double? shopLng,
+    double maxMeters = shopActionMaxDistanceMeters,
   }) {
+    final hasShop =
+        shopLat != null &&
+        shopLng != null &&
+        shopLat.abs() <= 90 &&
+        shopLng.abs() <= 180 &&
+        !(shopLat == 0 && shopLng == 0);
+    if (!hasShop) {
+      throw ApiException(message: AppTexts.obShopLocationMissing);
+    }
     final meters = distanceMetersBetween(
       fromLat: currentLat,
       fromLng: currentLng,
       toLat: shopLat,
       toLng: shopLng,
     );
-    if (meters > placeOrderMaxDistanceMeters) {
+    if (meters > maxMeters) {
       throw ApiException(
         message: AppTexts.obOrderTooFarFromShop(meters.round()),
       );

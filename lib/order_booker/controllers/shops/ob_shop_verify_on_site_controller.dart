@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -15,7 +14,6 @@ import 'package:shahtaj_oil_mobile_app/core/utils/media/app_image_compress.dart'
 import 'package:shahtaj_oil_mobile_app/core/utils/validator/app_validator.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/shops/ob_shop_missing_field.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/shops/ob_shop_verify_on_site_request.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_task_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/shops/ob_shop_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/tasks/ob_task_service.dart';
@@ -443,47 +441,34 @@ class ObShopVerifyOnSiteController extends GetxController {
 
     isSubmitting.value = true;
     try {
-      final result = await _shopService.verifyOnSite(
-        ObShopVerifyOnSiteRequest(
-          shopId: shopIdInt,
-          taskId: current.id,
-          latitude: checkInLatitude.value!,
-          longitude: checkInLongitude.value!,
-          shopExteriorPhoto: base64Encode(exteriorBytes),
-          ownerCnicNumber: showsKey('owner_cnic_number')
-              ? ownerCnicController.text.trim()
-              : null,
-          ownerPhoto: ownerPhoto.value == null
-              ? null
-              : base64Encode(ownerPhoto.value!),
-          ownerCnicFront: ownerCnicFront.value == null
-              ? null
-              : base64Encode(ownerCnicFront.value!),
-          ownerCnicBack: ownerCnicBack.value == null
-              ? null
-              : base64Encode(ownerCnicBack.value!),
-          ownerName: showsKey('owner_name')
-              ? ownerNameController.text.trim()
-              : null,
-          ownerPhone: showsKey('owner_phone')
-              ? ownerPhoneController.text.trim()
-              : null,
-          shopCategory: showsKey('shop_category')
-              ? selectedShopType.value?.name
-              : null,
-          creditLimit: showsKey('credit_limit')
-              ? _parseOptionalDouble(creditLimitController.text)
-              : null,
-          legacyBalance: showsKey('legacy_balance')
-              ? _parseOptionalDouble(legacyBalanceController.text)
-              : null,
-        ),
+      AppHelper.ensureWithinShopRange(
+        currentLat: checkInLatitude.value!,
+        currentLng: checkInLongitude.value!,
+        shopLat: current.shopLatitude,
+        shopLng: current.shopLongitude,
+      );
+      final result = await _shopService.submitVerification(
+        task: current,
+        shopId: shopIdInt,
+        latitude: checkInLatitude.value!,
+        longitude: checkInLongitude.value!,
+        photos: {
+          'shop_exterior_photo': exteriorBytes,
+          if (ownerPhoto.value != null) 'owner_photo': ownerPhoto.value!,
+          if (ownerCnicFront.value != null)
+            'owner_cnic_front': ownerCnicFront.value!,
+          if (ownerCnicBack.value != null)
+            'owner_cnic_back': ownerCnicBack.value!,
+        },
+        fields: _verificationFields(),
       );
 
       if (result.hasVisit) {
         await _taskService.applyActiveVisit(result.visit!);
         _showMessage(
-          result.message ?? AppTexts.obShopVerifiedSuccess,
+          result.queued
+              ? AppTexts.obShopVerifyQueuedOffline
+              : (result.message ?? AppTexts.obShopVerifiedSuccess),
           isError: false,
         );
         Get.offNamed(
@@ -501,6 +486,30 @@ class ObShopVerifyOnSiteController extends GetxController {
     } finally {
       isSubmitting.value = false;
     }
+  }
+
+  /// Non-photo verification fields, using the same emptiness rules as the API
+  /// request model so online and offline submissions are identical.
+  Map<String, dynamic> _verificationFields() {
+    final cnic = ownerCnicController.text.trim();
+    final name = ownerNameController.text.trim();
+    final phone = ownerPhoneController.text.trim();
+    final category = selectedShopType.value?.name;
+    final creditLimit = _parseOptionalDouble(creditLimitController.text);
+    final legacyBalance = _parseOptionalDouble(legacyBalanceController.text);
+
+    return {
+      if (showsKey('owner_cnic_number') && cnic.isNotEmpty)
+        'owner_cnic_number': cnic,
+      if (showsKey('owner_name') && name.isNotEmpty) 'owner_name': name,
+      if (showsKey('owner_phone') && phone.isNotEmpty) 'owner_phone': phone,
+      if (showsKey('shop_category') && category != null)
+        'shop_category': category,
+      if (showsKey('credit_limit') && creditLimit != null)
+        'credit_limit': creditLimit,
+      if (showsKey('legacy_balance') && legacyBalance != null)
+        'legacy_balance': legacyBalance,
+    };
   }
 
   void _showMessage(String message, {bool isError = true}) {

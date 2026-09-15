@@ -1,9 +1,14 @@
+import 'dart:convert';
+
 import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/constants/api_endpoints.dart';
+import 'package:shahtaj_oil_mobile_app/core/database/app_database.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/sync/ob_day_bootstrap_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/history/ob_visit_detail_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/orders/ob_order_detail_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/orders/ob_order_line_model.dart';
@@ -46,11 +51,42 @@ class ObOrderDetailService extends GetxService {
       throw ApiException(message: 'Invalid visit id for order detail.');
     }
 
-    final data = await _api.postData(
-      ApiEndpoints.obVisitsGet,
-      data: {'visit_id': id},
-    );
-    final visitJson = ApiMap.asMap(data['visit']) ?? data;
-    return ObOrderDetailModel.fromVisitJson(visitJson);
+    if (_shouldServeCacheFirst) {
+      final cached = await _readCached(id);
+      if (cached != null) return cached;
+    }
+
+    try {
+      final data = await _api.postData(
+        ApiEndpoints.obVisitsGet,
+        data: {'visit_id': id},
+      );
+      final visitJson = ApiMap.asMap(data['visit']) ?? data;
+      await _db?.saveDoc(ObDocKeys.orderDetail(id), jsonEncode(visitJson));
+      return ObOrderDetailModel.fromVisitJson(visitJson);
+    } catch (_) {
+      final cached = await _readCached(id);
+      if (cached != null) return cached;
+      rethrow;
+    }
+  }
+
+  AppDatabase? get _db =>
+      Get.isRegistered<AppDatabase>() ? Get.find<AppDatabase>() : null;
+
+  bool get _shouldServeCacheFirst =>
+      Get.isRegistered<OfflineCacheService>() &&
+      Get.find<OfflineCacheService>().shouldServeCacheFirst();
+
+  Future<ObOrderDetailModel?> _readCached(int visitId) async {
+    final doc = await _db?.readDoc(ObDocKeys.orderDetail(visitId));
+    if (doc == null) return null;
+    try {
+      return ObOrderDetailModel.fromVisitJson(
+        Map<String, dynamic>.from(jsonDecode(doc.jsonPayload) as Map),
+      );
+    } catch (_) {
+      return null;
+    }
   }
 }

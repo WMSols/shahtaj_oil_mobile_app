@@ -39,62 +39,68 @@ class ObDashboardService extends GetxService {
             data: const {'limit': 5, 'offset': 0},
           ),
         ]);
-
-        final today = ObTodayTasksModel.fromJson(results[0]);
-        final targets = ApiMap.listOf(
-          results[1],
-          'targets',
-        ).map(ObTargetItemModel.fromJson).toList(growable: false);
-        final visits = ObVisitListResult.fromJson(results[2]);
-
-        final orderVisits = visits.visits
-            .where((visit) => visit.outcome == VisitOutcome.orderPlaced)
-            .toList(growable: false);
-        final todayStart = DateTime(
-          DateTime.now().year,
-          DateTime.now().month,
-          DateTime.now().day,
-        );
-        final ordersToday = orderVisits
-            .where((visit) {
-              final at = visit.checkedOutAt ?? visit.checkedInAt;
-              return !at.isBefore(todayStart);
-            })
-            .toList(growable: false);
-
-        final pendingApprovalCount = orderVisits
-            .where(
-              (visit) => visit.approval.state == ObOrderApprovalState.toApprove,
-            )
-            .length;
-
-        return ObDashboardModel(
-          todaysRoute: today.route.id.isEmpty ? null : today.route,
-          completedTasks: today.completedCount,
-          pendingTasks: today.pendingCount,
-          inVisitTasks: today.inVisitCount,
-          totalTasks: today.totalCount,
-          ordersTodayCount: ordersToday.length,
-          ordersTodayValue: ordersToday.fold<double>(
-            0,
-            (sum, visit) => sum + (visit.subtotal ?? 0),
-          ),
-          pendingApprovalCount: pendingApprovalCount,
-          recentOrders: orderVisits
-              .map(_orderFromVisit)
-              .toList(growable: false),
-          targets: _targetsSummary(targets),
+        return composeSnapshot(
+          todayJson: results[0],
+          targetsJson: results[1],
+          visitsJson: results[2],
         ).toJson();
       },
       parse: ObDashboardModel.fromJson,
     );
   }
 
-  ObTargetsModel _targetsSummary(List<ObTargetItemModel> items) {
-    return ObTargetsModel.fromTargets(items);
+  /// Builds the dashboard snapshot from pieces the day bootstrap already cached.
+  static ObDashboardModel composeSnapshot({
+    required Map<String, dynamic> todayJson,
+    required Map<String, dynamic> targetsJson,
+    required Map<String, dynamic> visitsJson,
+  }) {
+    final today = ObTodayTasksModel.fromJson(todayJson);
+    final targets = ApiMap.listOf(
+      targetsJson,
+      'targets',
+    ).map(ObTargetItemModel.fromJson).toList(growable: false);
+    final visits = ObVisitListResult.fromJson(visitsJson);
+
+    final orderVisits = visits.visits
+        .where((visit) => visit.outcome == VisitOutcome.orderPlaced)
+        .toList(growable: false);
+    final todayStart = DateTime(
+      DateTime.now().year,
+      DateTime.now().month,
+      DateTime.now().day,
+    );
+    final ordersToday = orderVisits
+        .where((visit) {
+          final at = visit.checkedOutAt ?? visit.checkedInAt;
+          return !at.isBefore(todayStart);
+        })
+        .toList(growable: false);
+
+    final pendingApprovalCount = orderVisits
+        .where(
+          (visit) => visit.approval.state == ObOrderApprovalState.toApprove,
+        )
+        .length;
+
+    return ObDashboardModel(
+      todaysRoute: today.route.id.isEmpty ? null : today.route,
+      completedTasks: today.completedCount,
+      pendingTasks: today.pendingCount,
+      inVisitTasks: today.inVisitCount,
+      totalTasks: today.totalCount,
+      ordersTodayCount: ordersToday.length,
+      ordersTodayValue: ordersToday.fold<double>(
+        0,
+        (sum, visit) => sum + (visit.subtotal ?? 0),
+      ),
+      pendingApprovalCount: pendingApprovalCount,
+      recentOrders: orderVisits.map(_orderFromVisit).toList(growable: false),
+      targets: ObTargetsModel.fromTargets(targets),
+    );
   }
 
-  ObOrderSummaryModel _orderFromVisit(ObVisitSummaryModel visit) {
+  static ObOrderSummaryModel _orderFromVisit(ObVisitSummaryModel visit) {
     final number = visit.orderNumber ?? 'SO-${visit.visitId}';
     return ObOrderSummaryModel(
       id: '${visit.visitId}',

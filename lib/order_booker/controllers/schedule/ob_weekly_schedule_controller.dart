@@ -5,7 +5,6 @@ import 'package:shahtaj_oil_mobile_app/core/services/cached_load_mixin.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/shell/ob_shell_controller.dart';
-import 'package:shahtaj_oil_mobile_app/order_booker/models/dashboard/ob_dashboard_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/schedule/ob_route_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/schedule/ob_weekly_schedule_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/dashboard/ob_dashboard_service.dart';
@@ -45,14 +44,25 @@ class ObWeeklyScheduleController extends GetxController with CachedLoadMixin {
   @override
   Future<void> fetchData() async {
     final force = isForceRefresh;
-    final results = await Future.wait([
-      _weeklyScheduleService.fetchWeeklySchedule(forceNetwork: force),
-      _dashboardService.fetchDashboard(forceNetwork: force),
-    ]);
-    final schedule = results[0] as ObWeeklyScheduleModel;
-    final dashboard = results[1] as ObDashboardModel;
-    days.assignAll(schedule.days);
-    todaysRoute.value = dashboard.todaysRoute;
+
+    // Load independently so a missing dashboard cache cannot blank the week.
+    try {
+      final schedule = await _weeklyScheduleService.fetchWeeklySchedule(
+        forceNetwork: force,
+      );
+      days.assignAll(schedule.days);
+    } catch (_) {
+      if (days.isEmpty) rethrow;
+    }
+
+    try {
+      final dashboard = await _dashboardService.fetchDashboard(
+        forceNetwork: force,
+      );
+      todaysRoute.value = dashboard.todaysRoute;
+    } catch (_) {
+      // Schedule can still show without today's route action.
+    }
   }
 
   Future<void> onTodayRouteAction() async {
@@ -64,7 +74,8 @@ class ObWeeklyScheduleController extends GetxController with CachedLoadMixin {
     } else if (route.status == RouteStatus.inProgress) {
       await _dashboardService.continueRoute(route.id);
     }
-    Get.toNamed(AppRoutes.obRouteDetail.replaceFirst(':id', route.id));
+    // Prefer shell leaf over stacking a second route-detail page.
+    openTodayTasks();
   }
 
   void openTodayTasks() {

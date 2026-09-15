@@ -96,6 +96,26 @@ class AppCacheStorage {
     }
   }
 
+  /// Original cache keys whose safe filenames start with [prefix].
+  ///
+  /// Filenames are sanitized, so this matches the sanitized form of [prefix]
+  /// against on-disk names and returns those sanitized stems (usable with
+  /// [delete] / [clearKeys] because [_safeKey] is idempotent for them).
+  Future<List<String>> keysWithPrefix(String prefix) async {
+    final dir = await _dir();
+    if (!await dir.exists()) return const [];
+    final needle = _safeKey(prefix);
+    final out = <String>[];
+    await for (final entity in dir.list()) {
+      if (entity is! File) continue;
+      final name = p.basename(entity.path);
+      if (!name.endsWith('.json') || name.endsWith('.meta.json')) continue;
+      final stem = name.substring(0, name.length - '.json'.length);
+      if (stem.startsWith(needle)) out.add(stem);
+    }
+    return out;
+  }
+
   /// One-time import from secure storage JSON strings.
   Future<void> importFromSecureStorage({
     required String key,

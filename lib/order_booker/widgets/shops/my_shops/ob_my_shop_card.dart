@@ -17,6 +17,9 @@ class ObMyShopCard extends StatelessWidget {
   final ObShopModel shop;
   final VoidCallback? onTap;
 
+  /// Shops registered offline carry a negative, device-only id.
+  bool get isPendingSync => (int.tryParse(shop.id) ?? 0) < 0;
+
   IconData get _locationIcon => shop.status == ShopStatus.rejected
       ? AppIcons.block5
       : shop.locationLabel?.toLowerCase().contains('route') == true
@@ -57,7 +60,14 @@ class ObMyShopCard extends StatelessWidget {
                       ),
                       AppSpacing.horizontal(context, 0.01),
                     ],
-                    AppStatusChip.shop(shop.status),
+                    if (isPendingSync)
+                      AppStatusChip(
+                        label: AppTexts.obShopPendingSync,
+                        color: AppColors.warning,
+                        soft: true,
+                      )
+                    else
+                      AppStatusChip.shop(shop.status),
                   ],
                 ),
                 if (shop.ownerName != null) ...[
@@ -65,6 +75,13 @@ class ObMyShopCard extends StatelessWidget {
                   Text(
                     AppTexts.obShopOwner(shop.ownerName!),
                     style: mutedStyle,
+                  ),
+                ],
+                if (isPendingSync) ...[
+                  AppSpacing.vertical(context, 0.005),
+                  Text(
+                    AppTexts.obShopVisitAfterSync,
+                    style: mutedStyle.copyWith(color: AppColors.warning),
                   ),
                 ],
                 AppSpacing.vertical(context, 0.005),

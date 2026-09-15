@@ -57,6 +57,15 @@ class ObRegisterShopForm extends StatelessWidget {
                   textInputAction: TextInputAction.done,
                 ),
                 AppSpacing.vertical(context, 0.01),
+                AppTextField(
+                  controller: controller.licenseNumberController,
+                  label: AppTexts.obShopLicenseNumberLabel,
+                  hint: AppTexts.obShopLicenseNumberHint,
+                  prefixIcon: AppIcons.personalCard,
+                  borderless: true,
+                  textInputAction: TextInputAction.done,
+                ),
+                AppSpacing.vertical(context, 0.01),
                 AppDropdownField<ShopType>(
                   fieldKey: ValueKey(
                     'shop-type-${controller.formEpoch.value}-${controller.selectedShopType.value}',

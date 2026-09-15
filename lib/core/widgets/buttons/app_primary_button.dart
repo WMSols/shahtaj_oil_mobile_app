@@ -12,6 +12,7 @@ class AppPrimaryButton extends StatelessWidget {
     this.isLoading = false,
     this.icon,
     this.labelStyle,
+    this.backgroundColor,
   });
 
   final String label;
@@ -19,6 +20,7 @@ class AppPrimaryButton extends StatelessWidget {
   final bool isLoading;
   final IconData? icon;
   final TextStyle? labelStyle;
+  final Color? backgroundColor;
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +30,7 @@ class AppPrimaryButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
+          backgroundColor: backgroundColor ?? AppColors.primary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppResponsive.radius(context)),
           ),

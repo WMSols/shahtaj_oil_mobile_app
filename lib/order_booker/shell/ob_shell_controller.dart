@@ -3,6 +3,9 @@ import 'package:flutter/scheduler.dart';
 import 'package:shahtaj_oil_mobile_app/common/bindings/account/account_binding.dart';
 import 'package:shahtaj_oil_mobile_app/common/controllers/shell/app_shell_controller.dart';
 import 'package:shahtaj_oil_mobile_app/common/views/account/account_screen.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/connectivity_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/sync_outbox_service.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/sync/ob_day_bootstrap_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/shell/ob_services_binding.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
@@ -53,6 +56,15 @@ class OrderBookerShellController extends AppShellController {
   void onInit() {
     OrderBookerServicesBinding.ensureRegistered();
     super.onInit();
+    // Pull the whole day down once the shell opens so the booker can go
+    // offline straight after. Screens keep rendering from the last snapshot
+    // while this runs.
+    if (Get.isRegistered<ObDayBootstrapService>()) {
+      Get.find<ObDayBootstrapService>().runInBackground();
+    }
+    if (Get.isRegistered<SyncOutboxService>()) {
+      Get.find<SyncOutboxService>().flush();
+    }
   }
 
   @override
@@ -62,23 +74,30 @@ class OrderBookerShellController extends AppShellController {
   }
 
   void _refreshLeafData(String id) {
+    // Offline / weak: refresh from disk cache, do not force a network miss.
+    final forceNetwork = Get.isRegistered<ConnectivityService>()
+        ? Get.find<ConnectivityService>().isOnline.value &&
+              Get.find<ConnectivityService>().quality.value !=
+                  NetworkQuality.weak
+        : true;
+
     switch (id) {
       case 'ob_today_tasks':
         if (Get.isRegistered<ObRouteDetailController>()) {
           Get.find<ObRouteDetailController>().loadTasks(
             silent: true,
-            force: true,
+            force: forceNetwork,
           );
         }
         break;
       case 'ob_dashboard':
         if (Get.isRegistered<ObDashboardController>()) {
-          Get.find<ObDashboardController>().loadDashboard(force: true);
+          Get.find<ObDashboardController>().loadDashboard(force: forceNetwork);
         }
         break;
       case 'ob_weekly_schedule':
         if (Get.isRegistered<ObWeeklyScheduleController>()) {
-          Get.find<ObWeeklyScheduleController>().load(force: true);
+          Get.find<ObWeeklyScheduleController>().load(force: forceNetwork);
         }
         break;
     }

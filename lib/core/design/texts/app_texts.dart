@@ -72,16 +72,26 @@ class AppTexts {
   static String roleWithLabel(String role) =>
       'roleWithLabel'.trParams({'role': role});
 
-  static String obShopsDistance(int shops, String distanceKm) =>
-      'obShopsDistance'.trParams({'shops': '$shops', 'distance': distanceKm});
+  static String obShopsDistance(int shops, String distanceKm) {
+    if (shops == 1) {
+      return 'obShopsDistanceOne'.trParams({'distance': distanceKm});
+    }
+    return 'obShopsDistance'.trParams({
+      'shops': '$shops',
+      'distance': distanceKm,
+    });
+  }
 
-  static String obShopsCount(int shops) =>
-      'obShopsCount'.trParams({'shops': '$shops'});
+  static String obShopsCount(int shops) => shops == 1
+      ? 'obShopsCountOne'.tr
+      : 'obShopsCount'.trParams({'shops': '$shops'});
 
-  static String obVanStockSummary(int count) =>
-      'obVanStockSummary'.trParams({'count': '$count'});
-  static String dmVanStockSummary(int count) =>
-      'dmVanStockSummary'.trParams({'count': '$count'});
+  static String obVanStockSummary(int count) => count == 1
+      ? 'obVanStockSummaryOne'.tr
+      : 'obVanStockSummary'.trParams({'count': '$count'});
+  static String dmVanStockSummary(int count) => count == 1
+      ? 'dmVanStockSummaryOne'.tr
+      : 'dmVanStockSummary'.trParams({'count': '$count'});
   static String dmStockLoadedSummary(int count) =>
       'dmStockLoadedSummary'.trParams({'count': '$count'});
   static String dmStockOnHandSummary(int count) =>
@@ -154,10 +164,12 @@ class AppTexts {
   static String get dmRecentActivity => 'dmRecentActivity'.tr;
   static String get dmNoRecentCollections => 'dmNoRecentCollections'.tr;
   static String get dmNoRecentActivity => 'dmNoRecentActivity'.tr;
-  static String dmShopsDueCount(int count) =>
-      'dmShopsDueCount'.trParams({'count': '$count'});
-  static String dmReceiptsCount(int count) =>
-      'dmReceiptsCount'.trParams({'count': '$count'});
+  static String dmShopsDueCount(int count) => count == 1
+      ? 'dmShopsDueCountOne'.tr
+      : 'dmShopsDueCount'.trParams({'count': '$count'});
+  static String dmReceiptsCount(int count) => count == 1
+      ? 'dmReceiptsCountOne'.tr
+      : 'dmReceiptsCount'.trParams({'count': '$count'});
   static String dmProgressPercent(int percent) =>
       'dmProgressPercent'.trParams({'percent': '$percent'});
   static String get dmNextPickupSubtitle => 'dmNextPickupSubtitle'.tr;
@@ -175,8 +187,9 @@ class AppTexts {
   static String get dmFilterPartial => 'dmFilterPartial'.tr;
   static String get dmNoShopsDue => 'dmNoShopsDue'.tr;
   static String get dmNoShopsMatchSearch => 'dmNoShopsMatchSearch'.tr;
-  static String dmInvoicesCount(int count) =>
-      'dmInvoicesCount'.trParams({'count': '$count'});
+  static String dmInvoicesCount(int count) => count == 1
+      ? 'dmInvoicesCountOne'.tr
+      : 'dmInvoicesCount'.trParams({'count': '$count'});
   static String get dmOutstandingLabel => 'dmOutstandingLabel'.tr;
   static String get dmDueStatusLabel => 'dmDueStatusLabel'.tr;
   static String get dmHighDueChip => 'dmHighDueChip'.tr;
@@ -247,6 +260,8 @@ class AppTexts {
   static String get obCaptureShop => 'obCaptureShop'.tr;
   static String get obPhotoUploaded => 'obPhotoUploaded'.tr;
   static String get obLocationDisabled => 'obLocationDisabled'.tr;
+  static String get obShopLocationMissing => 'obShopLocationMissing'.tr;
+  static String get obTooFarFromShop => 'obTooFarFromShop'.tr;
   static String get obLocationPermissionDenied =>
       'obLocationPermissionDenied'.tr;
   static String get obLocationFetchFailed => 'obLocationFetchFailed'.tr;
@@ -266,8 +281,9 @@ class AppTexts {
   static String get obShopHighlighted => 'obShopHighlighted'.tr;
   static String get obNoTasksMatchSearch => 'obNoTasksMatchSearch'.tr;
   static String get obNoVisitsMatchSearch => 'obNoVisitsMatchSearch'.tr;
-  static String obHistoryTotals(int count, String total) =>
-      'obHistoryTotals'.trParams({'count': '$count', 'total': total});
+  static String obHistoryTotals(int count, String total) => count == 1
+      ? 'obHistoryTotalsOne'.trParams({'total': total})
+      : 'obHistoryTotals'.trParams({'count': '$count', 'total': total});
   static String obOrderNumberValue(String number) =>
       'obOrderNumberValue'.trParams({'number': number});
   static String get obAddressLabel => 'obAddressLabel'.tr;
@@ -275,8 +291,9 @@ class AppTexts {
   static String get obShopSetupLabel => 'obShopSetupLabel'.tr;
   static String get obShopSetupRequired => 'obShopSetupRequired'.tr;
   static String get obShopSetupRequiredBanner => 'obShopSetupRequiredBanner'.tr;
-  static String obShopMissingFieldsCount(int count) =>
-      'obShopMissingFieldsCount'.trParams({'count': '$count'});
+  static String obShopMissingFieldsCount(int count) => count == 1
+      ? 'obShopMissingFieldsCountOne'.tr
+      : 'obShopMissingFieldsCount'.trParams({'count': '$count'});
   static String get obShopMapSection => 'obShopMapSection'.tr;
   static String get obScheduleToday => 'obScheduleToday'.tr;
   static String get obTargetAtRisk => 'obTargetAtRisk'.tr;
@@ -304,9 +321,6 @@ class AppTexts {
   static String get obShopNotOnRouteToday => 'obShopNotOnRouteToday'.tr;
   static String get obShopCheckInBeforeOrder => 'obShopCheckInBeforeOrder'.tr;
   static String get backOnline => 'backOnline'.tr;
-  static String get showingOfflineData => 'showingOfflineData'.tr;
-  static String showingOfflineDataUpdated(String age) =>
-      'showingOfflineDataUpdated'.trParams({'age': age});
   static String get syncCenterTitle => 'syncCenterTitle'.tr;
   static String get syncNow => 'syncNow'.tr;
   static String get syncSuccessful => 'syncSuccessful'.tr;
@@ -315,11 +329,19 @@ class AppTexts {
   static String syncAttempts(int count) =>
       'syncAttempts'.trParams({'count': '$count'});
   static String syncVisitId(int id) => 'syncVisitId'.trParams({'id': '$id'});
-  static String syncLinesCount(int count) =>
-      'syncLinesCount'.trParams({'count': '$count'});
+  static String syncLinesCount(int count) => count == 1
+      ? 'syncLinesCountOne'.tr
+      : 'syncLinesCount'.trParams({'count': '$count'});
   static String get syncPendingBadge => 'syncPendingBadge'.tr;
-  static String syncPendingCount(int count) =>
-      'syncPendingCount'.trParams({'count': '$count'});
+  static String syncPendingCount(int count) => count == 1
+      ? 'syncPendingCountOne'.tr
+      : 'syncPendingCount'.trParams({'count': '$count'});
+  static String get syncBannerSyncing => 'syncBannerSyncing'.tr;
+  static String get syncBannerCompleted => 'syncBannerCompleted'.tr;
+  static String get syncBannerNeedsAttention => 'syncBannerNeedsAttention'.tr;
+  static String syncBannerPending(int count) => count == 1
+      ? 'syncBannerPendingOne'.tr
+      : 'syncBannerPending'.trParams({'count': '$count'});
   static String get syncStatusQueued => 'syncStatusQueued'.tr;
   static String get syncStatusSyncing => 'syncStatusSyncing'.tr;
   static String get syncStatusSynced => 'syncStatusSynced'.tr;
@@ -333,9 +355,28 @@ class AppTexts {
   static String get obOrderQueuedForSync => 'obOrderQueuedForSync'.tr;
   static String obOrderTooFarFromShop(int meters) =>
       'obOrderTooFarFromShop'.trParams({'meters': '$meters'});
-  static String get obShopLocationMissing => 'obShopLocationMissing'.tr;
   static String get obVisitQueuedForSync => 'obVisitQueuedForSync'.tr;
   static String get obNotesQueuedForSync => 'obNotesQueuedForSync'.tr;
+  static String get obCheckInQueuedOffline => 'obCheckInQueuedOffline'.tr;
+  static String get obProductCatalogUnavailable =>
+      'obProductCatalogUnavailable'.tr;
+  static String get obShopVerifyQueuedOffline => 'obShopVerifyQueuedOffline'.tr;
+  static String get obShopRegisterQueuedOffline =>
+      'obShopRegisterQueuedOffline'.tr;
+  static String get obShopPendingSync => 'obShopPendingSync'.tr;
+  static String get obShopVisitAfterSync => 'obShopVisitAfterSync'.tr;
+  static String get obSyncBlocked => 'obSyncBlocked'.tr;
+  static String get obSyncStaleDay => 'obSyncStaleDay'.tr;
+  static String get obSyncOtherUserPending => 'obSyncOtherUserPending'.tr;
+  static String get obSyncNeedsReview => 'obSyncNeedsReview'.tr;
+  static String get syncRetry => 'syncRetry'.tr;
+  static String get obQueuedCheckIn => 'obQueuedCheckIn'.tr;
+  static String get obQueuedVerification => 'obQueuedVerification'.tr;
+  static String get obQueuedRegistration => 'obQueuedRegistration'.tr;
+  static String get clearLocalData => 'clearLocalData'.tr;
+  static String get clearLocalDataMessage => 'clearLocalDataMessage'.tr;
+  static String get clearLocalDataBlocked => 'clearLocalDataBlocked'.tr;
+  static String get clearLocalDataDone => 'clearLocalDataDone'.tr;
   static String get statusOnline => 'statusOnline'.tr;
   static String get statusAway => 'statusAway'.tr;
   static String get statusOffline => 'statusOffline'.tr;
@@ -589,8 +630,9 @@ class AppTexts {
   static String get dmDateLabel => 'dmDateLabel'.tr;
   static String get dmPickupItems => 'dmPickupItems'.tr;
   static String get dmTodaySummary => 'dmTodaySummary'.tr;
-  static String dmItemsCount(int count) =>
-      'dmItemsCount'.trParams({'count': '$count'});
+  static String dmItemsCount(int count) => count == 1
+      ? 'dmItemsCountOne'.tr
+      : 'dmItemsCount'.trParams({'count': '$count'});
   static String dmWarehouseLabel(String warehouse) =>
       'dmWarehouseLabel'.trParams({'warehouse': warehouse});
   static String dmVehicleLabel(String vehicle) =>
@@ -662,8 +704,9 @@ class AppTexts {
   static String get dmNoCollectionsMatchSearch =>
       'dmNoCollectionsMatchSearch'.tr;
   static String get dmCollectionNotFound => 'dmCollectionNotFound'.tr;
-  static String dmHistoryTotals(int count, String total) =>
-      'dmHistoryTotals'.trParams({'count': '$count', 'total': total});
+  static String dmHistoryTotals(int count, String total) => count == 1
+      ? 'dmHistoryTotalsOne'.trParams({'total': total})
+      : 'dmHistoryTotals'.trParams({'count': '$count', 'total': total});
   static String get dmReceiptNumber => 'dmReceiptNumber'.tr;
   static String get dmCollectedAt => 'dmCollectedAt'.tr;
   static String get dmCollectionStatus => 'dmCollectionStatus'.tr;
@@ -702,8 +745,9 @@ class AppTexts {
   static String get dmHandoverReference => 'dmHandoverReference'.tr;
   static String get dmHandoverAt => 'dmHandoverAt'.tr;
   static String get dmHandoverCollections => 'dmHandoverCollections'.tr;
-  static String dmHandoverReceiptsCount(int count) =>
-      'dmHandoverReceiptsCount'.trParams({'count': '$count'});
+  static String dmHandoverReceiptsCount(int count) => count == 1
+      ? 'dmHandoverReceiptsCountOne'.tr
+      : 'dmHandoverReceiptsCount'.trParams({'count': '$count'});
   static String get emptyNoHandoverTitle => 'emptyNoHandoverTitle'.tr;
 
   // Common labels
@@ -728,12 +772,15 @@ class AppTexts {
   static String fileSizeMb(String sizeMb) =>
       'fileSizeMb'.trParams({'sizeMb': sizeMb});
 
-  static String minsAgo(int minutes) =>
-      'minsAgo'.trParams({'minutes': '$minutes'});
+  static String minsAgo(int minutes) => minutes == 1
+      ? 'minsAgoOne'.tr
+      : 'minsAgo'.trParams({'minutes': '$minutes'});
 
-  static String hrsAgo(int hours) => 'hrsAgo'.trParams({'hours': '$hours'});
+  static String hrsAgo(int hours) =>
+      hours == 1 ? 'hrsAgoOne'.tr : 'hrsAgo'.trParams({'hours': '$hours'});
 
-  static String daysAgo(int days) => 'daysAgo'.trParams({'days': '$days'});
+  static String daysAgo(int days) =>
+      days == 1 ? 'daysAgoOne'.tr : 'daysAgo'.trParams({'days': '$days'});
 
   // Notifications
 
