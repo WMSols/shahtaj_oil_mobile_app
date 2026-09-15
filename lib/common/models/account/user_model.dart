@@ -8,6 +8,8 @@ class UserModel {
     this.phone,
     required this.role,
     this.orderBookerId,
+    this.deliveryManId,
+    this.employeeCode,
     this.presenceStatus = PresenceStatus.away,
   });
 
@@ -17,6 +19,8 @@ class UserModel {
   final String? phone;
   final UserRole role;
   final String? orderBookerId;
+  final String? deliveryManId;
+  final String? employeeCode;
   final PresenceStatus presenceStatus;
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -39,6 +43,9 @@ class UserModel {
       phone: json['phone']?.toString(),
       orderBookerId: (json['order_booker_id'] ?? json['orderBookerId'])
           ?.toString(),
+      deliveryManId: (json['delivery_man_id'] ?? json['deliveryManId'])
+          ?.toString(),
+      employeeCode: (json['employee_code'] ?? json['employeeCode'])?.toString(),
       role: UserRole.values.firstWhere(
         (r) => r.name == roleValue?.toString(),
         orElse: () => UserRole.orderBooker,
@@ -56,6 +63,8 @@ class UserModel {
     String? phone,
     UserRole? role,
     String? orderBookerId,
+    String? deliveryManId,
+    String? employeeCode,
     PresenceStatus? presenceStatus,
   }) {
     return UserModel(
@@ -65,6 +74,8 @@ class UserModel {
       phone: phone ?? this.phone,
       role: role ?? this.role,
       orderBookerId: orderBookerId ?? this.orderBookerId,
+      deliveryManId: deliveryManId ?? this.deliveryManId,
+      employeeCode: employeeCode ?? this.employeeCode,
       presenceStatus: presenceStatus ?? this.presenceStatus,
     );
   }
@@ -93,6 +104,8 @@ class UserModel {
     'phone': phone,
     'role': role.name,
     'order_booker_id': orderBookerId,
+    'delivery_man_id': deliveryManId,
+    'employee_code': employeeCode,
     'online_status': presenceStatus.name,
   };
 }

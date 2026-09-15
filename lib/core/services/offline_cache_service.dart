@@ -40,18 +40,36 @@ abstract class OfflineCacheKeys {
     zones,
   ];
 
-  // Delivery Man — deliveries
+  // Delivery Man — deliveries (legacy mock keys kept until Phase 7 cleanup)
   static const dmOrders = 'offline_cache_dm_orders_v2';
   static const dmPickup = 'offline_cache_dm_pickup_v2';
   static const dmReturn = 'offline_cache_dm_return_v2';
   static const dmVanStock = 'offline_cache_dm_van_stock_v1';
 
-  // Delivery Man — collections / handover
+  // Delivery Man — live API caches
+  static const dmSession = 'offline_cache_dm_session_v1';
+  static const dmLoadToday = 'offline_cache_dm_load_today_v1';
+  static const dmPlanToday = 'offline_cache_dm_plan_today_v1';
+  static const dmVanSnapshot = 'offline_cache_dm_van_snapshot_v1';
+
+  // Delivery Man — collections / handover (hidden until recovery APIs)
   static const dmShops = 'offline_cache_dm_shops_v1';
   static const dmInvoices = 'offline_cache_dm_invoices_v1';
   static const dmCollections = 'offline_cache_dm_collections_v1';
   static const dmHandovers = 'offline_cache_dm_handovers_v1';
   static const dmCollectionTargets = 'offline_cache_dm_collection_targets_v1';
+
+  /// Keys wiped on DM logout so a new session cannot show a previous day.
+  static const List<String> deliveryManSessionKeys = [
+    dmSession,
+    dmLoadToday,
+    dmPlanToday,
+    dmVanSnapshot,
+    dmOrders,
+    dmPickup,
+    dmReturn,
+    dmVanStock,
+  ];
 
   /// Pending mutation queue for every role (legacy JSON; drift outbox is primary).
   static const syncQueue = 'offline_cache_sync_queue';
@@ -279,6 +297,10 @@ class OfflineCacheService extends GetxService {
       final keys = await _cache.keysWithPrefix(prefix);
       if (keys.isNotEmpty) await clearKeys(keys);
     }
+  }
+
+  Future<void> clearDeliveryManSessionCache() async {
+    await clearKeys(OfflineCacheKeys.deliveryManSessionKeys);
   }
 
   void registerSyncHandler(

@@ -16,6 +16,15 @@ enum ObOrderApprovalReason { discount, credit }
 
 enum DeliveryStatus { pending, pickedUp, inTransit, delivered, returned }
 
+/// Day session on `shahtaj.dm.day.session`.
+enum DmSessionState { office, onTheWay, ended }
+
+/// Job stock lifecycle (`state` on delivery job).
+enum DmJobState { notReady, ready, picked, partial, delivered, returned }
+
+/// Job field stop (`field_state` on delivery job).
+enum DmFieldState { pending, inTransit, notAttended, failed, done }
+
 enum CollectionStatus { pending, collected, handedOver }
 
 enum PaymentMethod { cash, cheque, bank }
@@ -190,6 +199,99 @@ extension DeliveryStatusX on DeliveryStatus {
     DeliveryStatus.returned => AppColors.error,
     DeliveryStatus.pending => AppColors.warning,
   };
+}
+
+extension DmSessionStateX on DmSessionState {
+  String get label => switch (this) {
+    DmSessionState.office => AppTexts.dmSessionOffice,
+    DmSessionState.onTheWay => AppTexts.dmSessionOnTheWay,
+    DmSessionState.ended => AppTexts.dmSessionEnded,
+  };
+
+  Color get chipColor => switch (this) {
+    DmSessionState.office => AppColors.warning,
+    DmSessionState.onTheWay => AppColors.primary,
+    DmSessionState.ended => AppColors.grey,
+  };
+
+  static DmSessionState? tryParse(String? raw) {
+    if (raw == null || raw.trim().isEmpty) return null;
+    final normalized = raw.trim().toLowerCase().replaceAll('-', '_');
+    return switch (normalized) {
+      'office' => DmSessionState.office,
+      'on_the_way' || 'ontheway' => DmSessionState.onTheWay,
+      'ended' => DmSessionState.ended,
+      _ => null,
+    };
+  }
+}
+
+extension DmJobStateX on DmJobState {
+  String get label => switch (this) {
+    DmJobState.notReady => AppTexts.dmJobNotReady,
+    DmJobState.ready => AppTexts.dmJobReady,
+    DmJobState.picked => AppTexts.dmJobPicked,
+    DmJobState.partial => AppTexts.dmJobPartial,
+    DmJobState.delivered => AppTexts.dmJobDelivered,
+    DmJobState.returned => AppTexts.dmJobReturned,
+  };
+
+  Color get chipColor => switch (this) {
+    DmJobState.notReady => AppColors.grey,
+    DmJobState.ready => AppColors.warning,
+    DmJobState.picked => AppColors.information,
+    DmJobState.partial => AppColors.statPurple,
+    DmJobState.delivered => AppColors.success,
+    DmJobState.returned => AppColors.error,
+  };
+
+  static DmJobState? tryParse(String? raw) {
+    if (raw == null || raw.trim().isEmpty) return null;
+    final normalized = raw.trim().toLowerCase().replaceAll('-', '_');
+    return switch (normalized) {
+      'not_ready' || 'notready' => DmJobState.notReady,
+      'ready' => DmJobState.ready,
+      'picked' => DmJobState.picked,
+      'partial' => DmJobState.partial,
+      'delivered' => DmJobState.delivered,
+      'returned' => DmJobState.returned,
+      _ => null,
+    };
+  }
+}
+
+extension DmFieldStateX on DmFieldState {
+  String get label => switch (this) {
+    DmFieldState.pending => AppTexts.dmFieldPending,
+    DmFieldState.inTransit => AppTexts.dmFieldInTransit,
+    DmFieldState.notAttended => AppTexts.dmFieldNotAttended,
+    DmFieldState.failed => AppTexts.dmFieldFailed,
+    DmFieldState.done => AppTexts.dmFieldDone,
+  };
+
+  Color get chipColor => switch (this) {
+    DmFieldState.pending => AppColors.warning,
+    DmFieldState.inTransit => AppColors.primary,
+    DmFieldState.notAttended => AppColors.grey,
+    DmFieldState.failed => AppColors.error,
+    DmFieldState.done => AppColors.success,
+  };
+
+  static DmFieldState? tryParse(String? raw) {
+    if (raw == null || raw.trim().isEmpty) return null;
+    final normalized = raw.trim().toLowerCase().replaceAll('-', '_');
+    return switch (normalized) {
+      'pending' => DmFieldState.pending,
+      'in_transit' || 'intransit' => DmFieldState.inTransit,
+      'not_attended' ||
+      'notattended' ||
+      'shop_closed' ||
+      'shopclosed' => DmFieldState.notAttended,
+      'failed' => DmFieldState.failed,
+      'done' => DmFieldState.done,
+      _ => null,
+    };
+  }
 }
 
 extension CollectionStatusX on CollectionStatus {

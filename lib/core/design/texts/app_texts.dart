@@ -553,6 +553,22 @@ class AppTexts {
   static String get obViewOrder => 'obViewOrder'.tr;
   static String get obOrderNumberLabel => 'obOrderNumberLabel'.tr;
 
+  // Delivery man — API session / job / field states
+  static String get dmSessionOffice => 'dmSessionOffice'.tr;
+  static String get dmSessionOnTheWay => 'dmSessionOnTheWay'.tr;
+  static String get dmSessionEnded => 'dmSessionEnded'.tr;
+  static String get dmJobNotReady => 'dmJobNotReady'.tr;
+  static String get dmJobReady => 'dmJobReady'.tr;
+  static String get dmJobPicked => 'dmJobPicked'.tr;
+  static String get dmJobPartial => 'dmJobPartial'.tr;
+  static String get dmJobDelivered => 'dmJobDelivered'.tr;
+  static String get dmJobReturned => 'dmJobReturned'.tr;
+  static String get dmFieldPending => 'dmFieldPending'.tr;
+  static String get dmFieldInTransit => 'dmFieldInTransit'.tr;
+  static String get dmFieldNotAttended => 'dmFieldNotAttended'.tr;
+  static String get dmFieldFailed => 'dmFieldFailed'.tr;
+  static String get dmFieldDone => 'dmFieldDone'.tr;
+
   // Delivery man screens
   static String get dmPickupTitle => 'dmPickupTitle'.tr;
   static String get dmVanStockTitle => 'dmVanStockTitle'.tr;

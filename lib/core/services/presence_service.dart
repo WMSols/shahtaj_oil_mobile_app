@@ -75,7 +75,6 @@ class PresenceService extends GetxService with WidgetsBindingObserver {
   }
 
   void _syncHeartbeat() {
-    // Presence heartbeat is Order Booker–only until other roles have APIs.
     if (!_shouldUsePresenceApi) {
       _stop();
       return;
@@ -98,9 +97,17 @@ class PresenceService extends GetxService with WidgetsBindingObserver {
 
   bool get _hasSession => _session.user.value != null;
 
-  /// Live presence APIs exist only for Order Booker. DM use mock UI sessions.
-  bool get _shouldUsePresenceApi =>
-      _hasSession && _session.role.value == UserRole.orderBooker;
+  bool get _shouldUsePresenceApi {
+    if (!_hasSession) return false;
+    final role = _session.role.value;
+    return role == UserRole.orderBooker || role == UserRole.deliveryMan;
+  }
+
+  String get _heartbeatEndpoint {
+    return _session.role.value == UserRole.deliveryMan
+        ? ApiEndpoints.dmPresenceHeartbeat
+        : ApiEndpoints.obPresenceHeartbeat;
+  }
 
   bool get _isNetworkOnline {
     if (!Get.isRegistered<ConnectivityService>()) return true;
@@ -128,7 +135,7 @@ class PresenceService extends GetxService with WidgetsBindingObserver {
       final token = await _storage.getToken();
       if (token == null || token.isEmpty) return;
 
-      await _api.postData(ApiEndpoints.obPresenceHeartbeat, data: const {});
+      await _api.postData(_heartbeatEndpoint, data: const {});
 
       // Heartbeat succeeded while foregrounded → user is online for UI.
       // Backend may still echo "away"; ignore that while the app is in use.
