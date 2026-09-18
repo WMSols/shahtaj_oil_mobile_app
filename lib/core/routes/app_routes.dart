@@ -25,6 +25,8 @@ class AppRoutes {
 
   // Delivery man — deliveries (pushed / deep-linkable)
   static const dmOrderDetail = '/delivery-man/orders/:id';
+  static const dmJobDetail = '/delivery-man/jobs/:id';
+  static const dmFreeDeliverShop = '/delivery-man/free-deliver/:shopId';
   static const dmDeliveryDetail = '/delivery-man/deliveries/:id';
 
   // Delivery man — collections / handover (pushed / deep-linkable)

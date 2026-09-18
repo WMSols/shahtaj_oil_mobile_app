@@ -264,8 +264,8 @@ class AppTexts {
   static String get obPhotoUploaded => 'obPhotoUploaded'.tr;
   static String get obLocationDisabled => 'obLocationDisabled'.tr;
   static String get obShopLocationMissing => 'obShopLocationMissing'.tr;
-  static String get obTooFarFromShop => 'obTooFarFromShop'.tr;
   static String get obGpsCriteriaMissing => 'obGpsCriteriaMissing'.tr;
+  static String get obTooFarFromShop => 'obTooFarFromShop'.tr;
   static String obTooFarFromShopMax(int maxMeters) =>
       'obTooFarFromShopMax'.trParams({'meters': '$maxMeters'});
   static String get obLocationPermissionDenied =>
@@ -574,8 +574,123 @@ class AppTexts {
   static String get obViewOrder => 'obViewOrder'.tr;
   static String get obOrderNumberLabel => 'obOrderNumberLabel'.tr;
 
+  // Delivery man — API session / job / field states
+  static String get dmSessionOffice => 'dmSessionOffice'.tr;
+  static String get dmSessionOnTheWay => 'dmSessionOnTheWay'.tr;
+  static String get dmSessionEnded => 'dmSessionEnded'.tr;
+  static String get dmJobNotReady => 'dmJobNotReady'.tr;
+  static String get dmJobReady => 'dmJobReady'.tr;
+  static String get dmJobPicked => 'dmJobPicked'.tr;
+  static String get dmJobPartial => 'dmJobPartial'.tr;
+  static String get dmJobDelivered => 'dmJobDelivered'.tr;
+  static String get dmJobReturned => 'dmJobReturned'.tr;
+  static String get dmFieldPending => 'dmFieldPending'.tr;
+  static String get dmFieldInTransit => 'dmFieldInTransit'.tr;
+  static String get dmFieldNotAttended => 'dmFieldNotAttended'.tr;
+  static String get dmFieldFailed => 'dmFieldFailed'.tr;
+  static String get dmFieldDone => 'dmFieldDone'.tr;
+
+  // Delivery man — today plan / job stop
+  static String get dmTodayPlanTitle => 'dmTodayPlanTitle'.tr;
+  static String get dmJobDetailTitle => 'dmJobDetailTitle'.tr;
+  static String get dmJobIdLabel => 'dmJobIdLabel'.tr;
+  static String get dmJobStateLabel => 'dmJobStateLabel'.tr;
+  static String get dmFieldStateLabel => 'dmFieldStateLabel'.tr;
+  static String get dmShopNameLabel => 'dmShopNameLabel'.tr;
+  static String get dmLinesLabel => 'dmLinesLabel'.tr;
+  static String get dmNoJobsToday => 'dmNoJobsToday'.tr;
+  static String get dmNoJobLines => 'dmNoJobLines'.tr;
+  static String get dmJobNotFound => 'dmJobNotFound'.tr;
+  static String get dmSearchJobsHint => 'dmSearchJobsHint'.tr;
+  static String get dmFilterAll => 'dmFilterAll'.tr;
+  static String get dmDepartTitle => 'dmDepartTitle'.tr;
+  static String get dmDepartConfirmMessage => 'dmDepartConfirmMessage'.tr;
+  static String get dmDepartSuccess => 'dmDepartSuccess'.tr;
+  static String get dmEndDayTitle => 'dmEndDayTitle'.tr;
+  static String get dmEndDayConfirmMessage => 'dmEndDayConfirmMessage'.tr;
+  static String get dmEndDaySuccess => 'dmEndDaySuccess'.tr;
+  static String get dmQtyAssigned => 'dmQtyAssigned'.tr;
+  static String get dmQtyPicked => 'dmQtyPicked'.tr;
+  static String get dmQtyDeliver => 'dmQtyDeliver'.tr;
+  static String get dmNotesLabel => 'dmNotesLabel'.tr;
+  static String get dmNotesHint => 'dmNotesHint'.tr;
+  static String get dmSaveNotes => 'dmSaveNotes'.tr;
+  static String get dmNotesSaved => 'dmNotesSaved'.tr;
+  static String get dmDeliverConfirmMessage => 'dmDeliverConfirmMessage'.tr;
+  static String get dmDeliverSuccess => 'dmDeliverSuccess'.tr;
+  static String get dmDeliverQtyRequired => 'dmDeliverQtyRequired'.tr;
+  static String get dmShopClosedTitle => 'dmShopClosedTitle'.tr;
+  static String get dmShopClosedConfirmMessage =>
+      'dmShopClosedConfirmMessage'.tr;
+  static String get dmShopClosedSuccess => 'dmShopClosedSuccess'.tr;
+  static String get dmFailedTitle => 'dmFailedTitle'.tr;
+  static String get dmFailedConfirmMessage => 'dmFailedConfirmMessage'.tr;
+  static String get dmFailedNotesRequired => 'dmFailedNotesRequired'.tr;
+  static String get dmFailedSuccess => 'dmFailedSuccess'.tr;
+  static String get dmReturnUndeliveredTitle => 'dmReturnUndeliveredTitle'.tr;
+  static String get dmReturnUndeliveredConfirmMessage =>
+      'dmReturnUndeliveredConfirmMessage'.tr;
+  static String get dmReturnUndeliveredSuccess =>
+      'dmReturnUndeliveredSuccess'.tr;
+
+  // Delivery man — free deliver
+  static String get dmFreeDeliverTitle => 'dmFreeDeliverTitle'.tr;
+  static String get dmFreeDeliverSubtitle => 'dmFreeDeliverSubtitle'.tr;
+  static String get dmFreeDeliverSearchHint => 'dmFreeDeliverSearchHint'.tr;
+  static String get dmFreeDeliverEmpty => 'dmFreeDeliverEmpty'.tr;
+  static String get dmFreeDeliverNoStock => 'dmFreeDeliverNoStock'.tr;
+  static String get dmFreeDeliverConfirmMessage =>
+      'dmFreeDeliverConfirmMessage'.tr;
+  static String get dmFreeDeliverSuccess => 'dmFreeDeliverSuccess'.tr;
+  static String get dmNextDepartSubtitle => 'dmNextDepartSubtitle'.tr;
+  static String get dmNextEndDaySubtitle => 'dmNextEndDaySubtitle'.tr;
+
+  // Delivery man — recovery / wallet
+  static String get dmRecoverShopsTitle => 'dmRecoverShopsTitle'.tr;
+  static String get dmRecoverShopsSubtitle => 'dmRecoverShopsSubtitle'.tr;
+  static String get dmRecoverNoPlanShops => 'dmRecoverNoPlanShops'.tr;
+  static String get dmRecoverAtShop => 'dmRecoverAtShop'.tr;
+  static String get dmCollectAllOpen => 'dmCollectAllOpen'.tr;
+  static String get dmEffectiveOutstanding => 'dmEffectiveOutstanding'.tr;
+  static String get dmPostedReceivable => 'dmPostedReceivable'.tr;
+  static String get dmShopWalletBalance => 'dmShopWalletBalance'.tr;
+  static String get dmLegacyBalanceChip => 'dmLegacyBalanceChip'.tr;
+  static String get dmWalletTitle => 'dmWalletTitle'.tr;
+  static String get dmWalletBalance => 'dmWalletBalance'.tr;
+  static String get dmWalletCollectedTotal => 'dmWalletCollectedTotal'.tr;
+  static String get dmWalletSettledTotal => 'dmWalletSettledTotal'.tr;
+  static String get dmWalletAsOf => 'dmWalletAsOf'.tr;
+  static String get dmWalletEmptySubtitle => 'dmWalletEmptySubtitle'.tr;
+  static String get dmWalletHandoverNote => 'dmWalletHandoverNote'.tr;
+  static String dmWalletNudgeSubtitle(String amount) =>
+      'dmWalletNudgeSubtitle'.trParams({'amount': amount});
+  static String dmConfirmCashCollectionMessage(String shop, String amount) =>
+      'dmConfirmCashCollectionMessage'.trParams({
+        'shop': shop,
+        'amount': amount,
+      });
+
   // Delivery man screens
   static String get dmPickupTitle => 'dmPickupTitle'.tr;
+  static String get dmConfirmPickup => 'dmConfirmPickup'.tr;
+  static String get dmPickupDone => 'dmPickupDone'.tr;
+  static String get dmPickupItems => 'dmPickupItems'.tr;
+  static String get dmLoadPickEmpty => 'dmLoadPickEmpty'.tr;
+  static String get dmLoadPickConfirmed => 'dmLoadPickConfirmed'.tr;
+  static String get dmLoadEmptySubtitle => 'dmLoadEmptySubtitle'.tr;
+  static String get dmLoadShopsSection => 'dmLoadShopsSection'.tr;
+  static String get dmLoadShopsCount => 'dmLoadShopsCount'.tr;
+  static String get dmLoadPickRemaining => 'dmLoadPickRemaining'.tr;
+  static String get dmQtyToPick => 'dmQtyToPick'.tr;
+  static String get dmQtyOnVan => 'dmQtyOnVan'.tr;
+  static String get dmQtyInWarehouse => 'dmQtyInWarehouse'.tr;
+  static String get dmQtyStill => 'dmQtyStill'.tr;
+  static String get dmConfirmJobPick => 'dmConfirmJobPick'.tr;
+  static String get dmJobPickConfirmed => 'dmJobPickConfirmed'.tr;
+  static String get dmJobPickNoLines => 'dmJobPickNoLines'.tr;
+  static String get dmVanModeOnVan => 'dmVanModeOnVan'.tr;
+  static String get dmVanModeLoadFromWh => 'dmVanModeLoadFromWh'.tr;
+  static String get dmVanModeReturnToWh => 'dmVanModeReturnToWh'.tr;
   static String get dmVanStockTitle => 'dmVanStockTitle'.tr;
   static String get dmVanStockItems => 'dmVanStockItems'.tr;
   static String get dmVanStatusLabel => 'dmVanStatusLabel'.tr;
@@ -608,10 +723,8 @@ class AppTexts {
   static String get dmReturnTitle => 'dmReturnTitle'.tr;
   static String get dmOrderDetailTitle => 'dmOrderDetailTitle'.tr;
   static String get dmPickupRequired => 'dmPickupRequired'.tr;
-  static String get dmPickupDone => 'dmPickupDone'.tr;
   static String get dmGoToPickup => 'dmGoToPickup'.tr;
   static String get dmContinueDeliveries => 'dmContinueDeliveries'.tr;
-  static String get dmConfirmPickup => 'dmConfirmPickup'.tr;
   static String get dmNoInTransitOrders => 'dmNoInTransitOrders'.tr;
   static String get dmStartDelivery => 'dmStartDelivery'.tr;
   static String get dmConfirmDelivery => 'dmConfirmDelivery'.tr;
@@ -621,6 +734,7 @@ class AppTexts {
   static String get dmProofPhotoTitle => 'dmProofPhotoTitle'.tr;
   static String get dmProofPhotoSubtitle => 'dmProofPhotoSubtitle'.tr;
   static String get dmProofPhotoRequired => 'dmProofPhotoRequired'.tr;
+  static String get dmDeliveryProofCaptured => 'dmDeliveryProofCaptured'.tr;
   static String get dmOrderLinesSection => 'dmOrderLinesSection'.tr;
   static String get dmTimelineSection => 'dmTimelineSection'.tr;
   static String get dmOrderedQty => 'dmOrderedQty'.tr;
@@ -640,7 +754,6 @@ class AppTexts {
   static String get dmReceiverRequired => 'dmReceiverRequired'.tr;
   static String get dmNoActiveOrdersForReturn => 'dmNoActiveOrdersForReturn'.tr;
   static String get dmLeftoverStock => 'dmLeftoverStock'.tr;
-  static String get dmNotesHint => 'dmNotesHint'.tr;
   static String get dmWarehouse => 'dmWarehouse'.tr;
   static String get dmVehicle => 'dmVehicle'.tr;
   static String get dmShiftDate => 'dmShiftDate'.tr;
@@ -649,7 +762,6 @@ class AppTexts {
   static String get dmItemsLabel => 'dmItemsLabel'.tr;
   static String get dmAmountLabel => 'dmAmountLabel'.tr;
   static String get dmDateLabel => 'dmDateLabel'.tr;
-  static String get dmPickupItems => 'dmPickupItems'.tr;
   static String get dmTodaySummary => 'dmTodaySummary'.tr;
   static String dmItemsCount(int count) => count == 1
       ? 'dmItemsCountOne'.tr
@@ -670,6 +782,12 @@ class AppTexts {
   static String get dmOpenInvoices => 'dmOpenInvoices'.tr;
   static String get dmNoOpenInvoices => 'dmNoOpenInvoices'.tr;
   static String get dmNoOpenInvoicesSubtitle => 'dmNoOpenInvoicesSubtitle'.tr;
+  static String get dmPaidInvoices => 'dmPaidInvoices'.tr;
+  static String get dmNoPaidInvoicesSubtitle => 'dmNoPaidInvoicesSubtitle'.tr;
+  static String get dmPaidInvoiceChip => 'dmPaidInvoiceChip'.tr;
+  static String get dmPaidOn => 'dmPaidOn'.tr;
+  static String get dmCollectedBy => 'dmCollectedBy'.tr;
+  static String get dmWalletCollectionChip => 'dmWalletCollectionChip'.tr;
   static String get dmCollectSelected => 'dmCollectSelected'.tr;
   static String get dmBatchPayment => 'dmBatchPayment'.tr;
   static String get dmSelectAll => 'dmSelectAll'.tr;
@@ -700,6 +818,9 @@ class AppTexts {
   static String get dmChequeNumber => 'dmChequeNumber'.tr;
   static String get dmChequeNumberHint => 'dmChequeNumberHint'.tr;
   static String get dmChequeNumberRequired => 'dmChequeNumberRequired'.tr;
+  static String get dmChequeImageTitle => 'dmChequeImageTitle'.tr;
+  static String get dmChequeImageSubtitle => 'dmChequeImageSubtitle'.tr;
+  static String get dmChequeImageRequired => 'dmChequeImageRequired'.tr;
   static String get dmBankReference => 'dmBankReference'.tr;
   static String get dmBankReferenceHint => 'dmBankReferenceHint'.tr;
   static String get dmBankReferenceRequired => 'dmBankReferenceRequired'.tr;

@@ -9,11 +9,19 @@ import 'package:shahtaj_oil_mobile_app/core/models/gps_criteria.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
 import 'package:shahtaj_oil_mobile_app/core/database/app_database.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
+import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/sync_outbox_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/presence_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/storage_service.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/services/free_deliver/dm_free_deliver_service.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/services/load/dm_load_service.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/services/plan/dm_plan_service.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/services/recovery/dm_recovery_service.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/services/session/dm_session_service.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/services/sync/dm_day_bootstrap_service.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/services/van/dm_van_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/sync/ob_day_bootstrap_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/shops/ob_shop_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/tasks/ob_task_service.dart';
@@ -32,23 +40,17 @@ class AuthService extends GetxService {
     required String password,
     required UserRole role,
   }) async {
-    // Delivery Man: UI-only mock session — no API until modules are wired.
-    if (role == UserRole.deliveryMan) {
-      return _loginUiOnly(email: email, role: role);
-    }
-
-    // Re-enable to block non-OB at the service layer.
-    // if (role != UserRole.orderBooker) {
-    //   throw ApiException(message: 'This module is under development.');
-    // }
-
     final database = _api.odooDatabase;
     if (database.isEmpty) {
       throw ApiException(message: 'ODOO_DATABASE is not configured.');
     }
 
+    final endpoint = role == UserRole.deliveryMan
+        ? ApiEndpoints.dmAuthLogin
+        : ApiEndpoints.obAuthLogin;
+
     final data = await _api.postData(
-      ApiEndpoints.obAuthLogin,
+      endpoint,
       data: {'database': database, 'login': email.trim(), 'password': password},
     );
 
@@ -79,6 +81,10 @@ class AuthService extends GetxService {
     }
     await _reconcileLocalDataOwner(user.id);
 
+    if (role == UserRole.deliveryMan) {
+      await _seedDmSession(ApiMap.asMap(data['session']));
+    }
+
     if (Get.isRegistered<PresenceService>()) {
       unawaited(Get.find<PresenceService>().markOnlineNow());
     }
@@ -86,26 +92,11 @@ class AuthService extends GetxService {
     return user;
   }
 
-  /// Local session for Delivery Man while UI is built without APIs.
-  Future<UserModel> _loginUiOnly({
-    required String email,
-    required UserRole role,
-  }) async {
-    final trimmed = email.trim();
-    final display = trimmed.isEmpty ? 'Delivery Man' : trimmed.split('@').first;
-
-    final user = UserModel(
-      id: 'ui-${role.name}',
-      name: display,
-      email: trimmed.isEmpty ? '${role.name}@shahtaj.local' : trimmed,
-      role: role,
-      presenceStatus: PresenceStatus.online,
-    ).withResolvedName();
-
-    await _storage.saveToken('ui-mock-token-${role.name}');
-    await _storage.saveRole(role.name);
-    await _session.setSession(userModel: user, userRole: role);
-    return user;
+  Future<void> _seedDmSession(Map<String, dynamic>? sessionJson) async {
+    if (!Get.isRegistered<DmSessionService>()) {
+      Get.put(DmSessionService(Get.find<ApiClient>()), permanent: true);
+    }
+    await Get.find<DmSessionService>().applyFromPayload(sessionJson);
   }
 
   /// Logout clears the session only.
@@ -131,6 +122,31 @@ class AuthService extends GetxService {
     if (Get.isRegistered<ObShopService>()) {
       Get.find<ObShopService>().clearSessionMemory();
       await Get.delete<ObShopService>(force: true);
+    }
+    if (Get.isRegistered<DmSessionService>()) {
+      Get.find<DmSessionService>().clear();
+      await Get.delete<DmSessionService>(force: true);
+    }
+    if (Get.isRegistered<DmLoadService>()) {
+      await Get.delete<DmLoadService>(force: true);
+    }
+    if (Get.isRegistered<DmVanService>()) {
+      await Get.delete<DmVanService>(force: true);
+    }
+    if (Get.isRegistered<DmPlanService>()) {
+      await Get.delete<DmPlanService>(force: true);
+    }
+    if (Get.isRegistered<DmFreeDeliverService>()) {
+      await Get.delete<DmFreeDeliverService>(force: true);
+    }
+    if (Get.isRegistered<DmDayBootstrapService>()) {
+      await Get.delete<DmDayBootstrapService>(force: true);
+    }
+    if (Get.isRegistered<DmRecoveryService>()) {
+      await Get.delete<DmRecoveryService>(force: true);
+    }
+    if (Get.isRegistered<OfflineCacheService>()) {
+      await Get.find<OfflineCacheService>().clearDeliveryManSessionCache();
     }
     await _session.clearSession();
   }

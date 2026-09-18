@@ -21,6 +21,7 @@ import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/collections/dm_t
 import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/dashboard/dm_dashboard_controller.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/handover/dm_handover_controller.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/van_stock/dm_van_stock_controller.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/services/session/dm_session_service.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/shell/dm_services_binding.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/views/collections/dm_collection_history_screen.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/views/collections/dm_today_shops_screen.dart';
@@ -38,6 +39,16 @@ class DeliveryManShellController extends AppShellController {
   void onInit() {
     DmServicesBinding.ensureRegistered();
     super.onInit();
+    _refreshSession();
+  }
+
+  Future<void> _refreshSession() async {
+    if (!Get.isRegistered<DmSessionService>()) return;
+    try {
+      await Get.find<DmSessionService>().fetchSession(forceNetwork: true);
+    } catch (_) {
+      await Get.find<DmSessionService>().loadCached();
+    }
   }
 
   @override

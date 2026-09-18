@@ -1,7 +1,7 @@
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 
-/// Server GPS gate for check-in / place-order (`gps_criteria` on login & today).
-/// Values always come from the API (or the last saved offline copy) — no app default.
+/// Server GPS gate (`gps_criteria` on login / plan or tasks today).
+/// Values come from the API (or last offline save) — no app-hardcoded max.
 class GpsCriteria {
   const GpsCriteria({required this.minM, required this.maxM});
 

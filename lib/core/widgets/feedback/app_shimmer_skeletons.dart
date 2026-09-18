@@ -126,38 +126,70 @@ class AppShimmerSkeletons {
 
   static Widget shopList(BuildContext context, {int count = 5}) {
     return AppShimmer(
-      child: Padding(
-        padding: AppSpacing.screenPadding(context),
-        child: AppShimmer.list(context: context, count: count),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final content = Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: AppSpacing.horizontalValue(context, 0.04),
+              vertical: AppSpacing.verticalValue(context, 0.01),
+            ),
+            child: AppShimmer.list(context: context, count: count),
+          );
+          if (!constraints.hasBoundedHeight) {
+            return content;
+          }
+          return SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: content,
+          );
+        },
       ),
     );
   }
 
+  /// Safe inside another [ListView] / [Column] (no nested viewport).
+  /// When given a bounded height (e.g. [Expanded]), scrolls instead of overflowing.
   static Widget genericList(BuildContext context, {int count = 6}) {
     return AppShimmer(
-      child: ListView(
-        padding: AppSpacing.screenPadding(context),
-        physics: const NeverScrollableScrollPhysics(),
-        children: [AppShimmer.list(context: context, count: count)],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final content = Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: AppSpacing.horizontalValue(context, 0.04),
+              vertical: AppSpacing.verticalValue(context, 0.01),
+            ),
+            child: AppShimmer.list(context: context, count: count),
+          );
+          if (!constraints.hasBoundedHeight) {
+            return content;
+          }
+          return SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: content,
+          );
+        },
       ),
     );
   }
 
   static Widget detail(BuildContext context) {
     return AppShimmer(
-      child: ListView(
+      child: Padding(
         padding: AppSpacing.screenPadding(context),
-        physics: const NeverScrollableScrollPhysics(),
-        children: [
-          AppShimmer.box(
-            height: AppSpacing.verticalValue(context, 0.22),
-            radius: AppResponsive.radius(context),
-          ),
-          SizedBox(height: AppSpacing.verticalValue(context, 0.016)),
-          AppShimmer.listCard(context),
-          SizedBox(height: AppSpacing.verticalValue(context, 0.016)),
-          AppShimmer.list(context: context, count: 4),
-        ],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AppShimmer.box(
+              height: AppSpacing.verticalValue(context, 0.22),
+              radius: AppResponsive.radius(context),
+            ),
+            SizedBox(height: AppSpacing.verticalValue(context, 0.016)),
+            AppShimmer.listCard(context),
+            SizedBox(height: AppSpacing.verticalValue(context, 0.016)),
+            AppShimmer.list(context: context, count: 4),
+          ],
+        ),
       ),
     );
   }

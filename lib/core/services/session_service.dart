@@ -18,7 +18,7 @@ class SessionService extends GetxService {
 
   bool get isLoggedIn => user.value != null;
 
-  /// Effective place-order / check-in max distance (meters), or null if unknown.
+  /// Effective check-in / deliver / place-order max distance, or null if unknown.
   double? get shopActionMaxDistanceMeters => gpsCriteria.value?.maxM;
 
   Future<SessionService> init() async {
