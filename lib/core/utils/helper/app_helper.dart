@@ -70,7 +70,8 @@ class AppHelper {
   static const _positionTimeout = Duration(seconds: 10);
   static const _lastKnownMaxAge = Duration(minutes: 2);
 
-  /// Live max from session (`gps_criteria.max_m`). Throws if never received.
+  /// Live max from session (`gps_criteria.max_m` saved at login / plan / today).
+  /// Throws when criteria was never received (cannot invent a distance).
   static double resolvedShopMaxDistanceMeters() {
     if (!Get.isRegistered<SessionService>()) {
       throw ApiException(message: AppTexts.obGpsCriteriaMissing);

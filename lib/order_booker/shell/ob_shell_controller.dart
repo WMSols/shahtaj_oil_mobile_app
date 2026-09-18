@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/scheduler.dart';
 
 import 'package:shahtaj_oil_mobile_app/common/bindings/account/account_binding.dart';
 import 'package:shahtaj_oil_mobile_app/common/controllers/shell/app_shell_controller.dart';
 import 'package:shahtaj_oil_mobile_app/common/views/account/account_screen.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/connectivity_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/sync_outbox_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/sync/ob_day_bootstrap_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/shell/ob_services_binding.dart';
@@ -56,14 +59,24 @@ class OrderBookerShellController extends AppShellController {
   void onInit() {
     OrderBookerServicesBinding.ensureRegistered();
     super.onInit();
-    // Pull the whole day down once the shell opens so the booker can go
-    // offline straight after. Screens keep rendering from the last snapshot
-    // while this runs.
-    if (Get.isRegistered<ObDayBootstrapService>()) {
-      Get.find<ObDayBootstrapService>().runInBackground();
-    }
-    if (Get.isRegistered<SyncOutboxService>()) {
-      Get.find<SyncOutboxService>().flush();
+    // Login / shell open: flush pending, then pull day (force if stale).
+    unawaited(_syncOnShellOpen());
+  }
+
+  Future<void> _syncOnShellOpen() async {
+    try {
+      if (Get.isRegistered<OfflineCacheService>()) {
+        await Get.find<OfflineCacheService>().flushSyncQueue();
+      }
+      if (Get.isRegistered<SyncOutboxService>()) {
+        await Get.find<SyncOutboxService>().flush();
+      }
+      if (!Get.isRegistered<ObDayBootstrapService>()) return;
+      final bootstrap = Get.find<ObDayBootstrapService>();
+      // Always pull on login/shell open; force when snapshot is from another day.
+      await bootstrap.run(force: true);
+    } catch (_) {
+      // Shell stays usable from the last snapshot.
     }
   }
 

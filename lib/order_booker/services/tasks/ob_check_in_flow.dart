@@ -78,6 +78,7 @@ abstract class ObCheckInFlow {
       final existing = await session.activeVisit();
       if (existing != null &&
           (existing.taskId == task.id || existing.shopId == task.shopId)) {
+        session.publishActiveVisit(existing);
         await _openOrderCreate(existing.visitId, onDone);
         return;
       }

@@ -8,6 +8,7 @@ import 'package:shahtaj_oil_mobile_app/core/database/app_database.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/sync_outbox_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_active_visit_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_check_in_result.dart';
@@ -68,6 +69,10 @@ class ObTaskService extends GetxService {
   ObTodayTasksModel _applyToday(ObTodayTasksModel today) {
     _route = today.route;
     _tasks = List<ObTaskModel>.from(today.tasks);
+    final gps = today.gpsCriteria;
+    if (gps != null && Get.isRegistered<SessionService>()) {
+      unawaited(Get.find<SessionService>().setGpsCriteria(gps));
+    }
     return today;
   }
 
@@ -105,23 +110,33 @@ class ObTaskService extends GetxService {
         await _dropStaleOverride(override, task);
       }
 
+      // Local completed wins over server pending once the close is queued or
+      // the local visit row is closed — never leave a fake inVisit after sync.
       var status = task.status;
       if (localRank > serverRank && localStatus != null) {
         final fakeCompleted =
             localStatus == TaskStatus.completed &&
             task.status != TaskStatus.completed &&
             !hasQueue;
-        if (!fakeCompleted) {
-          status = localStatus;
+        // Prefer completed when we know the local visit was closed.
+        final locallyClosed =
+            Get.isRegistered<ObVisitSessionService>() &&
+            Get.find<ObVisitSessionService>().isLocallyClosedTask(task.id);
+        if (!fakeCompleted || locallyClosed) {
+          if (locallyClosed) {
+            status = TaskStatus.completed;
+          } else if (!fakeCompleted) {
+            status = localStatus;
+          }
         }
       }
 
-      // Offline close keeps the task inVisit until outbox sync marks completed.
-      // While place-order / end-visit is queued, surface as waiting to sync.
+      // While place-order / end-visit is still queued, surface as waiting to sync
+      // (display layer maps that to Completed + will-sync chip).
       if (hasQueue &&
           (_outbox?.isTaskQueuedForSync(task.id) ?? false) &&
           status != TaskStatus.completed) {
-        status = TaskStatus.inVisit;
+        status = TaskStatus.completed;
       }
 
       merged.add(

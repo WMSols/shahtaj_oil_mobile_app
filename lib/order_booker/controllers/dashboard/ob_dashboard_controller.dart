@@ -19,6 +19,7 @@ import 'package:shahtaj_oil_mobile_app/order_booker/controllers/history/ob_histo
 import 'package:shahtaj_oil_mobile_app/order_booker/controllers/tasks/ob_route_detail_controller.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/dashboard/ob_dashboard_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/tasks/ob_task_service.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/visit/ob_visit_session_service.dart';
 
 class ObDashboardController extends GetxController with CachedLoadMixin {
   ObDashboardController(this._service, this._session, this._taskService);
@@ -30,6 +31,8 @@ class ObDashboardController extends GetxController with CachedLoadMixin {
   final Rxn<ObDashboardModel> dashboard = Rxn<ObDashboardModel>();
   final Rxn<ObActiveVisitModel> activeVisit = Rxn<ObActiveVisitModel>();
 
+  Worker? _activeVisitWorker;
+
   @override
   bool get hasCachedData => dashboard.value != null;
 
@@ -39,8 +42,25 @@ class ObDashboardController extends GetxController with CachedLoadMixin {
   @override
   void onInit() {
     super.onInit();
+    _bindActiveVisitRx();
     loadDashboard();
     unawaited(_refreshActiveVisit());
+  }
+
+  @override
+  void onClose() {
+    _activeVisitWorker?.dispose();
+    super.onClose();
+  }
+
+  void _bindActiveVisitRx() {
+    if (!Get.isRegistered<ObVisitSessionService>()) return;
+    final session = Get.find<ObVisitSessionService>();
+    activeVisit.value = session.activeVisitRx.value;
+    _activeVisitWorker = ever<ObActiveVisitModel?>(
+      session.activeVisitRx,
+      (visit) => activeVisit.value = visit,
+    );
   }
 
   String get greeting => AppFormatter.timeOfDayGreeting();
@@ -183,6 +203,10 @@ class ObDashboardController extends GetxController with CachedLoadMixin {
 
   Future<void> _refreshActiveVisit() async {
     activeVisit.value = await _taskService.fetchActiveVisit();
+    if (Get.isRegistered<ObVisitSessionService>() &&
+        activeVisit.value != null) {
+      Get.find<ObVisitSessionService>().publishActiveVisit(activeVisit.value!);
+    }
   }
 
   void openOrder(ObOrderSummaryModel order) => Get.toNamed(

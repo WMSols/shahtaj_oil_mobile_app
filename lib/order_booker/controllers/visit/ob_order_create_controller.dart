@@ -124,8 +124,11 @@ class ObOrderCreateController extends GetxController {
     }
     final limit = currentShop.creditLimit;
     if (limit != null) {
-      final outstanding = currentShop.outstandingBalance ?? 0;
-      return (outstanding + orderAmount) > limit + 0.001;
+      final used =
+          currentShop.effectiveOutstanding ??
+          currentShop.outstandingBalance ??
+          0;
+      return (used + orderAmount) > limit + 0.001;
     }
     return false;
   }
@@ -257,10 +260,14 @@ class ObOrderCreateController extends GetxController {
     await _enrichShopCoordinatesFromTask(active);
   }
 
-  /// When shop detail has no GPS, copy today's task coords (check-in source).
+  /// When shop detail has no GPS, copy today's task coords or the visit pin
+  /// captured at offline verify / check-in.
   Future<void> _enrichShopCoordinatesFromTask(ObActiveVisitModel active) async {
     final current = shop.value;
     if (current != null && current.hasCoordinates) return;
+
+    double? lat;
+    double? lng;
 
     try {
       final today = await _taskService.fetchTodayTasks(
@@ -272,24 +279,72 @@ class ObOrderCreateController extends GetxController {
           continue;
         }
         if (!task.hasShopCoordinates) continue;
-        if (current == null) {
-          shop.value = ObShopModel(
-            id: active.shopId,
-            name: active.shopName,
-            latitude: task.shopLatitude,
-            longitude: task.shopLongitude,
-          );
-        } else {
-          shop.value = current.copyWith(
-            latitude: task.shopLatitude,
-            longitude: task.shopLongitude,
-          );
-        }
-        return;
+        lat = task.shopLatitude;
+        lng = task.shopLongitude;
+        break;
       }
     } catch (_) {
-      // Place-order gate will still try task lookup at submit time.
+      // Fall through to visit GPS.
     }
+
+    if (!_hasUsableCoordinates(lat, lng)) {
+      lat = active.latitude;
+      lng = active.longitude;
+    }
+    if (!_hasUsableCoordinates(lat, lng)) return;
+
+    if (current == null) {
+      shop.value = ObShopModel(
+        id: active.shopId,
+        name: active.shopName,
+        latitude: lat,
+        longitude: lng,
+      );
+    } else {
+      shop.value = current.copyWith(latitude: lat, longitude: lng);
+    }
+    _shopService.rememberShop(shop.value!);
+  }
+
+  /// Prefer shop detail, then task, then local visit GPS (offline verify pin).
+  Future<(double?, double?)> _resolveShopCoordinates(
+    ObActiveVisitModel active,
+  ) async {
+    final currentShop = shop.value;
+    if (currentShop != null && currentShop.hasCoordinates) {
+      return (currentShop.latitude, currentShop.longitude);
+    }
+
+    try {
+      final today = await _taskService.fetchTodayTasks(
+        allowStaleFallback: true,
+        forceNetwork: false,
+      );
+      for (final task in today.tasks) {
+        if (task.id != active.taskId && task.shopId != active.shopId) {
+          continue;
+        }
+        if (task.hasShopCoordinates) {
+          return (task.shopLatitude, task.shopLongitude);
+        }
+      }
+    } catch (_) {
+      // Fall through to visit / shop leftovers.
+    }
+
+    if (_hasUsableCoordinates(active.latitude, active.longitude)) {
+      return (active.latitude, active.longitude);
+    }
+
+    return (currentShop?.latitude, currentShop?.longitude);
+  }
+
+  static bool _hasUsableCoordinates(double? lat, double? lng) {
+    return lat != null &&
+        lng != null &&
+        lat.abs() <= 90 &&
+        lng.abs() <= 180 &&
+        !(lat == 0 && lng == 0);
   }
 
   Future<void> _loadProductsAndCart(ObActiveVisitModel active, int id) async {
@@ -788,35 +843,6 @@ class ObOrderCreateController extends GetxController {
     } finally {
       isPlacingOrder.value = false;
     }
-  }
-
-  /// Prefer shop detail coords; fall back to today's task (same as check-in).
-  Future<(double?, double?)> _resolveShopCoordinates(
-    ObActiveVisitModel active,
-  ) async {
-    final currentShop = shop.value;
-    if (currentShop != null && currentShop.hasCoordinates) {
-      return (currentShop.latitude, currentShop.longitude);
-    }
-
-    try {
-      final today = await _taskService.fetchTodayTasks(
-        allowStaleFallback: true,
-        forceNetwork: false,
-      );
-      for (final task in today.tasks) {
-        if (task.id != active.taskId && task.shopId != active.shopId) {
-          continue;
-        }
-        if (task.hasShopCoordinates) {
-          return (task.shopLatitude, task.shopLongitude);
-        }
-      }
-    } catch (_) {
-      // Keep whatever the shop model has.
-    }
-
-    return (currentShop?.latitude, currentShop?.longitude);
   }
 
   Future<void> _persistProposedRatesToCart() async {

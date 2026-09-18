@@ -7,11 +7,12 @@ import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/sync_outbox_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/sync/ob_day_bootstrap_service.dart';
 
 /// Sticky sync strip under the app bar — same bar chrome as offline/location.
 ///
-/// Shows syncing / pending / attention, then a brief success flash when a flush
-/// clears the queue before sliding away.
+/// Shows day-bootstrap download, outbox syncing / pending / attention, then a
+/// brief success flash when a flush clears the queue before sliding away.
 class AppSyncStatusBanner extends StatefulWidget {
   const AppSyncStatusBanner({super.key});
 
@@ -73,17 +74,35 @@ class _AppSyncStatusBannerState extends State<AppSyncStatusBanner> {
 
   @override
   Widget build(BuildContext context) {
-    if (!Get.isRegistered<SyncOutboxService>()) {
+    final hasOutbox = Get.isRegistered<SyncOutboxService>();
+    final hasBootstrap = Get.isRegistered<ObDayBootstrapService>();
+    if (!hasOutbox && !hasBootstrap) {
       return const SizedBox.shrink();
     }
-    final outbox = Get.find<SyncOutboxService>();
 
     return Obx(() {
+      final bootstrap = hasBootstrap ? Get.find<ObDayBootstrapService>() : null;
+      final bootstrapping = bootstrap?.isRunning.value ?? false;
+      final bootstrapMsg = bootstrap?.statusMessage.value;
+
+      if (bootstrapping) {
+        return AppSlideInBar(
+          visible: true,
+          child: AppToastBar(
+            message: bootstrapMsg?.trim().isNotEmpty == true
+                ? bootstrapMsg!
+                : AppTexts.obDayBootstrapRunning,
+            style: AppToastStyle.information,
+          ),
+        );
+      }
+
+      if (!hasOutbox) return const SizedBox.shrink();
+      final outbox = Get.find<SyncOutboxService>();
       final syncing = outbox.isFlushing.value;
       final attention = outbox.attentionCount.value;
       final pending = outbox.pendingCount.value;
 
-      // New work while the success flash is up cancels it.
       if (_showCompleted && (syncing || pending > 0 || attention > 0)) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted || !_showCompleted) return;

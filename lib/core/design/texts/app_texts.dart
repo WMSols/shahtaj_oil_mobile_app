@@ -246,10 +246,13 @@ class AppTexts {
   static String get obCreditLimitLabel => 'obCreditLimitLabel'.tr;
   static String get obLegacyBalanceLabel => 'obLegacyBalanceLabel'.tr;
   static String get obOutstandingBalanceLabel => 'obOutstandingBalanceLabel'.tr;
+  static String get obEffectiveOutstandingLabel =>
+      'obEffectiveOutstandingLabel'.tr;
   static String get obCreditRemainingLabel => 'obCreditRemainingLabel'.tr;
   static String get obShopCreditSummary => 'obShopCreditSummary'.tr;
   static String get obCreditLimitHint => 'obCreditLimitHint'.tr;
   static String get obLegacyBalanceHint => 'obLegacyBalanceHint'.tr;
+  static String get obCreditLimitExceededChip => 'obCreditLimitExceededChip'.tr;
   static String get obPickFromCamera => 'obPickFromCamera'.tr;
   static String get obPickFromGallery => 'obPickFromGallery'.tr;
   static String get obCnicFrontTitle => 'obCnicFrontTitle'.tr;
@@ -263,6 +266,8 @@ class AppTexts {
   static String get obShopLocationMissing => 'obShopLocationMissing'.tr;
   static String get obGpsCriteriaMissing => 'obGpsCriteriaMissing'.tr;
   static String get obTooFarFromShop => 'obTooFarFromShop'.tr;
+  static String obTooFarFromShopMax(int maxMeters) =>
+      'obTooFarFromShopMax'.trParams({'meters': '$maxMeters'});
   static String get obLocationPermissionDenied =>
       'obLocationPermissionDenied'.tr;
   static String get obLocationFetchFailed => 'obLocationFetchFailed'.tr;
@@ -343,6 +348,18 @@ class AppTexts {
   static String syncBannerPending(int count) => count == 1
       ? 'syncBannerPendingOne'.tr
       : 'syncBannerPending'.trParams({'count': '$count'});
+  static String get obDayBootstrapRunning => 'obDayBootstrapRunning'.tr;
+  static String get obDayBootstrapTasks => 'obDayBootstrapTasks'.tr;
+  static String get obDayBootstrapActiveVisit => 'obDayBootstrapActiveVisit'.tr;
+  static String get obDayBootstrapCatalog => 'obDayBootstrapCatalog'.tr;
+  static String get obDayBootstrapShops => 'obDayBootstrapShops'.tr;
+  static String get obDayBootstrapRoutes => 'obDayBootstrapRoutes'.tr;
+  static String get obDayBootstrapSchedule => 'obDayBootstrapSchedule'.tr;
+  static String get obDayBootstrapTargets => 'obDayBootstrapTargets'.tr;
+  static String get obDayBootstrapHistory => 'obDayBootstrapHistory'.tr;
+  static String get obDayBootstrapDashboard => 'obDayBootstrapDashboard'.tr;
+  static String get obProductCatalogDownloading =>
+      'obProductCatalogDownloading'.tr;
   static String get syncStatusQueued => 'syncStatusQueued'.tr;
   static String get syncStatusSyncing => 'syncStatusSyncing'.tr;
   static String get syncStatusSynced => 'syncStatusSynced'.tr;
