@@ -7,29 +7,34 @@ import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
+import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_text_field.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/pickup/dm_pickup_controller.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/models/dashboard/dm_stock_item_model.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/models/load/dm_pick_line_model.dart';
 
 class DmPickupItemCard extends StatelessWidget {
   const DmPickupItemCard({
     super.key,
-    required this.item,
+    required this.line,
     required this.controller,
   });
 
-  final DmStockItemModel item;
+  final DmPickLineModel line;
   final DmPickupController controller;
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final readOnly = controller.acknowledged.value;
-      final error = controller.qtyErrors[item.id];
+      final key = '${line.productId}';
+      final error = controller.qtyErrors[key];
+      final readOnly = line.qtyToPick <= 0;
+      final metricStyle = AppTextStyles.caption(
+        context,
+      ).copyWith(color: AppColors.grey);
 
       return AppOutlineCard(
-        statusColor: controller.stripeColorFor(item),
+        statusColor: controller.stripeColorFor(line),
         padding: AppSpacing.symmetric(context, h: 0.03, v: 0.012),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -43,29 +48,42 @@ class DmPickupItemCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        item.name,
+                        line.name,
                         style: AppTextStyles.sectionTitle(context),
                       ),
-                      if (item.unit.isNotEmpty)
-                        Text(item.unit, style: AppTextStyles.caption(context)),
+                      if ((line.uom ?? '').isNotEmpty)
+                        Text(line.uom!, style: metricStyle),
                     ],
                   ),
                 ),
               ],
             ),
+            AppSpacing.vertical(context, 0.006),
+            Text(
+              '${AppTexts.dmQtyToPick}: ${AppFormatter.targetAmount(line.qtyToPick)}',
+              style: metricStyle,
+            ),
+            Text(
+              '${AppTexts.dmQtyOnVan}: ${AppFormatter.targetAmount(line.qtyOnVan)} · ${AppTexts.dmQtyInWarehouse}: ${AppFormatter.targetAmount(line.qtyInWarehouse)}',
+              style: metricStyle,
+            ),
             AppSpacing.vertical(context, 0.01),
             AppTextField(
-              controller: controller.qtyControllerFor(item.id),
+              controller: controller.qtyControllerFor(line),
               label: AppTexts.dmLoadedQty,
               hint: AppTexts.dmLoadedQtyHint,
               prefixIcon: AppIcons.myshops,
               readOnly: readOnly,
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+              ],
               textInputAction: TextInputAction.done,
               onChanged: readOnly
                   ? null
-                  : (raw) => controller.onLoadedQtyChanged(item.id, raw),
+                  : (raw) => controller.onQtyChanged(line, raw),
               errorText: error,
             ),
           ],
