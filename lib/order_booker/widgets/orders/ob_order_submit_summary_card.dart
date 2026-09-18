@@ -91,6 +91,7 @@ class ObOrderSubmitSummaryCard extends StatelessWidget {
                 creditWouldExceed: preview.hasCreditWarning,
                 creditLimit: shop?.creditLimit,
                 outstandingBalance: shop?.outstandingBalance,
+                effectiveOutstanding: shop?.effectiveOutstanding,
                 creditRemaining: shop?.resolvedCreditRemaining,
                 orderAmount: preview.proposedTotal,
               ),

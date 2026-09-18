@@ -996,16 +996,50 @@ class SyncOutboxService extends GetxService {
     final visit = ApiMap.asMap(data['visit']) ?? data;
     final serverLines = ApiMap.listOf(visit, 'lines');
 
+    // Collapse server duplicates first — keep one line per product_id.
     final serverByProduct = <int, Map<String, dynamic>>{};
+    final extrasToRemove = <int>[];
     for (final line in serverLines) {
       final pid = ApiMap.asInt(line['product_id']);
-      if (pid != null) serverByProduct[pid] = line;
+      if (pid == null) continue;
+      final lineId = ApiMap.asInt(line['line_id']) ?? ApiMap.asInt(line['id']);
+      final existing = serverByProduct[pid];
+      if (existing == null) {
+        serverByProduct[pid] = line;
+        continue;
+      }
+      final existingId =
+          ApiMap.asInt(existing['line_id']) ?? ApiMap.asInt(existing['id']);
+      // Keep the lower positive id as canonical; drop the other.
+      if (lineId != null &&
+          existingId != null &&
+          lineId < existingId &&
+          lineId > 0) {
+        extrasToRemove.add(existingId);
+        serverByProduct[pid] = line;
+      } else if (lineId != null) {
+        extrasToRemove.add(lineId);
+      }
+    }
+    for (final lineId in extrasToRemove) {
+      await _api.postData(
+        ApiEndpoints.obVisitsLineRemove,
+        data: {'line_id': lineId},
+      );
     }
 
     final localByProduct = <int, Map<String, dynamic>>{};
     for (final line in lines) {
       final pid = ApiMap.asInt(line['product_id']);
-      if (pid != null) localByProduct[pid] = line;
+      if (pid == null) continue;
+      final existing = localByProduct[pid];
+      if (existing == null) {
+        localByProduct[pid] = line;
+        continue;
+      }
+      final qty = ApiMap.asDouble(line['quantity']) ?? 0;
+      final existingQty = ApiMap.asDouble(existing['quantity']) ?? 0;
+      if (qty >= existingQty) localByProduct[pid] = line;
     }
 
     for (final entry in serverByProduct.entries) {

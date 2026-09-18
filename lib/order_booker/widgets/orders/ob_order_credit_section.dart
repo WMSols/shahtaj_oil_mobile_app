@@ -6,6 +6,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.d
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/info/app_detail_row.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/orders/ob_order_approval_info.dart';
 
@@ -17,6 +18,7 @@ class ObOrderCreditSection extends StatelessWidget {
     this.creditWouldExceed = false,
     this.creditLimit,
     this.outstandingBalance,
+    this.effectiveOutstanding,
     this.creditRemaining,
     this.orderAmount,
     this.forManagerReview = false,
@@ -26,17 +28,23 @@ class ObOrderCreditSection extends StatelessWidget {
   final bool creditWouldExceed;
   final double? creditLimit;
   final double? outstandingBalance;
+  final double? effectiveOutstanding;
   final double? creditRemaining;
   final double? orderAmount;
   final bool forManagerReview;
+
+  bool get _limitExceeded =>
+      creditWouldExceed || (creditRemaining != null && creditRemaining! <= 0);
 
   bool get _showWarning => approval.hasCreditReason || creditWouldExceed;
 
   @override
   Widget build(BuildContext context) {
     if (!_showWarning &&
+        !_limitExceeded &&
         creditLimit == null &&
         outstandingBalance == null &&
+        effectiveOutstanding == null &&
         creditRemaining == null &&
         orderAmount == null) {
       return const SizedBox.shrink();
@@ -56,8 +64,21 @@ class ObOrderCreditSection extends StatelessWidget {
           style: AppTextStyles.sectionTitle(context),
         ),
         AppSpacing.vertical(context, 0.01),
+        if (_limitExceeded) ...[
+          Align(
+            alignment: Alignment.centerLeft,
+            child: AppStatusChip(
+              label: AppTexts.obCreditLimitExceededChip,
+              color: AppColors.error,
+              soft: true,
+            ),
+          ),
+          AppSpacing.vertical(context, 0.008),
+        ],
         AppOutlineCard(
-          statusColor: _showWarning ? AppColors.warning : AppColors.primary,
+          statusColor: _showWarning || _limitExceeded
+              ? AppColors.warning
+              : AppColors.primary,
           padding: EdgeInsets.zero,
           child: Column(
             children: [
@@ -71,10 +92,23 @@ class ObOrderCreditSection extends StatelessWidget {
                   label: AppTexts.obOutstandingBalanceLabel,
                   value: AppFormatter.currencyWhole(outstandingBalance!),
                 ),
+              if (effectiveOutstanding != null)
+                AppDetailRow(
+                  label: AppTexts.obEffectiveOutstandingLabel,
+                  value: AppFormatter.currencyWhole(effectiveOutstanding!),
+                  valueColor: _limitExceeded
+                      ? AppColors.error
+                      : AppColors.warning,
+                  valueWeight: FontWeight.w700,
+                ),
               if (creditRemaining != null)
                 AppDetailRow(
                   label: AppTexts.obCreditRemainingLabel,
                   value: AppFormatter.currencyWhole(creditRemaining!),
+                  valueColor: creditRemaining! <= 0 ? AppColors.error : null,
+                  valueWeight: creditRemaining! <= 0
+                      ? FontWeight.w700
+                      : FontWeight.w500,
                 ),
               if (orderAmount != null)
                 AppDetailRow(

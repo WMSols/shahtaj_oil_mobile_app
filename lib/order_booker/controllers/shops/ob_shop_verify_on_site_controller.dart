@@ -441,12 +441,16 @@ class ObShopVerifyOnSiteController extends GetxController {
 
     isSubmitting.value = true;
     try {
-      AppHelper.ensureWithinShopRange(
-        currentLat: checkInLatitude.value!,
-        currentLng: checkInLongitude.value!,
-        shopLat: current.shopLatitude,
-        shopLng: current.shopLongitude,
-      );
+      // First-time verify: shop has no pin yet — device GPS becomes the
+      // location. Range check only applies when a shop pin already exists.
+      if (current.hasShopCoordinates) {
+        AppHelper.ensureWithinShopRange(
+          currentLat: checkInLatitude.value!,
+          currentLng: checkInLongitude.value!,
+          shopLat: current.shopLatitude,
+          shopLng: current.shopLongitude,
+        );
+      }
       final result = await _shopService.submitVerification(
         task: current,
         shopId: shopIdInt,

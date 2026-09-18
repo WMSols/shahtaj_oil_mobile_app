@@ -30,14 +30,19 @@ class ObShopCreditCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isCredit = shop.isCreditShop;
     final remaining = shop.resolvedCreditRemaining;
-    final remainingColor = remaining != null && remaining < 0
+    final limitExceeded = shop.isCreditLimitExceeded;
+    final remainingColor = remaining != null && remaining <= 0
         ? AppColors.error
         : AppColors.success;
-    final showExceed =
+    final showOrderExceed =
         isCredit && (wouldExceedCredit || shop.creditWouldExceed);
     final remainingAfter = remaining != null && liveOrderAmount != null
         ? remaining - liveOrderAmount!
         : null;
+    final effectiveOverLimit =
+        shop.creditLimit != null &&
+        shop.effectiveOutstanding != null &&
+        shop.effectiveOutstanding! > shop.creditLimit!;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -52,7 +57,20 @@ class ObShopCreditCard extends StatelessWidget {
           padding: EdgeInsets.zero,
           child: AppDetailRow(
             label: AppTexts.obShopTypeLabel,
-            trailing: AppStatusChip.shopType(shop.shopType),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AppStatusChip.shopType(shop.shopType),
+                if (limitExceeded) ...[
+                  AppSpacing.horizontal(context, 0.01),
+                  AppStatusChip(
+                    label: AppTexts.obCreditLimitExceededChip,
+                    color: AppColors.error,
+                    soft: true,
+                  ),
+                ],
+              ],
+            ),
             showDivider: false,
           ),
         ),
@@ -88,6 +106,26 @@ class ObShopCreditCard extends StatelessWidget {
             ),
           ),
         ],
+        if (isCredit && shop.effectiveOutstanding != null) ...[
+          AppSpacing.vertical(context, 0.008),
+          AppOutlineCard(
+            statusColor: effectiveOverLimit || limitExceeded
+                ? AppColors.error
+                : AppColors.warning,
+            statusStripeEdge: AppStatusStripeEdge.bottom,
+            statusStripeThicknessFactor: 0.004,
+            padding: EdgeInsets.zero,
+            child: AppDetailRow(
+              label: AppTexts.obEffectiveOutstandingLabel,
+              value: AppFormatter.currencyWhole(shop.effectiveOutstanding!),
+              valueColor: effectiveOverLimit || limitExceeded
+                  ? AppColors.error
+                  : AppColors.warning,
+              valueWeight: FontWeight.w700,
+              showDivider: false,
+            ),
+          ),
+        ],
         if (isCredit && remaining != null) ...[
           AppSpacing.vertical(context, 0.008),
           AppOutlineCard(
@@ -107,14 +145,18 @@ class ObShopCreditCard extends StatelessWidget {
         if (isCredit && liveOrderAmount != null) ...[
           AppSpacing.vertical(context, 0.008),
           AppOutlineCard(
-            statusColor: showExceed ? AppColors.warning : AppColors.primary,
+            statusColor: showOrderExceed
+                ? AppColors.warning
+                : AppColors.primary,
             statusStripeEdge: AppStatusStripeEdge.bottom,
             statusStripeThicknessFactor: 0.004,
             padding: EdgeInsets.zero,
             child: AppDetailRow(
               label: AppTexts.obOrderAmountLabel,
               value: AppFormatter.currencyWhole(liveOrderAmount!),
-              valueColor: showExceed ? AppColors.warning : AppColors.primary,
+              valueColor: showOrderExceed
+                  ? AppColors.warning
+                  : AppColors.primary,
               valueWeight: FontWeight.w700,
               showDivider: remainingAfter != null,
             ),
@@ -140,7 +182,7 @@ class ObShopCreditCard extends StatelessWidget {
             ),
           ],
         ],
-        if (showExceed) ...[
+        if (showOrderExceed && !limitExceeded) ...[
           AppSpacing.vertical(context, 0.008),
           AppOutlineCard(
             statusColor: AppColors.warning,

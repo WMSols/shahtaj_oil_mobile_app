@@ -30,6 +30,7 @@ class ObShopModel {
     this.shopType = ShopType.credit,
     this.creditLimit,
     this.outstandingBalance,
+    this.effectiveOutstanding,
     this.creditRemaining,
     this.creditWouldExceed = false,
     this.legacyBalance,
@@ -57,6 +58,9 @@ class ObShopModel {
   final ShopType shopType;
   final double? creditLimit;
   final double? outstandingBalance;
+
+  /// Real credit in use (invoiced + pending + confirmed uninvoiced).
+  final double? effectiveOutstanding;
   final double? creditRemaining;
   final bool creditWouldExceed;
   final double? legacyBalance;
@@ -82,8 +86,18 @@ class ObShopModel {
 
   double? get resolvedCreditRemaining {
     if (creditRemaining != null) return creditRemaining;
-    if (creditLimit == null || outstandingBalance == null) return null;
-    return creditLimit! - outstandingBalance!;
+    if (creditLimit == null) return null;
+    final used = effectiveOutstanding ?? outstandingBalance;
+    if (used == null) return null;
+    return creditLimit! - used;
+  }
+
+  /// Fully used or over limit (`credit_remaining` 0 / `credit_would_exceed`).
+  bool get isCreditLimitExceeded {
+    if (!isCreditShop) return false;
+    if (creditWouldExceed) return true;
+    final remaining = resolvedCreditRemaining;
+    return remaining != null && remaining <= 0;
   }
 
   /// True when credit numbers are present enough to show the create-order card.
@@ -91,6 +105,7 @@ class ObShopModel {
       isCreditShop &&
       (creditLimit != null ||
           outstandingBalance != null ||
+          effectiveOutstanding != null ||
           creditRemaining != null);
 
   ObShopModel copyWith({
@@ -106,6 +121,7 @@ class ObShopModel {
     ShopType? shopType,
     double? creditLimit,
     double? outstandingBalance,
+    double? effectiveOutstanding,
     double? creditRemaining,
     bool? creditWouldExceed,
     double? legacyBalance,
@@ -132,6 +148,7 @@ class ObShopModel {
     shopType: shopType ?? this.shopType,
     creditLimit: creditLimit ?? this.creditLimit,
     outstandingBalance: outstandingBalance ?? this.outstandingBalance,
+    effectiveOutstanding: effectiveOutstanding ?? this.effectiveOutstanding,
     creditRemaining: creditRemaining ?? this.creditRemaining,
     creditWouldExceed: creditWouldExceed ?? this.creditWouldExceed,
     legacyBalance: legacyBalance ?? this.legacyBalance,
@@ -161,6 +178,7 @@ class ObShopModel {
       shopType: other.isCreditShop ? other.shopType : shopType,
       creditLimit: other.creditLimit ?? creditLimit,
       outstandingBalance: other.outstandingBalance ?? outstandingBalance,
+      effectiveOutstanding: other.effectiveOutstanding ?? effectiveOutstanding,
       creditRemaining: other.creditRemaining ?? creditRemaining,
       creditWouldExceed: other.creditWouldExceed || creditWouldExceed,
       legacyBalance: other.legacyBalance ?? legacyBalance,
@@ -189,6 +207,9 @@ class ObShopModel {
         ApiMap.asDouble(json['due_amount']) ??
         ApiMap.asDouble(credit?['outstanding_balance']) ??
         ApiMap.asDouble(credit?['outstanding']);
+    final effective =
+        ApiMap.asDouble(json['effective_outstanding']) ??
+        ApiMap.asDouble(credit?['effective_outstanding']);
     final remaining =
         ApiMap.asDouble(json['credit_remaining']) ??
         ApiMap.asDouble(json['available_credit']) ??
@@ -245,9 +266,11 @@ class ObShopModel {
       ),
       creditLimit: creditLimit,
       outstandingBalance: outstanding,
+      effectiveOutstanding: effective,
       creditRemaining: remaining,
       creditWouldExceed:
           json['credit_would_exceed'] == true ||
+          credit?['credit_would_exceed'] == true ||
           credit?['would_exceed'] == true,
       legacyBalance:
           ApiMap.asDouble(json['legacy_balance']) ??
@@ -349,6 +372,7 @@ class ObShopModel {
     'shop_category': shopType.name,
     'credit_limit': creditLimit,
     'outstanding_balance': outstandingBalance,
+    'effective_outstanding': effectiveOutstanding,
     'credit_remaining': creditRemaining,
     'credit_would_exceed': creditWouldExceed,
     'legacy_balance': legacyBalance,

@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:shahtaj_oil_mobile_app/common/models/account/user_model.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/api_endpoints.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
+import 'package:shahtaj_oil_mobile_app/core/models/gps_criteria.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
 import 'package:shahtaj_oil_mobile_app/core/database/app_database.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
@@ -72,6 +73,10 @@ class AuthService extends GetxService {
     await _storage.saveToken(apiKey);
     await _storage.saveRole(role.name);
     await _session.setSession(userModel: user, userRole: role);
+    final gps = GpsCriteria.tryParse(data['gps_criteria']);
+    if (gps != null) {
+      await _session.setGpsCriteria(gps);
+    }
     await _reconcileLocalDataOwner(user.id);
 
     if (Get.isRegistered<PresenceService>()) {
