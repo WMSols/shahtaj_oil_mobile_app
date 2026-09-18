@@ -16,6 +16,8 @@ class DmJobModel {
     this.scheduledDate,
     this.qtyOnVan,
     this.notes,
+    this.receiverName,
+    this.hasDeliveryProof = false,
     this.gpsVerified = false,
     this.lines = const [],
   });
@@ -32,6 +34,8 @@ class DmJobModel {
   final DateTime? scheduledDate;
   final double? qtyOnVan;
   final String? notes;
+  final String? receiverName;
+  final bool hasDeliveryProof;
   final bool gpsVerified;
   final List<DmJobLineModel> lines;
 
@@ -45,7 +49,8 @@ class DmJobModel {
   factory DmJobModel.fromJson(Map<String, dynamic> json) {
     return DmJobModel(
       jobId: ApiMap.asInt(json['job_id'] ?? json['id']) ?? 0,
-      shopId: (ApiMap.asInt(json['shop_id']) ?? json['shop_id'] ?? '').toString(),
+      shopId: (ApiMap.asInt(json['shop_id']) ?? json['shop_id'] ?? '')
+          .toString(),
       shopName: ApiMap.asString(json['shop_name']) ?? '',
       shopAddress: ApiMap.asString(json['shop_address']),
       latitude: ApiMap.asDouble(json['latitude']),
@@ -60,10 +65,13 @@ class DmJobModel {
       scheduledDate: ApiMap.asDateTime(json['scheduled_date']),
       qtyOnVan: ApiMap.asDouble(json['qty_on_van']),
       notes: ApiMap.asString(json['notes']),
+      receiverName: ApiMap.asString(json['receiver_name']),
+      hasDeliveryProof: json['has_delivery_proof'] == true,
       gpsVerified: json['gps_verified'] == true,
-      lines: ApiMap.listOf(json, 'lines')
-          .map(DmJobLineModel.fromJson)
-          .toList(growable: false),
+      lines: ApiMap.listOf(
+        json,
+        'lines',
+      ).map(DmJobLineModel.fromJson).toList(growable: false),
     );
   }
 
@@ -93,6 +101,8 @@ class DmJobModel {
     'scheduled_date': scheduledDate?.toIso8601String(),
     'qty_on_van': qtyOnVan,
     'notes': notes,
+    'receiver_name': receiverName,
+    'has_delivery_proof': hasDeliveryProof,
     'gps_verified': gpsVerified,
     'lines': lines.map((e) => e.toJson()).toList(growable: false),
   };

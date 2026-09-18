@@ -16,7 +16,15 @@ class DmDashboardActivityItem {
   final double? amount;
 }
 
-enum DmNextActionKind { pickup, deliver, unload, collect, handover }
+enum DmNextActionKind {
+  pickup,
+  depart,
+  deliver,
+  unload,
+  endDay,
+  collect,
+  handover,
+}
 
 class DmNextActionModel {
   const DmNextActionModel({
