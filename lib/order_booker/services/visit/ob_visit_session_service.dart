@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:drift/drift.dart';
 import 'package:get/get.dart' hide Value;
 
@@ -24,6 +26,14 @@ class ObVisitSessionService extends GetxService {
   static const kindCheckIn = 'check_in';
   static const kindVerifyThenCheckIn = 'verify_then_check_in';
 
+  /// Live active visit for Today Tasks / Dashboard — updated at check-in,
+  /// not only after a later network refresh.
+  final Rxn<ObActiveVisitModel> activeVisitRx = Rxn<ObActiveVisitModel>();
+
+  /// Task ids whose local visit row is already closed (order / no-sale).
+  /// Prevents stale `inVisit` overrides from showing Resume after sync.
+  final RxSet<int> closedTaskIds = <int>{}.obs;
+
   String? get _userId {
     if (!Get.isRegistered<SessionService>()) return null;
     final id = Get.find<SessionService>().user.value?.id;
@@ -31,6 +41,45 @@ class ObVisitSessionService extends GetxService {
   }
 
   String get _requireUserId => _userId ?? '';
+
+  @override
+  void onInit() {
+    super.onInit();
+    unawaited(refreshLocalVisitIndex());
+  }
+
+  /// Seeds active + closed indexes from SQLite.
+  Future<void> refreshLocalVisitIndex() async {
+    final rows = await allLocalVisits();
+    final closed = <int>{};
+    for (final row in rows) {
+      if (row.status == 'completed') {
+        closed.add(row.taskId);
+      }
+    }
+    closedTaskIds
+      ..clear()
+      ..addAll(closed);
+    closedTaskIds.refresh();
+    await refreshActiveVisitRx();
+  }
+
+  /// Seeds [activeVisitRx] from SQLite (app start / after return).
+  Future<void> refreshActiveVisitRx() async {
+    activeVisitRx.value = await activeVisit();
+  }
+
+  void publishActiveVisit(ObActiveVisitModel visit) {
+    closedTaskIds.remove(visit.taskId);
+    closedTaskIds.refresh();
+    activeVisitRx.value = visit;
+  }
+
+  void clearActiveVisitRx() {
+    activeVisitRx.value = null;
+  }
+
+  bool isLocallyClosedTask(int taskId) => closedTaskIds.contains(taskId);
 
   // ------------------------------------------------------------ read helpers
 
@@ -88,7 +137,9 @@ class ObVisitSessionService extends GetxService {
       // Already checked in locally — never enqueue a second check_in.
       if (existing.serverVisitId != null ||
           await _db.openCheckInEntryForVisit(existing.localVisitId) != null) {
-        return toActiveVisit(existing);
+        final visit = toActiveVisit(existing);
+        publishActiveVisit(visit);
+        return visit;
       }
       await _enqueueCheckIn(
         task: task,
@@ -96,7 +147,9 @@ class ObVisitSessionService extends GetxService {
         latitude: latitude,
         longitude: longitude,
       );
-      return toActiveVisit(existing);
+      final visit = toActiveVisit(existing);
+      publishActiveVisit(visit);
+      return visit;
     }
 
     final localVisitId = await _openLocalVisit(
@@ -113,7 +166,9 @@ class ObVisitSessionService extends GetxService {
     );
 
     final row = await _db.localVisitById(localVisitId);
-    return toActiveVisit(row!);
+    final visit = toActiveVisit(row!);
+    publishActiveVisit(visit);
+    return visit;
   }
 
   Future<void> _enqueueCheckIn({
@@ -227,6 +282,7 @@ class ObVisitSessionService extends GetxService {
       serverId: visit.visitId,
     );
     await setTaskStatus(task.id, TaskStatus.inVisit);
+    publishActiveVisit(visit);
     return visit;
   }
 
@@ -250,7 +306,9 @@ class ObVisitSessionService extends GetxService {
         existing.localVisitId,
       );
       if (openCheckIn != null || existing.serverVisitId != null) {
-        return toActiveVisit(existing);
+        final visit = toActiveVisit(existing);
+        publishActiveVisit(visit);
+        return visit;
       }
     }
 
@@ -264,7 +322,9 @@ class ObVisitSessionService extends GetxService {
     final openCheckIn = await _db.openCheckInEntryForVisit(localVisitId);
     if (openCheckIn != null) {
       final row = await _db.localVisitById(localVisitId);
-      return toActiveVisit(row!);
+      final visit = toActiveVisit(row!);
+      publishActiveVisit(visit);
+      return visit;
     }
 
     final payload = <String, dynamic>{
@@ -310,7 +370,9 @@ class ObVisitSessionService extends GetxService {
 
     await setTaskVerified(task.id);
     final row = await _db.localVisitById(localVisitId);
-    return toActiveVisit(row!);
+    final visit = toActiveVisit(row!);
+    publishActiveVisit(visit);
+    return visit;
   }
 
   Future<int> _openLocalVisit({
@@ -350,9 +412,9 @@ class ObVisitSessionService extends GetxService {
     return localVisitId;
   }
 
-  /// Closes the visit locally. Task stays [TaskStatus.inVisit] until the
-  /// outbox close step syncs — otherwise Today/Dashboard show Completed
-  /// before anything reaches the server.
+  /// Closes the visit locally. Task override is [TaskStatus.completed] so the
+  /// list never shows Resume; while the close is still in the outbox the chip
+  /// is "will sync" via [SyncOutboxService.isTaskQueuedForSync].
   Future<void> completeVisit({
     required int visitId,
     required String outcome,
@@ -371,10 +433,12 @@ class ObVisitSessionService extends GetxService {
         completedAt: Value(DateTime.now()),
       ),
     );
-    await setTaskStatus(row.taskId, TaskStatus.inVisit);
+    await setTaskStatus(row.taskId, TaskStatus.completed);
+    closedTaskIds.add(row.taskId);
+    closedTaskIds.refresh();
+    clearActiveVisitRx();
   }
 
-  /// True when another shop still has an open visit.
   Future<LocalVisit?> otherActiveVisit(int taskId) async {
     final active = await _db.activeLocalVisit(userId: _requireUserId);
     if (active == null) return null;
