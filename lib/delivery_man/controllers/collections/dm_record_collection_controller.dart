@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -8,39 +8,42 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
-import 'package:shahtaj_oil_mobile_app/core/services/cached_load_mixin.dart';
+import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
+import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/media/app_image_compress.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_confirm_dialog.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/collections/dm_collection_history_controller.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/collections/dm_today_shops_controller.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/dashboard/dm_dashboard_controller.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/handover/dm_handover_controller.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/collections/dm_collection_history_controller.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/models/collections/dm_invoice_model.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/models/collections/dm_shop_due_model.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/services/collections/dm_collection_store.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/wallet/dm_wallet_controller.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/models/recovery/dm_recovery_invoice_model.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/models/recovery/dm_recovery_shop_model.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/services/recovery/dm_recovery_service.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/shell/dm_services_binding.dart';
 
-class DmRecordCollectionController extends GetxController with CachedLoadMixin {
-  DmRecordCollectionController(this._store);
+class DmRecordCollectionController extends GetxController {
+  DmRecordCollectionController(this._recovery);
 
-  final DmCollectionStore _store;
+  final DmRecoveryService _recovery;
   final ImagePicker _picker = ImagePicker();
 
-  final Rxn<DmShopDueModel> shop = Rxn<DmShopDueModel>();
-  final RxList<DmInvoiceModel> invoices = <DmInvoiceModel>[].obs;
-  final Rx<PaymentMethod> method = PaymentMethod.cash.obs;
+  final RxBool isLoading = true.obs;
   final RxBool isSaving = false.obs;
+  final RxnString error = RxnString();
+  final Rxn<DmRecoveryShopModel> shop = Rxn<DmRecoveryShopModel>();
+  final RxList<DmRecoveryInvoiceModel> invoices =
+      <DmRecoveryInvoiceModel>[].obs;
+  final Rx<PaymentMethod> method = PaymentMethod.cash.obs;
+  final Rxn<Uint8List> chequeImageBytes = Rxn<Uint8List>();
   final amountEpoch = 0.obs;
-  final Rxn<Uint8List> bankScreenshotBytes = Rxn<Uint8List>();
-
-  final batchAmountController = TextEditingController();
-  final referenceController = TextEditingController();
   final notesController = TextEditingController();
-  final invoiceAmountControllers = <String, TextEditingController>{};
+  final chequeNumberController = TextEditingController();
+  final invoiceAmountControllers = <int, TextEditingController>{};
 
-  late final CollectionMode mode;
-  late final List<String> invoiceIds;
+  late final List<int> invoiceIds;
+
+  static const collectMethods = [PaymentMethod.cash, PaymentMethod.cheque];
 
   String get shopId {
     final args = Get.arguments;
@@ -50,66 +53,76 @@ class DmRecordCollectionController extends GetxController with CachedLoadMixin {
     return '';
   }
 
-  bool get isBatch => mode == CollectionMode.batch;
+  int get shopIdInt => int.tryParse(shopId) ?? 0;
 
-  @override
   bool get hasCachedData => shop.value != null;
 
-  @override
-  String get loadFailedMessage => AppTexts.emptyLoadFailedSubtitle;
-
   double get remainingTotal =>
-      invoices.fold<double>(0, (sum, invoice) => sum + invoice.remainingAmount);
+      invoices.fold<double>(0, (sum, invoice) => sum + invoice.amountResidual);
 
   double get collectingTotal {
     amountEpoch.value;
-    if (isBatch) return _parseAmount(batchAmountController.text);
     return invoices.fold<double>(0, (sum, invoice) {
-      return sum + _parseAmount(invoiceAmountControllers[invoice.id]?.text);
+      return sum +
+          _parseAmount(invoiceAmountControllers[invoice.invoiceId]?.text);
     });
   }
 
   @override
   void onInit() {
-    super.onInit();
     DmServicesBinding.ensureRegistered();
+    super.onInit();
     final args = Get.arguments;
-    mode = CollectionModeX.fromApi(
-      args is Map ? args['mode'] : CollectionMode.invoiceWise.name,
-    );
     invoiceIds = args is Map && args['invoiceIds'] is List
-        ? (args['invoiceIds'] as List).map((id) => id.toString()).toList()
-        : const <String>[];
+        ? (args['invoiceIds'] as List)
+              .map((id) => int.tryParse(id.toString()) ?? 0)
+              .where((id) => id > 0)
+              .toList(growable: false)
+        : const <int>[];
     loadForm();
   }
 
   @override
   void onClose() {
-    batchAmountController.dispose();
-    referenceController.dispose();
     notesController.dispose();
+    chequeNumberController.dispose();
     for (final controller in invoiceAmountControllers.values) {
       controller.dispose();
     }
     super.onClose();
   }
 
-  Future<void> loadForm({bool force = false}) => loadCached(force: force);
-
-  @override
-  Future<void> fetchData() async {
-    await Future<void>.delayed(const Duration(milliseconds: 250));
-    await _store.hydrate();
-    shop.value = _store.shopById(shopId);
-    final open = _store.openInvoicesForShop(shopId);
-    final selected = invoiceIds.isEmpty
-        ? open
-        : open.where((invoice) => invoiceIds.contains(invoice.id)).toList();
-    invoices.assignAll(selected);
-    _seedAmountControllers(selected);
+  Future<void> loadForm({bool force = true}) async {
+    if (shopIdInt <= 0) {
+      isLoading.value = false;
+      error.value = AppTexts.emptyLoadFailedSubtitle;
+      return;
+    }
+    isLoading.value = true;
+    try {
+      final data = await _recovery.fetchShop(shopIdInt, forceNetwork: force);
+      shop.value = data;
+      final open = data.openInvoices;
+      final selected = invoiceIds.isEmpty
+          ? open
+          : open
+                .where((invoice) => invoiceIds.contains(invoice.invoiceId))
+                .toList(growable: false);
+      invoices.assignAll(selected);
+      _seedAmountControllers(selected);
+      error.value = null;
+    } on ApiException catch (e) {
+      error.value = e.message;
+      AppToast.showError(e.message);
+    } catch (_) {
+      error.value = AppTexts.emptyLoadFailedSubtitle;
+      AppToast.showError(AppTexts.error);
+    } finally {
+      isLoading.value = false;
+    }
   }
 
-  void _seedAmountControllers(List<DmInvoiceModel> rows) {
+  void _seedAmountControllers(List<DmRecoveryInvoiceModel> rows) {
     for (final controller in invoiceAmountControllers.values) {
       controller.dispose();
     }
@@ -118,39 +131,31 @@ class DmRecordCollectionController extends GetxController with CachedLoadMixin {
       ..addEntries(
         rows.map(
           (invoice) => MapEntry(
-            invoice.id,
-            TextEditingController(text: _formatAmount(invoice.remainingAmount)),
+            invoice.invoiceId,
+            TextEditingController(text: _formatAmount(invoice.amountResidual)),
           ),
         ),
       );
-    batchAmountController.text = _formatAmount(
-      rows.fold<double>(0, (sum, invoice) => sum + invoice.remainingAmount),
-    );
     amountEpoch.value++;
-  }
-
-  void selectMethod(PaymentMethod value) {
-    method.value = value;
-    if (value != PaymentMethod.bank) {
-      bankScreenshotBytes.value = null;
-    }
   }
 
   void onAmountChanged() => amountEpoch.value++;
 
-  void fillInvoiceRemaining(DmInvoiceModel invoice) {
-    final controller = invoiceAmountControllers[invoice.id];
+  void setMethod(PaymentMethod next) {
+    method.value = next;
+    if (next != PaymentMethod.cheque) {
+      chequeImageBytes.value = null;
+    }
+  }
+
+  void fillInvoiceRemaining(DmRecoveryInvoiceModel invoice) {
+    final controller = invoiceAmountControllers[invoice.invoiceId];
     if (controller == null) return;
-    controller.text = _formatAmount(invoice.remainingAmount);
+    controller.text = _formatAmount(invoice.amountResidual);
     onAmountChanged();
   }
 
-  void fillBatchRemaining() {
-    batchAmountController.text = _formatAmount(remainingTotal);
-    onAmountChanged();
-  }
-
-  Future<void> pickBankScreenshot() async {
+  Future<void> pickChequeImage() async {
     final source = await Get.bottomSheet<ImageSource>(
       SafeArea(
         child: Wrap(
@@ -174,23 +179,22 @@ class DmRecordCollectionController extends GetxController with CachedLoadMixin {
     final file = await _picker.pickImage(source: source, imageQuality: 90);
     if (file == null) return;
     final raw = await file.readAsBytes();
-    bankScreenshotBytes.value = await AppImageCompress.compress(raw);
+    chequeImageBytes.value = await AppImageCompress.compress(raw);
   }
 
   Future<void> submit() async {
     if (isSaving.value) return;
-    final error = _validate();
-    if (error != null) {
-      AppToast.showError(error);
+    final validationError = _validate();
+    if (validationError != null) {
+      AppToast.showError(validationError);
       return;
     }
 
     final confirmed = await AppConfirmSheet.show(
       title: AppTexts.dmConfirmCollection,
-      message: AppTexts.dmConfirmCollectionMessage(
-        shop.value?.name ?? '',
-        _formatAmount(collectingTotal),
-        method.value.label,
+      message: AppTexts.dmConfirmCashCollectionMessage(
+        shop.value?.shopName ?? '',
+        AppFormatter.currency(collectingTotal, symbol: 'Rs. '),
       ),
       confirmLabel: AppTexts.dmConfirmCollection,
     );
@@ -198,24 +202,37 @@ class DmRecordCollectionController extends GetxController with CachedLoadMixin {
 
     isSaving.value = true;
     try {
-      await Future<void>.delayed(const Duration(milliseconds: 280));
-      final screenshot = bankScreenshotBytes.value;
-      final recorded = await _store.recordCollection(
-        shopId: shopId,
-        allocations: _allocations(),
-        method: method.value,
-        mode: mode,
+      final photo = chequeImageBytes.value;
+      final result = await _recovery.collect(
+        shopId: shopIdInt,
+        paymentMethod: method.value,
+        chequeNumber: method.value == PaymentMethod.cheque
+            ? chequeNumberController.text
+            : null,
+        chequeImageBase64: method.value == PaymentMethod.cheque && photo != null
+            ? base64Encode(photo)
+            : null,
+        allocations: [
+          for (final invoice in invoices)
+            (
+              invoiceId: invoice.invoiceId,
+              amount: _parseAmount(
+                invoiceAmountControllers[invoice.invoiceId]?.text,
+              ),
+            ),
+        ],
         notes: notesController.text,
-        reference: referenceController.text,
-        proofPhotoBase64: screenshot == null || screenshot.isEmpty
-            ? null
-            : base64Encode(screenshot),
       );
       _refreshRelatedLists();
-      AppToast.showSuccess(
-        AppTexts.dmCollectionRecorded(recorded.receiptNumber),
-      );
+      final receipt = result.payments.isNotEmpty
+          ? result.payments.first.name
+          : result.paymentIds.isNotEmpty
+          ? '${result.paymentIds.first}'
+          : AppFormatter.currency(result.collectedAmount, symbol: 'Rs. ');
+      AppToast.showSuccess(AppTexts.dmCollectionRecorded(receipt));
       Get.back(result: true);
+    } on ApiException catch (e) {
+      AppToast.showError(e.message);
     } catch (_) {
       AppToast.showError(AppTexts.dmCollectionFailed);
     } finally {
@@ -223,55 +240,29 @@ class DmRecordCollectionController extends GetxController with CachedLoadMixin {
     }
   }
 
-  Map<String, double> _allocations() {
-    if (!isBatch) {
-      return {
-        for (final invoice in invoices)
-          invoice.id: _parseAmount(invoiceAmountControllers[invoice.id]?.text),
-      };
-    }
-
-    var remaining = _parseAmount(batchAmountController.text);
-    final allocations = <String, double>{};
-    for (final invoice in invoices) {
-      if (remaining <= 0) {
-        allocations[invoice.id] = 0;
-        continue;
-      }
-      final take = remaining > invoice.remainingAmount
-          ? invoice.remainingAmount
-          : remaining;
-      allocations[invoice.id] = take;
-      remaining = ((remaining - take) * 100).round() / 100;
-    }
-    return allocations;
-  }
-
   String? _validate() {
     if (invoices.isEmpty) return AppTexts.dmSelectInvoicesHint;
-    if (isBatch) {
-      final amount = _parseAmount(batchAmountController.text);
-      if (amount <= 0) return AppTexts.dmAmountRequired;
-      if (amount > remainingTotal) return AppTexts.dmAmountExceedsRemaining;
-    } else {
-      var total = 0.0;
-      for (final invoice in invoices) {
-        final amount = _parseAmount(invoiceAmountControllers[invoice.id]?.text);
-        if (amount < 0) return AppTexts.dmAmountRequired;
-        if (amount > invoice.remainingAmount) {
-          return AppTexts.dmAmountExceedsRemaining;
-        }
-        total += amount;
+    var total = 0.0;
+    for (final invoice in invoices) {
+      final amount = _parseAmount(
+        invoiceAmountControllers[invoice.invoiceId]?.text,
+      );
+      if (amount < 0) return AppTexts.dmAmountRequired;
+      if (amount > invoice.amountResidual) {
+        return AppTexts.dmAmountExceedsRemaining;
       }
-      if (total <= 0) return AppTexts.dmAmountRequired;
+      total += amount;
     }
+    if (total <= 0) return AppTexts.dmAmountRequired;
 
-    final reference = referenceController.text.trim();
-    if (method.value == PaymentMethod.cheque && reference.isEmpty) {
-      return AppTexts.dmChequeNumberRequired;
-    }
-    if (method.value == PaymentMethod.bank && reference.isEmpty) {
-      return AppTexts.dmBankReferenceRequired;
+    if (method.value == PaymentMethod.cheque) {
+      if (chequeNumberController.text.trim().isEmpty) {
+        return AppTexts.dmChequeNumberRequired;
+      }
+      final photo = chequeImageBytes.value;
+      if (photo == null || photo.isEmpty) {
+        return AppTexts.dmChequeImageRequired;
+      }
     }
     return null;
   }
@@ -286,8 +277,8 @@ class DmRecordCollectionController extends GetxController with CachedLoadMixin {
     if (Get.isRegistered<DmCollectionHistoryController>()) {
       Get.find<DmCollectionHistoryController>().loadHistory(force: true);
     }
-    if (Get.isRegistered<DmHandoverController>()) {
-      Get.find<DmHandoverController>().loadHandover(force: true);
+    if (Get.isRegistered<DmWalletController>()) {
+      Get.find<DmWalletController>().load(force: true);
     }
   }
 

@@ -1,43 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
-import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
-import 'package:shahtaj_oil_mobile_app/core/services/cached_load_mixin.dart';
+import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_datetime_picker.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_datetime_picker_mode.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/models/collections/dm_collection_summary_model.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/services/collections/dm_collection_store.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/models/recovery/dm_wallet_collection_model.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/services/recovery/dm_recovery_service.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/shell/dm_services_binding.dart';
 
-class DmCollectionHistoryController extends GetxController
-    with CachedLoadMixin {
-  DmCollectionHistoryController(this._store);
+class DmCollectionHistoryController extends GetxController {
+  DmCollectionHistoryController(this._recovery);
 
-  final DmCollectionStore _store;
+  final DmRecoveryService _recovery;
 
-  static const methodFilters = <PaymentMethod?>[
-    null,
-    PaymentMethod.cash,
-    PaymentMethod.cheque,
-    PaymentMethod.bank,
-  ];
-
-  final RxList<DmCollectionSummaryModel> collections =
-      <DmCollectionSummaryModel>[].obs;
+  final RxBool isLoading = true.obs;
+  final RxnString error = RxnString();
+  final RxList<DmWalletCollectionModel> collections =
+      <DmWalletCollectionModel>[].obs;
+  final RxDouble walletBalance = 0.0.obs;
   final Rxn<DateTime> dateFrom = Rxn<DateTime>();
   final Rxn<DateTime> dateTo = Rxn<DateTime>();
-  final Rxn<PaymentMethod> methodFilter = Rxn<PaymentMethod>();
   final RxString searchQuery = ''.obs;
 
-  @override
   bool get hasCachedData => collections.isNotEmpty;
-
-  @override
-  String get loadFailedMessage => AppTexts.emptyLoadFailedSubtitle;
-
   bool get hasDateFilter => dateFrom.value != null || dateTo.value != null;
 
   String get dateFromLabel =>
@@ -46,16 +34,15 @@ class DmCollectionHistoryController extends GetxController
   String get dateToLabel =>
       dateTo.value == null ? '' : AppFormatter.shortDate(dateTo.value!);
 
-  List<DmCollectionSummaryModel> get filteredCollections {
+  List<DmWalletCollectionModel> get filteredCollections {
     final query = searchQuery.value.trim().toLowerCase();
-    final method = methodFilter.value;
+    if (query.isEmpty) return collections.toList(growable: false);
     return collections
         .where((item) {
-          if (method != null && item.method != method) return false;
-          if (query.isEmpty) return true;
           return item.shopName.toLowerCase().contains(query) ||
-              item.receiptNumber.toLowerCase().contains(query) ||
-              item.reference.toLowerCase().contains(query);
+              item.name.toLowerCase().contains(query) ||
+              item.invoices.any((inv) => inv.toLowerCase().contains(query)) ||
+              (item.notes?.toLowerCase().contains(query) ?? false);
         })
         .toList(growable: false);
   }
@@ -65,32 +52,34 @@ class DmCollectionHistoryController extends GetxController
 
   @override
   void onInit() {
-    super.onInit();
     DmServicesBinding.ensureRegistered();
+    super.onInit();
     loadHistory();
   }
 
-  bool isMethodSelected(PaymentMethod? method) => methodFilter.value == method;
-
-  String methodFilterLabel(PaymentMethod? method) =>
-      method?.label ?? AppTexts.obShopsFilterAll;
-
-  void selectMethodFilter(PaymentMethod? method) => methodFilter.value = method;
-
   void onSearchChanged(String value) => searchQuery.value = value;
 
-  Future<void> loadHistory({bool force = false}) => loadCached(force: force);
-
-  @override
-  Future<void> fetchData() async {
-    await Future<void>.delayed(const Duration(milliseconds: 250));
-    await _store.hydrate();
-    collections.assignAll(
-      _store.collectionsForHistory(
+  Future<void> loadHistory({bool force = true}) async {
+    final showLoader = collections.isEmpty;
+    if (showLoader) isLoading.value = true;
+    try {
+      final page = await _recovery.fetchCollections(
         dateFrom: dateFrom.value,
         dateTo: dateTo.value,
-      ),
-    );
+        forceNetwork: force,
+      );
+      collections.assignAll(page.collections);
+      walletBalance.value = page.walletBalance;
+      error.value = null;
+    } on ApiException catch (e) {
+      error.value = e.message;
+      if (collections.isEmpty) AppToast.showError(e.message);
+    } catch (_) {
+      error.value = AppTexts.emptyLoadFailedSubtitle;
+      if (collections.isEmpty) AppToast.showError(AppTexts.error);
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   Future<void> pickDateFrom(BuildContext context) async {
@@ -130,14 +119,7 @@ class DmCollectionHistoryController extends GetxController
     await loadHistory(force: true);
   }
 
-  String timeLabel(DmCollectionSummaryModel collection) {
-    return '${AppFormatter.shortDate(collection.collectedAt)} • ${AppFormatter.timeOfDay(collection.collectedAt)}';
-  }
-
-  void openCollection(DmCollectionSummaryModel collection) {
-    Get.toNamed(
-      AppRoutes.dmCollectionDetail.replaceFirst(':id', collection.id),
-      arguments: {'collectionId': collection.id},
-    );
+  String timeLabel(DmWalletCollectionModel collection) {
+    return '${AppFormatter.shortDate(collection.date)} • ${AppFormatter.timeOfDay(collection.date)}';
   }
 }

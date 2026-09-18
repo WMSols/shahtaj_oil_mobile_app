@@ -1,83 +1,108 @@
-﻿import 'package:get/get.dart';
+﻿import 'dart:async';
+
+import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
+import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
-import 'package:shahtaj_oil_mobile_app/core/services/cached_load_mixin.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/models/collections/dm_shop_due_model.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/services/collections/dm_collection_store.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/models/jobs/dm_job_model.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/models/shops/dm_free_shop_model.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/services/free_deliver/dm_free_deliver_service.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/services/plan/dm_plan_service.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/shell/dm_services_binding.dart';
 
-enum DmShopDueFilter { all, highDue, partial }
+/// Recovery shop picker: today's plan shops + `shops/search` (no dues-list API).
+class DmTodayShopsController extends GetxController {
+  DmTodayShopsController(this._planService, this._freeDeliverService);
 
-class DmTodayShopsController extends GetxController with CachedLoadMixin {
-  DmTodayShopsController(this._store);
+  final DmPlanService _planService;
+  final DmFreeDeliverService _freeDeliverService;
 
-  final DmCollectionStore _store;
+  final RxBool isLoading = true.obs;
+  final RxBool isSearching = false.obs;
+  final RxnString error = RxnString();
+  final RxList<DmJobModel> planShops = <DmJobModel>[].obs;
+  final RxList<DmFreeShopModel> searchShops = <DmFreeShopModel>[].obs;
+  final RxString query = ''.obs;
 
-  final RxList<DmShopDueModel> shops = <DmShopDueModel>[].obs;
-  final RxString searchQuery = ''.obs;
-  final Rxn<DmShopDueFilter> dueFilter = Rxn<DmShopDueFilter>(
-    DmShopDueFilter.all,
-  );
+  Timer? _debounce;
 
-  @override
-  bool get hasCachedData => shops.isNotEmpty;
-
-  @override
-  String get loadFailedMessage => AppTexts.emptyLoadFailedSubtitle;
+  bool get isSearchMode => query.value.trim().isNotEmpty;
 
   @override
   void onInit() {
-    super.onInit();
     DmServicesBinding.ensureRegistered();
+    super.onInit();
     loadShops();
   }
 
-  List<DmShopDueModel> get filteredShops {
-    final query = searchQuery.value.trim().toLowerCase();
-    final filter = dueFilter.value ?? DmShopDueFilter.all;
-
-    return shops
-        .where((shop) {
-          final matchesFilter = switch (filter) {
-            DmShopDueFilter.all => true,
-            DmShopDueFilter.highDue => shop.hasHighDue,
-            DmShopDueFilter.partial => _store.shopHasPartialPayment(shop.id),
-          };
-          if (!matchesFilter) return false;
-          if (query.isEmpty) return true;
-          return shop.name.toLowerCase().contains(query) ||
-              shop.ownerName.toLowerCase().contains(query) ||
-              shop.phone.toLowerCase().contains(query) ||
-              shop.address.toLowerCase().contains(query);
-        })
-        .toList(growable: false);
-  }
-
-  bool isFilterSelected(DmShopDueFilter filter) => dueFilter.value == filter;
-
-  void selectFilter(DmShopDueFilter filter) => dueFilter.value = filter;
-
-  void onSearchChanged(String value) => searchQuery.value = value;
-
-  Future<void> loadShops({bool force = false}) => loadCached(force: force);
-
   @override
-  Future<void> fetchData() async {
-    await Future<void>.delayed(const Duration(milliseconds: 250));
-    await _store.hydrate();
-    final rows = [..._store.shopsWithDue]
-      ..sort((a, b) => b.outstanding.compareTo(a.outstanding));
-    shops.assignAll(rows);
+  void onClose() {
+    _debounce?.cancel();
+    super.onClose();
   }
 
-  bool shopIsPartial(DmShopDueModel shop) =>
-      _store.shopHasPartialPayment(shop.id);
+  void onSearchChanged(String value) {
+    query.value = value;
+    _debounce?.cancel();
+    if (value.trim().isEmpty) {
+      searchShops.clear();
+      isSearching.value = false;
+      return;
+    }
+    _debounce = Timer(const Duration(milliseconds: 350), searchNow);
+  }
 
-  void openShop(DmShopDueModel shop) {
+  Future<void> searchNow() async {
+    final q = query.value.trim();
+    if (q.isEmpty) return;
+    isSearching.value = true;
+    try {
+      searchShops.assignAll(await _freeDeliverService.searchShops(query: q));
+    } on ApiException catch (e) {
+      AppToast.showError(e.message);
+    } catch (_) {
+      AppToast.showError(AppTexts.error);
+    } finally {
+      isSearching.value = false;
+    }
+  }
+
+  Future<void> loadShops({bool force = true}) async {
+    isLoading.value = true;
+    error.value = null;
+    try {
+      final plan = await _planService.fetchToday(forceNetwork: force);
+      final byShop = <String, DmJobModel>{};
+      for (final job in plan.jobs) {
+        byShop.putIfAbsent(job.shopId, () => job);
+      }
+      final rows = byShop.values.toList()
+        ..sort((a, b) => a.shopName.compareTo(b.shopName));
+      planShops.assignAll(rows);
+    } on ApiException catch (e) {
+      error.value = e.message;
+      if (planShops.isEmpty) AppToast.showError(e.message);
+    } catch (_) {
+      error.value = AppTexts.emptyLoadFailedSubtitle;
+      if (planShops.isEmpty) AppToast.showError(AppTexts.error);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  void openPlanShop(DmJobModel job) {
     Get.toNamed(
-      AppRoutes.dmShopOutstanding.replaceFirst(':id', shop.id),
-      arguments: {'shopId': shop.id},
+      AppRoutes.dmShopOutstanding.replaceFirst(':id', job.shopId),
+      arguments: {'shopId': job.shopId},
+    );
+  }
+
+  void openSearchShop(DmFreeShopModel shop) {
+    Get.toNamed(
+      AppRoutes.dmShopOutstanding.replaceFirst(':id', shop.shopId),
+      arguments: {'shopId': shop.shopId},
     );
   }
 }

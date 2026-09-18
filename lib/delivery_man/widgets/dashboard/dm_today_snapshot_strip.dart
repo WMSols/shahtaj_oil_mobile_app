@@ -14,30 +14,28 @@ class DmTodaySnapshotStrip extends StatelessWidget {
     required this.inTransitCount,
     required this.deliveredCount,
     required this.collectedToday,
-    required this.stillDue,
-    required this.cashInBag,
-    required this.shopsDueCount,
+    required this.walletBalance,
+    required this.settledTotal,
     this.onPendingTap,
     this.onInTransitTap,
     this.onDeliveredTap,
     this.onCollectedTap,
-    this.onStillDueTap,
-    this.onCashInBagTap,
+    this.onWalletTap,
+    this.onSettledTap,
   });
 
   final int pendingCount;
   final int inTransitCount;
   final int deliveredCount;
   final double collectedToday;
-  final double stillDue;
-  final double cashInBag;
-  final int shopsDueCount;
+  final double walletBalance;
+  final double settledTotal;
   final VoidCallback? onPendingTap;
   final VoidCallback? onInTransitTap;
   final VoidCallback? onDeliveredTap;
   final VoidCallback? onCollectedTap;
-  final VoidCallback? onStillDueTap;
-  final VoidCallback? onCashInBagTap;
+  final VoidCallback? onWalletTap;
+  final VoidCallback? onSettledTap;
 
   @override
   Widget build(BuildContext context) {
@@ -95,18 +93,17 @@ class DmTodaySnapshotStrip extends StatelessWidget {
               ),
               _divider(context),
               _Stat(
-                label: AppTexts.dmSnapshotStillDue,
-                value: AppFormatter.compactCurrency(stillDue),
-                caption: AppTexts.dmShopsDueCount(shopsDueCount),
-                color: AppColors.warning,
-                onTap: onStillDueTap,
+                label: AppTexts.dmWalletBalance,
+                value: AppFormatter.compactCurrency(walletBalance),
+                color: AppColors.primary,
+                onTap: onWalletTap,
               ),
               _divider(context),
               _Stat(
-                label: AppTexts.dmSnapshotCashInBag,
-                value: AppFormatter.compactCurrency(cashInBag),
-                color: AppColors.primary,
-                onTap: onCashInBagTap,
+                label: AppTexts.dmWalletSettledTotal,
+                value: AppFormatter.compactCurrency(settledTotal),
+                color: AppColors.grey,
+                onTap: onSettledTap,
               ),
             ],
           ),
@@ -148,13 +145,11 @@ class _Stat extends StatelessWidget {
     required this.label,
     required this.value,
     required this.color,
-    this.caption,
     this.onTap,
   });
 
   final String label;
   final String value;
-  final String? caption;
   final Color color;
   final VoidCallback? onTap;
 
@@ -184,16 +179,6 @@ class _Stat extends StatelessWidget {
             context,
           ).copyWith(color: color, fontWeight: FontWeight.w600),
         ),
-        if (caption != null)
-          Text(
-            caption!,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppTextStyles.caption(
-              context,
-            ).copyWith(color: AppColors.grey),
-          ),
       ],
     );
 

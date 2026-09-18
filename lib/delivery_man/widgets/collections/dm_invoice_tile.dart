@@ -7,7 +7,8 @@ import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.d
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/models/collections/dm_invoice_model.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/models/recovery/dm_recovery_invoice_model.dart';
 
 class DmInvoiceTile extends StatelessWidget {
   const DmInvoiceTile({
@@ -17,13 +18,13 @@ class DmInvoiceTile extends StatelessWidget {
     required this.onTap,
   });
 
-  final DmInvoiceModel invoice;
+  final DmRecoveryInvoiceModel invoice;
   final bool selected;
   final VoidCallback onTap;
 
   bool get _isPartial =>
-      invoice.remainingAmount > 0 &&
-      invoice.remainingAmount < invoice.originalAmount;
+      invoice.amountResidual > 0 &&
+      invoice.amountResidual < invoice.amountTotal;
 
   @override
   Widget build(BuildContext context) {
@@ -49,23 +50,30 @@ class DmInvoiceTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  invoice.invoiceNumber,
-                  style: AppTextStyles.sectionTitle(context),
-                ),
-                AppSpacing.vertical(context, 0.004),
-                Text(
-                  AppFormatter.shortDate(invoice.issuedAt),
-                  style: mutedStyle,
-                ),
+                Text(invoice.name, style: AppTextStyles.sectionTitle(context)),
+                if (invoice.invoiceDate != null) ...[
+                  AppSpacing.vertical(context, 0.004),
+                  Text(
+                    AppFormatter.shortDate(invoice.invoiceDate!),
+                    style: mutedStyle,
+                  ),
+                ],
                 AppSpacing.vertical(context, 0.006),
                 Text(
                   '${AppTexts.dmInvoiceOriginal}: '
-                  '${AppFormatter.currency(invoice.originalAmount, symbol: 'Rs. ')}',
+                  '${AppFormatter.currency(invoice.amountTotal, symbol: 'Rs. ')}',
                   style: mutedStyle.copyWith(
                     fontSize: AppResponsive.scaleSize(context, 12),
                   ),
                 ),
+                if (invoice.isLegacyBalance) ...[
+                  AppSpacing.vertical(context, 0.006),
+                  AppStatusChip(
+                    label: AppTexts.dmLegacyBalanceChip,
+                    color: AppColors.statPurple,
+                    soft: true,
+                  ),
+                ],
               ],
             ),
           ),
@@ -80,7 +88,7 @@ class DmInvoiceTile extends StatelessWidget {
               ),
               AppSpacing.vertical(context, 0.004),
               Text(
-                AppFormatter.currency(invoice.remainingAmount, symbol: 'Rs. '),
+                AppFormatter.currency(invoice.amountResidual, symbol: 'Rs. '),
                 style: AppTextStyles.sectionTitle(
                   context,
                 ).copyWith(color: AppColors.primary),

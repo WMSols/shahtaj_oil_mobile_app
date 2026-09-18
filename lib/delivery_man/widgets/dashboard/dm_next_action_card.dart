@@ -24,9 +24,11 @@ class DmNextActionCard extends StatelessWidget {
     final iconPad = AppResponsive.scaleSize(context, 8);
     final icon = switch (action.kind) {
       DmNextActionKind.pickup => AppIcons.pickups,
+      DmNextActionKind.depart => AppIcons.deliver,
       DmNextActionKind.deliver => AppIcons.deliver,
       DmNextActionKind.unload => AppIcons.vanStock,
-      DmNextActionKind.collect => AppIcons.collections,
+      DmNextActionKind.endDay => AppIcons.account,
+      DmNextActionKind.collect => AppIcons.wallet,
       DmNextActionKind.handover => AppIcons.handover,
     };
 

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
@@ -11,14 +11,14 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_primary_button.d
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_secondary_button.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_amount_summary_bar.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_shop_summary_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_shimmer_skeletons.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/info/app_detail_row.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/collections/dm_shop_invoices_controller.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/models/collections/dm_shop_due_model.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/models/recovery/dm_recovery_shop_model.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/widgets/collections/dm_invoice_tile.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/widgets/collections/dm_paid_invoice_tile.dart';
 
 class DmShopOutstandingContent extends GetView<DmShopInvoicesController> {
   const DmShopOutstandingContent({super.key});
@@ -50,8 +50,8 @@ class DmShopOutstandingContent extends GetView<DmShopInvoicesController> {
       }
 
       final invoices = controller.invoices;
+      final paidInvoices = controller.paidInvoices;
       final selectedCount = controller.selectedInvoiceIds.length;
-      final isPartial = controller.isPartial;
 
       return Column(
         children: [
@@ -61,28 +61,8 @@ class DmShopOutstandingContent extends GetView<DmShopInvoicesController> {
               child: ListView(
                 padding: AppSpacing.screenPadding(context),
                 children: [
-                  AppShopSummaryCard(
-                    name: shop.name,
-                    ownerName: shop.ownerName,
-                    phone: shop.phone,
-                    statusColor: shop.hasHighDue
-                        ? AppColors.warning
-                        : isPartial
-                        ? AppColors.information
-                        : AppColors.primary,
-                    callLabel: AppTexts.dmCallShop,
-                    directionsLabel: AppTexts.dmDirections,
-                    onCall: controller.callShop,
-                    onDirections: controller.openDirections,
-                  ),
-                  AppSpacing.vertical(context, 0.025),
-                  _ShopDetailsSection(
-                    shop: shop,
-                    isPartial: isPartial,
-                    outstanding: controller.totalOutstanding,
-                    openInvoiceCount: invoices.length,
-                  ),
-                  AppSpacing.vertical(context, 0.025),
+                  _ShopCreditSection(shop: shop),
+                  AppSpacing.vertical(context, 0.02),
                   Row(
                     children: [
                       Expanded(
@@ -119,9 +99,33 @@ class DmShopOutstandingContent extends GetView<DmShopInvoicesController> {
                       if (i > 0) AppSpacing.vertical(context, 0.01),
                       DmInvoiceTile(
                         invoice: invoices[i],
-                        selected: controller.isSelected(invoices[i].id),
-                        onTap: () => controller.toggleInvoice(invoices[i].id),
+                        selected: controller.isSelected(invoices[i].invoiceId),
+                        onTap: () =>
+                            controller.toggleInvoice(invoices[i].invoiceId),
                       ),
+                    ],
+                  AppSpacing.vertical(context, 0.024),
+                  Text(
+                    AppTexts.dmPaidInvoices,
+                    style: AppTextStyles.sectionTitle(context),
+                  ),
+                  AppSpacing.vertical(context, 0.008),
+                  if (paidInvoices.isEmpty)
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        vertical: AppSpacing.verticalValue(context, 0.012),
+                      ),
+                      child: Text(
+                        AppTexts.dmNoPaidInvoicesSubtitle,
+                        style: AppTextStyles.bodyText(
+                          context,
+                        ).copyWith(color: AppColors.grey),
+                      ),
+                    )
+                  else
+                    for (var i = 0; i < paidInvoices.length; i++) ...[
+                      if (i > 0) AppSpacing.vertical(context, 0.01),
+                      DmPaidInvoiceTile(invoice: paidInvoices[i]),
                     ],
                   AppSpacing.vertical(context, 0.12),
                 ],
@@ -153,9 +157,9 @@ class DmShopOutstandingContent extends GetView<DmShopInvoicesController> {
                       ),
                       AppSpacing.vertical(context, 0.01),
                       AppSecondaryButton(
-                        label: AppTexts.dmBatchPayment,
+                        label: AppTexts.dmCollectAllOpen,
                         outlinedOnly: true,
-                        onPressed: controller.collectBatch,
+                        onPressed: controller.collectAllOpen,
                       ),
                     ],
                   ),
@@ -168,80 +172,69 @@ class DmShopOutstandingContent extends GetView<DmShopInvoicesController> {
   }
 }
 
-class _ShopDetailsSection extends StatelessWidget {
-  const _ShopDetailsSection({
-    required this.shop,
-    required this.isPartial,
-    required this.outstanding,
-    required this.openInvoiceCount,
-  });
+class _ShopCreditSection extends StatelessWidget {
+  const _ShopCreditSection({required this.shop});
 
-  final DmShopDueModel shop;
-  final bool isPartial;
-  final double outstanding;
-  final int openInvoiceCount;
+  final DmRecoveryShopModel shop;
 
   @override
   Widget build(BuildContext context) {
-    final chips = <Widget>[
-      if (shop.hasHighDue)
-        AppStatusChip(label: AppTexts.dmHighDueChip, color: AppColors.warning),
-      if (isPartial)
-        AppStatusChip(
-          label: AppTexts.dmPartialChip,
-          color: AppColors.information,
-        ),
-    ];
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          AppTexts.obShopDetailsSection,
-          style: AppTextStyles.sectionTitle(context),
-        ),
-        AppSpacing.vertical(context, 0.01),
+        Text(shop.shopName, style: AppTextStyles.sectionTitle(context)),
+        if ((shop.shopCategory ?? '').isNotEmpty) ...[
+          AppSpacing.vertical(context, 0.006),
+          AppStatusChip(
+            label: shop.shopCategory!,
+            color: AppColors.primary,
+            soft: true,
+          ),
+        ],
+        if (shop.isCreditLimitExceeded) ...[
+          AppSpacing.vertical(context, 0.008),
+          AppStatusChip(
+            label: AppTexts.obCreditWouldExceedWarning,
+            color: AppColors.warning,
+            soft: true,
+          ),
+        ],
+        AppSpacing.vertical(context, 0.012),
         AppOutlineCard(
-          clipBehavior: Clip.antiAlias,
           padding: EdgeInsets.zero,
           child: Column(
             children: [
-              AppDetailRow(label: AppTexts.obShopNameLabel, value: shop.name),
-              if (shop.ownerName.trim().isNotEmpty)
-                AppDetailRow(
-                  label: AppTexts.obOwnerNameLabel,
-                  value: shop.ownerName,
-                ),
-              if (shop.phone.trim().isNotEmpty)
-                AppDetailRow(
-                  label: AppTexts.obPhoneNumberLabel,
-                  value: shop.phone,
-                ),
-              if (shop.address.trim().isNotEmpty)
-                AppDetailRow(
-                  label: AppTexts.obAddressLabel,
-                  value: shop.address,
-                ),
               AppDetailRow(
-                label: AppTexts.dmOpenInvoices,
-                value: '$openInvoiceCount',
-              ),
-              if (chips.isNotEmpty)
-                AppDetailRow(
-                  label: AppTexts.dmDueStatusLabel,
-                  trailing: Wrap(
-                    spacing: AppSpacing.horizontalValue(context, 0.012),
-                    runSpacing: AppSpacing.verticalValue(context, 0.006),
-                    children: chips,
-                  ),
-                ),
-              AppDetailRow(
-                label: AppTexts.dmTotalOutstanding,
-                value: AppFormatter.currencyWhole(outstanding),
-                valueColor: shop.hasHighDue
+                label: AppTexts.dmEffectiveOutstanding,
+                value: AppFormatter.currencyWhole(shop.effectiveOutstanding),
+                valueColor: shop.isCreditLimitExceeded
                     ? AppColors.warning
                     : AppColors.primary,
                 valueWeight: FontWeight.w700,
+              ),
+              AppDetailRow(
+                label: AppTexts.dmPostedReceivable,
+                value: AppFormatter.currencyWhole(shop.postedReceivable),
+              ),
+              AppDetailRow(
+                label: AppTexts.obCreditLimitLabel.replaceAll(' (Rs)', ''),
+                value: AppFormatter.currencyWhole(shop.creditLimit),
+              ),
+              AppDetailRow(
+                label: AppTexts.obCreditRemainingLabel,
+                value: AppFormatter.currencyWhole(shop.creditRemaining),
+              ),
+              AppDetailRow(
+                label: AppTexts.dmOpenInvoices,
+                value: '${shop.openInvoices.length}',
+              ),
+              AppDetailRow(
+                label: AppTexts.dmPaidInvoices,
+                value: '${shop.paidInvoiceCount}',
+              ),
+              AppDetailRow(
+                label: AppTexts.dmShopWalletBalance,
+                value: AppFormatter.currencyWhole(shop.walletBalance),
                 showDivider: false,
               ),
             ],

@@ -1,25 +1,23 @@
-﻿import 'package:flutter/foundation.dart';
-import 'package:get/get.dart';
-import 'package:url_launcher/url_launcher.dart';
+﻿import 'package:get/get.dart';
 
-import 'package:shahtaj_oil_mobile_app/core/constants/app_map_tiles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
+import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
-import 'package:shahtaj_oil_mobile_app/core/services/cached_load_mixin.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/models/collections/dm_invoice_model.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/models/collections/dm_shop_due_model.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/services/collections/dm_collection_store.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/models/recovery/dm_recovery_invoice_model.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/models/recovery/dm_recovery_shop_model.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/services/recovery/dm_recovery_service.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/shell/dm_services_binding.dart';
 
-class DmShopInvoicesController extends GetxController with CachedLoadMixin {
-  DmShopInvoicesController(this._store);
+class DmShopInvoicesController extends GetxController {
+  DmShopInvoicesController(this._recovery);
 
-  final DmCollectionStore _store;
+  final DmRecoveryService _recovery;
 
-  final Rxn<DmShopDueModel> shop = Rxn<DmShopDueModel>();
-  final RxList<DmInvoiceModel> invoices = <DmInvoiceModel>[].obs;
-  final selectedInvoiceIds = <String>{}.obs;
+  final RxBool isLoading = true.obs;
+  final RxnString error = RxnString();
+  final Rxn<DmRecoveryShopModel> shop = Rxn<DmRecoveryShopModel>();
+  final selectedInvoiceIds = <int>{}.obs;
 
   String get shopId {
     final fromParams = Get.parameters['id'];
@@ -31,57 +29,66 @@ class DmShopInvoicesController extends GetxController with CachedLoadMixin {
     return '';
   }
 
-  @override
+  int get shopIdInt => int.tryParse(shopId) ?? 0;
+
   bool get hasCachedData => shop.value != null;
 
-  @override
-  String get loadFailedMessage => AppTexts.emptyLoadFailedSubtitle;
+  List<DmRecoveryInvoiceModel> get invoices =>
+      shop.value?.openInvoices ?? const [];
+
+  List<DmRecoveryInvoiceModel> get paidInvoices =>
+      shop.value?.paidInvoices ?? const [];
+
+  int get paidInvoiceCount =>
+      shop.value?.paidInvoiceCount ?? paidInvoices.length;
 
   double get totalOutstanding =>
+      shop.value?.effectiveOutstanding ??
       shop.value?.outstanding ??
-      invoices.fold<double>(0, (sum, invoice) => sum + invoice.remainingAmount);
+      invoices.fold<double>(0, (sum, invoice) => sum + invoice.amountResidual);
 
-  List<DmInvoiceModel> get selectedInvoices => invoices
-      .where((invoice) => selectedInvoiceIds.contains(invoice.id))
+  List<DmRecoveryInvoiceModel> get selectedInvoices => invoices
+      .where((invoice) => selectedInvoiceIds.contains(invoice.invoiceId))
       .toList(growable: false);
 
   double get selectedTotal => selectedInvoices.fold<double>(
     0,
-    (sum, invoice) => sum + invoice.remainingAmount,
+    (sum, invoice) => sum + invoice.amountResidual,
   );
-
-  bool get hasCoordinates {
-    final current = shop.value;
-    return current != null &&
-        current.latitude != null &&
-        current.longitude != null;
-  }
-
-  bool get isPartial => _store.shopHasPartialPayment(shopId);
 
   @override
   void onInit() {
-    super.onInit();
     DmServicesBinding.ensureRegistered();
+    super.onInit();
     loadOutstanding();
   }
 
-  Future<void> loadOutstanding({bool force = false}) =>
-      loadCached(force: force);
-
-  @override
-  Future<void> fetchData() async {
-    await Future<void>.delayed(const Duration(milliseconds: 250));
-    await _store.hydrate();
-    final id = shopId;
-    shop.value = _store.shopById(id);
-    invoices.assignAll(_store.openInvoicesForShop(id));
-    selectedInvoiceIds.retainWhere(
-      (invoiceId) => invoices.any((row) => row.id == invoiceId),
-    );
+  Future<void> loadOutstanding({bool force = true}) async {
+    if (shopIdInt <= 0) {
+      isLoading.value = false;
+      error.value = AppTexts.emptyLoadFailedSubtitle;
+      return;
+    }
+    final showLoader = shop.value == null;
+    if (showLoader) isLoading.value = true;
+    try {
+      shop.value = await _recovery.fetchShop(shopIdInt, forceNetwork: force);
+      selectedInvoiceIds.retainWhere(
+        (id) => invoices.any((row) => row.invoiceId == id),
+      );
+      error.value = null;
+    } on ApiException catch (e) {
+      error.value = e.message;
+      if (shop.value == null) AppToast.showError(e.message);
+    } catch (_) {
+      error.value = AppTexts.emptyLoadFailedSubtitle;
+      if (shop.value == null) AppToast.showError(AppTexts.error);
+    } finally {
+      isLoading.value = false;
+    }
   }
 
-  void toggleInvoice(String invoiceId) {
+  void toggleInvoice(int invoiceId) {
     if (selectedInvoiceIds.contains(invoiceId)) {
       selectedInvoiceIds.remove(invoiceId);
     } else {
@@ -89,12 +96,12 @@ class DmShopInvoicesController extends GetxController with CachedLoadMixin {
     }
   }
 
-  bool isSelected(String invoiceId) => selectedInvoiceIds.contains(invoiceId);
+  bool isSelected(int invoiceId) => selectedInvoiceIds.contains(invoiceId);
 
   void selectAll() {
     selectedInvoiceIds
       ..clear()
-      ..addAll(invoices.map((invoice) => invoice.id));
+      ..addAll(invoices.map((invoice) => invoice.invoiceId));
   }
 
   void clearSelection() => selectedInvoiceIds.clear();
@@ -109,65 +116,19 @@ class DmShopInvoicesController extends GetxController with CachedLoadMixin {
       arguments: {
         'shopId': shopId,
         'invoiceIds': selectedInvoiceIds.toList(growable: false),
-        'mode': 'invoiceWise',
       },
     );
     if (recorded == true) await loadOutstanding(force: true);
   }
 
-  Future<void> collectBatch() async {
+  Future<void> collectAllOpen() async {
     final recorded = await Get.toNamed(
       AppRoutes.dmRecordCollection,
       arguments: {
         'shopId': shopId,
-        'invoiceIds': selectedInvoiceIds.isEmpty
-            ? invoices.map((invoice) => invoice.id).toList(growable: false)
-            : selectedInvoiceIds.toList(growable: false),
-        'mode': 'batch',
+        'invoiceIds': invoices.map((i) => i.invoiceId).toList(growable: false),
       },
     );
     if (recorded == true) await loadOutstanding(force: true);
-  }
-
-  Future<void> callShop() async {
-    final phone = shop.value?.phone.trim() ?? '';
-    if (phone.isEmpty) {
-      AppToast.showInformation(AppTexts.dmNoPhoneToCall);
-      return;
-    }
-    final normalized = phone.replaceAll(RegExp(r'[^\d+]'), '');
-    final uri = Uri(scheme: 'tel', path: normalized);
-    try {
-      await launchUrl(uri);
-    } catch (e, stackTrace) {
-      debugPrint('DmShopInvoicesController: call failed — $e');
-      debugPrint('$stackTrace');
-    }
-  }
-
-  Future<void> openDirections() async {
-    final current = shop.value;
-    if (current == null || !hasCoordinates) {
-      AppToast.showInformation(AppTexts.dmNoLocationForDirections);
-      return;
-    }
-    final latitude = current.latitude!;
-    final longitude = current.longitude!;
-    final uris = [
-      AppMapTiles.googleMapsNavigationUri(latitude, longitude),
-      AppMapTiles.googleMapsGeoUri(latitude, longitude),
-    ];
-    for (final uri in uris) {
-      try {
-        final opened = await launchUrl(
-          uri,
-          mode: LaunchMode.externalApplication,
-        );
-        if (opened) return;
-      } catch (e, stackTrace) {
-        debugPrint('DmShopInvoicesController: failed to open $uri — $e');
-        debugPrint('$stackTrace');
-      }
-    }
   }
 }

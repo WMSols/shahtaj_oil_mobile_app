@@ -2,132 +2,123 @@ import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
-import 'package:shahtaj_oil_mobile_app/core/mock/app_mock_data.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/models/collections/dm_collection_summary_model.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/models/collections/dm_shop_due_model.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/dashboard/dm_dashboard_activity_model.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/dashboard/dm_stock_item_model.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/models/dashboard/dm_targets_model.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/models/handover/dm_handover_summary_model.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/models/orders/dm_delivery_order_model.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/services/dashboard/dm_collection_dashboard_service.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/services/orders/dm_delivery_service.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/services/pickup/dm_pickup_service.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/services/van_stock/dm_van_stock_service.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/models/jobs/dm_job_model.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/models/load/dm_load_today_model.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/models/plan/dm_plan_today_model.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/models/recovery/dm_wallet_model.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/models/session/dm_session_model.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/models/van/dm_van_snapshot_model.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/services/load/dm_load_service.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/services/plan/dm_plan_service.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/services/recovery/dm_recovery_service.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/services/session/dm_session_service.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/services/van/dm_van_service.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/shell/dm_shell_controller.dart';
 
 class DmDashboardController extends GetxController {
   DmDashboardController(
-    this._pickupService,
-    this._deliveryService,
-    this._collectionService,
-    this._vanStockService,
+    this._sessionService,
+    this._loadService,
+    this._planService,
+    this._vanService,
+    this._recoveryService,
   );
 
-  final DmPickupService _pickupService;
-  final DmDeliveryService _deliveryService;
-  final DmCollectionDashboardService _collectionService;
-  final DmVanStockService _vanStockService;
+  final DmSessionService _sessionService;
+  final DmLoadService _loadService;
+  final DmPlanService _planService;
+  final DmVanService _vanService;
+  final DmRecoveryService _recoveryService;
   final SessionService _session = Get.find<SessionService>();
-
-  static const recentPreviewLimit = 3;
 
   final RxBool isLoading = true.obs;
   final RxBool isRefreshing = false.obs;
   final RxnString error = RxnString();
 
+  final Rxn<DmSessionState> sessionState = Rxn<DmSessionState>();
   final RxInt pendingCount = 0.obs;
   final RxInt inTransitCount = 0.obs;
   final RxInt deliveredCount = 0.obs;
-  final RxBool pickupConfirmed = false.obs;
-  final RxBool vanUnloaded = false.obs;
-  final RxInt vanOnHandTotal = 0.obs;
-  final Rxn<DmDeliveryOrderModel> nextOrder = Rxn<DmDeliveryOrderModel>();
-
+  final RxBool hasRemainingPick = false.obs;
+  final RxDouble vanOnHandTotal = 0.0.obs;
+  final RxDouble collectedToday = 0.0.obs;
+  final RxDouble walletBalance = 0.0.obs;
+  final RxDouble settledTotal = 0.0.obs;
+  final Rxn<DmJobModel> nextJob = Rxn<DmJobModel>();
   final RxList<DmStockItemModel> stockItems = <DmStockItemModel>[].obs;
 
-  final RxDouble collectedToday = 0.0.obs;
-  final RxDouble stillDue = 0.0.obs;
-  final RxDouble cashInBag = 0.0.obs;
-  final RxInt shopsDueCount = 0.obs;
-  final RxInt bagReceiptCount = 0.obs;
-  final Rxn<DmShopDueModel> nextDueShop = Rxn<DmShopDueModel>();
-  final Rx<DmTargetsModel> targets = const DmTargetsModel().obs;
-  final RxList<DmDashboardActivityItem> recentActivity =
-      <DmDashboardActivityItem>[].obs;
+  Future<void> refreshCollections() => load(force: true);
 
   bool get hasContent =>
+      sessionState.value != null ||
       pendingCount.value + inTransitCount.value + deliveredCount.value > 0 ||
       stockItems.isNotEmpty ||
-      recentActivity.isNotEmpty ||
-      collectedToday.value > 0 ||
-      stillDue.value > 0;
-
-  List<DmDashboardActivityItem> get previewRecentActivity =>
-      recentActivity.take(recentPreviewLimit).toList(growable: false);
+      walletBalance.value > 0 ||
+      collectedToday.value > 0;
 
   bool get showNextDeliveryStop =>
-      nextOrder.value != null && nextAction?.kind != DmNextActionKind.deliver;
-
-  bool get showNextCollectionStop =>
-      nextDueShop.value != null && nextAction?.kind != DmNextActionKind.collect;
+      nextJob.value != null && nextAction?.kind != DmNextActionKind.deliver;
 
   String get greeting => AppFormatter.timeOfDayGreeting();
   String get userName =>
       _session.user.value?.displayName('Delivery Man') ?? 'Delivery Man';
 
   DmNextActionModel? get nextAction {
-    if (!pickupConfirmed.value) {
+    final state = sessionState.value;
+    if (state == null || state == DmSessionState.ended) return null;
+
+    if (state == DmSessionState.office) {
+      if (hasRemainingPick.value) {
+        return DmNextActionModel(
+          kind: DmNextActionKind.pickup,
+          message: AppTexts.dmNextPickupSubtitle,
+          buttonLabel: AppTexts.dmPickupTitle,
+        );
+      }
       return DmNextActionModel(
-        kind: DmNextActionKind.pickup,
-        message: AppTexts.dmNextPickupSubtitle,
-        buttonLabel: AppTexts.dmVanLoadAll,
+        kind: DmNextActionKind.depart,
+        message: AppTexts.dmNextDepartSubtitle,
+        buttonLabel: AppTexts.dmDepartTitle,
       );
     }
 
-    final order = nextOrder.value;
-    if (order != null) {
+    final job = nextJob.value;
+    if (job != null) {
       return DmNextActionModel(
         kind: DmNextActionKind.deliver,
-        message: order.shopName,
+        message: job.shopName,
         buttonLabel: AppTexts.dmContinueDeliveries,
       );
     }
 
-    if (!vanUnloaded.value) {
+    if (vanOnHandTotal.value > 0) {
       return DmNextActionModel(
         kind: DmNextActionKind.unload,
         message: AppTexts.dmNextUnloadSubtitle,
-        buttonLabel: vanOnHandTotal.value <= 0
-            ? AppTexts.dmVanCloseEmpty
-            : AppTexts.dmVanUnloadAll,
+        buttonLabel: AppTexts.dmVanModeReturnToWh,
       );
     }
 
-    if (cashInBag.value > 0) {
-      return DmNextActionModel(
-        kind: DmNextActionKind.handover,
-        message: AppTexts.dmHandoverNudgeSubtitle(
-          AppFormatter.compactCurrency(cashInBag.value),
-          '${bagReceiptCount.value}',
-        ),
-        buttonLabel: AppTexts.dmConfirmHandover,
-      );
-    }
-
-    if (shopsDueCount.value > 0) {
-      final shop = nextDueShop.value;
+    if (walletBalance.value > 0) {
       return DmNextActionModel(
         kind: DmNextActionKind.collect,
-        message: shop?.name ?? AppTexts.dmShopsDueCount(shopsDueCount.value),
-        buttonLabel: AppTexts.dmTodayShopsTitle,
+        message: AppTexts.dmWalletNudgeSubtitle(
+          AppFormatter.compactCurrency(walletBalance.value),
+        ),
+        buttonLabel: AppTexts.dmWalletTitle,
       );
     }
 
-    return null;
+    return DmNextActionModel(
+      kind: DmNextActionKind.endDay,
+      message: AppTexts.dmNextEndDaySubtitle,
+      buttonLabel: AppTexts.dmEndDayTitle,
+    );
   }
 
   @override
@@ -136,7 +127,7 @@ class DmDashboardController extends GetxController {
     load();
   }
 
-  Future<void> load() async {
+  Future<void> load({bool force = true}) async {
     final showFullLoader = !hasContent;
     if (showFullLoader) {
       isLoading.value = true;
@@ -145,44 +136,80 @@ class DmDashboardController extends GetxController {
     }
 
     try {
-      final results = await Future.wait([
-        _loadDeliveries(),
-        _loadCollections(),
+      late final DmSessionModel session;
+      late final DmLoadTodayModel load;
+      late final DmPlanTodayModel plan;
+      late final DmVanSnapshotModel van;
+      late final DmWalletModel wallet;
+
+      await Future.wait([
+        _sessionService
+            .fetchSession(forceNetwork: force)
+            .then((v) => session = v),
+        _loadService.fetchToday(forceNetwork: force).then((v) => load = v),
+        _planService.fetchToday(forceNetwork: force).then((v) => plan = v),
+        _vanService.fetchSnapshot(forceNetwork: force).then((v) => van = v),
+        _recoveryService
+            .fetchWallet(forceNetwork: force)
+            .then((v) => wallet = v),
       ]);
-      final delivery = results[0] as _DeliveryDashboardSlice;
-      final collection = results[1] as _CollectionDashboardSlice;
 
-      pickupConfirmed.value = delivery.pickupConfirmed;
-      vanUnloaded.value = delivery.vanUnloaded;
-      vanOnHandTotal.value = delivery.vanOnHandTotal;
-      pendingCount.value = delivery.pendingCount;
-      inTransitCount.value = delivery.inTransitCount;
-      deliveredCount.value = delivery.deliveredCount;
-      nextOrder.value = delivery.nextOrder;
-      stockItems.assignAll(delivery.stockItems);
+      sessionState.value = session.state;
 
-      collectedToday.value = collection.collectedToday;
-      stillDue.value = collection.stillDue;
-      cashInBag.value = collection.cashInBag;
-      shopsDueCount.value = collection.shopsDueCount;
-      bagReceiptCount.value = collection.bagReceiptCount;
-      nextDueShop.value = collection.highestDueShop;
+      final jobs = plan.jobs;
+      pendingCount.value = jobs
+          .where((j) => j.fieldState == DmFieldState.pending)
+          .length;
+      inTransitCount.value = jobs
+          .where((j) => j.fieldState == DmFieldState.inTransit)
+          .length;
+      deliveredCount.value = jobs
+          .where(
+            (j) =>
+                j.fieldState == DmFieldState.done ||
+                j.state == DmJobState.delivered,
+          )
+          .length;
 
-      final mockTargets = AppMockData.dmTargets;
-      targets.value = mockTargets.copyWith(
-        deliveryCurrent: delivery.deliveredCount,
-        deliveryValueCurrent: delivery.deliveredValue,
-        recoveryCurrent: collection.recoveryCurrent,
-        recoveryTarget: collection.recoveryTarget,
+      hasRemainingPick.value = load.pickLines.any(
+        (line) => line.qtyStill > 0 || line.qtyToPick > 0,
       );
 
-      recentActivity.assignAll(
-        _mergeActivity(
-          deliveredOrders: delivery.deliveredOrders,
-          collections: collection.recentCollections,
-          handovers: collection.recentHandovers,
-        ),
-      );
+      vanOnHandTotal.value = van.qtyTotal;
+      collectedToday.value = wallet.collectedToday;
+      walletBalance.value = wallet.balance;
+      settledTotal.value = wallet.settledTotal;
+
+      final mapped = [
+        for (final item in van.items)
+          DmStockItemModel(
+            id: '${item.productId}',
+            name: item.name,
+            quantity: item.qty.round(),
+            onHandQuantity: item.qty.round(),
+            unit: item.uom ?? '',
+            isLowStock: item.qty <= 0,
+          ),
+      ]..sort((a, b) => a.name.compareTo(b.name));
+      stockItems.assignAll(mapped);
+
+      final open = jobs
+          .where(
+            (j) =>
+                j.fieldState == DmFieldState.pending ||
+                j.fieldState == DmFieldState.inTransit,
+          )
+          .toList(growable: false);
+      open.sort((a, b) {
+        final rank = _fieldRank(
+          a.fieldState,
+        ).compareTo(_fieldRank(b.fieldState));
+        if (rank != 0) return rank;
+        final aAt = a.scheduledDate ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final bAt = b.scheduledDate ?? DateTime.fromMillisecondsSinceEpoch(0);
+        return aAt.compareTo(bAt);
+      });
+      nextJob.value = open.isEmpty ? null : open.first;
       error.value = null;
     } catch (_) {
       if (!hasContent) {
@@ -194,142 +221,26 @@ class DmDashboardController extends GetxController {
     }
   }
 
-  Future<void> refreshCollections() => load();
-
-  Future<_DeliveryDashboardSlice> _loadDeliveries() async {
-    final pickup = await _pickupService.fetchTodayPickup();
-    final orders = await _deliveryService.fetchOrders();
-    final van = await _vanStockService.fetchVanStock();
-
-    final pending = orders
-        .where((o) => o.status == DeliveryStatus.pending)
-        .length;
-    final inTransit = orders
-        .where(
-          (o) =>
-              o.status == DeliveryStatus.inTransit ||
-              o.status == DeliveryStatus.pickedUp,
-        )
-        .length;
-    final completedOrders = orders
-        .where(
-          (o) =>
-              o.status == DeliveryStatus.delivered ||
-              o.status == DeliveryStatus.returned,
-        )
-        .toList(growable: false);
-    final deliveredValue = completedOrders.fold<double>(
-      0,
-      (sum, order) => sum + order.resolvedTotal,
-    );
-
-    final queue = orders
-        .where(
-          (o) =>
-              o.status == DeliveryStatus.pending ||
-              o.status == DeliveryStatus.inTransit ||
-              o.status == DeliveryStatus.pickedUp,
-        )
-        .toList();
-    queue.sort((a, b) {
-      final rank = _deliveryQueueRank(
-        a.status,
-      ).compareTo(_deliveryQueueRank(b.status));
-      if (rank != 0) return rank;
-      final aAt = a.scheduledAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-      final bAt = b.scheduledAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-      return aAt.compareTo(bAt);
-    });
-
-    final stock = van.items.toList()
-      ..sort((a, b) {
-        if (a.isLowStock == b.isLowStock) {
-          return a.name.compareTo(b.name);
-        }
-        return a.isLowStock ? -1 : 1;
-      });
-
-    return _DeliveryDashboardSlice(
-      pickupConfirmed: pickup.isAcknowledged,
-      vanUnloaded: van.isUnloaded,
-      vanOnHandTotal: van.totalOnHand,
-      pendingCount: pending,
-      inTransitCount: inTransit,
-      deliveredCount: completedOrders.length,
-      deliveredValue: deliveredValue,
-      nextOrder: queue.isEmpty ? null : queue.first,
-      deliveredOrders: completedOrders,
-      stockItems: stock,
-    );
-  }
-
-  Future<_CollectionDashboardSlice> _loadCollections() async {
-    final dashboard = await _collectionService.fetchDashboard();
-    return _CollectionDashboardSlice(
-      collectedToday: dashboard.collectedToday,
-      stillDue: dashboard.stillDue,
-      cashInBag: dashboard.cashInBag,
-      shopsDueCount: dashboard.shopsDueCount,
-      bagReceiptCount: dashboard.bagReceiptCount,
-      highestDueShop: dashboard.highestDueShop,
-      recentCollections: dashboard.recentCollections,
-      recentHandovers: dashboard.recentHandovers,
-      recoveryCurrent: dashboard.targets.recoveryCurrent,
-      recoveryTarget: dashboard.targets.recoveryTarget,
-    );
-  }
-
-  List<DmDashboardActivityItem> _mergeActivity({
-    required List<DmDeliveryOrderModel> deliveredOrders,
-    required List<DmCollectionSummaryModel> collections,
-    required List<DmHandoverSummaryModel> handovers,
-  }) {
-    final items = <DmDashboardActivityItem>[
-      for (final order in deliveredOrders)
-        DmDashboardActivityItem(
-          kind: DmDashboardActivityKind.delivery,
-          id: order.id,
-          title: order.shopName,
-          at: order.deliveredAt ?? order.scheduledAt ?? DateTime.now(),
-          amount: order.resolvedTotal,
-        ),
-      for (final collection in collections)
-        DmDashboardActivityItem(
-          kind: DmDashboardActivityKind.collection,
-          id: collection.id,
-          title: collection.shopName,
-          at: collection.collectedAt,
-          amount: collection.amount,
-        ),
-      for (final handover in handovers)
-        DmDashboardActivityItem(
-          kind: DmDashboardActivityKind.handover,
-          id: handover.id,
-          title: handover.reference,
-          at: handover.handedAt,
-          amount: handover.total,
-        ),
-    ]..sort((a, b) => b.at.compareTo(a.at));
-    return items;
-  }
-
-  int _deliveryQueueRank(DeliveryStatus status) => switch (status) {
-    DeliveryStatus.inTransit || DeliveryStatus.pickedUp => 0,
-    DeliveryStatus.pending => 1,
+  int _fieldRank(DmFieldState state) => switch (state) {
+    DmFieldState.inTransit => 0,
+    DmFieldState.pending => 1,
     _ => 2,
   };
 
   void runNextAction() {
     switch (nextAction?.kind) {
       case DmNextActionKind.pickup:
+        goToPickup();
+      case DmNextActionKind.depart:
+      case DmNextActionKind.endDay:
+        goToOrders();
+      case DmNextActionKind.deliver:
+        openNextJob();
       case DmNextActionKind.unload:
         goToVanStock();
-      case DmNextActionKind.deliver:
-        openNextOrder();
       case DmNextActionKind.collect:
-        openNextDueShop();
+        goToWallet();
       case DmNextActionKind.handover:
-        goToHandoverConfirm();
       case null:
         break;
     }
@@ -341,110 +252,25 @@ class DmDashboardController extends GetxController {
 
   void goToOrders() => _selectLeaf('dm_orders');
 
-  void goToDeliver() => _selectLeaf('dm_deliver');
+  void goToFreeDeliver() => _selectLeaf('dm_free_deliver');
 
-  void goToDeliveriesList() => _selectLeaf('dm_deliveries_list');
+  void goToWallet() => _selectLeaf('dm_wallet');
 
-  void goToTodayShops() => _selectLeaf('dm_today_shops');
+  void goToRecoverShops() => _selectLeaf('dm_today_shops');
 
   void goToCollectionHistory() => _selectLeaf('dm_collection_history');
 
-  void goToHandover() => _selectLeaf('dm_handover');
-
-  void goToHandoverConfirm() => Get.toNamed(AppRoutes.dmHandoverConfirm);
-
-  void openNextOrder() {
-    final order = nextOrder.value;
-    if (order == null) {
-      goToDeliver();
+  void openNextJob() {
+    final job = nextJob.value;
+    if (job == null) {
+      goToOrders();
       return;
     }
-    Get.toNamed(AppRoutes.dmOrderDetail.replaceFirst(':id', order.id));
-  }
-
-  void openNextDueShop() {
-    final shop = nextDueShop.value;
-    if (shop == null) {
-      goToTodayShops();
-      return;
-    }
-    Get.toNamed(
-      AppRoutes.dmShopOutstanding.replaceFirst(':id', shop.id),
-      arguments: {'shopId': shop.id},
-    );
-  }
-
-  void openActivity(DmDashboardActivityItem item) {
-    switch (item.kind) {
-      case DmDashboardActivityKind.delivery:
-        Get.toNamed(AppRoutes.dmDeliveryDetail.replaceFirst(':id', item.id));
-      case DmDashboardActivityKind.collection:
-        Get.toNamed(
-          AppRoutes.dmCollectionDetail.replaceFirst(':id', item.id),
-          arguments: {'collectionId': item.id},
-        );
-      case DmDashboardActivityKind.handover:
-        Get.toNamed(
-          AppRoutes.dmHandoverDetail.replaceFirst(':id', item.id),
-          arguments: {'handoverId': item.id},
-        );
-    }
+    Get.toNamed(AppRoutes.dmJobDetail.replaceFirst(':id', '${job.jobId}'));
   }
 
   void _selectLeaf(String id) {
     if (!Get.isRegistered<DeliveryManShellController>()) return;
     Get.find<DeliveryManShellController>().selectLeaf(id);
   }
-}
-
-class _DeliveryDashboardSlice {
-  const _DeliveryDashboardSlice({
-    required this.pickupConfirmed,
-    required this.vanUnloaded,
-    required this.vanOnHandTotal,
-    required this.pendingCount,
-    required this.inTransitCount,
-    required this.deliveredCount,
-    required this.deliveredValue,
-    required this.nextOrder,
-    required this.deliveredOrders,
-    required this.stockItems,
-  });
-
-  final bool pickupConfirmed;
-  final bool vanUnloaded;
-  final int vanOnHandTotal;
-  final int pendingCount;
-  final int inTransitCount;
-  final int deliveredCount;
-  final double deliveredValue;
-  final DmDeliveryOrderModel? nextOrder;
-  final List<DmDeliveryOrderModel> deliveredOrders;
-  final List<DmStockItemModel> stockItems;
-}
-
-class _CollectionDashboardSlice {
-  const _CollectionDashboardSlice({
-    required this.collectedToday,
-    required this.stillDue,
-    required this.cashInBag,
-    required this.shopsDueCount,
-    required this.bagReceiptCount,
-    required this.highestDueShop,
-    required this.recentCollections,
-    required this.recentHandovers,
-    required this.recoveryCurrent,
-    required this.recoveryTarget,
-  });
-
-  final double collectedToday;
-  final double stillDue;
-  final double cashInBag;
-  final int shopsDueCount;
-  final int bagReceiptCount;
-  final DmShopDueModel? highestDueShop;
-  final List<DmCollectionSummaryModel> recentCollections;
-  final List<DmHandoverSummaryModel> recentHandovers;
-  final double recoveryCurrent;
-  final double recoveryTarget;
 }
