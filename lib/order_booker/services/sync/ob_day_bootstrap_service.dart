@@ -6,6 +6,7 @@ import 'package:get/get.dart' hide Value;
 
 import 'package:shahtaj_oil_mobile_app/core/constants/api_endpoints.dart';
 import 'package:shahtaj_oil_mobile_app/core/database/app_database.dart';
+import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/connectivity_service.dart';
@@ -43,6 +44,8 @@ class ObDayBootstrapService extends GetxService {
   final RxBool isRunning = false.obs;
   final Rxn<DateTime> lastCompletedAt = Rxn<DateTime>();
   final RxnString lastError = RxnString();
+  final RxnString statusMessage = RxnString();
+  final RxBool catalogReady = false.obs;
 
   /// History depth kept for offline browsing.
   static const historyWindow = Duration(days: 30);
@@ -71,6 +74,17 @@ class ObDayBootstrapService extends GetxService {
     return at.isBefore(DateTime(now.year, now.month, now.day));
   }
 
+  @override
+  void onInit() {
+    super.onInit();
+    unawaited(refreshCatalogReady());
+  }
+
+  Future<void> refreshCatalogReady() async {
+    final rows = await _db.catalogFor(ObDayCatalog.globalScope);
+    catalogReady.value = rows.isNotEmpty;
+  }
+
   /// Fire-and-forget refresh used on app open, reconnect and pull-to-refresh.
   void runInBackground({bool force = false}) {
     unawaited(run(force: force));
@@ -92,25 +106,30 @@ class ObDayBootstrapService extends GetxService {
     lastError.value = null;
     var failures = 0;
 
-    // Each step is guarded so one failing endpoint cannot abort the rest.
-    // Order matters: dashboard + catalog reuse today / visits already saved.
-    failures += await _step(_loadToday);
-    failures += await _step(_loadActiveVisit);
-    failures += await _step(_loadShops);
-    failures += await _step(_loadZonesAndRoutes);
-    failures += await _step(_loadSchedule);
-    failures += await _step(_loadTargets);
-    failures += await _step(_loadVisitHistory);
-    failures += await _step(_loadDashboard);
-    failures += await _step(_loadCatalog);
+    // Catalog early: offline ordering depends on it more than history/targets.
+    failures += await _step(AppTexts.obDayBootstrapTasks, _loadToday);
+    failures += await _step(
+      AppTexts.obDayBootstrapActiveVisit,
+      _loadActiveVisit,
+    );
+    failures += await _step(AppTexts.obDayBootstrapCatalog, _loadCatalog);
+    failures += await _step(AppTexts.obDayBootstrapShops, _loadShops);
+    failures += await _step(AppTexts.obDayBootstrapRoutes, _loadZonesAndRoutes);
+    failures += await _step(AppTexts.obDayBootstrapSchedule, _loadSchedule);
+    failures += await _step(AppTexts.obDayBootstrapTargets, _loadTargets);
+    failures += await _step(AppTexts.obDayBootstrapHistory, _loadVisitHistory);
+    failures += await _step(AppTexts.obDayBootstrapDashboard, _loadDashboard);
 
     isRunning.value = false;
+    statusMessage.value = null;
+    await refreshCatalogReady();
     if (failures == 0) {
       lastCompletedAt.value = DateTime.now();
     }
   }
 
-  Future<int> _step(Future<void> Function() action) async {
+  Future<int> _step(String label, Future<void> Function() action) async {
+    statusMessage.value = label;
     try {
       await action();
       return 0;
@@ -134,7 +153,6 @@ class ObDayBootstrapService extends GetxService {
     final data = await _api.postData(ApiEndpoints.obShopsMine);
     await _cache.saveMap(OfflineCacheKeys.shopsMine, data);
 
-    // Shop detail carries credit fields the order screen needs offline.
     for (final shop in ApiMap.listOf(data, 'shops')) {
       final id = ApiMap.asInt(shop['shop_id']) ?? ApiMap.asInt(shop['id']);
       if (id == null) continue;
@@ -155,7 +173,6 @@ class ObDayBootstrapService extends GetxService {
     final zones = await _api.postData(ApiEndpoints.obZonesList);
     await _cache.saveMap(OfflineCacheKeys.zones, zones);
 
-    // Registration needs every zone and route available offline.
     final all = await _api.postData(ApiEndpoints.obRoutesList);
     await _cache.saveMap(OfflineCacheKeys.routes(null), all);
 
@@ -185,7 +202,6 @@ class ObDayBootstrapService extends GetxService {
   }
 
   Future<void> _loadVisitHistory() async {
-    // Page one, matching what the history screen requests by default.
     final recent = await _api.postData(
       ApiEndpoints.obVisitsMine,
       data: {'limit': 50, 'offset': 0},
@@ -206,7 +222,6 @@ class ObDayBootstrapService extends GetxService {
     await _db.saveDoc(ObDocKeys.visitHistoryWindow, jsonEncode(window));
   }
 
-  /// Weekly schedule / dashboard screens both need this composite cache.
   Future<void> _loadDashboard() async {
     final today = await _cache.readMap(OfflineCacheKeys.tasksToday);
     final targets = await _cache.readMap(OfflineCacheKeys.targetsMine);
@@ -256,11 +271,10 @@ class ObDayBootstrapService extends GetxService {
           .whereType<CatalogProductsCompanion>()
           .toList(growable: false),
     );
+    catalogReady.value = products.isNotEmpty;
   }
 
   Future<int?> _anyUsableVisitId() async {
-    // Prefer ids already pulled in this bootstrap run so we do not depend on
-    // opening History / creating an online visit first.
     final fromActive = _visitIdFromActive(
       await _cache.readMap(OfflineCacheKeys.activeVisit),
     );
