@@ -44,9 +44,10 @@ class DmVanSnapshotModel {
   factory DmVanSnapshotModel.fromJson(Map<String, dynamic> json) {
     return DmVanSnapshotModel(
       vanLocationId: ApiMap.asInt(json['van_location_id']),
-      items: ApiMap.listOf(json, 'items')
-          .map(DmVanItemModel.fromJson)
-          .toList(growable: false),
+      items: ApiMap.listOf(
+        json,
+        'items',
+      ).map(DmVanItemModel.fromJson).toList(growable: false),
       qtyTotal: ApiMap.asDouble(json['qty_total']) ?? 0,
     );
   }

@@ -27,12 +27,14 @@ class DmLoadTodayModel {
       session: sessionJson == null
           ? null
           : DmSessionModel.fromJson(sessionJson),
-      shops: ApiMap.listOf(json, 'shops')
-          .map(DmJobModel.fromJson)
-          .toList(growable: false),
-      pickLines: ApiMap.listOf(json, 'pick_lines')
-          .map(DmPickLineModel.fromJson)
-          .toList(growable: false),
+      shops: ApiMap.listOf(
+        json,
+        'shops',
+      ).map(DmJobModel.fromJson).toList(growable: false),
+      pickLines: ApiMap.listOf(
+        json,
+        'pick_lines',
+      ).map(DmPickLineModel.fromJson).toList(growable: false),
       vanQtyTotal: ApiMap.asDouble(json['van_qty_total']) ?? 0,
       warehouseQtyTotal: ApiMap.asDouble(json['warehouse_qty_total']) ?? 0,
     );

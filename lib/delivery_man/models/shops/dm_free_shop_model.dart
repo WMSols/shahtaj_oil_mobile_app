@@ -24,7 +24,8 @@ class DmFreeShopModel {
 
   factory DmFreeShopModel.fromJson(Map<String, dynamic> json) {
     return DmFreeShopModel(
-      shopId: (ApiMap.asInt(json['shop_id']) ?? json['shop_id'] ?? '').toString(),
+      shopId: (ApiMap.asInt(json['shop_id']) ?? json['shop_id'] ?? '')
+          .toString(),
       name: ApiMap.asString(json['name']) ?? '',
       address: ApiMap.asString(json['address']),
       latitude: ApiMap.asDouble(json['latitude']),
