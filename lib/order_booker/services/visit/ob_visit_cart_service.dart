@@ -73,7 +73,13 @@ class ObVisitCartService extends GetxService {
         await _persistProductsForVisit(visitId, catalog);
         return catalog;
       }
-      throw ApiException(message: AppTexts.obProductCatalogUnavailable);
+      throw ApiException(
+        message:
+            Get.isRegistered<ObDayBootstrapService>() &&
+                Get.find<ObDayBootstrapService>().isRunning.value
+            ? AppTexts.obProductCatalogDownloading
+            : AppTexts.obProductCatalogUnavailable,
+      );
     }
 
     if (!forceRefresh) {
@@ -212,10 +218,11 @@ class ObVisitCartService extends GetxService {
       data: {'visit_id': visitId},
     );
     final visitJson = ApiMap.asMap(data['visit']) ?? data;
-    final lines = ApiMap.listOf(
+    final rawLines = ApiMap.listOf(
       visitJson,
       'lines',
     ).map(ObVisitCartLineModel.fromJson).toList(growable: false);
+    final lines = _dedupeCartModels(rawLines);
 
     await _db.clearVisitCart(visitId);
     for (final line in lines) {
@@ -580,8 +587,35 @@ class ObVisitCartService extends GetxService {
   }
 
   Future<List<ObVisitCartLineModel>> _readLinesFromDb(int visitId) async {
+    await _db.dedupeVisitCartLines(visitId);
     final rows = await _db.linesForVisit(visitId);
     return rows.map(_mapLine).toList(growable: false);
+  }
+
+  /// One line per product — prefer server ids, keep max quantity.
+  static List<ObVisitCartLineModel> _dedupeCartModels(
+    List<ObVisitCartLineModel> lines,
+  ) {
+    if (lines.length < 2) return lines;
+    final byProduct = <int, ObVisitCartLineModel>{};
+    for (final line in lines) {
+      final existing = byProduct[line.productId];
+      if (existing == null) {
+        byProduct[line.productId] = line;
+        continue;
+      }
+      final preferNew =
+          (line.lineId > 0 && existing.lineId <= 0) ||
+          (line.lineId > 0 == existing.lineId > 0 &&
+              line.lineId > existing.lineId);
+      final keeper = preferNew ? line : existing;
+      final other = preferNew ? existing : line;
+      final qty = keeper.quantity > other.quantity
+          ? keeper.quantity
+          : other.quantity;
+      byProduct[line.productId] = keeper.copyWith(quantity: qty);
+    }
+    return byProduct.values.toList(growable: false);
   }
 
   ObVisitCartLineModel _mapLine(VisitCartLine row) => ObVisitCartLineModel(

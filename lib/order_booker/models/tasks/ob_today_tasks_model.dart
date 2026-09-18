@@ -1,16 +1,29 @@
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
+import 'package:shahtaj_oil_mobile_app/core/models/gps_criteria.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/schedule/ob_route_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_task_model.dart';
 
 class ObTodayTasksModel {
-  const ObTodayTasksModel({required this.route, required this.tasks});
+  const ObTodayTasksModel({
+    required this.route,
+    required this.tasks,
+    this.gpsCriteria,
+  });
 
   final ObRouteModel route;
   final List<ObTaskModel> tasks;
+  final GpsCriteria? gpsCriteria;
 
-  ObTodayTasksModel copyWith({ObRouteModel? route, List<ObTaskModel>? tasks}) =>
-      ObTodayTasksModel(route: route ?? this.route, tasks: tasks ?? this.tasks);
+  ObTodayTasksModel copyWith({
+    ObRouteModel? route,
+    List<ObTaskModel>? tasks,
+    GpsCriteria? gpsCriteria,
+  }) => ObTodayTasksModel(
+    route: route ?? this.route,
+    tasks: tasks ?? this.tasks,
+    gpsCriteria: gpsCriteria ?? this.gpsCriteria,
+  );
 
   int get completedCount =>
       tasks.where((task) => task.status == TaskStatus.completed).length;
@@ -48,7 +61,11 @@ class ObTodayTasksModel {
             : null) ??
         const <String, dynamic>{};
 
-    return ObTodayTasksModel(route: _routeFrom(routeJson, tasks), tasks: tasks);
+    return ObTodayTasksModel(
+      route: _routeFrom(routeJson, tasks),
+      tasks: tasks,
+      gpsCriteria: GpsCriteria.tryParse(json['gps_criteria']),
+    );
   }
 
   static ObRouteModel _routeFrom(

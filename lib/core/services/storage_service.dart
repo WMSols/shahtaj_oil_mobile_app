@@ -6,6 +6,7 @@ class StorageService {
   static const _tokenKey = 'auth_token';
   static const _roleKey = 'user_role';
   static const _userKey = 'user_profile';
+  static const _gpsCriteriaKey = 'gps_criteria';
   static const _localeKey = 'app_locale';
   static const _onboardingCompletedKey = 'onboarding_completed';
   static const _localDataOwnerKey = 'local_data_owner_user_id';
@@ -39,6 +40,13 @@ class StorageService {
       _storage.write(key: _userKey, value: userJson);
 
   Future<void> clearUser() => _storage.delete(key: _userKey);
+
+  Future<String?> getGpsCriteria() => _read(_gpsCriteriaKey);
+
+  Future<void> saveGpsCriteria(String json) =>
+      _storage.write(key: _gpsCriteriaKey, value: json);
+
+  Future<void> clearGpsCriteria() => _storage.delete(key: _gpsCriteriaKey);
 
   /// Which user the offline data on this device belongs to.
   Future<String?> getLocalDataOwner() => _read(_localDataOwnerKey);
@@ -98,6 +106,7 @@ class StorageService {
     await clearToken();
     await clearRole();
     await clearUser();
+    await clearGpsCriteria();
   }
 
   Future<void> clearAll() => _storage.deleteAll();

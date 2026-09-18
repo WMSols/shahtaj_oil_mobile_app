@@ -70,7 +70,20 @@ class ObShopDetailInfoSection extends StatelessWidget {
                 ),
               AppDetailRow(
                 label: AppTexts.obShopTypeLabel,
-                trailing: AppStatusChip.shopType(shop.shopType),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    AppStatusChip.shopType(shop.shopType),
+                    if (shop.isCreditLimitExceeded) ...[
+                      AppSpacing.horizontal(context, 0.01),
+                      AppStatusChip(
+                        label: AppTexts.obCreditLimitExceededChip,
+                        color: AppColors.error,
+                        soft: true,
+                      ),
+                    ],
+                  ],
+                ),
               ),
               AppDetailRow(
                 label: AppTexts.obVisitTagLabel,
@@ -101,13 +114,22 @@ class ObShopDetailInfoSection extends StatelessWidget {
                   valueColor: AppColors.error,
                   valueWeight: FontWeight.w700,
                 ),
+              if (shop.isCreditShop && shop.effectiveOutstanding != null)
+                AppDetailRow(
+                  label: AppTexts.obEffectiveOutstandingLabel,
+                  value: AppFormatter.currencyWhole(shop.effectiveOutstanding!),
+                  valueColor: shop.isCreditLimitExceeded
+                      ? AppColors.error
+                      : AppColors.warning,
+                  valueWeight: FontWeight.w700,
+                ),
               if (shop.isCreditShop && shop.resolvedCreditRemaining != null)
                 AppDetailRow(
                   label: AppTexts.obCreditRemainingLabel,
                   value: AppFormatter.currencyWhole(
                     shop.resolvedCreditRemaining!,
                   ),
-                  valueColor: shop.resolvedCreditRemaining! < 0
+                  valueColor: shop.resolvedCreditRemaining! <= 0
                       ? AppColors.error
                       : AppColors.success,
                   valueWeight: FontWeight.w700,

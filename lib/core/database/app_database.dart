@@ -349,6 +349,49 @@ class AppDatabase extends _$AppDatabase {
   Future<void> clearVisitCart(int visitId) =>
       (delete(visitCartLines)..where((t) => t.visitId.equals(visitId))).go();
 
+  /// Keeps one row per product after remap / failed sync left duplicates.
+  /// Prefers server line ids (`> 0`); quantity is the max across copies
+  /// (sync retries usually duplicate the same qty, so summing would inflate).
+  Future<void> dedupeVisitCartLines(int visitId) async {
+    final rows = await linesForVisit(visitId);
+    if (rows.length < 2) return;
+
+    final byProduct = <int, List<VisitCartLine>>{};
+    for (final row in rows) {
+      (byProduct[row.productId] ??= <VisitCartLine>[]).add(row);
+    }
+
+    for (final group in byProduct.values) {
+      if (group.length < 2) continue;
+      group.sort((a, b) {
+        final aServer = a.lineId > 0 ? 1 : 0;
+        final bServer = b.lineId > 0 ? 1 : 0;
+        if (aServer != bServer) return bServer.compareTo(aServer);
+        return b.lineId.compareTo(a.lineId);
+      });
+      final keeper = group.first;
+      var qty = keeper.quantity;
+      for (final extra in group.skip(1)) {
+        if (extra.quantity > qty) qty = extra.quantity;
+        await deleteCartLine(visitId: visitId, lineId: extra.lineId);
+      }
+      if ((qty - keeper.quantity).abs() > 0.001) {
+        await upsertCartLine(
+          VisitCartLinesCompanion.insert(
+            visitId: keeper.visitId,
+            lineId: keeper.lineId,
+            productId: keeper.productId,
+            productName: keeper.productName,
+            quantity: qty,
+            priceUnit: keeper.priceUnit,
+            unit: Value(keeper.unit),
+            isLocalOnly: Value(keeper.isLocalOnly),
+          ),
+        );
+      }
+    }
+  }
+
   /// Moves locally captured rows onto the server visit id after check-in syncs.
   Future<void> remapVisitLocalData({
     required int localVisitId,
@@ -375,6 +418,7 @@ class AppDatabase extends _$AppDatabase {
         updates: {visitProducts},
       );
     });
+    await dedupeVisitCartLines(serverVisitId);
   }
 
   Future<void> replaceProductsForVisit(

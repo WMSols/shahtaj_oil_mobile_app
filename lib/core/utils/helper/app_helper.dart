@@ -1,7 +1,9 @@
 import 'package:geolocator/geolocator.dart';
+import 'package:get/get.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_location_enable_sheet.dart';
 
 class AppHelper {
@@ -68,8 +70,18 @@ class AppHelper {
   static const _positionTimeout = Duration(seconds: 10);
   static const _lastKnownMaxAge = Duration(minutes: 2);
 
-  /// Max distance from shop GPS for check-in and place-order (meters).
-  static const shopActionMaxDistanceMeters = 250.0;
+  /// Live max from session (`gps_criteria.max_m` saved at login / today tasks).
+  /// Throws when criteria was never received (cannot invent a distance).
+  static double resolvedShopMaxDistanceMeters() {
+    if (!Get.isRegistered<SessionService>()) {
+      throw ApiException(message: AppTexts.obGpsCriteriaMissing);
+    }
+    final max = Get.find<SessionService>().shopActionMaxDistanceMeters;
+    if (max == null || max <= 0) {
+      throw ApiException(message: AppTexts.obGpsCriteriaMissing);
+    }
+    return max;
+  }
 
   /// Straight-line distance in meters between two WGS84 points.
   static double distanceMetersBetween({
@@ -85,7 +97,7 @@ class AppHelper {
     required double currentLng,
     double? shopLat,
     double? shopLng,
-    double maxMeters = shopActionMaxDistanceMeters,
+    double? maxMeters,
   }) {
     final hasShop =
         shopLat != null &&
@@ -96,15 +108,19 @@ class AppHelper {
     if (!hasShop) {
       throw ApiException(message: AppTexts.obShopLocationMissing);
     }
+    final limit = maxMeters ?? resolvedShopMaxDistanceMeters();
     final meters = distanceMetersBetween(
       fromLat: currentLat,
       fromLng: currentLng,
       toLat: shopLat,
       toLng: shopLng,
     );
-    if (meters > maxMeters) {
+    if (meters > limit) {
       throw ApiException(
-        message: AppTexts.obOrderTooFarFromShop(meters.round()),
+        message: AppTexts.obOrderTooFarFromShop(
+          meters.round(),
+          maxMeters: limit.round(),
+        ),
       );
     }
   }
