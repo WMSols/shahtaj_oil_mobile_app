@@ -40,7 +40,7 @@ abstract class OfflineCacheKeys {
     zones,
   ];
 
-  // Delivery Man — deliveries (legacy mock keys kept until Phase 7 cleanup)
+  // Delivery Man — legacy mock keys (parked; wipe on logout; delete with mocks)
   static const dmOrders = 'offline_cache_dm_orders_v2';
   static const dmPickup = 'offline_cache_dm_pickup_v2';
   static const dmReturn = 'offline_cache_dm_return_v2';
@@ -51,8 +51,11 @@ abstract class OfflineCacheKeys {
   static const dmLoadToday = 'offline_cache_dm_load_today_v1';
   static const dmPlanToday = 'offline_cache_dm_plan_today_v1';
   static const dmVanSnapshot = 'offline_cache_dm_van_snapshot_v1';
+  static const dmWallet = 'offline_cache_dm_wallet_v1';
+  static const dmWalletCollections = 'offline_cache_dm_wallet_collections_v1';
+  static const dmRecoveryShopPrefix = 'offline_cache_dm_recovery_shop_';
 
-  // Delivery Man — collections / handover (hidden until recovery APIs)
+  // Delivery Man — legacy mock collections / handover (parked)
   static const dmShops = 'offline_cache_dm_shops_v1';
   static const dmInvoices = 'offline_cache_dm_invoices_v1';
   static const dmCollections = 'offline_cache_dm_collections_v1';
@@ -65,6 +68,8 @@ abstract class OfflineCacheKeys {
     dmLoadToday,
     dmPlanToday,
     dmVanSnapshot,
+    dmWallet,
+    dmWalletCollections,
     dmOrders,
     dmPickup,
     dmReturn,
@@ -301,6 +306,10 @@ class OfflineCacheService extends GetxService {
 
   Future<void> clearDeliveryManSessionCache() async {
     await clearKeys(OfflineCacheKeys.deliveryManSessionKeys);
+    final recoveryKeys = await _cache.keysWithPrefix(
+      OfflineCacheKeys.dmRecoveryShopPrefix,
+    );
+    if (recoveryKeys.isNotEmpty) await clearKeys(recoveryKeys);
   }
 
   void registerSyncHandler(

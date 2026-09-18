@@ -96,8 +96,7 @@ class _AppSyncStatusBannerState extends State<AppSyncStatusBanner> {
         });
       }
 
-      final visible =
-          syncing || attention > 0 || pending > 0 || _showCompleted;
+      final visible = syncing || attention > 0 || pending > 0 || _showCompleted;
 
       late final String message;
       late final AppToastStyle style;

@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:shahtaj_oil_mobile_app/common/models/account/user_model.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/api_endpoints.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
+import 'package:shahtaj_oil_mobile_app/core/models/gps_criteria.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
 import 'package:shahtaj_oil_mobile_app/core/database/app_database.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
@@ -14,7 +15,13 @@ import 'package:shahtaj_oil_mobile_app/core/services/sync_outbox_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/presence_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/storage_service.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/services/free_deliver/dm_free_deliver_service.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/services/load/dm_load_service.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/services/plan/dm_plan_service.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/services/recovery/dm_recovery_service.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/services/session/dm_session_service.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/services/sync/dm_day_bootstrap_service.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/services/van/dm_van_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/sync/ob_day_bootstrap_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/shops/ob_shop_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/tasks/ob_task_service.dart';
@@ -68,6 +75,10 @@ class AuthService extends GetxService {
     await _storage.saveToken(apiKey);
     await _storage.saveRole(role.name);
     await _session.setSession(userModel: user, userRole: role);
+    final gps = GpsCriteria.tryParse(data['gps_criteria']);
+    if (gps != null) {
+      await _session.setGpsCriteria(gps);
+    }
     await _reconcileLocalDataOwner(user.id);
 
     if (role == UserRole.deliveryMan) {
@@ -115,6 +126,27 @@ class AuthService extends GetxService {
     if (Get.isRegistered<DmSessionService>()) {
       Get.find<DmSessionService>().clear();
       await Get.delete<DmSessionService>(force: true);
+    }
+    if (Get.isRegistered<DmLoadService>()) {
+      await Get.delete<DmLoadService>(force: true);
+    }
+    if (Get.isRegistered<DmVanService>()) {
+      await Get.delete<DmVanService>(force: true);
+    }
+    if (Get.isRegistered<DmPlanService>()) {
+      await Get.delete<DmPlanService>(force: true);
+    }
+    if (Get.isRegistered<DmFreeDeliverService>()) {
+      await Get.delete<DmFreeDeliverService>(force: true);
+    }
+    if (Get.isRegistered<DmDayBootstrapService>()) {
+      await Get.delete<DmDayBootstrapService>(force: true);
+    }
+    if (Get.isRegistered<DmRecoveryService>()) {
+      await Get.delete<DmRecoveryService>(force: true);
+    }
+    if (Get.isRegistered<OfflineCacheService>()) {
+      await Get.find<OfflineCacheService>().clearDeliveryManSessionCache();
     }
     await _session.clearSession();
   }

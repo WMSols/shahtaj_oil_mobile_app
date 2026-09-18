@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/common/models/account/user_model.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
+import 'package:shahtaj_oil_mobile_app/core/models/gps_criteria.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/storage_service.dart';
 
 class SessionService extends GetxService {
@@ -13,8 +14,12 @@ class SessionService extends GetxService {
 
   final Rxn<UserModel> user = Rxn<UserModel>();
   final Rxn<UserRole> role = Rxn<UserRole>();
+  final Rxn<GpsCriteria> gpsCriteria = Rxn<GpsCriteria>();
 
   bool get isLoggedIn => user.value != null;
+
+  /// Effective check-in / deliver / place-order max distance, or null if unknown.
+  double? get shopActionMaxDistanceMeters => gpsCriteria.value?.maxM;
 
   Future<SessionService> init() async {
     final token = await _storage.getToken();
@@ -37,6 +42,17 @@ class SessionService extends GetxService {
       }
     }
 
+    final gpsJson = await _storage.getGpsCriteria();
+    if (gpsJson != null) {
+      try {
+        gpsCriteria.value = GpsCriteria.fromJson(
+          jsonDecode(gpsJson) as Map<String, dynamic>,
+        );
+      } catch (_) {
+        gpsCriteria.value = null;
+      }
+    }
+
     return this;
   }
 
@@ -54,9 +70,19 @@ class SessionService extends GetxService {
     await _storage.saveUser(jsonEncode(userModel.toJson()));
   }
 
+  Future<void> setGpsCriteria(GpsCriteria? criteria) async {
+    gpsCriteria.value = criteria;
+    if (criteria == null) {
+      await _storage.clearGpsCriteria();
+      return;
+    }
+    await _storage.saveGpsCriteria(jsonEncode(criteria.toJson()));
+  }
+
   Future<void> clearSession() async {
     user.value = null;
     role.value = null;
+    gpsCriteria.value = null;
     await _storage.clearSessionData();
   }
 }

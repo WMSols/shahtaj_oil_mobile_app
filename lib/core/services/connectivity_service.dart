@@ -11,6 +11,7 @@ import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/sync_outbox_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/services/sync/dm_day_bootstrap_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/sync/ob_day_bootstrap_service.dart';
 
 enum NetworkQuality { offline, weak, medium, good }
@@ -88,6 +89,9 @@ class ConnectivityService extends GetxService {
     // Regaining signal is the best moment to top up the offline snapshot.
     if (Get.isRegistered<ObDayBootstrapService>()) {
       Get.find<ObDayBootstrapService>().runInBackground();
+    }
+    if (Get.isRegistered<DmDayBootstrapService>()) {
+      Get.find<DmDayBootstrapService>().runInBackground();
     }
   }
 

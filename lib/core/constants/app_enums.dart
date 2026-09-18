@@ -209,8 +209,8 @@ extension DmSessionStateX on DmSessionState {
   };
 
   Color get chipColor => switch (this) {
-    DmSessionState.office => AppColors.warning,
-    DmSessionState.onTheWay => AppColors.primary,
+    DmSessionState.office => AppColors.primary,
+    DmSessionState.onTheWay => AppColors.success,
     DmSessionState.ended => AppColors.grey,
   };
 

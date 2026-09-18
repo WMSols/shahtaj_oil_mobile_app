@@ -52,4 +52,8 @@ class ApiEndpoints {
       '/api/shahtaj/v1/dm/job/return-undelivered';
   static const dmShopsSearch = '/api/shahtaj/v1/dm/shops/search';
   static const dmDeliverFree = '/api/shahtaj/v1/dm/deliver/free';
+  static const dmRecoveryShop = '/api/shahtaj/v1/dm/recovery/shop';
+  static const dmRecoveryCollect = '/api/shahtaj/v1/dm/recovery/collect';
+  static const dmWalletGet = '/api/shahtaj/v1/dm/wallet/get';
+  static const dmWalletCollections = '/api/shahtaj/v1/dm/wallet/collections';
 }

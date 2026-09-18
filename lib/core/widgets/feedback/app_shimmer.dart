@@ -94,6 +94,7 @@ class AppShimmer extends StatefulWidget {
     Widget Function(BuildContext context, int index)? itemBuilder,
   }) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         for (var i = 0; i < count; i++) ...[
           if (i > 0) SizedBox(height: AppSpacing.verticalValue(context, 0.01)),

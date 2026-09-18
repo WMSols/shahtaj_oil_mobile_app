@@ -5,7 +5,9 @@ import 'package:shahtaj_oil_mobile_app/core/constants/api_endpoints.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
+import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/services/session/dm_session_service.dart';
 
 class ProfileService extends GetxService {
   ProfileService(this._api, this._session);
@@ -19,7 +21,7 @@ class ProfileService extends GetxService {
       throw StateError('No active role in session');
     }
 
-    if (role != UserRole.orderBooker) {
+    if (role != UserRole.orderBooker && role != UserRole.deliveryMan) {
       final cached = _session.user.value;
       if (cached != null) return cached;
       throw ApiException(
@@ -27,8 +29,12 @@ class ProfileService extends GetxService {
       );
     }
 
+    final endpoint = role == UserRole.deliveryMan
+        ? ApiEndpoints.dmAuthMe
+        : ApiEndpoints.obAuthMe;
+
     try {
-      final data = await _api.postData(ApiEndpoints.obAuthMe);
+      final data = await _api.postData(endpoint);
       final userJson = data['user'];
       if (userJson is! Map) {
         throw ApiException(message: 'Profile payload was missing.');
@@ -41,6 +47,11 @@ class ProfileService extends GetxService {
           )
           .withResolvedName();
       await _session.updateUser(user);
+
+      if (role == UserRole.deliveryMan) {
+        await _seedDmSession(ApiMap.asMap(data['session']));
+      }
+
       return user;
     } catch (_) {
       final cached = _session.user.value?.withResolvedName();
@@ -49,5 +60,13 @@ class ProfileService extends GetxService {
       }
       rethrow;
     }
+  }
+
+  Future<void> _seedDmSession(Map<String, dynamic>? sessionJson) async {
+    if (sessionJson == null) return;
+    if (!Get.isRegistered<DmSessionService>()) {
+      Get.put(DmSessionService(_api), permanent: true);
+    }
+    await Get.find<DmSessionService>().applyFromPayload(sessionJson);
   }
 }

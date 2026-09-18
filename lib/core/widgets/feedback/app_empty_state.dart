@@ -77,10 +77,15 @@ class AppEmptyState extends StatelessWidget {
       onRefresh: onRefresh!,
       child: LayoutBuilder(
         builder: (context, constraints) {
+          // ListView / unbounded parents pass maxHeight = Infinity; Center
+          // cannot lay out with an infinite minHeight.
+          final minHeight = constraints.hasBoundedHeight
+              ? constraints.maxHeight
+              : MediaQuery.sizeOf(context).height * 0.55;
           return SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              constraints: BoxConstraints(minHeight: minHeight),
               child: content,
             ),
           );
