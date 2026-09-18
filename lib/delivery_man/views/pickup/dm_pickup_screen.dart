@@ -13,8 +13,13 @@ class DmPickupScreen extends GetView<DmPickupController> {
   Widget build(BuildContext context) {
     return AppScaffold(
       body: Obx(() {
-        if (controller.isLoading.value) return const AppLoader();
-        return const DmPickupContent();
+        if (controller.isLoading.value && controller.load.value == null) {
+          return const AppLoader();
+        }
+        return RefreshIndicator(
+          onRefresh: () => controller.loadToday(force: true),
+          child: const DmPickupContent(),
+        );
       }),
     );
   }

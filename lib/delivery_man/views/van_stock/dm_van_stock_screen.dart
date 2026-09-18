@@ -13,8 +13,13 @@ class DmVanStockScreen extends GetView<DmVanStockController> {
   Widget build(BuildContext context) {
     return AppScaffold(
       body: Obx(() {
-        if (controller.isLoading.value) return const AppLoader();
-        return const DmVanStockContent();
+        if (controller.isLoading.value && controller.snapshot.value == null) {
+          return const AppLoader();
+        }
+        return RefreshIndicator(
+          onRefresh: () => controller.load(force: true),
+          child: const DmVanStockContent(),
+        );
       }),
     );
   }

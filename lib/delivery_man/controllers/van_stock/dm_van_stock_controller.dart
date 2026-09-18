@@ -2,36 +2,33 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
+import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/dashboard/dm_dashboard_controller.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/models/van_stock/dm_van_stock_model.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/services/van_stock/dm_van_stock_service.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/models/van/dm_van_item_view.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/models/van/dm_van_snapshot_model.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/services/van/dm_van_service.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/shell/dm_shell_controller.dart';
 
-class DmVanStockController extends GetxController {
-  DmVanStockController(this._service);
+enum DmVanStockMode { onVan, loadFromWh, returnToWh }
 
-  final DmVanStockService _service;
+class DmVanStockController extends GetxController {
+  DmVanStockController(this._vanService);
+
+  final DmVanService _vanService;
 
   final RxBool isLoading = true.obs;
   final RxBool isSubmitting = false.obs;
-  final Rxn<DmVanStockModel> session = Rxn<DmVanStockModel>();
-  final RxString notes = ''.obs;
+  final RxnString error = RxnString();
+  final Rxn<DmVanSnapshotModel> snapshot = Rxn<DmVanSnapshotModel>();
+  final RxList<DmVanItemView> rows = <DmVanItemView>[].obs;
+  final Rx<DmVanStockMode> mode = DmVanStockMode.onVan.obs;
   final RxMap<String, String> qtyDrafts = <String, String>{}.obs;
   final RxMap<String, String?> qtyErrors = <String, String?>{}.obs;
   final Map<String, TextEditingController> qtyControllers = {};
 
-  bool get canLoad => session.value?.canLoad ?? false;
-  bool get canUnload => session.value?.canUnload ?? false;
-  bool get isEditingQty => canLoad || canUnload;
-
-  int _maxQtyFor(String itemId) {
-    final item = session.value?.items.firstWhereOrNull((e) => e.id == itemId);
-    if (item == null) return 0;
-    if (canLoad) return item.expected;
-    if (canUnload) return item.onHand;
-    return 0;
-  }
+  bool get canEditQty =>
+      mode.value == DmVanStockMode.loadFromWh ||
+      mode.value == DmVanStockMode.returnToWh;
 
   @override
   void onInit() {
@@ -52,105 +49,189 @@ class DmVanStockController extends GetxController {
     qtyControllers.clear();
   }
 
-  TextEditingController qtyControllerFor(String itemId) {
+  TextEditingController qtyControllerFor(String id) {
     return qtyControllers.putIfAbsent(
-      itemId,
-      () => TextEditingController(text: qtyDrafts[itemId] ?? ''),
+      id,
+      () => TextEditingController(text: qtyDrafts[id] ?? ''),
     );
   }
 
-  Future<void> load() async {
+  Future<void> load({bool force = true}) async {
     isLoading.value = true;
+    error.value = null;
     try {
-      final data = await _service.fetchVanStock();
-      session.value = data;
-      notes.value = data.notes;
-      _seedQtyDrafts(data);
+      snapshot.value = await _vanService.fetchSnapshot(forceNetwork: force);
+      await _reloadRowsForMode();
+    } on ApiException catch (e) {
+      error.value = e.message;
+      if (snapshot.value == null) AppToast.showError(e.message);
+    } catch (_) {
+      error.value = AppTexts.error;
+      if (snapshot.value == null) AppToast.showError(AppTexts.error);
     } finally {
       isLoading.value = false;
     }
   }
 
-  void _seedQtyDrafts(DmVanStockModel data) {
+  Future<void> setMode(DmVanStockMode next) async {
+    if (mode.value == next) return;
+    mode.value = next;
+    isLoading.value = true;
+    try {
+      await _reloadRowsForMode();
+    } on ApiException catch (e) {
+      AppToast.showError(e.message);
+    } catch (_) {
+      AppToast.showError(AppTexts.error);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> _reloadRowsForMode() async {
+    switch (mode.value) {
+      case DmVanStockMode.onVan:
+        final snap = snapshot.value ?? await _vanService.fetchSnapshot();
+        snapshot.value = snap;
+        rows.assignAll([
+          for (final item in snap.items)
+            DmVanItemView(
+              id: '${item.productId}',
+              productId: item.productId,
+              name: item.name,
+              uom: item.uom,
+              qtyOnVan: item.qty,
+              maxEditable: 0,
+            ),
+        ]);
+        _clearDrafts();
+        break;
+      case DmVanStockMode.loadFromWh:
+        final products = await _vanService.fetchProducts();
+        rows.assignAll([
+          for (final p in products)
+            if (p.qtyInWarehouse > 0)
+              DmVanItemView(
+                id: '${p.productId}',
+                productId: p.productId,
+                name: p.name,
+                uom: p.uom,
+                qtyOnVan: p.qtyOnVan,
+                qtyInWarehouse: p.qtyInWarehouse,
+                maxEditable: p.qtyInWarehouse,
+              ),
+        ]);
+        _seedDrafts(zero: true);
+        break;
+      case DmVanStockMode.returnToWh:
+        final snap = snapshot.value ?? await _vanService.fetchSnapshot();
+        snapshot.value = snap;
+        rows.assignAll([
+          for (final item in snap.items)
+            if (item.qty > 0)
+              DmVanItemView(
+                id: '${item.productId}',
+                productId: item.productId,
+                name: item.name,
+                uom: item.uom,
+                qtyOnVan: item.qty,
+                maxEditable: item.qty,
+              ),
+        ]);
+        _seedDrafts(useOnVan: true);
+        break;
+    }
+  }
+
+  void _clearDrafts() {
     _disposeQtyControllers();
     qtyDrafts.clear();
     qtyErrors.clear();
+  }
 
-    for (final item in data.items) {
-      final text = data.canLoad
-          ? item.expected.toString()
-          : data.canUnload
-          ? item.onHand.toString()
-          : item.onHand.toString();
-      qtyDrafts[item.id] = text;
-      qtyControllers[item.id] = TextEditingController(text: text);
+  void _seedDrafts({bool zero = false, bool useOnVan = false}) {
+    _disposeQtyControllers();
+    qtyDrafts.clear();
+    qtyErrors.clear();
+    for (final row in rows) {
+      final text = zero
+          ? '0'
+          : useOnVan
+          ? row.qtyOnVan.round().toString()
+          : '0';
+      qtyDrafts[row.id] = text;
+      qtyControllers[row.id] = TextEditingController(text: text);
     }
     qtyDrafts.refresh();
   }
 
-  void onNotesChanged(String value) => notes.value = value;
-
-  void onQtyChanged(String itemId, String raw) {
-    qtyDrafts[itemId] = raw;
+  void onQtyChanged(String id, String raw) {
+    qtyDrafts[id] = raw;
+    final row = rows.firstWhereOrNull((e) => e.id == id);
+    if (row == null) return;
     final trimmed = raw.trim();
     if (trimmed.isEmpty) {
-      qtyErrors[itemId] = null;
+      qtyErrors[id] = null;
     } else {
-      final parsed = int.tryParse(trimmed);
-      final max = _maxQtyFor(itemId);
-      if (parsed == null || parsed < 0 || parsed > max) {
-        qtyErrors[itemId] = AppTexts.dmInvalidQuantity;
+      final parsed = double.tryParse(trimmed);
+      if (parsed == null || parsed < 0 || parsed > row.maxEditable) {
+        qtyErrors[id] = AppTexts.dmInvalidQuantity;
       } else {
-        qtyErrors[itemId] = null;
+        qtyErrors[id] = null;
       }
     }
     qtyDrafts.refresh();
     qtyErrors.refresh();
   }
 
-  bool _validateAllForSubmit() {
-    final current = session.value;
-    if (current == null) return false;
+  bool _validate() {
     var ok = true;
-    for (final item in current.items) {
-      final raw = (qtyDrafts[item.id] ?? '').trim();
-      final parsed = int.tryParse(raw);
-      final max = current.canLoad ? item.expected : item.onHand;
-      if (parsed == null || parsed < 0 || parsed > max) {
-        qtyErrors[item.id] = AppTexts.dmInvalidQuantity;
+    var any = false;
+    for (final row in rows) {
+      final raw = (qtyDrafts[row.id] ?? '').trim();
+      final parsed = double.tryParse(raw);
+      if (parsed == null || parsed < 0 || parsed > row.maxEditable) {
+        qtyErrors[row.id] = AppTexts.dmInvalidQuantity;
         ok = false;
       } else {
-        qtyErrors[item.id] = null;
+        qtyErrors[row.id] = null;
+        if (parsed > 0) any = true;
       }
     }
     qtyErrors.refresh();
+    if (ok && !any) {
+      AppToast.showError(AppTexts.dmLoadPickEmpty);
+      return false;
+    }
     return ok;
   }
 
-  Map<String, int> _parsedQuantities() {
-    final map = <String, int>{};
-    for (final entry in qtyDrafts.entries) {
-      map[entry.key] = int.parse(entry.value.trim());
-    }
-    return map;
+  List<({int productId, double qty})> _lines() {
+    return [
+      for (final row in rows)
+        (
+          productId: row.productId,
+          qty: double.parse((qtyDrafts[row.id] ?? '0').trim()),
+        ),
+    ].where((e) => e.qty > 0).toList(growable: false);
   }
 
   Future<void> confirmLoad() async {
-    if (!canLoad || isSubmitting.value) return;
-    if (!_validateAllForSubmit()) {
-      AppToast.showError(AppTexts.dmInvalidQuantity);
+    if (mode.value != DmVanStockMode.loadFromWh || isSubmitting.value) return;
+    if (!_validate()) {
+      if (qtyErrors.values.any((e) => e != null)) {
+        AppToast.showError(AppTexts.dmInvalidQuantity);
+      }
       return;
     }
-
     isSubmitting.value = true;
     try {
-      session.value = await _service.confirmLoad(
-        quantitiesByItemId: _parsedQuantities(),
-        notes: notes.value,
-      );
-      _seedQtyDrafts(session.value!);
+      snapshot.value = await _vanService.loadToVan(lines: _lines());
       AppToast.showSuccess(AppTexts.dmVanLoadConfirmed);
-      _refreshDashboard();
+      mode.value = DmVanStockMode.onVan;
+      await _reloadRowsForMode();
+    } on ApiException catch (e) {
+      AppToast.showError(e.message);
     } catch (_) {
       AppToast.showError(AppTexts.error);
     } finally {
@@ -158,22 +239,22 @@ class DmVanStockController extends GetxController {
     }
   }
 
-  Future<void> confirmUnload() async {
-    if (!canUnload || isSubmitting.value) return;
-    if (!_validateAllForSubmit()) {
-      AppToast.showError(AppTexts.dmInvalidQuantity);
+  Future<void> confirmReturn() async {
+    if (mode.value != DmVanStockMode.returnToWh || isSubmitting.value) return;
+    if (!_validate()) {
+      if (qtyErrors.values.any((e) => e != null)) {
+        AppToast.showError(AppTexts.dmInvalidQuantity);
+      }
       return;
     }
-
     isSubmitting.value = true;
     try {
-      session.value = await _service.confirmUnload(
-        quantitiesByItemId: _parsedQuantities(),
-        notes: notes.value,
-      );
-      _seedQtyDrafts(session.value!);
+      snapshot.value = await _vanService.returnToWarehouse(lines: _lines());
       AppToast.showSuccess(AppTexts.dmVanUnloadConfirmed);
-      _refreshDashboard();
+      mode.value = DmVanStockMode.onVan;
+      await _reloadRowsForMode();
+    } on ApiException catch (e) {
+      AppToast.showError(e.message);
     } catch (_) {
       AppToast.showError(AppTexts.error);
     } finally {
@@ -184,11 +265,5 @@ class DmVanStockController extends GetxController {
   void goToOrders() {
     if (!Get.isRegistered<DeliveryManShellController>()) return;
     Get.find<DeliveryManShellController>().selectLeaf('dm_orders');
-  }
-
-  void _refreshDashboard() {
-    if (Get.isRegistered<DmDashboardController>()) {
-      Get.find<DmDashboardController>().load();
-    }
   }
 }
