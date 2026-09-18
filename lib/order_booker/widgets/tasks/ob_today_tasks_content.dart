@@ -133,6 +133,7 @@ class ObTodayTasksContent extends GetView<ObRouteDetailController> {
                       ),
                       child: ObTaskCard(
                         task: task,
+                        displayStatus: controller.displayStatusFor(task),
                         willSync: controller.hasQueuedSyncWork(task),
                         syncNeedsReview: controller.needsSyncReview(task),
                         isCheckingIn:
@@ -142,10 +143,11 @@ class ObTodayTasksContent extends GetView<ObRouteDetailController> {
                                 TaskStatus.pending
                             ? () => controller.openCheckIn(task)
                             : null,
+                        onResume: controller.isResumableTask(task)
+                            ? controller.resumeActiveVisit
+                            : null,
                         onNotes: () => controller.openTaskNotes(task),
-                        onTap:
-                            controller.displayStatusFor(task) ==
-                                TaskStatus.inVisit
+                        onTap: controller.isResumableTask(task)
                             ? controller.resumeActiveVisit
                             : null,
                       ),

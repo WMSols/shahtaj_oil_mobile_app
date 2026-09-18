@@ -8,6 +8,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_outline_icon_button.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_primary_button.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_task_model.dart';
@@ -16,7 +17,9 @@ class ObTaskCard extends StatelessWidget {
   const ObTaskCard({
     super.key,
     required this.task,
+    this.displayStatus,
     this.onCheckIn,
+    this.onResume,
     this.onNotes,
     this.onTap,
     this.isCheckingIn = false,
@@ -25,20 +28,28 @@ class ObTaskCard extends StatelessWidget {
   });
 
   final ObTaskModel task;
+
+  /// Prefer controller [displayStatusFor] so active visit overlays immediately.
+  final TaskStatus? displayStatus;
   final VoidCallback? onCheckIn;
+  final VoidCallback? onResume;
   final VoidCallback? onNotes;
   final VoidCallback? onTap;
   final bool isCheckingIn;
   final bool willSync;
   final bool syncNeedsReview;
 
-  bool get _canCheckIn => !willSync && task.status == TaskStatus.pending;
+  TaskStatus get _status => displayStatus ?? task.status;
+
+  bool get _canCheckIn => !willSync && _status == TaskStatus.pending;
+
+  bool get _canResume => _status == TaskStatus.inVisit && onResume != null;
 
   bool get _hasNotes => task.notes != null && task.notes!.trim().isNotEmpty;
 
   bool get _showNotesButton => !_hasNotes && onNotes != null;
 
-  bool get _showActions => _canCheckIn || _showNotesButton;
+  bool get _showActions => _canCheckIn || _showNotesButton || _canResume;
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +61,7 @@ class ObTaskCard extends StatelessWidget {
         ? AppColors.error
         : willSync
         ? AppColors.warning
-        : task.status.chipColor;
+        : _status.chipColor;
 
     return AppOutlineCard(
       onTap: onTap,
@@ -128,25 +139,31 @@ class ObTaskCard extends StatelessWidget {
           ),
           if (_showActions) ...[
             AppSpacing.vertical(context, 0.012),
-            Row(
-              children: [
-                if (_canCheckIn)
-                  AppOutlineIconButton(
-                    icon: AppIcons.task,
-                    label: AppTexts.obTaskCheckIn,
-                    isLoading: isCheckingIn,
-                    onTap: isCheckingIn ? null : onCheckIn,
-                  ),
-                if (_canCheckIn && _showNotesButton)
-                  AppSpacing.horizontal(context, 0.012),
-                if (_showNotesButton)
-                  AppOutlineIconButton(
-                    icon: AppIcons.history5,
-                    label: AppTexts.obTaskNotes,
-                    onTap: onNotes,
-                  ),
-              ],
-            ),
+            if (_canResume)
+              AppPrimaryButton(
+                label: AppTexts.obResumeVisit,
+                onPressed: onResume,
+              )
+            else
+              Row(
+                children: [
+                  if (_canCheckIn)
+                    AppOutlineIconButton(
+                      icon: AppIcons.task,
+                      label: AppTexts.obTaskCheckIn,
+                      isLoading: isCheckingIn,
+                      onTap: isCheckingIn ? null : onCheckIn,
+                    ),
+                  if (_canCheckIn && _showNotesButton)
+                    AppSpacing.horizontal(context, 0.012),
+                  if (_showNotesButton)
+                    AppOutlineIconButton(
+                      icon: AppIcons.history5,
+                      label: AppTexts.obTaskNotes,
+                      onTap: onNotes,
+                    ),
+                ],
+              ),
           ],
           if (_hasNotes) ...[
             AppSpacing.vertical(context, 0.012),
@@ -201,8 +218,8 @@ class ObTaskCard extends StatelessWidget {
           else if (willSync)
             AppStatusChip.willSync(fullWidth: true)
           else ...[
-            AppStatusChip.task(task.status, fullWidth: true),
-            if (task.status == TaskStatus.completed &&
+            AppStatusChip.task(_status, fullWidth: true),
+            if (_status == TaskStatus.completed &&
                 task.hasPendingOrderVerification) ...[
               AppSpacing.vertical(context, 0.008),
               AppStatusChip(

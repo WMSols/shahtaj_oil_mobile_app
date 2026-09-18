@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
@@ -11,6 +13,7 @@ import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_today_tasks_
 import 'package:shahtaj_oil_mobile_app/order_booker/services/history/ob_visit_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/tasks/ob_task_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/tasks/ob_check_in_flow.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/visit/ob_visit_session_service.dart';
 
 class ObRouteDetailController extends GetxController {
   ObRouteDetailController(this._taskService, {this._visitService});
@@ -25,6 +28,8 @@ class ObRouteDetailController extends GetxController {
   final RxnInt checkingInTaskId = RxnInt();
   final Rxn<TaskStatus> statusFilter = Rxn<TaskStatus>();
   final RxString searchQuery = ''.obs;
+
+  Worker? _activeVisitWorker;
 
   String get routeId => Get.parameters['id'] ?? '';
 
@@ -50,12 +55,43 @@ class ObRouteDetailController extends GetxController {
     return Get.find<SyncOutboxService>().isTaskNeedsReview(task.id);
   }
 
-  /// Queued closes look completed with a will-sync chip; nothing looks
-  /// completed from local data alone until the outbox step succeeds.
+  /// Queued closes look completed with a will-sync chip.
+  /// Only the live [activeVisit] may show as In visit / Resume.
   TaskStatus displayStatusFor(ObTaskModel task) {
     if (isQueuedForSync(task)) return TaskStatus.completed;
+
+    if (Get.isRegistered<ObVisitSessionService>()) {
+      final session = Get.find<ObVisitSessionService>();
+      // Observe for Obx rebuilds after offline closes / reconnect.
+      session.closedTaskIds.length;
+      session.activeVisitRx.value;
+
+      if (session.isLocallyClosedTask(task.id)) {
+        return TaskStatus.completed;
+      }
+
+      final active = session.activeVisitRx.value ?? activeVisit.value;
+      if (active != null &&
+          (active.taskId == task.id || active.shopId == task.shopId)) {
+        return TaskStatus.inVisit;
+      }
+    } else {
+      final active = activeVisit.value;
+      if (active != null &&
+          (active.taskId == task.id || active.shopId == task.shopId)) {
+        return TaskStatus.inVisit;
+      }
+    }
+
+    // Stale inVisit override for a non-active shop must never look resumeable.
+    if (task.status == TaskStatus.inVisit) {
+      return TaskStatus.completed;
+    }
     return task.status;
   }
+
+  bool isResumableTask(ObTaskModel task) =>
+      displayStatusFor(task) == TaskStatus.inVisit;
 
   List<ObTaskModel> get filteredSortedTasks {
     final tasks = todayTasks.value?.tasks ?? const <ObTaskModel>[];
@@ -117,14 +153,50 @@ class ObRouteDetailController extends GetxController {
         }
       }
     }
+    _bindActiveVisitRx();
     loadTasks();
+  }
+
+  @override
+  void onClose() {
+    _activeVisitWorker?.dispose();
+    super.onClose();
+  }
+
+  void _bindActiveVisitRx() {
+    if (!Get.isRegistered<ObVisitSessionService>()) return;
+    final session = Get.find<ObVisitSessionService>();
+    activeVisit.value = session.activeVisitRx.value;
+    _activeVisitWorker = ever<ObActiveVisitModel?>(session.activeVisitRx, (
+      visit,
+    ) {
+      activeVisit.value = visit;
+      if (visit != null) {
+        _markTaskInVisitLocally(visit.taskId, visit.shopId);
+      }
+    });
+  }
+
+  /// Instant UI update so the banner / in-visit card appear before any network.
+  void _markTaskInVisitLocally(int taskId, String shopId) {
+    final current = todayTasks.value;
+    if (current == null) return;
+    var changed = false;
+    final tasks = current.tasks
+        .map((task) {
+          if (task.id != taskId && task.shopId != shopId) return task;
+          if (task.status == TaskStatus.inVisit) return task;
+          changed = true;
+          return task.copyWith(status: TaskStatus.inVisit);
+        })
+        .toList(growable: false);
+    if (!changed) return;
+    todayTasks.value = current.copyWith(tasks: tasks);
   }
 
   Future<void> loadTasks({bool silent = false, bool force = false}) async {
     final hasCache = todayTasks.value != null;
 
-    // Always hit the network so distributor zone/route changes show up without
-    // requiring logout. Keep showing cached UI while refreshing when possible.
     if (!silent && !hasCache) {
       isLoading.value = true;
     }
@@ -135,6 +207,18 @@ class ObRouteDetailController extends GetxController {
       );
       todayTasks.value = data;
       activeVisit.value = await _taskService.fetchActiveVisit();
+      if (Get.isRegistered<ObVisitSessionService>()) {
+        final session = Get.find<ObVisitSessionService>();
+        // Keep shared Rx in sync with local-first read.
+        if (activeVisit.value != null) {
+          session.publishActiveVisit(activeVisit.value!);
+        } else if (session.activeVisitRx.value != null) {
+          // Network said none but local still has one — prefer local UI.
+          activeVisit.value = session.activeVisitRx.value;
+        } else {
+          session.clearActiveVisitRx();
+        }
+      }
       await _enrichTasksWithOrderApproval();
 
       if (routeId.isNotEmpty &&
@@ -149,8 +233,6 @@ class ObRouteDetailController extends GetxController {
       }
       error.value = null;
     } catch (_) {
-      // Keep existing tasks on screen when a refresh fails; only fail hard
-      // when there is nothing to show.
       if (!hasCache) {
         error.value = AppTexts.error;
       }
@@ -161,6 +243,26 @@ class ObRouteDetailController extends GetxController {
     }
   }
 
+  /// After check-in / return from visit: local overlay first, network later.
+  Future<void> refreshAfterVisitChange() async {
+    try {
+      todayTasks.value = await _taskService.fetchTodayTasks(
+        allowStaleFallback: true,
+        forceNetwork: false,
+      );
+      activeVisit.value = await _taskService.fetchActiveVisit();
+      if (Get.isRegistered<ObVisitSessionService>() &&
+          activeVisit.value != null) {
+        Get.find<ObVisitSessionService>().publishActiveVisit(
+          activeVisit.value!,
+        );
+      }
+    } catch (_) {
+      // Keep optimistic UI.
+    }
+    unawaited(loadTasks(silent: true, force: true));
+  }
+
   Future<void> openCheckIn(ObTaskModel task) async {
     if (checkingInTaskId.value != null) return;
     checkingInTaskId.value = task.id;
@@ -169,7 +271,7 @@ class ObRouteDetailController extends GetxController {
         taskService: _taskService,
         task: task,
         activeVisit: activeVisit.value,
-        onDone: () => loadTasks(force: true),
+        onDone: refreshAfterVisitChange,
       );
     } finally {
       checkingInTaskId.value = null;
