@@ -7,13 +7,17 @@ import 'package:shahtaj_oil_mobile_app/delivery_man/bindings/collections/dm_shop
 import 'package:shahtaj_oil_mobile_app/delivery_man/bindings/deliveries/dm_delivery_detail_binding.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/bindings/handover/dm_handover_confirm_binding.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/bindings/handover/dm_handover_detail_binding.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/bindings/free_deliver/dm_free_deliver_binding.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/bindings/orders/dm_job_detail_binding.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/bindings/orders/dm_order_detail_binding.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/views/collections/dm_collection_detail_screen.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/views/collections/dm_record_collection_screen.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/views/collections/dm_shop_invoices_screen.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/views/deliveries/dm_delivery_detail_screen.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/views/free_deliver/dm_free_deliver_screen.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/views/handover/dm_handover_confirm_screen.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/views/handover/dm_handover_detail_screen.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/views/orders/dm_job_detail_screen.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/views/orders/dm_order_detail_screen.dart';
 
 class DeliveryManRoutes {
@@ -23,6 +27,16 @@ class DeliveryManRoutes {
   /// and are not registered here.
   /// Static paths (confirm/record) must appear before `:id` routes.
   static final pages = <GetPage>[
+    GetPage(
+      name: AppRoutes.dmJobDetail,
+      page: () => const DmJobDetailScreen(),
+      binding: DmJobDetailBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.dmFreeDeliverShop,
+      page: () => const DmFreeDeliverScreen(),
+      binding: DmFreeDeliverBinding(),
+    ),
     GetPage(
       name: AppRoutes.dmOrderDetail,
       page: DmOrderDetailScreen.new,

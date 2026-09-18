@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/images/app_images.dart';
@@ -10,7 +9,6 @@ import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_filter_chip.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_async_body.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_shimmer_skeletons.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_search_field.dart';
@@ -79,26 +77,6 @@ class DmCollectionHistoryContent
             ),
           );
         }),
-        Obx(
-          () => SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: AppSpacing.screenPadding(
-              context,
-            ).copyWith(top: 0, bottom: 0),
-            child: Row(
-              children: [
-                for (final method
-                    in DmCollectionHistoryController.methodFilters)
-                  AppFilterChip(
-                    label: controller.methodFilterLabel(method),
-                    selected: controller.isMethodSelected(method),
-                    color: method?.chipColor ?? AppColors.primary,
-                    onTap: () => controller.selectMethodFilter(method),
-                  ),
-              ],
-            ),
-          ),
-        ),
         Obx(() {
           final rows = controller.filteredCollections;
           if (controller.isLoading.value || rows.isEmpty) {
@@ -123,7 +101,6 @@ class DmCollectionHistoryContent
           child: Obx(() {
             final rows = controller.filteredCollections;
             final hasQuery = controller.searchQuery.value.trim().isNotEmpty;
-            final isFiltered = controller.methodFilter.value != null;
 
             return AppAsyncBody(
               isLoading:
@@ -132,7 +109,7 @@ class DmCollectionHistoryContent
               isEmpty: rows.isEmpty,
               errorMessage: controller.error.value,
               emptyTitle: AppTexts.emptyNoCollectionsTitle,
-              emptySubtitle: hasQuery || isFiltered || controller.hasDateFilter
+              emptySubtitle: hasQuery || controller.hasDateFilter
                   ? AppTexts.dmNoCollectionsMatchSearch
                   : AppTexts.dmNoRecentCollections,
               emptyImage: AppImages.emptyNoCollections,
@@ -150,7 +127,6 @@ class DmCollectionHistoryContent
                     child: DmCollectionHistoryCard(
                       collection: collection,
                       timeLabel: controller.timeLabel(collection),
-                      onTap: () => controller.openCollection(collection),
                     ),
                   );
                 },

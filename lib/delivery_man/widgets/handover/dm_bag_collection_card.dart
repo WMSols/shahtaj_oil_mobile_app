@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
@@ -9,17 +9,20 @@ import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.d
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/models/recovery/dm_wallet_collection_model.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/models/collections/dm_collection_summary_model.dart';
 
-class DmCollectionHistoryCard extends StatelessWidget {
-  const DmCollectionHistoryCard({
+/// Mock bag-collection row for parked handover UI (no live handover API yet).
+class DmBagCollectionCard extends StatelessWidget {
+  const DmBagCollectionCard({
     super.key,
     required this.collection,
     required this.timeLabel,
+    this.onTap,
   });
 
-  final DmWalletCollectionModel collection;
+  final DmCollectionSummaryModel collection;
   final String timeLabel;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +31,8 @@ class DmCollectionHistoryCard extends StatelessWidget {
     ).copyWith(color: AppColors.grey);
 
     return AppOutlineCard(
-      statusColor: collection.paymentMethod.chipColor,
+      onTap: onTap,
+      statusColor: collection.status.chipColor,
       padding: AppSpacing.symmetric(context, h: 0.035, v: 0.016),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -37,39 +41,26 @@ class DmCollectionHistoryCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  collection.name,
+                  collection.receiptNumber,
                   style: AppTextStyles.sectionTitle(context),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              AppStatusChip(
-                label: collection.paymentMethod.label,
-                color: collection.paymentMethod.chipColor,
-                soft: true,
-              ),
+              AppSpacing.horizontal(context, 0.012),
+              AppStatusChip.paymentMethod(collection.method),
+              if (onTap != null) ...[
+                AppSpacing.horizontal(context, 0.012),
+                Icon(
+                  AppIcons.chevronRight,
+                  color: AppColors.black,
+                  size: AppResponsive.scaleSize(context, 22),
+                ),
+              ],
             ],
           ),
           AppSpacing.vertical(context, 0.004),
           Text(collection.shopName, style: mutedStyle),
-          if (collection.invoices.isNotEmpty) ...[
-            AppSpacing.vertical(context, 0.004),
-            Text(
-              collection.invoices.join(', '),
-              style: mutedStyle,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-          if (collection.paymentMethod == PaymentMethod.cheque &&
-              (collection.chequeNumber ?? '').isNotEmpty) ...[
-            AppSpacing.vertical(context, 0.004),
-            Text(collection.chequeNumber!, style: mutedStyle),
-          ],
-          if ((collection.notes ?? '').isNotEmpty) ...[
-            AppSpacing.vertical(context, 0.004),
-            Text(collection.notes!, style: mutedStyle),
-          ],
           AppSpacing.vertical(context, 0.006),
           Row(
             children: [
@@ -87,12 +78,19 @@ class DmCollectionHistoryCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
+            ],
+          ),
+          AppSpacing.vertical(context, 0.008),
+          Row(
+            children: [
               Text(
                 AppFormatter.currency(collection.amount, symbol: 'Rs. '),
                 style: AppTextStyles.sectionTitle(
                   context,
                 ).copyWith(color: AppColors.primary),
               ),
+              AppSpacing.horizontal(context, 0.016),
+              AppStatusChip.collection(collection.status),
             ],
           ),
         ],

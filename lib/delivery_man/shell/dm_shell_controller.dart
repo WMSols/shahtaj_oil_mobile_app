@@ -5,49 +5,42 @@ import 'package:shahtaj_oil_mobile_app/common/controllers/shell/app_shell_contro
 import 'package:shahtaj_oil_mobile_app/common/views/account/account_screen.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/connectivity_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_drawer_entry.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/bindings/collections/dm_collection_history_binding.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/bindings/collections/dm_today_shops_binding.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/bindings/dashboard/dm_dashboard_binding.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/bindings/deliver/dm_deliver_binding.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/bindings/deliveries/dm_deliveries_binding.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/bindings/handover/dm_handover_binding.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/bindings/free_deliver/dm_free_deliver_search_binding.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/bindings/orders/dm_orders_binding.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/bindings/pickup/dm_pickup_binding.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/bindings/return/dm_return_binding.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/bindings/van_stock/dm_van_stock_binding.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/bindings/wallet/dm_wallet_binding.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/collections/dm_collection_history_controller.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/collections/dm_today_shops_controller.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/dashboard/dm_dashboard_controller.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/handover/dm_handover_controller.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/free_deliver/dm_free_deliver_search_controller.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/orders/dm_orders_controller.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/pickup/dm_pickup_controller.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/van_stock/dm_van_stock_controller.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/services/session/dm_session_service.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/wallet/dm_wallet_controller.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/services/sync/dm_day_bootstrap_service.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/shell/dm_services_binding.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/views/collections/dm_collection_history_screen.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/views/collections/dm_today_shops_screen.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/views/dashboard/dm_dashboard_screen.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/views/deliver/dm_deliver_screen.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/views/deliveries/dm_deliveries_screen.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/views/handover/dm_handover_screen.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/views/free_deliver/dm_free_deliver_search_screen.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/views/orders/dm_orders_screen.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/views/pickup/dm_pickup_screen.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/views/return/dm_return_screen.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/views/van_stock/dm_van_stock_screen.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/views/wallet/dm_wallet_screen.dart';
 
 class DeliveryManShellController extends AppShellController {
   @override
   void onInit() {
     DmServicesBinding.ensureRegistered();
     super.onInit();
-    _refreshSession();
-  }
-
-  Future<void> _refreshSession() async {
-    if (!Get.isRegistered<DmSessionService>()) return;
-    try {
-      await Get.find<DmSessionService>().fetchSession(forceNetwork: true);
-    } catch (_) {
-      await Get.find<DmSessionService>().loadCached();
+    if (Get.isRegistered<DmDayBootstrapService>()) {
+      Get.find<DmDayBootstrapService>().runInBackground(force: true);
     }
   }
 
@@ -58,30 +51,53 @@ class DeliveryManShellController extends AppShellController {
   }
 
   void _refreshLeafData(String id) {
+    final forceNetwork = Get.isRegistered<ConnectivityService>()
+        ? Get.find<ConnectivityService>().isOnline.value &&
+              Get.find<ConnectivityService>().quality.value !=
+                  NetworkQuality.weak
+        : true;
+
     switch (id) {
       case 'dm_dashboard':
         if (Get.isRegistered<DmDashboardController>()) {
-          Get.find<DmDashboardController>().load();
+          Get.find<DmDashboardController>().load(force: forceNetwork);
         }
         break;
-      case 'dm_today_shops':
-        if (Get.isRegistered<DmTodayShopsController>()) {
-          Get.find<DmTodayShopsController>().loadShops(force: true);
+      case 'dm_pickup':
+        if (Get.isRegistered<DmPickupController>()) {
+          Get.find<DmPickupController>().loadToday(force: forceNetwork);
         }
         break;
-      case 'dm_collection_history':
-        if (Get.isRegistered<DmCollectionHistoryController>()) {
-          Get.find<DmCollectionHistoryController>().loadHistory(force: true);
+      case 'dm_orders':
+        if (Get.isRegistered<DmOrdersController>()) {
+          Get.find<DmOrdersController>().loadPlan(force: forceNetwork);
         }
         break;
-      case 'dm_handover':
-        if (Get.isRegistered<DmHandoverController>()) {
-          Get.find<DmHandoverController>().loadHandover(force: true);
+      case 'dm_free_deliver':
+        if (Get.isRegistered<DmFreeDeliverSearchController>() && forceNetwork) {
+          Get.find<DmFreeDeliverSearchController>().search();
         }
         break;
       case 'dm_van_stock':
         if (Get.isRegistered<DmVanStockController>()) {
-          Get.find<DmVanStockController>().load();
+          Get.find<DmVanStockController>().load(force: forceNetwork);
+        }
+        break;
+      case 'dm_today_shops':
+        if (Get.isRegistered<DmTodayShopsController>()) {
+          Get.find<DmTodayShopsController>().loadShops(force: forceNetwork);
+        }
+        break;
+      case 'dm_wallet':
+        if (Get.isRegistered<DmWalletController>()) {
+          Get.find<DmWalletController>().load(force: forceNetwork);
+        }
+        break;
+      case 'dm_collection_history':
+        if (Get.isRegistered<DmCollectionHistoryController>()) {
+          Get.find<DmCollectionHistoryController>().loadHistory(
+            force: forceNetwork,
+          );
         }
         break;
     }
@@ -112,30 +128,23 @@ class DeliveryManShellController extends AppShellController {
           (
             id: 'dm_orders',
             icon: AppIcons.orders,
-            label: AppTexts.navOrders,
+            label: AppTexts.dmTodayPlanTitle,
             screen: const DmOrdersScreen(),
             initBinding: () => DmOrdersBinding().dependencies(),
           ),
           (
-            id: 'dm_deliver',
-            icon: AppIcons.deliver,
-            label: AppTexts.dmDeliverTitle,
-            screen: const DmDeliverScreen(),
-            initBinding: () => DmDeliverBinding().dependencies(),
+            id: 'dm_free_deliver',
+            icon: AppIcons.addshop,
+            label: AppTexts.dmFreeDeliverTitle,
+            screen: const DmFreeDeliverSearchScreen(),
+            initBinding: () => DmFreeDeliverSearchBinding().dependencies(),
           ),
           (
-            id: 'dm_return',
-            icon: AppIcons.returnDelivery,
-            label: AppTexts.dmReturnTitle,
-            screen: const DmReturnScreen(),
-            initBinding: () => DmReturnBinding().dependencies(),
-          ),
-          (
-            id: 'dm_deliveries_list',
-            icon: AppIcons.history,
-            label: AppTexts.navDeliveryHistory,
-            screen: const DmDeliveriesScreen(),
-            initBinding: () => DmDeliveriesBinding().dependencies(),
+            id: 'dm_van_stock',
+            icon: AppIcons.vanStock,
+            label: AppTexts.dmVanStockTitle,
+            screen: const DmVanStockScreen(),
+            initBinding: () => DmVanStockBinding().dependencies(),
           ),
         ],
       ),
@@ -148,14 +157,21 @@ class DeliveryManShellController extends AppShellController {
         children: [
           (
             id: 'dm_today_shops',
-            icon: AppIcons.task,
-            label: AppTexts.dmTodayShopsTitle,
+            icon: AppIcons.shops,
+            label: AppTexts.dmRecoverShopsTitle,
             screen: const DmTodayShopsScreen(),
             initBinding: () => DmTodayShopsBinding().dependencies(),
           ),
           (
+            id: 'dm_wallet',
+            icon: AppIcons.wallet,
+            label: AppTexts.dmWalletTitle,
+            screen: const DmWalletScreen(),
+            initBinding: () => DmWalletBinding().dependencies(),
+          ),
+          (
             id: 'dm_collection_history',
-            icon: AppIcons.invoices,
+            icon: AppIcons.history,
             label: AppTexts.dmCollectionHistoryTitle,
             screen: const DmCollectionHistoryScreen(),
             initBinding: () => DmCollectionHistoryBinding().dependencies(),
@@ -163,20 +179,7 @@ class DeliveryManShellController extends AppShellController {
         ],
       ),
     ),
-    AppDrawerEntry.leaf((
-      id: 'dm_handover',
-      icon: AppIcons.handover,
-      label: AppTexts.navHandover,
-      screen: const DmHandoverScreen(),
-      initBinding: () => DmHandoverBinding().dependencies(),
-    )),
-    AppDrawerEntry.leaf((
-      id: 'dm_van_stock',
-      icon: AppIcons.vanStock,
-      label: AppTexts.dmVanStockTitle,
-      screen: const DmVanStockScreen(),
-      initBinding: () => DmVanStockBinding().dependencies(),
-    )),
+    // Handover / delivery history / mock deliver-return: still no API.
     AppDrawerEntry.leaf((
       id: 'dm_account',
       icon: AppIcons.account,

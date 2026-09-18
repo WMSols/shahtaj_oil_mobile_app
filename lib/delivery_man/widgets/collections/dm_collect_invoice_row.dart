@@ -9,7 +9,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_text_field.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/models/collections/dm_invoice_model.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/models/recovery/dm_recovery_invoice_model.dart';
 
 class DmCollectInvoiceRow extends StatelessWidget {
   const DmCollectInvoiceRow({
@@ -20,7 +20,7 @@ class DmCollectInvoiceRow extends StatelessWidget {
     this.onFillRemaining,
   });
 
-  final DmInvoiceModel invoice;
+  final DmRecoveryInvoiceModel invoice;
   final TextEditingController? amountController;
   final VoidCallback? onAmountChanged;
   final VoidCallback? onFillRemaining;
@@ -41,22 +41,23 @@ class DmCollectInvoiceRow extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  invoice.invoiceNumber,
+                  invoice.name,
                   style: AppTextStyles.sectionTitle(context),
                 ),
               ),
-              Text(
-                AppFormatter.shortDate(invoice.issuedAt),
-                style: muted.copyWith(
-                  fontSize: AppResponsive.scaleSize(context, 12),
+              if (invoice.invoiceDate != null)
+                Text(
+                  AppFormatter.shortDate(invoice.invoiceDate!),
+                  style: muted.copyWith(
+                    fontSize: AppResponsive.scaleSize(context, 12),
+                  ),
                 ),
-              ),
             ],
           ),
           AppSpacing.vertical(context, 0.006),
           Text(
             '${AppTexts.dmInvoiceRemaining}: '
-            '${AppFormatter.currencyWhole(invoice.remainingAmount)}',
+            '${AppFormatter.currencyWhole(invoice.amountResidual)}',
             style: AppTextStyles.bodyText(
               context,
             ).copyWith(color: AppColors.primary, fontWeight: FontWeight.w600),
@@ -66,7 +67,7 @@ class DmCollectInvoiceRow extends StatelessWidget {
             AppTextField(
               controller: amountController,
               label: AppTexts.dmCollectAmount,
-              hint: AppFormatter.currencyWhole(invoice.remainingAmount),
+              hint: AppFormatter.currencyWhole(invoice.amountResidual),
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),

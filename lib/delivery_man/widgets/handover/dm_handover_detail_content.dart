@@ -18,7 +18,7 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/info/app_detail_row.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_section_header.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/handover/dm_handover_detail_controller.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/handover/dm_handover_summary_model.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/widgets/collections/dm_collection_history_card.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/widgets/handover/dm_bag_collection_card.dart';
 
 class DmHandoverDetailContent extends GetView<DmHandoverDetailController> {
   const DmHandoverDetailContent({super.key});
@@ -86,7 +86,7 @@ class DmHandoverDetailContent extends GetView<DmHandoverDetailController> {
             else
               for (var i = 0; i < controller.collections.length; i++) ...[
                 if (i > 0) AppSpacing.vertical(context, 0.01),
-                DmCollectionHistoryCard(
+                DmBagCollectionCard(
                   collection: controller.collections[i],
                   timeLabel: controller.collectionTimeLabel(
                     controller.collections[i],

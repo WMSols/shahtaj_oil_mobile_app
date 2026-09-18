@@ -11,9 +11,9 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dar
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_shimmer_skeletons.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_section_header.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/handover/dm_handover_controller.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/widgets/handover/dm_bag_collection_card.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/widgets/handover/dm_bag_snapshot_strip.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/widgets/handover/dm_handover_summary_card.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/widgets/collections/dm_collection_history_card.dart';
 
 class DmHandoverContent extends GetView<DmHandoverController> {
   const DmHandoverContent({super.key});
@@ -63,7 +63,7 @@ class DmHandoverContent extends GetView<DmHandoverController> {
                       i++
                     ) ...[
                       if (i > 0) AppSpacing.vertical(context, 0.01),
-                      DmCollectionHistoryCard(
+                      DmBagCollectionCard(
                         collection: controller.bagCollections[i],
                         timeLabel: controller.collectionTimeLabel(
                           controller.bagCollections[i],
