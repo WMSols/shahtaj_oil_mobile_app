@@ -13,10 +13,12 @@ import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/connectivity_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/local_media_store.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/sync/outbox_payload.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_check_in_result.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/sync/ob_day_bootstrap_service.dart';
 
 typedef SyncHandler =
     Future<void> Function(OutboxEntry entry, Map<String, dynamic> payload);
@@ -68,8 +70,18 @@ class SyncOutboxService extends GetxService {
   /// Owned entries in `failed` or `needsReview` (banner / Sync Center).
   final RxInt attentionCount = 0.obs;
 
+  /// Most recent local → server visit id swap (Create Order listens to refresh).
+  final Rxn<VisitIdRemap> lastVisitRemap = Rxn<VisitIdRemap>();
+
+  /// Bumped after every flush finishes so Today / active visit can reload.
+  final Rxn<DateTime> lastFlushAt = Rxn<DateTime>();
+
   static const _maxAttempts = 3;
   static const _uuid = Uuid();
+
+  /// Telemetry-only outbox rows (distributor panel). Hidden from Sync Center
+  /// and cleared after flush — the OB cannot usefully retry them.
+  static bool isSilentTelemetryAction(String action) => action == 'gps_attempt';
 
   Future<SyncOutboxService> init() async {
     _registerObHandlers();
@@ -119,6 +131,9 @@ class SyncOutboxService extends GetxService {
     var attention = 0;
 
     for (final entry in open) {
+      // Far-GPS pings sync in the background but never surface to the OB.
+      if (isSilentTelemetryAction(entry.action)) continue;
+
       if (!_isOwnedByCurrentUser(entry)) {
         otherUser++;
         continue;
@@ -175,6 +190,16 @@ class SyncOutboxService extends GetxService {
     String? entityType,
     int? localEntityId,
   }) async {
+    final requestId = clientRequestId ?? _uuid.v4();
+    if (action == 'gps_attempt') {
+      final existing = await _db.outboxByClientRequestId(requestId);
+      if (existing != null &&
+          existing.status != OutboxStatus.synced &&
+          existing.status != OutboxStatus.needsReview) {
+        return existing;
+      }
+    }
+
     final id = 'sync-${DateTime.now().millisecondsSinceEpoch}-${_uuid.v4()}';
     final mediaIds = OutboxPayload.collectMediaIds(payload);
     final entry = OutboxEntriesCompanion.insert(
@@ -182,7 +207,7 @@ class SyncOutboxService extends GetxService {
       role: role,
       action: action,
       payloadJson: jsonEncode(payload),
-      clientRequestId: clientRequestId ?? _uuid.v4(),
+      clientRequestId: requestId,
       status: const Value(OutboxStatus.queued),
       createdAt: DateTime.now(),
       dependsOn: Value(dependsOn),
@@ -196,6 +221,14 @@ class SyncOutboxService extends GetxService {
     return (await (_db.select(
       _db.outboxEntries,
     )..where((t) => t.id.equals(id))).getSingle());
+  }
+
+  /// True when a blocked GPS telemetry row with this id is already queued.
+  Future<bool> hasPendingGpsAttempt({required String clientRequestId}) async {
+    final existing = await _db.outboxByClientRequestId(clientRequestId);
+    if (existing == null) return false;
+    return existing.action == 'gps_attempt' &&
+        existing.status != OutboxStatus.synced;
   }
 
   /// Queues [payload] and, when the link is good enough, tries it right away.
@@ -312,14 +345,19 @@ class SyncOutboxService extends GetxService {
         await _mark(entry, status: OutboxStatus.syncing);
         try {
           await handler(entry, payload);
-          await _mark(
-            entry,
-            status: OutboxStatus.synced,
-            syncedAt: DateTime.now(),
-            error: '',
-          );
-          await _discardMedia(entry);
-          resolvedStatus[entry.id] = OutboxStatus.synced;
+          if (isSilentTelemetryAction(entry.action)) {
+            await _db.deleteOutboxEntry(entry.id);
+            resolvedStatus[entry.id] = OutboxStatus.synced;
+          } else {
+            await _mark(
+              entry,
+              status: OutboxStatus.synced,
+              syncedAt: DateTime.now(),
+              error: '',
+            );
+            await _discardMedia(entry);
+            resolvedStatus[entry.id] = OutboxStatus.synced;
+          }
         } on ApiException catch (e) {
           resolvedStatus[entry.id] = await _handleFailure(entry, e.message);
         } catch (e) {
@@ -329,6 +367,7 @@ class SyncOutboxService extends GetxService {
     } finally {
       isFlushing.value = false;
       await refreshPendingCount();
+      lastFlushAt.value = DateTime.now();
     }
   }
 
@@ -380,6 +419,27 @@ class SyncOutboxService extends GetxService {
   }
 
   Future<String> _handleFailure(OutboxEntry entry, String message) async {
+    // Telemetry: silent retries only; drop after the limit so Sync Center
+    // never asks the OB to retry a far-GPS ping.
+    if (isSilentTelemetryAction(entry.action)) {
+      final transient = _isTransient(message);
+      final attempts = transient ? entry.attempts : entry.attempts + 1;
+      if (!transient || attempts >= _maxAttempts) {
+        await _db.deleteOutboxEntry(entry.id);
+        return OutboxStatus.synced;
+      }
+      await (_db.update(
+        _db.outboxEntries,
+      )..where((t) => t.id.equals(entry.id))).write(
+        OutboxEntriesCompanion(
+          status: const Value(OutboxStatus.failed),
+          attempts: Value(attempts),
+          lastError: Value(message),
+        ),
+      );
+      return OutboxStatus.failed;
+    }
+
     final transient = _isTransient(message);
     final attempts = transient ? entry.attempts : entry.attempts + 1;
     final status = attempts >= _maxAttempts
@@ -416,7 +476,12 @@ class SyncOutboxService extends GetxService {
     );
   }
 
-  Future<List<OutboxEntry>> listPending() => _db.openOutbox();
+  Future<List<OutboxEntry>> listPending() async {
+    final open = await _db.openOutbox();
+    return open
+        .where((e) => !isSilentTelemetryAction(e.action))
+        .toList(growable: false);
+  }
 
   /// Explicit "clear local data" only. Never called on logout.
   Future<void> clearSessionData() async {
@@ -441,10 +506,86 @@ class SyncOutboxService extends GetxService {
     await flush(force: true);
   }
 
+  /// Removes a Sync Center item (and its media) without wiping other local work.
+  Future<void> discardEntry(String id) async {
+    final entry = await _db.outboxById(id);
+    if (entry == null) return;
+    await _discardMedia(entry);
+    await _db.deleteOutboxEntry(id);
+    await refreshPendingCount();
+  }
+
+  Future<void> discardEntries(Iterable<String> ids) async {
+    final entries = <OutboxEntry>[];
+    for (final id in ids) {
+      final entry = await _db.outboxById(id);
+      if (entry != null) entries.add(entry);
+    }
+    for (final entry in entries) {
+      await _discardMedia(entry);
+      await _db.deleteOutboxEntry(entry.id);
+    }
+    // Rebuild badges before deciding which task overrides to clear.
+    await refreshPendingCount();
+    await _discardLocalVisitArtifacts(entries);
+  }
+
+  /// Drops local visit/order snapshots so cleared sync cards leave History too.
+  Future<void> _discardLocalVisitArtifacts(List<OutboxEntry> entries) async {
+    if (entries.isEmpty) return;
+
+    final visitIds = <int>{};
+    final taskIds = <int>{};
+
+    for (final entry in entries) {
+      if (entry.entityType == 'visit' && entry.localEntityId != null) {
+        visitIds.add(entry.localEntityId!);
+      }
+      Map<String, dynamic> payload = const {};
+      try {
+        final decoded = jsonDecode(entry.payloadJson);
+        if (decoded is Map) payload = Map<String, dynamic>.from(decoded);
+      } catch (_) {}
+      final visitId = ApiMap.asInt(payload['visit_id']);
+      if (visitId != null) visitIds.add(visitId);
+      final taskId = ApiMap.asInt(payload['task_id']);
+      if (taskId != null) taskIds.add(taskId);
+    }
+
+    for (final visitId in visitIds) {
+      final row = await _db.localVisitByAnyId(visitId);
+      final ids = <int>{visitId};
+      if (row != null) {
+        ids.add(row.localVisitId);
+        if (row.serverVisitId != null) ids.add(row.serverVisitId!);
+        if (row.taskId != 0) taskIds.add(row.taskId);
+      }
+      for (final id in ids) {
+        await _db.clearVisitCart(id);
+        await _db.clearVisitProducts(id);
+        await _db.replaceOrderLinesForVisit(id, const []);
+        await _db.deleteDoc(ObDocKeys.visitDetail(id));
+        await _db.deleteDoc(ObDocKeys.orderDetail(id));
+      }
+      if (row != null) {
+        await _db.deleteLocalVisit(row.localVisitId);
+      }
+    }
+
+    for (final taskId in taskIds) {
+      if (taskId == 0) continue;
+      // Only reset Today's Visits if nothing else remains queued for this task.
+      if (!hasQueuedWorkForTask(taskId) && !isTaskQueuedForSync(taskId)) {
+        await _db.clearTaskOverride(taskId);
+      }
+    }
+  }
+
   void _registerObHandlers() {
     registerHandler('orderBooker', 'register_shop', _handleObRegisterShop);
     registerHandler('orderBooker', 'verify_on_site', _handleObVerifyOnSite);
     registerHandler('orderBooker', 'check_in', _handleObCheckIn);
+    registerHandler('orderBooker', 'gps_attempt', _handleObGpsAttempt);
     registerHandler('orderBooker', 'submit_order', _handleObSubmitOrder);
     registerHandler(
       'orderBooker',
@@ -467,32 +608,51 @@ class SyncOutboxService extends GetxService {
       return;
     }
 
-    // `shops/register` has no idempotency key, so look before creating.
-    final existing = await _findRegisteredShopId(payload);
-    if (existing != null) {
-      await _bindShop(localShopId, existing);
-      return;
+    // Never "adopt" an existing shop on the first attempt — phone/CNIC reuse
+    // would skip POST and make the offline registration vanish on refresh.
+    // Only reconcile after a prior failure (retry / duplicate response).
+    if (entry.attempts > 0) {
+      final existing = await _findRegisteredShopId(payload);
+      if (existing != null) {
+        await _bindShop(localShopId, existing);
+        await _mergeShopIntoMineCacheById(existing);
+        return;
+      }
     }
 
-    final data = await _api.postData(
-      ApiEndpoints.obShopsRegister,
-      data: payload,
-    );
-    final shopJson = ApiMap.asMap(data['shop']);
-    if (shopJson == null) {
-      throw ApiException(message: 'Shop registered but response was empty.');
+    try {
+      final data = await _api.postData(
+        ApiEndpoints.obShopsRegister,
+        data: payload,
+      );
+      final shopJson = ApiMap.asMap(data['shop']);
+      if (shopJson == null) {
+        throw ApiException(message: 'Shop registered but response was empty.');
+      }
+      final serverId =
+          ApiMap.asInt(shopJson['shop_id']) ?? ApiMap.asInt(shopJson['id']);
+      if (serverId == null || serverId <= 0) {
+        throw ApiException(message: 'Shop registered without an id.');
+      }
+      await _bindShop(localShopId, serverId);
+      await _mergeRegisteredShopIntoCache(shopJson);
+    } on ApiException {
+      // Server may reject a duplicate; adopt that shop so retry is not stuck.
+      final existing = await _findRegisteredShopId(payload);
+      if (existing != null) {
+        await _bindShop(localShopId, existing);
+        await _mergeShopIntoMineCacheById(existing);
+        return;
+      }
+      rethrow;
     }
-    final serverId =
-        ApiMap.asInt(shopJson['shop_id']) ?? ApiMap.asInt(shopJson['id']);
-    if (serverId == null || serverId <= 0) {
-      throw ApiException(message: 'Shop registered without an id.');
-    }
-    await _bindShop(localShopId, serverId);
   }
 
-  /// Matches an already-registered shop on CNIC or phone, or on name plus
-  /// coordinates. Name alone is never enough — adopting the wrong shop would
-  /// send orders somewhere else.
+  /// Matches an already-registered shop only when identity is strong enough.
+  ///
+  /// Phone or CNIC alone is not enough (same owner can have multiple shops /
+  /// testers reuse numbers). Require matching name plus CNIC or phone, and
+  /// when GPS is present prefer a nearby pin.
   Future<int?> _findRegisteredShopId(Map<String, dynamic> payload) async {
     String digits(Object? value) =>
         (value?.toString() ?? '').replaceAll(RegExp(r'\D'), '');
@@ -502,6 +662,7 @@ class SyncOutboxService extends GetxService {
     final name = (payload['name']?.toString() ?? '').trim().toLowerCase();
     final lat = ApiMap.asDouble(payload['latitude']);
     final lng = ApiMap.asDouble(payload['longitude']);
+    if (name.isEmpty) return null;
 
     try {
       final data = await _api.postData(ApiEndpoints.obShopsMine);
@@ -509,22 +670,28 @@ class SyncOutboxService extends GetxService {
         final id = ApiMap.asInt(row['shop_id']) ?? ApiMap.asInt(row['id']);
         if (id == null || id <= 0) continue;
 
+        final rowName = (row['name']?.toString() ?? '').trim().toLowerCase();
+        if (rowName != name) continue;
+
         final rowCnic = digits(row['owner_cnic_number']);
         final rowPhone = digits(row['owner_phone']);
-        if (cnic.length >= 13 && cnic == rowCnic) return id;
-        if (phone.length >= 10 && phone == rowPhone) return id;
+        final identityMatch =
+            (cnic.length >= 13 && cnic == rowCnic) ||
+            (phone.length >= 10 && phone == rowPhone);
+        if (!identityMatch) continue;
 
-        final rowName = (row['name']?.toString() ?? '').trim().toLowerCase();
-        if (name.isEmpty || rowName != name) continue;
         final rowLat = ApiMap.asDouble(row['latitude']);
         final rowLng = ApiMap.asDouble(row['longitude']);
-        if (lat == null || lng == null || rowLat == null || rowLng == null) {
+        if (lat != null &&
+            lng != null &&
+            rowLat != null &&
+            rowLng != null &&
+            ((rowLat - lat).abs() >= 0.0005 ||
+                (rowLng - lng).abs() >= 0.0005)) {
+          // Same name+phone but clearly a different pin — keep looking.
           continue;
         }
-        // ~0.0005 degrees is roughly 55 metres.
-        if ((rowLat - lat).abs() < 0.0005 && (rowLng - lng).abs() < 0.0005) {
-          return id;
-        }
+        return id;
       }
     } catch (_) {
       // Treat lookup failure as "not found"; the POST is still guarded by the
@@ -547,6 +714,43 @@ class SyncOutboxService extends GetxService {
         status: const Value('synced'),
       ),
     );
+  }
+
+  Future<void> _mergeRegisteredShopIntoCache(
+    Map<String, dynamic> shopJson,
+  ) async {
+    if (!Get.isRegistered<OfflineCacheService>()) return;
+    final cache = Get.find<OfflineCacheService>();
+    final existing =
+        await cache.readMap(OfflineCacheKeys.shopsMine) ??
+        const <String, dynamic>{};
+    final shops = List<Map<String, dynamic>>.from(
+      ApiMap.listOf(existing, 'shops'),
+    );
+    final newId =
+        ApiMap.asInt(shopJson['shop_id']) ?? ApiMap.asInt(shopJson['id']);
+    if (newId != null) {
+      shops.removeWhere((row) {
+        final id = ApiMap.asInt(row['shop_id']) ?? ApiMap.asInt(row['id']);
+        return id == newId;
+      });
+    }
+    shops.insert(0, Map<String, dynamic>.from(shopJson));
+    await cache.saveMap(OfflineCacheKeys.shopsMine, {'shops': shops});
+  }
+
+  Future<void> _mergeShopIntoMineCacheById(int serverShopId) async {
+    if (!Get.isRegistered<OfflineCacheService>()) return;
+    try {
+      final data = await _api.postData(
+        ApiEndpoints.obShopsGet,
+        data: {'shop_id': serverShopId},
+      );
+      final shopJson = ApiMap.asMap(data['shop']) ?? data;
+      await _mergeRegisteredShopIntoCache(shopJson);
+    } catch (_) {
+      // Cache stays as-is; My Shops still bridges via local row until mine returns.
+    }
   }
 
   Future<void> _handleObVerifyOnSite(
@@ -631,7 +835,20 @@ class SyncOutboxService extends GetxService {
     try {
       final data = await _api.postData(
         ApiEndpoints.obTasksCheckIn,
-        data: {'task_id': taskId, 'latitude': lat, 'longitude': lng},
+        data: {
+          'task_id': taskId,
+          'latitude': lat,
+          'longitude': lng,
+          if (payload['distance_m'] != null)
+            'distance_m': payload['distance_m'],
+          if (payload['out_of_range'] != null)
+            'out_of_range': payload['out_of_range'],
+          if (payload['gps_accuracy_m'] != null)
+            'gps_accuracy_m': payload['gps_accuracy_m'],
+          if (payload['gps_max_m'] != null) 'gps_max_m': payload['gps_max_m'],
+          if (payload['captured_at'] != null)
+            'captured_at': payload['captured_at'],
+        },
       );
       final result = ObCheckInResult.fromJson(data);
       if (result.hasVisit) {
@@ -657,6 +874,49 @@ class SyncOutboxService extends GetxService {
       return;
     }
     throw ApiException(message: 'Check-in did not return a visit');
+  }
+
+  /// Far / blocked GPS ping for the distributor panel. Never binds a visit.
+  Future<void> _handleObGpsAttempt(
+    OutboxEntry entry,
+    Map<String, dynamic> payload,
+  ) async {
+    final taskId = ApiMap.asInt(payload['task_id']);
+    final lat = ApiMap.asDouble(payload['latitude']);
+    final lng = ApiMap.asDouble(payload['longitude']);
+    if (taskId == null || lat == null || lng == null) {
+      throw ApiException(message: 'Missing GPS attempt fields');
+    }
+
+    await _api.postData(
+      ApiEndpoints.obTasksCheckIn,
+      data: {
+        'task_id': taskId,
+        'latitude': lat,
+        'longitude': lng,
+        if (payload['shop_id'] != null) 'shop_id': payload['shop_id'],
+        if (payload['shop_name'] != null) 'shop_name': payload['shop_name'],
+        if (payload['visit_id'] != null) 'visit_id': payload['visit_id'],
+        if (payload['distance_m'] != null) 'distance_m': payload['distance_m'],
+        if (payload['out_of_range'] != null)
+          'out_of_range': payload['out_of_range'],
+        if (payload['gps_accuracy_m'] != null)
+          'gps_accuracy_m': payload['gps_accuracy_m'],
+        if (payload['gps_max_m'] != null) 'gps_max_m': payload['gps_max_m'],
+        if (payload['captured_at'] != null)
+          'captured_at': payload['captured_at'],
+        if (payload['purpose'] != null) 'purpose': payload['purpose'],
+        if (payload['client_request_id'] != null)
+          'client_request_id': payload['client_request_id'],
+        'blocked': true,
+        'out_of_range': true,
+      },
+    );
+
+    final requestId = ApiMap.asString(payload['client_request_id']);
+    if (requestId != null && requestId.isNotEmpty) {
+      await _db.markTelemetrySent(requestId);
+    }
   }
 
   /// Server visit for [taskId] today.
@@ -734,6 +994,36 @@ class SyncOutboxService extends GetxService {
       localVisitId: localVisitId,
       serverVisitId: serverVisitId,
     );
+    await _remapVisitDetailDocs(localVisitId, serverVisitId);
+    if (localVisitId != serverVisitId) {
+      lastVisitRemap.value = VisitIdRemap(
+        localId: localVisitId,
+        serverId: serverVisitId,
+      );
+    }
+  }
+
+  Future<void> _remapVisitDetailDocs(
+    int localVisitId,
+    int serverVisitId,
+  ) async {
+    if (localVisitId == serverVisitId) return;
+    for (final keyOf in [ObDocKeys.visitDetail, ObDocKeys.orderDetail]) {
+      final localDoc = await _db.readDoc(keyOf(localVisitId));
+      if (localDoc == null) continue;
+      final serverDoc = await _db.readDoc(keyOf(serverVisitId));
+      if (serverDoc != null) continue;
+      try {
+        final map = Map<String, dynamic>.from(
+          jsonDecode(localDoc.jsonPayload) as Map,
+        );
+        map['visit_id'] = serverVisitId;
+        map['pending_sync'] = false;
+        await _db.saveDoc(keyOf(serverVisitId), jsonEncode(map));
+      } catch (_) {
+        await _db.saveDoc(keyOf(serverVisitId), localDoc.jsonPayload);
+      }
+    }
   }
 
   // ------------------------------------------------------------------ orders
@@ -762,7 +1052,20 @@ class SyncOutboxService extends GetxService {
     try {
       await _api.postData(
         ApiEndpoints.obVisitsPlaceOrder,
-        data: {'visit_id': visitId, 'latitude': lat, 'longitude': lng},
+        data: {
+          'visit_id': visitId,
+          'latitude': lat,
+          'longitude': lng,
+          if (payload['distance_m'] != null)
+            'distance_m': payload['distance_m'],
+          if (payload['out_of_range'] != null)
+            'out_of_range': payload['out_of_range'],
+          if (payload['gps_accuracy_m'] != null)
+            'gps_accuracy_m': payload['gps_accuracy_m'],
+          if (payload['gps_max_m'] != null) 'gps_max_m': payload['gps_max_m'],
+          if (payload['captured_at'] != null)
+            'captured_at': payload['captured_at'],
+        },
       );
     } on ApiException {
       if (await _visitHasOrder(visitId)) {
@@ -775,7 +1078,38 @@ class SyncOutboxService extends GetxService {
     if (!await _visitHasOrder(visitId)) {
       throw ApiException(message: 'Order submit did not produce an order');
     }
+    await _refreshVisitDetailDocs(visitId);
     await _markLocalVisitSynced(visitId);
+  }
+
+  Future<void> _refreshVisitDetailDocs(int visitId) async {
+    try {
+      final data = await _api.postData(
+        ApiEndpoints.obVisitsGet,
+        data: {'visit_id': visitId},
+      );
+      final visitJson = ApiMap.asMap(data['visit']) ?? data;
+      final encoded = jsonEncode(visitJson);
+      await _db.saveDoc(ObDocKeys.visitDetail(visitId), encoded);
+      await _db.saveDoc(ObDocKeys.orderDetail(visitId), encoded);
+      final orderNumber =
+          ApiMap.asString(visitJson['sale_order_name']) ??
+          ApiMap.asString(visitJson['order_number']);
+      if (orderNumber != null && orderNumber.isNotEmpty) {
+        final local = await _db.localVisitByAnyId(
+          visitId,
+          userId: _currentUserId,
+        );
+        if (local != null) {
+          await _db.patchLocalVisit(
+            local.localVisitId,
+            LocalVisitsCompanion(orderNumber: Value(orderNumber)),
+          );
+        }
+      }
+    } catch (_) {
+      // Snapshot refresh is best-effort; order already exists on server.
+    }
   }
 
   Future<void> _handleObEndWithoutOrder(
@@ -917,7 +1251,10 @@ class SyncOutboxService extends GetxService {
     if (local == null) return;
     await _db.patchLocalVisit(
       local.localVisitId,
-      const LocalVisitsCompanion(status: Value('completed')),
+      const LocalVisitsCompanion(
+        status: Value('completed'),
+        pendingSync: Value(false),
+      ),
     );
     // Only now mark the task completed — local end/order must not look done
     // on the server until this outbox step succeeds.
@@ -1142,4 +1479,12 @@ class SyncOutboxService extends GetxService {
         .map((e) => Map<String, dynamic>.from(e))
         .toList(growable: false);
   }
+}
+
+/// Local → server visit id swap published after a successful check-in flush.
+class VisitIdRemap {
+  const VisitIdRemap({required this.localId, required this.serverId});
+
+  final int localId;
+  final int serverId;
 }

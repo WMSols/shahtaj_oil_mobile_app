@@ -98,11 +98,6 @@ class SyncCenterController extends GetxController {
     ];
   }
 
-  bool get showClearLocalData => items.any(
-    (e) =>
-        e.status == OutboxStatus.failed || e.status == OutboxStatus.needsReview,
-  );
-
   int get otherUserPendingCount => _outbox.otherUserPendingCount.value;
 
   Future<void> retry(String id) async {
@@ -137,14 +132,15 @@ class SyncCenterController extends GetxController {
     }
   }
 
-  Future<void> clearLocalData() async {
-    if (isClearing.value) return;
+  /// Drops this failed card from the queue (does not wipe other local data).
+  Future<void> clearGroup(SyncQueueGroup group) async {
+    if (isClearing.value || !group.hasFailedOrNeedsReview) return;
     final confirmed =
         await Get.dialog<bool>(
           AppConfirmDialog(
-            title: AppTexts.clearLocalData,
-            message: AppTexts.clearLocalDataMessage,
-            confirmLabel: AppTexts.clearLocalData,
+            title: AppTexts.clearThisItem,
+            message: AppTexts.clearThisItemMessage,
+            confirmLabel: AppTexts.clearThisItem,
           ),
         ) ??
         false;
@@ -152,11 +148,13 @@ class SyncCenterController extends GetxController {
 
     isClearing.value = true;
     try {
-      await _outbox.clearSessionData();
+      // Remove the whole card so chained visit steps do not leave orphans.
+      await _outbox.discardEntries(group.entries.map((e) => e.id));
       await load();
-      AppToast.showSuccess(AppTexts.clearLocalDataDone);
+      AppToast.showSuccess(AppTexts.clearThisItemDone);
     } catch (_) {
       AppToast.showError(AppTexts.error);
+      await load();
     } finally {
       isClearing.value = false;
     }
@@ -169,6 +167,7 @@ class SyncCenterController extends GetxController {
       'orderBooker.visit_notes' => AppTexts.obSaveVisitNotes,
       'orderBooker.task_notes' => AppTexts.obTaskNotes,
       'orderBooker.check_in' => AppTexts.obQueuedCheckIn,
+      'orderBooker.gps_attempt' => AppTexts.obQueuedGpsAttempt,
       'orderBooker.verify_on_site' => AppTexts.obQueuedVerification,
       'orderBooker.register_shop' => AppTexts.obQueuedRegistration,
       _ => '${entry.role}.${entry.action}',

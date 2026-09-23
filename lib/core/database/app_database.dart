@@ -91,6 +91,12 @@ class LocalVisits extends Table {
   TextColumn get outcome => text().nullable()();
   TextColumn get notes => text().nullable()();
   TextColumn get orderNumber => text().nullable()();
+  RealColumn get subtotal => real().nullable()();
+
+  /// True while place-order / end-visit is still waiting to sync.
+  BoolColumn get pendingSync => boolean().withDefault(const Constant(false))();
+
+  TextColumn get approvalState => text().nullable()();
   TextColumn get userId => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get completedAt => dateTime().nullable()();
@@ -154,6 +160,41 @@ class CatalogProducts extends Table {
   Set<Column<Object>> get primaryKey => {scope, productId};
 }
 
+/// Durable order lines for History / Order detail after cart is cleared.
+class VisitOrderLines extends Table {
+  IntColumn get visitId => integer()();
+  IntColumn get lineId => integer()();
+  IntColumn get productId => integer()();
+  TextColumn get productName => text()();
+  RealColumn get quantity => real()();
+  RealColumn get priceUnit => real()();
+  TextColumn get unit => text().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {visitId, lineId};
+}
+
+/// Verification photos for a shop (paths live in [MediaFiles]).
+@DataClassName('ShopMediaRow')
+class ShopMedia extends Table {
+  TextColumn get shopId => text()();
+  TextColumn get slot => text()();
+  TextColumn get mediaId => text()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {shopId, slot};
+}
+
+/// App-side dedupe for silent telemetry (blocked GPS) already sent today.
+class TelemetrySent extends Table {
+  TextColumn get clientRequestId => text()();
+  DateTimeColumn get sentAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {clientRequestId};
+}
+
 /// Photos captured offline. Files live on disk; only paths are stored here.
 class MediaFiles extends Table {
   TextColumn get id => text()();
@@ -170,6 +211,7 @@ class MediaFiles extends Table {
     OutboxEntries,
     VisitCartLines,
     VisitProducts,
+    VisitOrderLines,
     IdMappings,
     LocalVisits,
     LocalShops,
@@ -177,6 +219,8 @@ class MediaFiles extends Table {
     CachedDocs,
     CatalogProducts,
     MediaFiles,
+    ShopMedia,
+    TelemetrySent,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -185,7 +229,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   /// Devices already carry queued orders in v1, so upgrades must be additive.
   @override
@@ -205,6 +249,14 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(outboxEntries, outboxEntries.entityType);
         await m.addColumn(outboxEntries, outboxEntries.localEntityId);
         await m.addColumn(outboxEntries, outboxEntries.mediaIds);
+      }
+      if (from < 3) {
+        await m.createTable(visitOrderLines);
+        await m.createTable(shopMedia);
+        await m.createTable(telemetrySent);
+        await m.addColumn(localVisits, localVisits.subtotal);
+        await m.addColumn(localVisits, localVisits.pendingSync);
+        await m.addColumn(localVisits, localVisits.approvalState);
       }
     },
   );
@@ -235,6 +287,12 @@ class AppDatabase extends _$AppDatabase {
 
   Future<OutboxEntry?> outboxById(String id) =>
       (select(outboxEntries)..where((t) => t.id.equals(id))).getSingleOrNull();
+
+  Future<OutboxEntry?> outboxByClientRequestId(String clientRequestId) =>
+      (select(outboxEntries)
+            ..where((t) => t.clientRequestId.equals(clientRequestId))
+            ..limit(1))
+          .getSingleOrNull();
 
   static const visitClosingActions = [
     'submit_order',
@@ -349,6 +407,13 @@ class AppDatabase extends _$AppDatabase {
   Future<void> clearVisitCart(int visitId) =>
       (delete(visitCartLines)..where((t) => t.visitId.equals(visitId))).go();
 
+  Future<void> clearVisitProducts(int visitId) =>
+      (delete(visitProducts)..where((t) => t.visitId.equals(visitId))).go();
+
+  Future<void> deleteLocalVisit(int localVisitId) => (delete(
+    localVisits,
+  )..where((t) => t.localVisitId.equals(localVisitId))).go();
+
   /// Keeps one row per product after remap / failed sync left duplicates.
   /// Prefers server line ids (`> 0`); quantity is the max across copies
   /// (sync retries usually duplicate the same qty, so summing would inflate).
@@ -417,6 +482,14 @@ class AppDatabase extends _$AppDatabase {
         ],
         updates: {visitProducts},
       );
+      await customUpdate(
+        'UPDATE OR REPLACE visit_order_lines SET visit_id = ? WHERE visit_id = ?',
+        variables: [
+          Variable.withInt(serverVisitId),
+          Variable.withInt(localVisitId),
+        ],
+        updates: {visitOrderLines},
+      );
     });
     await dedupeVisitCartLines(serverVisitId);
   }
@@ -437,6 +510,64 @@ class AppDatabase extends _$AppDatabase {
 
   Future<List<VisitProduct>> productsForVisit(int visitId) =>
       (select(visitProducts)..where((t) => t.visitId.equals(visitId))).get();
+
+  Future<List<VisitOrderLine>> orderLinesForVisit(int visitId) =>
+      (select(visitOrderLines)..where((t) => t.visitId.equals(visitId))).get();
+
+  Future<void> replaceOrderLinesForVisit(
+    int visitId,
+    List<VisitOrderLinesCompanion> rows,
+  ) async {
+    await transaction(() async {
+      await (delete(
+        visitOrderLines,
+      )..where((t) => t.visitId.equals(visitId))).go();
+      if (rows.isNotEmpty) {
+        await batch((b) => b.insertAll(visitOrderLines, rows));
+      }
+    });
+  }
+
+  Future<void> upsertShopMedia({
+    required String shopId,
+    required String slot,
+    required String mediaId,
+  }) => into(shopMedia).insertOnConflictUpdate(
+    ShopMediaCompanion.insert(
+      shopId: shopId,
+      slot: slot,
+      mediaId: mediaId,
+      updatedAt: DateTime.now(),
+    ),
+  );
+
+  Future<List<ShopMediaRow>> shopMediaFor(String shopId) =>
+      (select(shopMedia)..where((t) => t.shopId.equals(shopId))).get();
+
+  Future<ShopMediaRow?> shopMediaSlot(String shopId, String slot) =>
+      (select(shopMedia)
+            ..where((t) => t.shopId.equals(shopId) & t.slot.equals(slot)))
+          .getSingleOrNull();
+
+  Future<bool> hasTelemetrySent(String clientRequestId) async {
+    final row =
+        await (select(telemetrySent)
+              ..where((t) => t.clientRequestId.equals(clientRequestId)))
+            .getSingleOrNull();
+    return row != null;
+  }
+
+  Future<void> markTelemetrySent(String clientRequestId) =>
+      into(telemetrySent).insertOnConflictUpdate(
+        TelemetrySentCompanion.insert(
+          clientRequestId: clientRequestId,
+          sentAt: DateTime.now(),
+        ),
+      );
+
+  Future<void> deleteOutboxByClientRequestId(String clientRequestId) => (delete(
+    outboxEntries,
+  )..where((t) => t.clientRequestId.equals(clientRequestId))).go();
 
   // ----------------------------------------------------------- id mappings
 
@@ -663,10 +794,14 @@ class AppDatabase extends _$AppDatabase {
     await transaction(() async {
       await delete(visitCartLines).go();
       await delete(visitProducts).go();
+      await delete(visitOrderLines).go();
     });
   }
 
   Future<void> clearOutbox() => delete(outboxEntries).go();
+
+  Future<void> deleteOutboxEntry(String id) =>
+      (delete(outboxEntries)..where((t) => t.id.equals(id))).go();
 
   /// Explicit "clear local data" action. Never runs on logout.
   Future<void> clearAllLocalWork() async {
@@ -674,11 +809,14 @@ class AppDatabase extends _$AppDatabase {
       await delete(outboxEntries).go();
       await delete(visitCartLines).go();
       await delete(visitProducts).go();
+      await delete(visitOrderLines).go();
       await delete(localVisits).go();
       await delete(localShops).go();
       await delete(localTaskOverrides).go();
       await delete(idMappings).go();
       await delete(mediaFiles).go();
+      await delete(shopMedia).go();
+      await delete(telemetrySent).go();
     });
   }
 

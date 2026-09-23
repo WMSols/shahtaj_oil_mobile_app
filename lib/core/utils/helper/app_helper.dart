@@ -5,6 +5,7 @@ import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_location_enable_sheet.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 
 class AppHelper {
   AppHelper._();
@@ -67,8 +68,12 @@ class AppHelper {
     return '${text.substring(0, maxLength)}…';
   }
 
-  static const _positionTimeout = Duration(seconds: 10);
-  static const _lastKnownMaxAge = Duration(minutes: 2);
+  /// Prefer a fresh fix after location was just toggled on.
+  static const _positionTimeout = Duration(seconds: 8);
+  static const _positionAttempts = 3;
+
+  /// Only accept last-known if it is essentially "just now" (not minutes old).
+  static const _lastKnownMaxAge = Duration(seconds: 30);
 
   /// Live max from session (`gps_criteria.max_m` saved at login / plan / today).
   /// Throws when criteria was never received (cannot invent a distance).
@@ -91,6 +96,39 @@ class AppHelper {
     required double toLng,
   }) => Geolocator.distanceBetween(fromLat, fromLng, toLat, toLng);
 
+  /// True when [shopLat]/[shopLng] are usable WGS84 (not null / 0,0 / out of range).
+  static bool hasUsableShopCoordinates(double? shopLat, double? shopLng) =>
+      shopLat != null &&
+      shopLng != null &&
+      shopLat.abs() <= 90 &&
+      shopLng.abs() <= 180 &&
+      !(shopLat == 0 && shopLng == 0);
+
+  /// Distance vs session max. Throws only when the shop has no usable pin.
+  static ShopRangeEvaluation evaluateShopRange({
+    required double currentLat,
+    required double currentLng,
+    double? shopLat,
+    double? shopLng,
+    double? maxMeters,
+  }) {
+    if (!hasUsableShopCoordinates(shopLat, shopLng)) {
+      throw ApiException(message: AppTexts.obShopLocationMissing);
+    }
+    final limit = maxMeters ?? resolvedShopMaxDistanceMeters();
+    final meters = distanceMetersBetween(
+      fromLat: currentLat,
+      fromLng: currentLng,
+      toLat: shopLat!,
+      toLng: shopLng!,
+    );
+    return ShopRangeEvaluation(
+      meters: meters,
+      limit: limit,
+      outOfRange: meters > limit,
+    );
+  }
+
   /// Blocks when the shop has no usable coords, or the user is too far away.
   static void ensureWithinShopRange({
     required double currentLat,
@@ -99,37 +137,54 @@ class AppHelper {
     double? shopLng,
     double? maxMeters,
   }) {
-    final hasShop =
-        shopLat != null &&
-        shopLng != null &&
-        shopLat.abs() <= 90 &&
-        shopLng.abs() <= 180 &&
-        !(shopLat == 0 && shopLng == 0);
-    if (!hasShop) {
-      throw ApiException(message: AppTexts.obShopLocationMissing);
-    }
-    final limit = maxMeters ?? resolvedShopMaxDistanceMeters();
-    final meters = distanceMetersBetween(
-      fromLat: currentLat,
-      fromLng: currentLng,
-      toLat: shopLat,
-      toLng: shopLng,
+    final evaluation = evaluateShopRange(
+      currentLat: currentLat,
+      currentLng: currentLng,
+      shopLat: shopLat,
+      shopLng: shopLng,
+      maxMeters: maxMeters,
     );
-    if (meters > limit) {
+    if (evaluation.outOfRange) {
       throw ApiException(
         message: AppTexts.obOrderTooFarFromShop(
-          meters.round(),
-          maxMeters: limit.round(),
+          evaluation.meters.round(),
+          maxMeters: evaluation.limit.round(),
         ),
       );
     }
   }
 
-  /// Ensures location service + permission, then returns current position.
+  /// Extra GPS fields for check-in (online + outbox) so the panel can show distance.
+  /// Does not include latitude/longitude — callers send those separately.
+  static Map<String, dynamic> checkInGpsExtras({
+    required double latitude,
+    required double longitude,
+    required double accuracyMeters,
+    double? shopLat,
+    double? shopLng,
+    DateTime? capturedAt,
+  }) {
+    final payload = <String, dynamic>{
+      'gps_accuracy_m': accuracyMeters,
+      'captured_at': (capturedAt ?? DateTime.now()).toUtc().toIso8601String(),
+    };
+    if (!hasUsableShopCoordinates(shopLat, shopLng)) return payload;
+    final evaluation = evaluateShopRange(
+      currentLat: latitude,
+      currentLng: longitude,
+      shopLat: shopLat,
+      shopLng: shopLng,
+    );
+    payload['distance_m'] = evaluation.meters.round();
+    payload['out_of_range'] = evaluation.outOfRange;
+    payload['gps_max_m'] = evaluation.limit.round();
+    return payload;
+  }
+
+  /// Ensures location service + permission, then returns a fresh position.
   ///
-  /// Uses a hard [timeLimit] so callers (e.g. check-in) cannot hang forever on
-  /// weak GPS / network-assisted location. Falls back to a recent last-known
-  /// fix when a fresh fix times out.
+  /// Retries briefly after location was just toggled on. Does not use a
+  /// long-lived last-known fix — place-order / check-in need the spot now.
   ///
   /// When [showGuide] is true, opens a bottom sheet to enable location /
   /// permission on the device instead of only throwing.
@@ -158,14 +213,30 @@ class AppHelper {
       throw ApiException(message: AppTexts.obLocationPermissionDenied);
     }
 
+    AppToast.showInformation(
+      AppTexts.obGettingGpsLocation,
+      duration: const Duration(seconds: 45),
+    );
     try {
-      return await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.medium,
-          timeLimit: _positionTimeout,
-        ),
-      );
-    } catch (_) {
+      Object? lastError;
+      for (var attempt = 0; attempt < _positionAttempts; attempt++) {
+        if (attempt > 0) {
+          await Future<void>.delayed(Duration(milliseconds: 400 * attempt));
+        }
+        try {
+          return await Geolocator.getCurrentPosition(
+            locationSettings: LocationSettings(
+              accuracy: attempt == 0
+                  ? LocationAccuracy.medium
+                  : LocationAccuracy.high,
+              timeLimit: _positionTimeout,
+            ),
+          );
+        } catch (e) {
+          lastError = e;
+        }
+      }
+
       final last = await Geolocator.getLastKnownPosition();
       if (last != null) {
         final age = DateTime.now().difference(last.timestamp);
@@ -173,7 +244,28 @@ class AppHelper {
           return last;
         }
       }
+
+      assert(() {
+        // ignore: avoid_print
+        print('requireCurrentPosition failed after retries: $lastError');
+        return true;
+      }());
       throw ApiException(message: AppTexts.obLocationFetchFailed);
+    } finally {
+      AppToast.close();
     }
   }
+}
+
+/// Result of comparing the OB's GPS fix against the shop pin and session max.
+class ShopRangeEvaluation {
+  const ShopRangeEvaluation({
+    required this.meters,
+    required this.limit,
+    required this.outOfRange,
+  });
+
+  final double meters;
+  final double limit;
+  final bool outOfRange;
 }

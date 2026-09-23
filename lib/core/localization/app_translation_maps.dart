@@ -339,12 +339,16 @@ abstract final class AppTranslationMaps {
         'This shop has no location on file. Update the shop location before check-in or placing an order.',
     'obGpsCriteriaMissing':
         'GPS distance rules are not available yet. Go online once, open Today, then try again.',
+    'obCartLineMissing':
+        'That cart line was updated during sync. Try editing the quantity again.',
+    'obYesterdayLocalDataCleared': "Yesterday's local data was cleared.",
     'obTooFarFromShop':
         'You are too far from the shop. Move closer to check in or place the order.',
     'obTooFarFromShopMax':
         'You are too far from the shop (max @meters m). Move closer to check in or place the order.',
     'obLocationPermissionDenied': 'Location permission denied',
     'obLocationFetchFailed': 'Could not fetch current location',
+    'obGettingGpsLocation': 'Getting GPS location…',
     'obShopRegisteredSuccess': 'Shop registered successfully',
     'obRegisterShopHelpTitle': 'Register Shop Help',
     'obRegisterShopHelpBody':
@@ -439,6 +443,7 @@ abstract final class AppTranslationMaps {
     'logoutPendingSyncMessage':
         'You have changes waiting to sync. They stay saved on this device and will sync when you log back in. Log out now?',
     'obOrderQueuedForSync': 'Order saved — will sync when online',
+    'obOrderPendingSyncLabel': 'Pending sync',
     'obOrderTooFarFromShop':
         'You are @meters m away from the shop (max @max m). Return to the shop to place the order.',
     'obVisitQueuedForSync': 'Visit saved — will sync when online',
@@ -455,7 +460,12 @@ abstract final class AppTranslationMaps {
     'obSyncOtherUserPending': 'Pending work from another user on this device',
     'obSyncNeedsReview': 'Sync failed — open Sync Center to retry',
     'syncRetry': 'Retry sync',
+    'clearThisItem': 'Clear this item',
+    'clearThisItemMessage':
+        'Remove this failed sync item from the queue? It will not be sent to the server.',
+    'clearThisItemDone': 'Sync item cleared',
     'obQueuedCheckIn': 'Check-in',
+    'obQueuedGpsAttempt': 'GPS distance (too far)',
     'obQueuedVerification': 'Shop setup',
     'obQueuedRegistration': 'New shop',
     'clearLocalData': 'Clear local data',
@@ -1279,12 +1289,16 @@ abstract final class AppTranslationMaps {
         'اس دکان کی لوکیشن محفوظ نہیں۔ چیک ان یا آرڈر سے پہلے دکان کی لوکیشن اپڈیٹ کریں۔',
     'obGpsCriteriaMissing':
         'جی پی ایس فاصلے کے قواعد ابھی دستیاب نہیں۔ ایک بار آن لائن ہو کر آج کھولیں، پھر دوبارہ کوشش کریں۔',
+    'obCartLineMissing':
+        'سینک کے دوران کارٹ لائن تبدیل ہو گئی۔ مقدار دوبارہ تبدیل کر کے دیکھیں۔',
+    'obYesterdayLocalDataCleared': 'کل کا مقامی ڈیٹا صاف کر دیا گیا۔',
     'obTooFarFromShop':
         'آپ دکان سے بہت دور ہیں۔ چیک ان یا آرڈر کے لیے قریب آئیں۔',
     'obTooFarFromShopMax':
         'آپ دکان سے بہت دور ہیں (حد @meters میٹر)۔ چیک ان یا آرڈر کے لیے قریب آئیں۔',
     'obLocationPermissionDenied': 'لوکیشن کی اجازت نہیں ملی',
     'obLocationFetchFailed': 'موجودہ مقام حاصل نہیں ہو سکا',
+    'obGettingGpsLocation': 'جی پی ایس مقام حاصل کیا جا رہا ہے…',
     'obShopRegisteredSuccess': 'دکان کامیابی سے رجسٹر ہو گئی',
     'obRegisterShopHelpTitle': 'دکان رجسٹریشن مدد',
     'obRegisterShopHelpBody':
@@ -1379,6 +1393,7 @@ abstract final class AppTranslationMaps {
     'logoutPendingSyncMessage':
         'آپ کی تبدیلیاں سینک کے منتظر ہیں۔ یہ اسی ڈیوائس پر محفوظ رہیں گی اور دوبارہ لاگ ان پر سینک ہو جائیں گی۔ لاگ آؤٹ کریں؟',
     'obOrderQueuedForSync': 'آرڈر محفوظ — آن لائن ہونے پر سینک ہو گا',
+    'obOrderPendingSyncLabel': 'سینک زیر التوا',
     'obOrderTooFarFromShop':
         'آپ دکان سے @meters میٹر دور ہیں (حد @max میٹر)۔ آرڈر دینے کے لیے دکان پر واپس جائیں۔',
     'obVisitQueuedForSync': 'وزٹ محفوظ — آن لائن ہونے پر سینک ہو گا',
@@ -1396,7 +1411,12 @@ abstract final class AppTranslationMaps {
     'obSyncOtherUserPending': 'اس ڈیوائس پر دوسرے صارف کا کام باقی ہے',
     'obSyncNeedsReview': 'سینک ناکام — دوبارہ کوشش کے لیے سنک سینٹر کھولیں',
     'syncRetry': 'دوبارہ سینک کریں',
+    'clearThisItem': 'یہ آئٹم صاف کریں',
+    'clearThisItemMessage':
+        'اس ناکام سینک آئٹم کو قطار سے ہٹائیں؟ یہ سرور پر نہیں بھیجا جائے گا۔',
+    'clearThisItemDone': 'سینک آئٹم صاف ہو گیا',
     'obQueuedCheckIn': 'چیک ان',
+    'obQueuedGpsAttempt': 'جی پی ایس فاصلہ (بہت دور)',
     'obQueuedVerification': 'دکان کی تفصیل',
     'obQueuedRegistration': 'نئی دکان',
     'clearLocalData': 'مقامی ڈیٹا صاف کریں',

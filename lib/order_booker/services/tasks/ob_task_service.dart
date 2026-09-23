@@ -7,6 +7,7 @@ import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/database/app_database.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/connectivity_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/sync_outbox_service.dart';
@@ -112,22 +113,30 @@ class ObTaskService extends GetxService {
 
       // Local completed wins over server pending once the close is queued or
       // the local visit row is closed — never leave a fake inVisit after sync.
+      // On a forced network refresh, drop stale closed markers when the server
+      // says pending again and nothing is left in the outbox (distributor undo).
       var status = task.status;
       if (localRank > serverRank && localStatus != null) {
+        final hasClosingQueue = _outbox?.isTaskQueuedForSync(task.id) ?? false;
         final fakeCompleted =
             localStatus == TaskStatus.completed &&
             task.status != TaskStatus.completed &&
-            !hasQueue;
-        // Prefer completed when we know the local visit was closed.
+            !hasClosingQueue;
         final locallyClosed =
             Get.isRegistered<ObVisitSessionService>() &&
             Get.find<ObVisitSessionService>().isLocallyClosedTask(task.id);
-        if (!fakeCompleted || locallyClosed) {
+        if (fakeCompleted) {
+          // Server still pending and no place-order/end in outbox
+          // (e.g. distributor undo / route reset).
           if (locallyClosed) {
-            status = TaskStatus.completed;
-          } else if (!fakeCompleted) {
-            status = localStatus;
+            Get.find<ObVisitSessionService>().forgetClosedTask(task.id);
           }
+          await _dropStaleOverride(override, task, forceStatus: true);
+          // Keep server status (pending), do not force completed.
+        } else if (locallyClosed || hasClosingQueue) {
+          status = TaskStatus.completed;
+        } else {
+          status = localStatus;
         }
       }
 
@@ -162,12 +171,22 @@ class ObTaskService extends GetxService {
 
   Future<void> _dropStaleOverride(
     LocalTaskOverride override,
-    ObTaskModel task,
-  ) async {
-    // Keep the row while notes or verification are still queued for sync.
+    ObTaskModel task, {
+    bool forceStatus = false,
+  }) async {
+    // Keep the row while place-order / end-visit is still queued.
     final outbox = _outbox;
-    if (outbox != null && outbox.hasQueuedWorkForTask(task.id)) return;
-    if (override.notes != null && override.notes != task.notes) return;
+    if (outbox != null && outbox.isTaskQueuedForSync(task.id)) return;
+    if (!forceStatus &&
+        outbox != null &&
+        outbox.hasQueuedWorkForTask(task.id)) {
+      return;
+    }
+    if (!forceStatus &&
+        override.notes != null &&
+        override.notes != task.notes) {
+      return;
+    }
     if (!Get.isRegistered<AppDatabase>()) return;
     await Get.find<AppDatabase>().clearTaskOverride(task.id);
   }
@@ -268,10 +287,16 @@ class ObTaskService extends GetxService {
     required int taskId,
     required double latitude,
     required double longitude,
+    Map<String, dynamic> gpsExtras = const {},
   }) async {
     final data = await _api.postData(
       ApiEndpoints.obTasksCheckIn,
-      data: {'task_id': taskId, 'latitude': latitude, 'longitude': longitude},
+      data: {
+        'task_id': taskId,
+        'latitude': latitude,
+        'longitude': longitude,
+        ...gpsExtras,
+      },
     );
     final result = ObCheckInResult.fromJson(data);
     if (result.hasVisit) {
@@ -284,6 +309,90 @@ class ObTaskService extends GetxService {
     // second slow list call after a successful check-in.
     unawaited(fetchTodayTasks(allowStaleFallback: true));
     return result;
+  }
+
+  /// Sends / queues GPS when the OB is blocked for being too far, so the
+  /// distributor panel can still show the attempt (online + offline).
+  ///
+  /// Never opens a local visit. Posts to the same check-in endpoint the panel
+  /// already uses, with `out_of_range` / `blocked` set.
+  /// App-side: one blocked attempt per shop + purpose + local day.
+  Future<void> reportBlockedGpsAttempt({
+    required int taskId,
+    required String shopId,
+    String? shopName,
+    required double latitude,
+    required double longitude,
+    Map<String, dynamic> gpsExtras = const {},
+    String purpose = 'check_in',
+    int? visitId,
+  }) async {
+    final dayKey = _localDayKey();
+    final clientRequestId = 'gps-blocked-$shopId-$purpose-$dayKey';
+    final outbox = _outbox;
+    final db = Get.isRegistered<AppDatabase>() ? Get.find<AppDatabase>() : null;
+
+    // Already delivered to the panel today — never re-post or re-queue.
+    if (db != null && await db.hasTelemetrySent(clientRequestId)) {
+      await db.deleteOutboxByClientRequestId(clientRequestId);
+      return;
+    }
+
+    if (outbox != null &&
+        await outbox.hasPendingGpsAttempt(clientRequestId: clientRequestId)) {
+      return;
+    }
+
+    final payload = <String, dynamic>{
+      'task_id': taskId,
+      'shop_id': shopId,
+      'shop_name': ?shopName,
+      'latitude': latitude,
+      'longitude': longitude,
+      ...gpsExtras,
+      'out_of_range': true,
+      'blocked': true,
+      'purpose': purpose,
+      'visit_id': ?visitId,
+      'client_request_id': clientRequestId,
+    };
+
+    // Online: POST only. Never park in the outbox after a successful send.
+    if (_canReachServer) {
+      try {
+        await _api.postData(ApiEndpoints.obTasksCheckIn, data: payload);
+        if (db != null) {
+          await db.markTelemetrySent(clientRequestId);
+          await db.deleteOutboxByClientRequestId(clientRequestId);
+        }
+        return;
+      } catch (_) {
+        // Fall through to outbox only on network failure.
+      }
+    }
+
+    if (outbox == null) return;
+    await outbox.enqueue(
+      role: 'orderBooker',
+      action: 'gps_attempt',
+      payload: payload,
+      clientRequestId: clientRequestId,
+    );
+  }
+
+  String _localDayKey() {
+    final now = DateTime.now();
+    final y = now.year.toString().padLeft(4, '0');
+    final m = now.month.toString().padLeft(2, '0');
+    final d = now.day.toString().padLeft(2, '0');
+    return '$y-$m-$d';
+  }
+
+  bool get _canReachServer {
+    if (!Get.isRegistered<ConnectivityService>()) return true;
+    final connectivity = Get.find<ConnectivityService>();
+    if (!connectivity.isOnline.value) return false;
+    return connectivity.quality.value != NetworkQuality.weak;
   }
 
   Future<void> applyActiveVisit(ObActiveVisitModel visit) async {

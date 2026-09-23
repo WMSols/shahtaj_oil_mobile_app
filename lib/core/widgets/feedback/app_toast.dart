@@ -53,8 +53,12 @@ abstract class AppToast {
     _show(status: AppToastStatus.success, message: message);
   }
 
-  static void showInformation(String message) {
-    _show(status: AppToastStatus.information, message: message);
+  static void showInformation(String message, {Duration? duration}) {
+    _show(
+      status: AppToastStatus.information,
+      message: message,
+      duration: duration,
+    );
   }
 
   static void showWarning(String message) {
@@ -83,7 +87,11 @@ abstract class AppToast {
     _overlayEpoch.value++;
   }
 
-  static void _show({required AppToastStatus status, required String message}) {
+  static void _show({
+    required AppToastStatus status,
+    required String message,
+    Duration? duration,
+  }) {
     final trimmed = message.trim();
     if (trimmed.isEmpty) return;
 
@@ -104,7 +112,7 @@ abstract class AppToast {
     _overlayEpoch.value++;
 
     if (!isError) {
-      _timer = Timer(autoDismiss, close);
+      _timer = Timer(duration ?? autoDismiss, close);
     }
   }
 }

@@ -1,14 +1,20 @@
 import 'dart:async';
 
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/widgets.dart';
 
 import 'package:shahtaj_oil_mobile_app/common/bindings/account/account_binding.dart';
 import 'package:shahtaj_oil_mobile_app/common/controllers/shell/app_shell_controller.dart';
 import 'package:shahtaj_oil_mobile_app/common/views/account/account_screen.dart';
+import 'package:shahtaj_oil_mobile_app/core/database/app_database.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/connectivity_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/storage_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/sync_outbox_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/sync/ob_day_bootstrap_service.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/visit/ob_visit_session_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/shell/ob_services_binding.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
@@ -33,7 +39,8 @@ import 'package:shahtaj_oil_mobile_app/order_booker/views/targets/ob_targets_scr
 import 'package:shahtaj_oil_mobile_app/order_booker/views/schedule/ob_weekly_schedule_screen.dart';
 import 'package:get/get.dart';
 
-class OrderBookerShellController extends AppShellController {
+class OrderBookerShellController extends AppShellController
+    with WidgetsBindingObserver {
   /// Pops pushed OB routes back to the shell without recreating it.
   ///
   /// [Get.offAllNamed] on the same shell route destroys and rebuilds the
@@ -59,12 +66,27 @@ class OrderBookerShellController extends AppShellController {
   void onInit() {
     OrderBookerServicesBinding.ensureRegistered();
     super.onInit();
-    // Login / shell open: flush pending, then pull day (force if stale).
+    WidgetsBinding.instance.addObserver(this);
+    // Login / shell open: wipe stale day first, then flush, then pull day.
     unawaited(_syncOnShellOpen());
+  }
+
+  @override
+  void onClose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.onClose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_clearStaleLocalDayIfNeeded());
+    }
   }
 
   Future<void> _syncOnShellOpen() async {
     try {
+      await _clearStaleLocalDayIfNeeded();
       if (Get.isRegistered<OfflineCacheService>()) {
         await Get.find<OfflineCacheService>().flushSyncQueue();
       }
@@ -75,9 +97,52 @@ class OrderBookerShellController extends AppShellController {
       final bootstrap = Get.find<ObDayBootstrapService>();
       // Always pull on login/shell open; force when snapshot is from another day.
       await bootstrap.run(force: true);
+      await _stampLocalDataDay();
     } catch (_) {
       // Shell stays usable from the last snapshot.
     }
+  }
+
+  /// Wipes all OB local work when the device calendar day advanced.
+  ///
+  /// Runs before flush so yesterday's queue is discarded, not pushed.
+  Future<void> _clearStaleLocalDayIfNeeded() async {
+    if (!Get.isRegistered<StorageService>()) return;
+    final storage = Get.find<StorageService>();
+    final today = AppFormatter.apiDate(DateTime.now());
+    final stamped = await storage.getObLocalDataDay();
+    if (stamped == null || stamped.isEmpty) {
+      await storage.saveObLocalDataDay(today);
+      return;
+    }
+    if (stamped == today) return;
+
+    if (Get.isRegistered<SyncOutboxService>()) {
+      await Get.find<SyncOutboxService>().clearSessionData();
+    } else if (Get.isRegistered<AppDatabase>()) {
+      await Get.find<AppDatabase>().clearAllLocalWork();
+    }
+    if (Get.isRegistered<AppDatabase>()) {
+      await Get.find<AppDatabase>().clearSnapshots();
+    }
+    if (Get.isRegistered<OfflineCacheService>()) {
+      await Get.find<OfflineCacheService>().clearOrderBookerSessionCache();
+    }
+    if (Get.isRegistered<ObVisitSessionService>()) {
+      Get.find<ObVisitSessionService>().clearActiveVisitRx();
+      Get.find<ObVisitSessionService>().closedTaskIds.clear();
+      Get.find<ObVisitSessionService>().closedTaskIds.refresh();
+    }
+
+    await storage.saveObLocalDataDay(today);
+    AppToast.showInformation(AppTexts.obYesterdayLocalDataCleared);
+  }
+
+  Future<void> _stampLocalDataDay() async {
+    if (!Get.isRegistered<StorageService>()) return;
+    await Get.find<StorageService>().saveObLocalDataDay(
+      AppFormatter.apiDate(DateTime.now()),
+    );
   }
 
   @override

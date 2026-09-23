@@ -1667,6 +1667,475 @@ class VisitProductsCompanion extends UpdateCompanion<VisitProduct> {
   }
 }
 
+class $VisitOrderLinesTable extends VisitOrderLines
+    with TableInfo<$VisitOrderLinesTable, VisitOrderLine> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $VisitOrderLinesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _visitIdMeta = const VerificationMeta(
+    'visitId',
+  );
+  @override
+  late final GeneratedColumn<int> visitId = GeneratedColumn<int>(
+    'visit_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lineIdMeta = const VerificationMeta('lineId');
+  @override
+  late final GeneratedColumn<int> lineId = GeneratedColumn<int>(
+    'line_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _productIdMeta = const VerificationMeta(
+    'productId',
+  );
+  @override
+  late final GeneratedColumn<int> productId = GeneratedColumn<int>(
+    'product_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _productNameMeta = const VerificationMeta(
+    'productName',
+  );
+  @override
+  late final GeneratedColumn<String> productName = GeneratedColumn<String>(
+    'product_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _quantityMeta = const VerificationMeta(
+    'quantity',
+  );
+  @override
+  late final GeneratedColumn<double> quantity = GeneratedColumn<double>(
+    'quantity',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _priceUnitMeta = const VerificationMeta(
+    'priceUnit',
+  );
+  @override
+  late final GeneratedColumn<double> priceUnit = GeneratedColumn<double>(
+    'price_unit',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _unitMeta = const VerificationMeta('unit');
+  @override
+  late final GeneratedColumn<String> unit = GeneratedColumn<String>(
+    'unit',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    visitId,
+    lineId,
+    productId,
+    productName,
+    quantity,
+    priceUnit,
+    unit,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'visit_order_lines';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<VisitOrderLine> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('visit_id')) {
+      context.handle(
+        _visitIdMeta,
+        visitId.isAcceptableOrUnknown(data['visit_id']!, _visitIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_visitIdMeta);
+    }
+    if (data.containsKey('line_id')) {
+      context.handle(
+        _lineIdMeta,
+        lineId.isAcceptableOrUnknown(data['line_id']!, _lineIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_lineIdMeta);
+    }
+    if (data.containsKey('product_id')) {
+      context.handle(
+        _productIdMeta,
+        productId.isAcceptableOrUnknown(data['product_id']!, _productIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_productIdMeta);
+    }
+    if (data.containsKey('product_name')) {
+      context.handle(
+        _productNameMeta,
+        productName.isAcceptableOrUnknown(
+          data['product_name']!,
+          _productNameMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_productNameMeta);
+    }
+    if (data.containsKey('quantity')) {
+      context.handle(
+        _quantityMeta,
+        quantity.isAcceptableOrUnknown(data['quantity']!, _quantityMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_quantityMeta);
+    }
+    if (data.containsKey('price_unit')) {
+      context.handle(
+        _priceUnitMeta,
+        priceUnit.isAcceptableOrUnknown(data['price_unit']!, _priceUnitMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_priceUnitMeta);
+    }
+    if (data.containsKey('unit')) {
+      context.handle(
+        _unitMeta,
+        unit.isAcceptableOrUnknown(data['unit']!, _unitMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {visitId, lineId};
+  @override
+  VisitOrderLine map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return VisitOrderLine(
+      visitId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}visit_id'],
+      )!,
+      lineId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}line_id'],
+      )!,
+      productId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}product_id'],
+      )!,
+      productName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}product_name'],
+      )!,
+      quantity: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}quantity'],
+      )!,
+      priceUnit: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}price_unit'],
+      )!,
+      unit: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}unit'],
+      ),
+    );
+  }
+
+  @override
+  $VisitOrderLinesTable createAlias(String alias) {
+    return $VisitOrderLinesTable(attachedDatabase, alias);
+  }
+}
+
+class VisitOrderLine extends DataClass implements Insertable<VisitOrderLine> {
+  final int visitId;
+  final int lineId;
+  final int productId;
+  final String productName;
+  final double quantity;
+  final double priceUnit;
+  final String? unit;
+  const VisitOrderLine({
+    required this.visitId,
+    required this.lineId,
+    required this.productId,
+    required this.productName,
+    required this.quantity,
+    required this.priceUnit,
+    this.unit,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['visit_id'] = Variable<int>(visitId);
+    map['line_id'] = Variable<int>(lineId);
+    map['product_id'] = Variable<int>(productId);
+    map['product_name'] = Variable<String>(productName);
+    map['quantity'] = Variable<double>(quantity);
+    map['price_unit'] = Variable<double>(priceUnit);
+    if (!nullToAbsent || unit != null) {
+      map['unit'] = Variable<String>(unit);
+    }
+    return map;
+  }
+
+  VisitOrderLinesCompanion toCompanion(bool nullToAbsent) {
+    return VisitOrderLinesCompanion(
+      visitId: Value(visitId),
+      lineId: Value(lineId),
+      productId: Value(productId),
+      productName: Value(productName),
+      quantity: Value(quantity),
+      priceUnit: Value(priceUnit),
+      unit: unit == null && nullToAbsent ? const Value.absent() : Value(unit),
+    );
+  }
+
+  factory VisitOrderLine.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return VisitOrderLine(
+      visitId: serializer.fromJson<int>(json['visitId']),
+      lineId: serializer.fromJson<int>(json['lineId']),
+      productId: serializer.fromJson<int>(json['productId']),
+      productName: serializer.fromJson<String>(json['productName']),
+      quantity: serializer.fromJson<double>(json['quantity']),
+      priceUnit: serializer.fromJson<double>(json['priceUnit']),
+      unit: serializer.fromJson<String?>(json['unit']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'visitId': serializer.toJson<int>(visitId),
+      'lineId': serializer.toJson<int>(lineId),
+      'productId': serializer.toJson<int>(productId),
+      'productName': serializer.toJson<String>(productName),
+      'quantity': serializer.toJson<double>(quantity),
+      'priceUnit': serializer.toJson<double>(priceUnit),
+      'unit': serializer.toJson<String?>(unit),
+    };
+  }
+
+  VisitOrderLine copyWith({
+    int? visitId,
+    int? lineId,
+    int? productId,
+    String? productName,
+    double? quantity,
+    double? priceUnit,
+    Value<String?> unit = const Value.absent(),
+  }) => VisitOrderLine(
+    visitId: visitId ?? this.visitId,
+    lineId: lineId ?? this.lineId,
+    productId: productId ?? this.productId,
+    productName: productName ?? this.productName,
+    quantity: quantity ?? this.quantity,
+    priceUnit: priceUnit ?? this.priceUnit,
+    unit: unit.present ? unit.value : this.unit,
+  );
+  VisitOrderLine copyWithCompanion(VisitOrderLinesCompanion data) {
+    return VisitOrderLine(
+      visitId: data.visitId.present ? data.visitId.value : this.visitId,
+      lineId: data.lineId.present ? data.lineId.value : this.lineId,
+      productId: data.productId.present ? data.productId.value : this.productId,
+      productName: data.productName.present
+          ? data.productName.value
+          : this.productName,
+      quantity: data.quantity.present ? data.quantity.value : this.quantity,
+      priceUnit: data.priceUnit.present ? data.priceUnit.value : this.priceUnit,
+      unit: data.unit.present ? data.unit.value : this.unit,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VisitOrderLine(')
+          ..write('visitId: $visitId, ')
+          ..write('lineId: $lineId, ')
+          ..write('productId: $productId, ')
+          ..write('productName: $productName, ')
+          ..write('quantity: $quantity, ')
+          ..write('priceUnit: $priceUnit, ')
+          ..write('unit: $unit')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    visitId,
+    lineId,
+    productId,
+    productName,
+    quantity,
+    priceUnit,
+    unit,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is VisitOrderLine &&
+          other.visitId == this.visitId &&
+          other.lineId == this.lineId &&
+          other.productId == this.productId &&
+          other.productName == this.productName &&
+          other.quantity == this.quantity &&
+          other.priceUnit == this.priceUnit &&
+          other.unit == this.unit);
+}
+
+class VisitOrderLinesCompanion extends UpdateCompanion<VisitOrderLine> {
+  final Value<int> visitId;
+  final Value<int> lineId;
+  final Value<int> productId;
+  final Value<String> productName;
+  final Value<double> quantity;
+  final Value<double> priceUnit;
+  final Value<String?> unit;
+  final Value<int> rowid;
+  const VisitOrderLinesCompanion({
+    this.visitId = const Value.absent(),
+    this.lineId = const Value.absent(),
+    this.productId = const Value.absent(),
+    this.productName = const Value.absent(),
+    this.quantity = const Value.absent(),
+    this.priceUnit = const Value.absent(),
+    this.unit = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  VisitOrderLinesCompanion.insert({
+    required int visitId,
+    required int lineId,
+    required int productId,
+    required String productName,
+    required double quantity,
+    required double priceUnit,
+    this.unit = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : visitId = Value(visitId),
+       lineId = Value(lineId),
+       productId = Value(productId),
+       productName = Value(productName),
+       quantity = Value(quantity),
+       priceUnit = Value(priceUnit);
+  static Insertable<VisitOrderLine> custom({
+    Expression<int>? visitId,
+    Expression<int>? lineId,
+    Expression<int>? productId,
+    Expression<String>? productName,
+    Expression<double>? quantity,
+    Expression<double>? priceUnit,
+    Expression<String>? unit,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (visitId != null) 'visit_id': visitId,
+      if (lineId != null) 'line_id': lineId,
+      if (productId != null) 'product_id': productId,
+      if (productName != null) 'product_name': productName,
+      if (quantity != null) 'quantity': quantity,
+      if (priceUnit != null) 'price_unit': priceUnit,
+      if (unit != null) 'unit': unit,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  VisitOrderLinesCompanion copyWith({
+    Value<int>? visitId,
+    Value<int>? lineId,
+    Value<int>? productId,
+    Value<String>? productName,
+    Value<double>? quantity,
+    Value<double>? priceUnit,
+    Value<String?>? unit,
+    Value<int>? rowid,
+  }) {
+    return VisitOrderLinesCompanion(
+      visitId: visitId ?? this.visitId,
+      lineId: lineId ?? this.lineId,
+      productId: productId ?? this.productId,
+      productName: productName ?? this.productName,
+      quantity: quantity ?? this.quantity,
+      priceUnit: priceUnit ?? this.priceUnit,
+      unit: unit ?? this.unit,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (visitId.present) {
+      map['visit_id'] = Variable<int>(visitId.value);
+    }
+    if (lineId.present) {
+      map['line_id'] = Variable<int>(lineId.value);
+    }
+    if (productId.present) {
+      map['product_id'] = Variable<int>(productId.value);
+    }
+    if (productName.present) {
+      map['product_name'] = Variable<String>(productName.value);
+    }
+    if (quantity.present) {
+      map['quantity'] = Variable<double>(quantity.value);
+    }
+    if (priceUnit.present) {
+      map['price_unit'] = Variable<double>(priceUnit.value);
+    }
+    if (unit.present) {
+      map['unit'] = Variable<String>(unit.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VisitOrderLinesCompanion(')
+          ..write('visitId: $visitId, ')
+          ..write('lineId: $lineId, ')
+          ..write('productId: $productId, ')
+          ..write('productName: $productName, ')
+          ..write('quantity: $quantity, ')
+          ..write('priceUnit: $priceUnit, ')
+          ..write('unit: $unit, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $IdMappingsTable extends IdMappings
     with TableInfo<$IdMappingsTable, IdMapping> {
   @override
@@ -2130,6 +2599,43 @@ class $LocalVisitsTable extends LocalVisits
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _subtotalMeta = const VerificationMeta(
+    'subtotal',
+  );
+  @override
+  late final GeneratedColumn<double> subtotal = GeneratedColumn<double>(
+    'subtotal',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _pendingSyncMeta = const VerificationMeta(
+    'pendingSync',
+  );
+  @override
+  late final GeneratedColumn<bool> pendingSync = GeneratedColumn<bool>(
+    'pending_sync',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("pending_sync" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _approvalStateMeta = const VerificationMeta(
+    'approvalState',
+  );
+  @override
+  late final GeneratedColumn<String> approvalState = GeneratedColumn<String>(
+    'approval_state',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
   @override
   late final GeneratedColumn<String> userId = GeneratedColumn<String>(
@@ -2176,6 +2682,9 @@ class $LocalVisitsTable extends LocalVisits
     outcome,
     notes,
     orderNumber,
+    subtotal,
+    pendingSync,
+    approvalState,
     userId,
     createdAt,
     completedAt,
@@ -2294,6 +2803,30 @@ class $LocalVisitsTable extends LocalVisits
         ),
       );
     }
+    if (data.containsKey('subtotal')) {
+      context.handle(
+        _subtotalMeta,
+        subtotal.isAcceptableOrUnknown(data['subtotal']!, _subtotalMeta),
+      );
+    }
+    if (data.containsKey('pending_sync')) {
+      context.handle(
+        _pendingSyncMeta,
+        pendingSync.isAcceptableOrUnknown(
+          data['pending_sync']!,
+          _pendingSyncMeta,
+        ),
+      );
+    }
+    if (data.containsKey('approval_state')) {
+      context.handle(
+        _approvalStateMeta,
+        approvalState.isAcceptableOrUnknown(
+          data['approval_state']!,
+          _approvalStateMeta,
+        ),
+      );
+    }
     if (data.containsKey('user_id')) {
       context.handle(
         _userIdMeta,
@@ -2378,6 +2911,18 @@ class $LocalVisitsTable extends LocalVisits
         DriftSqlType.string,
         data['${effectivePrefix}order_number'],
       ),
+      subtotal: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}subtotal'],
+      ),
+      pendingSync: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}pending_sync'],
+      )!,
+      approvalState: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}approval_state'],
+      ),
       userId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}user_id'],
@@ -2419,6 +2964,11 @@ class LocalVisit extends DataClass implements Insertable<LocalVisit> {
   final String? outcome;
   final String? notes;
   final String? orderNumber;
+  final double? subtotal;
+
+  /// True while place-order / end-visit is still waiting to sync.
+  final bool pendingSync;
+  final String? approvalState;
   final String? userId;
   final DateTime createdAt;
   final DateTime? completedAt;
@@ -2436,6 +2986,9 @@ class LocalVisit extends DataClass implements Insertable<LocalVisit> {
     this.outcome,
     this.notes,
     this.orderNumber,
+    this.subtotal,
+    required this.pendingSync,
+    this.approvalState,
     this.userId,
     required this.createdAt,
     this.completedAt,
@@ -2463,6 +3016,13 @@ class LocalVisit extends DataClass implements Insertable<LocalVisit> {
     }
     if (!nullToAbsent || orderNumber != null) {
       map['order_number'] = Variable<String>(orderNumber);
+    }
+    if (!nullToAbsent || subtotal != null) {
+      map['subtotal'] = Variable<double>(subtotal);
+    }
+    map['pending_sync'] = Variable<bool>(pendingSync);
+    if (!nullToAbsent || approvalState != null) {
+      map['approval_state'] = Variable<String>(approvalState);
     }
     if (!nullToAbsent || userId != null) {
       map['user_id'] = Variable<String>(userId);
@@ -2497,6 +3057,13 @@ class LocalVisit extends DataClass implements Insertable<LocalVisit> {
       orderNumber: orderNumber == null && nullToAbsent
           ? const Value.absent()
           : Value(orderNumber),
+      subtotal: subtotal == null && nullToAbsent
+          ? const Value.absent()
+          : Value(subtotal),
+      pendingSync: Value(pendingSync),
+      approvalState: approvalState == null && nullToAbsent
+          ? const Value.absent()
+          : Value(approvalState),
       userId: userId == null && nullToAbsent
           ? const Value.absent()
           : Value(userId),
@@ -2526,6 +3093,9 @@ class LocalVisit extends DataClass implements Insertable<LocalVisit> {
       outcome: serializer.fromJson<String?>(json['outcome']),
       notes: serializer.fromJson<String?>(json['notes']),
       orderNumber: serializer.fromJson<String?>(json['orderNumber']),
+      subtotal: serializer.fromJson<double?>(json['subtotal']),
+      pendingSync: serializer.fromJson<bool>(json['pendingSync']),
+      approvalState: serializer.fromJson<String?>(json['approvalState']),
       userId: serializer.fromJson<String?>(json['userId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       completedAt: serializer.fromJson<DateTime?>(json['completedAt']),
@@ -2548,6 +3118,9 @@ class LocalVisit extends DataClass implements Insertable<LocalVisit> {
       'outcome': serializer.toJson<String?>(outcome),
       'notes': serializer.toJson<String?>(notes),
       'orderNumber': serializer.toJson<String?>(orderNumber),
+      'subtotal': serializer.toJson<double?>(subtotal),
+      'pendingSync': serializer.toJson<bool>(pendingSync),
+      'approvalState': serializer.toJson<String?>(approvalState),
       'userId': serializer.toJson<String?>(userId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'completedAt': serializer.toJson<DateTime?>(completedAt),
@@ -2568,6 +3141,9 @@ class LocalVisit extends DataClass implements Insertable<LocalVisit> {
     Value<String?> outcome = const Value.absent(),
     Value<String?> notes = const Value.absent(),
     Value<String?> orderNumber = const Value.absent(),
+    Value<double?> subtotal = const Value.absent(),
+    bool? pendingSync,
+    Value<String?> approvalState = const Value.absent(),
     Value<String?> userId = const Value.absent(),
     DateTime? createdAt,
     Value<DateTime?> completedAt = const Value.absent(),
@@ -2587,6 +3163,11 @@ class LocalVisit extends DataClass implements Insertable<LocalVisit> {
     outcome: outcome.present ? outcome.value : this.outcome,
     notes: notes.present ? notes.value : this.notes,
     orderNumber: orderNumber.present ? orderNumber.value : this.orderNumber,
+    subtotal: subtotal.present ? subtotal.value : this.subtotal,
+    pendingSync: pendingSync ?? this.pendingSync,
+    approvalState: approvalState.present
+        ? approvalState.value
+        : this.approvalState,
     userId: userId.present ? userId.value : this.userId,
     createdAt: createdAt ?? this.createdAt,
     completedAt: completedAt.present ? completedAt.value : this.completedAt,
@@ -2614,6 +3195,13 @@ class LocalVisit extends DataClass implements Insertable<LocalVisit> {
       orderNumber: data.orderNumber.present
           ? data.orderNumber.value
           : this.orderNumber,
+      subtotal: data.subtotal.present ? data.subtotal.value : this.subtotal,
+      pendingSync: data.pendingSync.present
+          ? data.pendingSync.value
+          : this.pendingSync,
+      approvalState: data.approvalState.present
+          ? data.approvalState.value
+          : this.approvalState,
       userId: data.userId.present ? data.userId.value : this.userId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       completedAt: data.completedAt.present
@@ -2638,6 +3226,9 @@ class LocalVisit extends DataClass implements Insertable<LocalVisit> {
           ..write('outcome: $outcome, ')
           ..write('notes: $notes, ')
           ..write('orderNumber: $orderNumber, ')
+          ..write('subtotal: $subtotal, ')
+          ..write('pendingSync: $pendingSync, ')
+          ..write('approvalState: $approvalState, ')
           ..write('userId: $userId, ')
           ..write('createdAt: $createdAt, ')
           ..write('completedAt: $completedAt')
@@ -2660,6 +3251,9 @@ class LocalVisit extends DataClass implements Insertable<LocalVisit> {
     outcome,
     notes,
     orderNumber,
+    subtotal,
+    pendingSync,
+    approvalState,
     userId,
     createdAt,
     completedAt,
@@ -2681,6 +3275,9 @@ class LocalVisit extends DataClass implements Insertable<LocalVisit> {
           other.outcome == this.outcome &&
           other.notes == this.notes &&
           other.orderNumber == this.orderNumber &&
+          other.subtotal == this.subtotal &&
+          other.pendingSync == this.pendingSync &&
+          other.approvalState == this.approvalState &&
           other.userId == this.userId &&
           other.createdAt == this.createdAt &&
           other.completedAt == this.completedAt);
@@ -2700,6 +3297,9 @@ class LocalVisitsCompanion extends UpdateCompanion<LocalVisit> {
   final Value<String?> outcome;
   final Value<String?> notes;
   final Value<String?> orderNumber;
+  final Value<double?> subtotal;
+  final Value<bool> pendingSync;
+  final Value<String?> approvalState;
   final Value<String?> userId;
   final Value<DateTime> createdAt;
   final Value<DateTime?> completedAt;
@@ -2717,6 +3317,9 @@ class LocalVisitsCompanion extends UpdateCompanion<LocalVisit> {
     this.outcome = const Value.absent(),
     this.notes = const Value.absent(),
     this.orderNumber = const Value.absent(),
+    this.subtotal = const Value.absent(),
+    this.pendingSync = const Value.absent(),
+    this.approvalState = const Value.absent(),
     this.userId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.completedAt = const Value.absent(),
@@ -2735,6 +3338,9 @@ class LocalVisitsCompanion extends UpdateCompanion<LocalVisit> {
     this.outcome = const Value.absent(),
     this.notes = const Value.absent(),
     this.orderNumber = const Value.absent(),
+    this.subtotal = const Value.absent(),
+    this.pendingSync = const Value.absent(),
+    this.approvalState = const Value.absent(),
     this.userId = const Value.absent(),
     required DateTime createdAt,
     this.completedAt = const Value.absent(),
@@ -2759,6 +3365,9 @@ class LocalVisitsCompanion extends UpdateCompanion<LocalVisit> {
     Expression<String>? outcome,
     Expression<String>? notes,
     Expression<String>? orderNumber,
+    Expression<double>? subtotal,
+    Expression<bool>? pendingSync,
+    Expression<String>? approvalState,
     Expression<String>? userId,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? completedAt,
@@ -2777,6 +3386,9 @@ class LocalVisitsCompanion extends UpdateCompanion<LocalVisit> {
       if (outcome != null) 'outcome': outcome,
       if (notes != null) 'notes': notes,
       if (orderNumber != null) 'order_number': orderNumber,
+      if (subtotal != null) 'subtotal': subtotal,
+      if (pendingSync != null) 'pending_sync': pendingSync,
+      if (approvalState != null) 'approval_state': approvalState,
       if (userId != null) 'user_id': userId,
       if (createdAt != null) 'created_at': createdAt,
       if (completedAt != null) 'completed_at': completedAt,
@@ -2797,6 +3409,9 @@ class LocalVisitsCompanion extends UpdateCompanion<LocalVisit> {
     Value<String?>? outcome,
     Value<String?>? notes,
     Value<String?>? orderNumber,
+    Value<double?>? subtotal,
+    Value<bool>? pendingSync,
+    Value<String?>? approvalState,
     Value<String?>? userId,
     Value<DateTime>? createdAt,
     Value<DateTime?>? completedAt,
@@ -2815,6 +3430,9 @@ class LocalVisitsCompanion extends UpdateCompanion<LocalVisit> {
       outcome: outcome ?? this.outcome,
       notes: notes ?? this.notes,
       orderNumber: orderNumber ?? this.orderNumber,
+      subtotal: subtotal ?? this.subtotal,
+      pendingSync: pendingSync ?? this.pendingSync,
+      approvalState: approvalState ?? this.approvalState,
       userId: userId ?? this.userId,
       createdAt: createdAt ?? this.createdAt,
       completedAt: completedAt ?? this.completedAt,
@@ -2863,6 +3481,15 @@ class LocalVisitsCompanion extends UpdateCompanion<LocalVisit> {
     if (orderNumber.present) {
       map['order_number'] = Variable<String>(orderNumber.value);
     }
+    if (subtotal.present) {
+      map['subtotal'] = Variable<double>(subtotal.value);
+    }
+    if (pendingSync.present) {
+      map['pending_sync'] = Variable<bool>(pendingSync.value);
+    }
+    if (approvalState.present) {
+      map['approval_state'] = Variable<String>(approvalState.value);
+    }
     if (userId.present) {
       map['user_id'] = Variable<String>(userId.value);
     }
@@ -2891,6 +3518,9 @@ class LocalVisitsCompanion extends UpdateCompanion<LocalVisit> {
           ..write('outcome: $outcome, ')
           ..write('notes: $notes, ')
           ..write('orderNumber: $orderNumber, ')
+          ..write('subtotal: $subtotal, ')
+          ..write('pendingSync: $pendingSync, ')
+          ..write('approvalState: $approvalState, ')
           ..write('userId: $userId, ')
           ..write('createdAt: $createdAt, ')
           ..write('completedAt: $completedAt')
@@ -5037,12 +5667,551 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
   }
 }
 
+class $ShopMediaTable extends ShopMedia
+    with TableInfo<$ShopMediaTable, ShopMediaRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ShopMediaTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _shopIdMeta = const VerificationMeta('shopId');
+  @override
+  late final GeneratedColumn<String> shopId = GeneratedColumn<String>(
+    'shop_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _slotMeta = const VerificationMeta('slot');
+  @override
+  late final GeneratedColumn<String> slot = GeneratedColumn<String>(
+    'slot',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _mediaIdMeta = const VerificationMeta(
+    'mediaId',
+  );
+  @override
+  late final GeneratedColumn<String> mediaId = GeneratedColumn<String>(
+    'media_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [shopId, slot, mediaId, updatedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'shop_media';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ShopMediaRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('shop_id')) {
+      context.handle(
+        _shopIdMeta,
+        shopId.isAcceptableOrUnknown(data['shop_id']!, _shopIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_shopIdMeta);
+    }
+    if (data.containsKey('slot')) {
+      context.handle(
+        _slotMeta,
+        slot.isAcceptableOrUnknown(data['slot']!, _slotMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_slotMeta);
+    }
+    if (data.containsKey('media_id')) {
+      context.handle(
+        _mediaIdMeta,
+        mediaId.isAcceptableOrUnknown(data['media_id']!, _mediaIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_mediaIdMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {shopId, slot};
+  @override
+  ShopMediaRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ShopMediaRow(
+      shopId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}shop_id'],
+      )!,
+      slot: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}slot'],
+      )!,
+      mediaId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}media_id'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $ShopMediaTable createAlias(String alias) {
+    return $ShopMediaTable(attachedDatabase, alias);
+  }
+}
+
+class ShopMediaRow extends DataClass implements Insertable<ShopMediaRow> {
+  final String shopId;
+  final String slot;
+  final String mediaId;
+  final DateTime updatedAt;
+  const ShopMediaRow({
+    required this.shopId,
+    required this.slot,
+    required this.mediaId,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['shop_id'] = Variable<String>(shopId);
+    map['slot'] = Variable<String>(slot);
+    map['media_id'] = Variable<String>(mediaId);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  ShopMediaCompanion toCompanion(bool nullToAbsent) {
+    return ShopMediaCompanion(
+      shopId: Value(shopId),
+      slot: Value(slot),
+      mediaId: Value(mediaId),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory ShopMediaRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ShopMediaRow(
+      shopId: serializer.fromJson<String>(json['shopId']),
+      slot: serializer.fromJson<String>(json['slot']),
+      mediaId: serializer.fromJson<String>(json['mediaId']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'shopId': serializer.toJson<String>(shopId),
+      'slot': serializer.toJson<String>(slot),
+      'mediaId': serializer.toJson<String>(mediaId),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  ShopMediaRow copyWith({
+    String? shopId,
+    String? slot,
+    String? mediaId,
+    DateTime? updatedAt,
+  }) => ShopMediaRow(
+    shopId: shopId ?? this.shopId,
+    slot: slot ?? this.slot,
+    mediaId: mediaId ?? this.mediaId,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  ShopMediaRow copyWithCompanion(ShopMediaCompanion data) {
+    return ShopMediaRow(
+      shopId: data.shopId.present ? data.shopId.value : this.shopId,
+      slot: data.slot.present ? data.slot.value : this.slot,
+      mediaId: data.mediaId.present ? data.mediaId.value : this.mediaId,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ShopMediaRow(')
+          ..write('shopId: $shopId, ')
+          ..write('slot: $slot, ')
+          ..write('mediaId: $mediaId, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(shopId, slot, mediaId, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ShopMediaRow &&
+          other.shopId == this.shopId &&
+          other.slot == this.slot &&
+          other.mediaId == this.mediaId &&
+          other.updatedAt == this.updatedAt);
+}
+
+class ShopMediaCompanion extends UpdateCompanion<ShopMediaRow> {
+  final Value<String> shopId;
+  final Value<String> slot;
+  final Value<String> mediaId;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const ShopMediaCompanion({
+    this.shopId = const Value.absent(),
+    this.slot = const Value.absent(),
+    this.mediaId = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ShopMediaCompanion.insert({
+    required String shopId,
+    required String slot,
+    required String mediaId,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : shopId = Value(shopId),
+       slot = Value(slot),
+       mediaId = Value(mediaId),
+       updatedAt = Value(updatedAt);
+  static Insertable<ShopMediaRow> custom({
+    Expression<String>? shopId,
+    Expression<String>? slot,
+    Expression<String>? mediaId,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (shopId != null) 'shop_id': shopId,
+      if (slot != null) 'slot': slot,
+      if (mediaId != null) 'media_id': mediaId,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ShopMediaCompanion copyWith({
+    Value<String>? shopId,
+    Value<String>? slot,
+    Value<String>? mediaId,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return ShopMediaCompanion(
+      shopId: shopId ?? this.shopId,
+      slot: slot ?? this.slot,
+      mediaId: mediaId ?? this.mediaId,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (shopId.present) {
+      map['shop_id'] = Variable<String>(shopId.value);
+    }
+    if (slot.present) {
+      map['slot'] = Variable<String>(slot.value);
+    }
+    if (mediaId.present) {
+      map['media_id'] = Variable<String>(mediaId.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ShopMediaCompanion(')
+          ..write('shopId: $shopId, ')
+          ..write('slot: $slot, ')
+          ..write('mediaId: $mediaId, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $TelemetrySentTable extends TelemetrySent
+    with TableInfo<$TelemetrySentTable, TelemetrySentData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TelemetrySentTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _clientRequestIdMeta = const VerificationMeta(
+    'clientRequestId',
+  );
+  @override
+  late final GeneratedColumn<String> clientRequestId = GeneratedColumn<String>(
+    'client_request_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sentAtMeta = const VerificationMeta('sentAt');
+  @override
+  late final GeneratedColumn<DateTime> sentAt = GeneratedColumn<DateTime>(
+    'sent_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [clientRequestId, sentAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'telemetry_sent';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TelemetrySentData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('client_request_id')) {
+      context.handle(
+        _clientRequestIdMeta,
+        clientRequestId.isAcceptableOrUnknown(
+          data['client_request_id']!,
+          _clientRequestIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_clientRequestIdMeta);
+    }
+    if (data.containsKey('sent_at')) {
+      context.handle(
+        _sentAtMeta,
+        sentAt.isAcceptableOrUnknown(data['sent_at']!, _sentAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sentAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {clientRequestId};
+  @override
+  TelemetrySentData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TelemetrySentData(
+      clientRequestId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}client_request_id'],
+      )!,
+      sentAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}sent_at'],
+      )!,
+    );
+  }
+
+  @override
+  $TelemetrySentTable createAlias(String alias) {
+    return $TelemetrySentTable(attachedDatabase, alias);
+  }
+}
+
+class TelemetrySentData extends DataClass
+    implements Insertable<TelemetrySentData> {
+  final String clientRequestId;
+  final DateTime sentAt;
+  const TelemetrySentData({
+    required this.clientRequestId,
+    required this.sentAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['client_request_id'] = Variable<String>(clientRequestId);
+    map['sent_at'] = Variable<DateTime>(sentAt);
+    return map;
+  }
+
+  TelemetrySentCompanion toCompanion(bool nullToAbsent) {
+    return TelemetrySentCompanion(
+      clientRequestId: Value(clientRequestId),
+      sentAt: Value(sentAt),
+    );
+  }
+
+  factory TelemetrySentData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TelemetrySentData(
+      clientRequestId: serializer.fromJson<String>(json['clientRequestId']),
+      sentAt: serializer.fromJson<DateTime>(json['sentAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'clientRequestId': serializer.toJson<String>(clientRequestId),
+      'sentAt': serializer.toJson<DateTime>(sentAt),
+    };
+  }
+
+  TelemetrySentData copyWith({String? clientRequestId, DateTime? sentAt}) =>
+      TelemetrySentData(
+        clientRequestId: clientRequestId ?? this.clientRequestId,
+        sentAt: sentAt ?? this.sentAt,
+      );
+  TelemetrySentData copyWithCompanion(TelemetrySentCompanion data) {
+    return TelemetrySentData(
+      clientRequestId: data.clientRequestId.present
+          ? data.clientRequestId.value
+          : this.clientRequestId,
+      sentAt: data.sentAt.present ? data.sentAt.value : this.sentAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TelemetrySentData(')
+          ..write('clientRequestId: $clientRequestId, ')
+          ..write('sentAt: $sentAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(clientRequestId, sentAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TelemetrySentData &&
+          other.clientRequestId == this.clientRequestId &&
+          other.sentAt == this.sentAt);
+}
+
+class TelemetrySentCompanion extends UpdateCompanion<TelemetrySentData> {
+  final Value<String> clientRequestId;
+  final Value<DateTime> sentAt;
+  final Value<int> rowid;
+  const TelemetrySentCompanion({
+    this.clientRequestId = const Value.absent(),
+    this.sentAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TelemetrySentCompanion.insert({
+    required String clientRequestId,
+    required DateTime sentAt,
+    this.rowid = const Value.absent(),
+  }) : clientRequestId = Value(clientRequestId),
+       sentAt = Value(sentAt);
+  static Insertable<TelemetrySentData> custom({
+    Expression<String>? clientRequestId,
+    Expression<DateTime>? sentAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (clientRequestId != null) 'client_request_id': clientRequestId,
+      if (sentAt != null) 'sent_at': sentAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TelemetrySentCompanion copyWith({
+    Value<String>? clientRequestId,
+    Value<DateTime>? sentAt,
+    Value<int>? rowid,
+  }) {
+    return TelemetrySentCompanion(
+      clientRequestId: clientRequestId ?? this.clientRequestId,
+      sentAt: sentAt ?? this.sentAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (clientRequestId.present) {
+      map['client_request_id'] = Variable<String>(clientRequestId.value);
+    }
+    if (sentAt.present) {
+      map['sent_at'] = Variable<DateTime>(sentAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TelemetrySentCompanion(')
+          ..write('clientRequestId: $clientRequestId, ')
+          ..write('sentAt: $sentAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $OutboxEntriesTable outboxEntries = $OutboxEntriesTable(this);
   late final $VisitCartLinesTable visitCartLines = $VisitCartLinesTable(this);
   late final $VisitProductsTable visitProducts = $VisitProductsTable(this);
+  late final $VisitOrderLinesTable visitOrderLines = $VisitOrderLinesTable(
+    this,
+  );
   late final $IdMappingsTable idMappings = $IdMappingsTable(this);
   late final $LocalVisitsTable localVisits = $LocalVisitsTable(this);
   late final $LocalShopsTable localShops = $LocalShopsTable(this);
@@ -5053,6 +6222,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     this,
   );
   late final $MediaFilesTable mediaFiles = $MediaFilesTable(this);
+  late final $ShopMediaTable shopMedia = $ShopMediaTable(this);
+  late final $TelemetrySentTable telemetrySent = $TelemetrySentTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -5061,6 +6232,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     outboxEntries,
     visitCartLines,
     visitProducts,
+    visitOrderLines,
     idMappings,
     localVisits,
     localShops,
@@ -5068,6 +6240,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     cachedDocs,
     catalogProducts,
     mediaFiles,
+    shopMedia,
+    telemetrySent,
   ];
 }
 
@@ -5896,6 +7070,252 @@ typedef $$VisitProductsTableProcessedTableManager =
       VisitProduct,
       PrefetchHooks Function()
     >;
+typedef $$VisitOrderLinesTableCreateCompanionBuilder =
+    VisitOrderLinesCompanion Function({
+      required int visitId,
+      required int lineId,
+      required int productId,
+      required String productName,
+      required double quantity,
+      required double priceUnit,
+      Value<String?> unit,
+      Value<int> rowid,
+    });
+typedef $$VisitOrderLinesTableUpdateCompanionBuilder =
+    VisitOrderLinesCompanion Function({
+      Value<int> visitId,
+      Value<int> lineId,
+      Value<int> productId,
+      Value<String> productName,
+      Value<double> quantity,
+      Value<double> priceUnit,
+      Value<String?> unit,
+      Value<int> rowid,
+    });
+
+class $$VisitOrderLinesTableFilterComposer
+    extends Composer<_$AppDatabase, $VisitOrderLinesTable> {
+  $$VisitOrderLinesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get visitId => $composableBuilder(
+    column: $table.visitId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lineId => $composableBuilder(
+    column: $table.lineId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get productId => $composableBuilder(
+    column: $table.productId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get productName => $composableBuilder(
+    column: $table.productName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get priceUnit => $composableBuilder(
+    column: $table.priceUnit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get unit => $composableBuilder(
+    column: $table.unit,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$VisitOrderLinesTableOrderingComposer
+    extends Composer<_$AppDatabase, $VisitOrderLinesTable> {
+  $$VisitOrderLinesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get visitId => $composableBuilder(
+    column: $table.visitId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lineId => $composableBuilder(
+    column: $table.lineId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get productId => $composableBuilder(
+    column: $table.productId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get productName => $composableBuilder(
+    column: $table.productName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get priceUnit => $composableBuilder(
+    column: $table.priceUnit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get unit => $composableBuilder(
+    column: $table.unit,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$VisitOrderLinesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $VisitOrderLinesTable> {
+  $$VisitOrderLinesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get visitId =>
+      $composableBuilder(column: $table.visitId, builder: (column) => column);
+
+  GeneratedColumn<int> get lineId =>
+      $composableBuilder(column: $table.lineId, builder: (column) => column);
+
+  GeneratedColumn<int> get productId =>
+      $composableBuilder(column: $table.productId, builder: (column) => column);
+
+  GeneratedColumn<String> get productName => $composableBuilder(
+    column: $table.productName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get quantity =>
+      $composableBuilder(column: $table.quantity, builder: (column) => column);
+
+  GeneratedColumn<double> get priceUnit =>
+      $composableBuilder(column: $table.priceUnit, builder: (column) => column);
+
+  GeneratedColumn<String> get unit =>
+      $composableBuilder(column: $table.unit, builder: (column) => column);
+}
+
+class $$VisitOrderLinesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $VisitOrderLinesTable,
+          VisitOrderLine,
+          $$VisitOrderLinesTableFilterComposer,
+          $$VisitOrderLinesTableOrderingComposer,
+          $$VisitOrderLinesTableAnnotationComposer,
+          $$VisitOrderLinesTableCreateCompanionBuilder,
+          $$VisitOrderLinesTableUpdateCompanionBuilder,
+          (
+            VisitOrderLine,
+            BaseReferences<
+              _$AppDatabase,
+              $VisitOrderLinesTable,
+              VisitOrderLine
+            >,
+          ),
+          VisitOrderLine,
+          PrefetchHooks Function()
+        > {
+  $$VisitOrderLinesTableTableManager(
+    _$AppDatabase db,
+    $VisitOrderLinesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$VisitOrderLinesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$VisitOrderLinesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$VisitOrderLinesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> visitId = const Value.absent(),
+                Value<int> lineId = const Value.absent(),
+                Value<int> productId = const Value.absent(),
+                Value<String> productName = const Value.absent(),
+                Value<double> quantity = const Value.absent(),
+                Value<double> priceUnit = const Value.absent(),
+                Value<String?> unit = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => VisitOrderLinesCompanion(
+                visitId: visitId,
+                lineId: lineId,
+                productId: productId,
+                productName: productName,
+                quantity: quantity,
+                priceUnit: priceUnit,
+                unit: unit,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required int visitId,
+                required int lineId,
+                required int productId,
+                required String productName,
+                required double quantity,
+                required double priceUnit,
+                Value<String?> unit = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => VisitOrderLinesCompanion.insert(
+                visitId: visitId,
+                lineId: lineId,
+                productId: productId,
+                productName: productName,
+                quantity: quantity,
+                priceUnit: priceUnit,
+                unit: unit,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$VisitOrderLinesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $VisitOrderLinesTable,
+      VisitOrderLine,
+      $$VisitOrderLinesTableFilterComposer,
+      $$VisitOrderLinesTableOrderingComposer,
+      $$VisitOrderLinesTableAnnotationComposer,
+      $$VisitOrderLinesTableCreateCompanionBuilder,
+      $$VisitOrderLinesTableUpdateCompanionBuilder,
+      (
+        VisitOrderLine,
+        BaseReferences<_$AppDatabase, $VisitOrderLinesTable, VisitOrderLine>,
+      ),
+      VisitOrderLine,
+      PrefetchHooks Function()
+    >;
 typedef $$IdMappingsTableCreateCompanionBuilder =
     IdMappingsCompanion Function({
       required String entityType,
@@ -6091,6 +7511,9 @@ typedef $$LocalVisitsTableCreateCompanionBuilder =
       Value<String?> outcome,
       Value<String?> notes,
       Value<String?> orderNumber,
+      Value<double?> subtotal,
+      Value<bool> pendingSync,
+      Value<String?> approvalState,
       Value<String?> userId,
       required DateTime createdAt,
       Value<DateTime?> completedAt,
@@ -6110,6 +7533,9 @@ typedef $$LocalVisitsTableUpdateCompanionBuilder =
       Value<String?> outcome,
       Value<String?> notes,
       Value<String?> orderNumber,
+      Value<double?> subtotal,
+      Value<bool> pendingSync,
+      Value<String?> approvalState,
       Value<String?> userId,
       Value<DateTime> createdAt,
       Value<DateTime?> completedAt,
@@ -6186,6 +7612,21 @@ class $$LocalVisitsTableFilterComposer
 
   ColumnFilters<String> get orderNumber => $composableBuilder(
     column: $table.orderNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get subtotal => $composableBuilder(
+    column: $table.subtotal,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get pendingSync => $composableBuilder(
+    column: $table.pendingSync,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get approvalState => $composableBuilder(
+    column: $table.approvalState,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6279,6 +7720,21 @@ class $$LocalVisitsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get subtotal => $composableBuilder(
+    column: $table.subtotal,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get pendingSync => $composableBuilder(
+    column: $table.pendingSync,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get approvalState => $composableBuilder(
+    column: $table.approvalState,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get userId => $composableBuilder(
     column: $table.userId,
     builder: (column) => ColumnOrderings(column),
@@ -6351,6 +7807,19 @@ class $$LocalVisitsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<double> get subtotal =>
+      $composableBuilder(column: $table.subtotal, builder: (column) => column);
+
+  GeneratedColumn<bool> get pendingSync => $composableBuilder(
+    column: $table.pendingSync,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get approvalState => $composableBuilder(
+    column: $table.approvalState,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get userId =>
       $composableBuilder(column: $table.userId, builder: (column) => column);
 
@@ -6407,6 +7876,9 @@ class $$LocalVisitsTableTableManager
                 Value<String?> outcome = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
                 Value<String?> orderNumber = const Value.absent(),
+                Value<double?> subtotal = const Value.absent(),
+                Value<bool> pendingSync = const Value.absent(),
+                Value<String?> approvalState = const Value.absent(),
                 Value<String?> userId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime?> completedAt = const Value.absent(),
@@ -6424,6 +7896,9 @@ class $$LocalVisitsTableTableManager
                 outcome: outcome,
                 notes: notes,
                 orderNumber: orderNumber,
+                subtotal: subtotal,
+                pendingSync: pendingSync,
+                approvalState: approvalState,
                 userId: userId,
                 createdAt: createdAt,
                 completedAt: completedAt,
@@ -6443,6 +7918,9 @@ class $$LocalVisitsTableTableManager
                 Value<String?> outcome = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
                 Value<String?> orderNumber = const Value.absent(),
+                Value<double?> subtotal = const Value.absent(),
+                Value<bool> pendingSync = const Value.absent(),
+                Value<String?> approvalState = const Value.absent(),
                 Value<String?> userId = const Value.absent(),
                 required DateTime createdAt,
                 Value<DateTime?> completedAt = const Value.absent(),
@@ -6460,6 +7938,9 @@ class $$LocalVisitsTableTableManager
                 outcome: outcome,
                 notes: notes,
                 orderNumber: orderNumber,
+                subtotal: subtotal,
+                pendingSync: pendingSync,
+                approvalState: approvalState,
                 userId: userId,
                 createdAt: createdAt,
                 completedAt: completedAt,
@@ -7619,6 +9100,336 @@ typedef $$MediaFilesTableProcessedTableManager =
       MediaFile,
       PrefetchHooks Function()
     >;
+typedef $$ShopMediaTableCreateCompanionBuilder =
+    ShopMediaCompanion Function({
+      required String shopId,
+      required String slot,
+      required String mediaId,
+      required DateTime updatedAt,
+      Value<int> rowid,
+    });
+typedef $$ShopMediaTableUpdateCompanionBuilder =
+    ShopMediaCompanion Function({
+      Value<String> shopId,
+      Value<String> slot,
+      Value<String> mediaId,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$ShopMediaTableFilterComposer
+    extends Composer<_$AppDatabase, $ShopMediaTable> {
+  $$ShopMediaTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get shopId => $composableBuilder(
+    column: $table.shopId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get slot => $composableBuilder(
+    column: $table.slot,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get mediaId => $composableBuilder(
+    column: $table.mediaId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ShopMediaTableOrderingComposer
+    extends Composer<_$AppDatabase, $ShopMediaTable> {
+  $$ShopMediaTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get shopId => $composableBuilder(
+    column: $table.shopId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get slot => $composableBuilder(
+    column: $table.slot,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get mediaId => $composableBuilder(
+    column: $table.mediaId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ShopMediaTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ShopMediaTable> {
+  $$ShopMediaTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get shopId =>
+      $composableBuilder(column: $table.shopId, builder: (column) => column);
+
+  GeneratedColumn<String> get slot =>
+      $composableBuilder(column: $table.slot, builder: (column) => column);
+
+  GeneratedColumn<String> get mediaId =>
+      $composableBuilder(column: $table.mediaId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$ShopMediaTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ShopMediaTable,
+          ShopMediaRow,
+          $$ShopMediaTableFilterComposer,
+          $$ShopMediaTableOrderingComposer,
+          $$ShopMediaTableAnnotationComposer,
+          $$ShopMediaTableCreateCompanionBuilder,
+          $$ShopMediaTableUpdateCompanionBuilder,
+          (
+            ShopMediaRow,
+            BaseReferences<_$AppDatabase, $ShopMediaTable, ShopMediaRow>,
+          ),
+          ShopMediaRow,
+          PrefetchHooks Function()
+        > {
+  $$ShopMediaTableTableManager(_$AppDatabase db, $ShopMediaTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ShopMediaTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ShopMediaTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ShopMediaTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> shopId = const Value.absent(),
+                Value<String> slot = const Value.absent(),
+                Value<String> mediaId = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ShopMediaCompanion(
+                shopId: shopId,
+                slot: slot,
+                mediaId: mediaId,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String shopId,
+                required String slot,
+                required String mediaId,
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => ShopMediaCompanion.insert(
+                shopId: shopId,
+                slot: slot,
+                mediaId: mediaId,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ShopMediaTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ShopMediaTable,
+      ShopMediaRow,
+      $$ShopMediaTableFilterComposer,
+      $$ShopMediaTableOrderingComposer,
+      $$ShopMediaTableAnnotationComposer,
+      $$ShopMediaTableCreateCompanionBuilder,
+      $$ShopMediaTableUpdateCompanionBuilder,
+      (
+        ShopMediaRow,
+        BaseReferences<_$AppDatabase, $ShopMediaTable, ShopMediaRow>,
+      ),
+      ShopMediaRow,
+      PrefetchHooks Function()
+    >;
+typedef $$TelemetrySentTableCreateCompanionBuilder =
+    TelemetrySentCompanion Function({
+      required String clientRequestId,
+      required DateTime sentAt,
+      Value<int> rowid,
+    });
+typedef $$TelemetrySentTableUpdateCompanionBuilder =
+    TelemetrySentCompanion Function({
+      Value<String> clientRequestId,
+      Value<DateTime> sentAt,
+      Value<int> rowid,
+    });
+
+class $$TelemetrySentTableFilterComposer
+    extends Composer<_$AppDatabase, $TelemetrySentTable> {
+  $$TelemetrySentTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get clientRequestId => $composableBuilder(
+    column: $table.clientRequestId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get sentAt => $composableBuilder(
+    column: $table.sentAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$TelemetrySentTableOrderingComposer
+    extends Composer<_$AppDatabase, $TelemetrySentTable> {
+  $$TelemetrySentTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get clientRequestId => $composableBuilder(
+    column: $table.clientRequestId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get sentAt => $composableBuilder(
+    column: $table.sentAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$TelemetrySentTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TelemetrySentTable> {
+  $$TelemetrySentTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get clientRequestId => $composableBuilder(
+    column: $table.clientRequestId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get sentAt =>
+      $composableBuilder(column: $table.sentAt, builder: (column) => column);
+}
+
+class $$TelemetrySentTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TelemetrySentTable,
+          TelemetrySentData,
+          $$TelemetrySentTableFilterComposer,
+          $$TelemetrySentTableOrderingComposer,
+          $$TelemetrySentTableAnnotationComposer,
+          $$TelemetrySentTableCreateCompanionBuilder,
+          $$TelemetrySentTableUpdateCompanionBuilder,
+          (
+            TelemetrySentData,
+            BaseReferences<
+              _$AppDatabase,
+              $TelemetrySentTable,
+              TelemetrySentData
+            >,
+          ),
+          TelemetrySentData,
+          PrefetchHooks Function()
+        > {
+  $$TelemetrySentTableTableManager(_$AppDatabase db, $TelemetrySentTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TelemetrySentTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TelemetrySentTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TelemetrySentTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> clientRequestId = const Value.absent(),
+                Value<DateTime> sentAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TelemetrySentCompanion(
+                clientRequestId: clientRequestId,
+                sentAt: sentAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String clientRequestId,
+                required DateTime sentAt,
+                Value<int> rowid = const Value.absent(),
+              }) => TelemetrySentCompanion.insert(
+                clientRequestId: clientRequestId,
+                sentAt: sentAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$TelemetrySentTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TelemetrySentTable,
+      TelemetrySentData,
+      $$TelemetrySentTableFilterComposer,
+      $$TelemetrySentTableOrderingComposer,
+      $$TelemetrySentTableAnnotationComposer,
+      $$TelemetrySentTableCreateCompanionBuilder,
+      $$TelemetrySentTableUpdateCompanionBuilder,
+      (
+        TelemetrySentData,
+        BaseReferences<_$AppDatabase, $TelemetrySentTable, TelemetrySentData>,
+      ),
+      TelemetrySentData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -7629,6 +9440,8 @@ class $AppDatabaseManager {
       $$VisitCartLinesTableTableManager(_db, _db.visitCartLines);
   $$VisitProductsTableTableManager get visitProducts =>
       $$VisitProductsTableTableManager(_db, _db.visitProducts);
+  $$VisitOrderLinesTableTableManager get visitOrderLines =>
+      $$VisitOrderLinesTableTableManager(_db, _db.visitOrderLines);
   $$IdMappingsTableTableManager get idMappings =>
       $$IdMappingsTableTableManager(_db, _db.idMappings);
   $$LocalVisitsTableTableManager get localVisits =>
@@ -7643,4 +9456,8 @@ class $AppDatabaseManager {
       $$CatalogProductsTableTableManager(_db, _db.catalogProducts);
   $$MediaFilesTableTableManager get mediaFiles =>
       $$MediaFilesTableTableManager(_db, _db.mediaFiles);
+  $$ShopMediaTableTableManager get shopMedia =>
+      $$ShopMediaTableTableManager(_db, _db.shopMedia);
+  $$TelemetrySentTableTableManager get telemetrySent =>
+      $$TelemetrySentTableTableManager(_db, _db.telemetrySent);
 }

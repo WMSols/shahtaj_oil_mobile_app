@@ -42,12 +42,15 @@ abstract class ObCheckInFlow {
       return;
     }
 
-    final needsSetup = forceNeedsSetup || task.needsShopSetup;
+    // No pin on file → verify-on-site (device GPS becomes the shop location).
+    final needsSetup =
+        forceNeedsSetup || task.needsShopSetup || !task.hasShopCoordinates;
     final missing = missingFields.isNotEmpty
         ? missingFields
         : task.missingFields;
 
     if (needsSetup) {
+      AppToast.close();
       await Get.toNamed(
         AppRoutes.obShopVerifyOnSite,
         arguments: {
@@ -66,13 +69,32 @@ abstract class ObCheckInFlow {
     try {
       final position = await AppHelper.requireCurrentPosition(showGuide: true);
 
-      // Same shop-range gate for online and offline — never queue a far check-in.
-      AppHelper.ensureWithinShopRange(
-        currentLat: position.latitude,
-        currentLng: position.longitude,
+      // Capture distance for the distributor panel, then block if beyond max.
+      // Far attempts still hit / queue check-in GPS so the panel can show them.
+      final gpsPayload = AppHelper.checkInGpsExtras(
+        latitude: position.latitude,
+        longitude: position.longitude,
+        accuracyMeters: position.accuracy,
         shopLat: task.shopLatitude,
         shopLng: task.shopLongitude,
       );
+      if (gpsPayload['out_of_range'] == true) {
+        await taskService.reportBlockedGpsAttempt(
+          taskId: task.id,
+          shopId: task.shopId,
+          shopName: task.shopName,
+          latitude: position.latitude,
+          longitude: position.longitude,
+          gpsExtras: gpsPayload,
+          purpose: 'check_in',
+        );
+        AppHelper.ensureWithinShopRange(
+          currentLat: position.latitude,
+          currentLng: position.longitude,
+          shopLat: task.shopLatitude,
+          shopLng: task.shopLongitude,
+        );
+      }
 
       // Already checked in locally: resume cart instead of queuing again.
       final existing = await session.activeVisit();
@@ -98,9 +120,11 @@ abstract class ObCheckInFlow {
             taskId: task.id,
             latitude: position.latitude,
             longitude: position.longitude,
+            gpsExtras: gpsPayload,
           );
 
           if (result.needsShopSetup) {
+            AppToast.close();
             await Get.toNamed(
               AppRoutes.obShopVerifyOnSite,
               arguments: {
@@ -146,6 +170,7 @@ abstract class ObCheckInFlow {
         task: task,
         latitude: position.latitude,
         longitude: position.longitude,
+        gpsExtras: gpsPayload,
       );
       AppToast.showSuccess(AppTexts.obCheckInQueuedOffline);
       await _openOrderCreate(visit.visitId, onDone);
