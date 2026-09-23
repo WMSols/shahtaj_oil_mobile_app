@@ -1,14 +1,17 @@
 /// Map tile settings for [AppMapPreview].
 ///
-/// Do not use OpenStreetMap public tile servers in production apps.
+/// Uses OpenStreetMap standard tiles (no API key). Fine for light in-app use;
+/// respect OSM tile usage policy for heavy production traffic.
 /// See: https://operations.osmfoundation.org/policies/tiles
 class AppMapTiles {
   AppMapTiles._();
 
-  static const voyagerTemplate =
-      'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png';
+  static const osmTemplate = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
-  static const subdomains = ['a', 'b', 'c', 'd'];
+  /// Kept as an alias so older call sites still compile.
+  static const voyagerTemplate = osmTemplate;
+
+  static const List<String> subdomains = <String>[];
 
   /// Default map center when no GPS coordinates are set (Islamabad, Pakistan).
   static const defaultLatitude = 33.6844;
@@ -16,7 +19,6 @@ class AppMapTiles {
 
   static const openStreetMapCopyrightUrl =
       'https://www.openstreetmap.org/copyright';
-  static const cartoAttributionUrl = 'https://carto.com/attributions';
 
   static Uri googleMapsNavigationUri(
     double latitude,

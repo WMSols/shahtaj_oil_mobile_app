@@ -65,7 +65,12 @@ class ObDashboardController extends GetxController with CachedLoadMixin {
 
   String get greeting => AppFormatter.timeOfDayGreeting();
   String get userName => _session.user.value?.name ?? AppTexts.defaultUserName;
-  ObRouteModel? get todaysRoute => dashboard.value?.todaysRoute;
+  ObRouteModel? get todaysRoute {
+    final route = dashboard.value?.todaysRoute;
+    if (route == null || route.id.isEmpty) return null;
+    return route;
+  }
+
   int get completedTasks => dashboard.value?.completedTasks ?? 0;
   int get pendingTasks => dashboard.value?.pendingTasks ?? 0;
   int get totalTasks => dashboard.value?.totalTasks ?? 0;
@@ -125,7 +130,12 @@ class ObDashboardController extends GetxController with CachedLoadMixin {
         }
       }
       dashboard.value = ObDashboardModel(
-        todaysRoute: remote.todaysRoute ?? today.route,
+        todaysRoute: () {
+          final fromRemote = remote.todaysRoute;
+          if (fromRemote != null && fromRemote.id.isNotEmpty) return fromRemote;
+          final fromToday = today.route;
+          return fromToday.id.isEmpty ? null : fromToday;
+        }(),
         recentOrders: remote.recentOrders,
         targets: remote.targets,
         completedTasks: completed,

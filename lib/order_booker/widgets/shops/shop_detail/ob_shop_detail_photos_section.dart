@@ -6,7 +6,6 @@ import 'package:shahtaj_oil_mobile_app/core/design/responsive/app_responsive.dar
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_shimmer.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/media/app_ref_image.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/shops/ob_shop_model.dart';
 
@@ -85,7 +84,6 @@ class ObPhotoPreviewTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final radius = AppResponsive.radius(context);
     final hasImage = AppRefImage.isLoadable(asset);
-    final showShimmer = isLoading && !hasImage;
 
     return Column(
       children: [
@@ -95,7 +93,9 @@ class ObPhotoPreviewTile extends StatelessWidget {
               color: AppColors.inputFill,
               borderRadius: BorderRadius.circular(radius),
               border: Border.all(
-                color: hasImage ? AppColors.primary : AppColors.lightGrey,
+                color: hasImage && !isLoading
+                    ? AppColors.primary
+                    : AppColors.lightGrey,
                 width: _borderWidth,
               ),
             ),
@@ -106,12 +106,12 @@ class ObPhotoPreviewTile extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  if (hasImage)
+                  if (isLoading)
+                    AppRefImage.loadingIndicator()
+                  else if (hasImage)
                     SizedBox.expand(
                       child: AppRefImage(ref: asset, fit: BoxFit.cover),
                     )
-                  else if (showShimmer)
-                    AppShimmer(child: AppShimmer.box(radius: 0))
                   else
                     Center(
                       child: Icon(

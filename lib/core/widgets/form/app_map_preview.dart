@@ -82,8 +82,7 @@ class AppMapPreview extends StatelessWidget {
                 ),
                 children: [
                   TileLayer(
-                    urlTemplate: AppMapTiles.voyagerTemplate,
-                    subdomains: AppMapTiles.subdomains,
+                    urlTemplate: AppMapTiles.osmTemplate,
                     userAgentPackageName: 'com.shahtaj.app',
                   ),
                   MarkerLayer(

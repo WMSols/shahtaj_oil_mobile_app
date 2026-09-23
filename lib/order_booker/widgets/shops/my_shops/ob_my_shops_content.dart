@@ -39,15 +39,8 @@ class ObMyShopsContent extends GetView<ObMyShopsController> {
               children: [
                 AppFilterChip(
                   label: AppTexts.obShopsFilterAll,
-                  selected:
-                      controller.isFilterSelected(null) &&
-                      !controller.needsSetupOnly.value,
-                  onTap: () {
-                    controller.selectFilter(null);
-                    if (controller.needsSetupOnly.value) {
-                      controller.toggleNeedsSetupFilter();
-                    }
-                  },
+                  selected: controller.isFilterSelected(null),
+                  onTap: () => controller.selectFilter(null),
                 ),
                 for (final status in controller.filterStatuses)
                   AppFilterChip.shopStatus(
@@ -55,11 +48,6 @@ class ObMyShopsContent extends GetView<ObMyShopsController> {
                     selected: controller.isFilterSelected(status),
                     onTap: () => controller.selectFilter(status),
                   ),
-                AppFilterChip(
-                  label: AppTexts.obNeedsSetupFilter,
-                  selected: controller.needsSetupOnly.value,
-                  onTap: controller.toggleNeedsSetupFilter,
-                ),
               ],
             ),
           ),

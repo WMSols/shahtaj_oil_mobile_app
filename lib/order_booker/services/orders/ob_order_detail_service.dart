@@ -54,6 +54,8 @@ class ObOrderDetailService extends GetxService {
     if (_shouldServeCacheFirst) {
       final cached = await _readCached(id);
       if (cached != null) return cached;
+      final fromVisit = await _fromLocalVisitDoc(id);
+      if (fromVisit != null) return fromVisit;
     }
 
     try {
@@ -63,11 +65,26 @@ class ObOrderDetailService extends GetxService {
       );
       final visitJson = ApiMap.asMap(data['visit']) ?? data;
       await _db?.saveDoc(ObDocKeys.orderDetail(id), jsonEncode(visitJson));
+      await _db?.saveDoc(ObDocKeys.visitDetail(id), jsonEncode(visitJson));
       return ObOrderDetailModel.fromVisitJson(visitJson);
     } catch (_) {
       final cached = await _readCached(id);
       if (cached != null) return cached;
+      final fromVisit = await _fromLocalVisitDoc(id);
+      if (fromVisit != null) return fromVisit;
       rethrow;
+    }
+  }
+
+  Future<ObOrderDetailModel?> _fromLocalVisitDoc(int visitId) async {
+    final doc = await _db?.readDoc(ObDocKeys.visitDetail(visitId));
+    if (doc == null) return null;
+    try {
+      return ObOrderDetailModel.fromVisitJson(
+        Map<String, dynamic>.from(jsonDecode(doc.jsonPayload) as Map),
+      );
+    } catch (_) {
+      return null;
     }
   }
 

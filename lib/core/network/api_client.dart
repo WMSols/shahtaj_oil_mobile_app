@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart' hide Response;
@@ -66,6 +68,24 @@ class ApiClient extends GetxService {
     try {
       _ensureConnectivity();
       return await _dio.get<T>(path, queryParameters: queryParameters);
+    } on DioException catch (e) {
+      throw _mapException(e);
+    }
+  }
+
+  /// Downloads raw bytes from an absolute URL (e.g. shop photo).
+  Future<Uint8List> getBytes(String url) async {
+    try {
+      _ensureConnectivity();
+      final response = await _dio.get<List<int>>(
+        url,
+        options: Options(responseType: ResponseType.bytes),
+      );
+      final data = response.data;
+      if (data == null || data.isEmpty) {
+        throw ApiException(message: 'Empty image response');
+      }
+      return Uint8List.fromList(data);
     } on DioException catch (e) {
       throw _mapException(e);
     }

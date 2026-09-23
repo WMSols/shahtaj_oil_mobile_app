@@ -3,6 +3,8 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
+import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
+
 /// Renders a photo ref as network, asset, base64, or [placeholder].
 ///
 /// Ignores non-loadable values (empty, presence flags like `"available"`).
@@ -77,6 +79,17 @@ class AppRefImage extends StatelessWidget {
     }
   }
 
+  static Widget loadingIndicator() => const Center(
+    child: SizedBox(
+      width: 28,
+      height: 28,
+      child: CircularProgressIndicator(
+        strokeWidth: 2.5,
+        color: AppColors.primary,
+      ),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     final value = ref?.trim();
@@ -89,6 +102,13 @@ class AppRefImage extends StatelessWidget {
       return Image.network(
         value,
         fit: fit,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return ColoredBox(
+            color: AppColors.inputFill,
+            child: loadingIndicator(),
+          );
+        },
         errorBuilder: (_, _, _) => placeholder ?? const SizedBox.shrink(),
       );
     }

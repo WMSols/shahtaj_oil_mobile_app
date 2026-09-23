@@ -50,111 +50,123 @@ class ObTodayTasksContent extends GetView<ObRouteDetailController> {
 
       return RefreshIndicator(
         onRefresh: () => controller.loadTasks(force: true),
-        child: ListView(
-          padding: AppSpacing.screenPadding(context),
+        child: Stack(
           children: [
-            ObRouteCard(route: data.route, showAction: false),
-            AppSpacing.vertical(context, 0.016),
-            ObTodayTasksProgress(
-              completed: controller.displayCompletedCount,
-              total: controller.displayTotalCount,
-            ),
-            Obx(() {
-              final activeVisit = controller.activeVisit.value;
-              if (activeVisit == null) return const SizedBox.shrink();
-              return Padding(
-                padding: EdgeInsets.only(
-                  top: AppSpacing.verticalValue(context, 0.016),
+            ListView(
+              padding: AppSpacing.screenPadding(context),
+              children: [
+                ObRouteCard(route: data.route, showAction: false),
+                AppSpacing.vertical(context, 0.016),
+                ObTodayTasksProgress(
+                  completed: controller.displayCompletedCount,
+                  total: controller.displayTotalCount,
                 ),
-                child: ObActiveVisitBanner(
-                  visit: activeVisit,
-                  onResume: controller.resumeActiveVisit,
-                ),
-              );
-            }),
-            AppSpacing.vertical(context, 0.016),
-            AppSearchField(
-              key: const ValueKey('ob_today_tasks_search'),
-              hint: AppTexts.obSearchTaskHint,
-              prefixIcon: AppIcons.search,
-              suffixIcon: null,
-              onChanged: controller.onSearchChanged,
-            ),
-            AppSpacing.vertical(context, 0.012),
-            Obx(
-              () => SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    AppFilterChip(
-                      label: AppTexts.obShopsFilterAll,
-                      selected: controller.isFilterSelected(null),
-                      onTap: () => controller.selectStatusFilter(null),
+                Obx(() {
+                  final activeVisit = controller.activeVisit.value;
+                  if (activeVisit == null) return const SizedBox.shrink();
+                  return Padding(
+                    padding: EdgeInsets.only(
+                      top: AppSpacing.verticalValue(context, 0.016),
                     ),
-                    for (final status in ObRouteDetailController.filterStatuses)
-                      AppFilterChip.taskStatus(
-                        status: status,
-                        selected: controller.isFilterSelected(status),
-                        onTap: () => controller.selectStatusFilter(status),
-                      ),
-                  ],
+                    child: ObActiveVisitBanner(
+                      visit: activeVisit,
+                      onResume: controller.resumeActiveVisit,
+                    ),
+                  );
+                }),
+                AppSpacing.vertical(context, 0.016),
+                AppSearchField(
+                  key: const ValueKey('ob_today_tasks_search'),
+                  hint: AppTexts.obSearchTaskHint,
+                  prefixIcon: AppIcons.search,
+                  suffixIcon: null,
+                  onChanged: controller.onSearchChanged,
                 ),
+                AppSpacing.vertical(context, 0.012),
+                Obx(
+                  () => SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        AppFilterChip(
+                          label: AppTexts.obShopsFilterAll,
+                          selected: controller.isFilterSelected(null),
+                          onTap: () => controller.selectStatusFilter(null),
+                        ),
+                        for (final status
+                            in ObRouteDetailController.filterStatuses)
+                          AppFilterChip.taskStatus(
+                            status: status,
+                            selected: controller.isFilterSelected(status),
+                            onTap: () => controller.selectStatusFilter(status),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                AppSpacing.vertical(context, 0.016),
+                Text(
+                  AppTexts.obTasksSection,
+                  style: AppTextStyles.sectionTitle(context),
+                ),
+                AppSpacing.vertical(context, 0.012),
+                Obx(() {
+                  if (Get.isRegistered<SyncOutboxService>()) {
+                    // Rebuild chips when outbox pending set changes.
+                    Get.find<SyncOutboxService>().pendingSyncByTaskId.length;
+                    Get.find<SyncOutboxService>().needsReviewByTaskId.length;
+                    Get.find<SyncOutboxService>().queuedActionsByTaskId.length;
+                  }
+                  final tasks = controller.filteredSortedTasks;
+                  if (tasks.isEmpty) {
+                    return AppEmptyState(
+                      title: AppTexts.emptyNoTasksTitle,
+                      subtitle: controller.searchQuery.value.trim().isEmpty
+                          ? AppTexts.obNoTasksToday
+                          : AppTexts.obNoTasksMatchSearch,
+                      image: AppImages.emptyNoTasks,
+                    );
+                  }
+                  return Column(
+                    children: [
+                      for (final task in tasks)
+                        Padding(
+                          padding: EdgeInsets.only(
+                            bottom: AppSpacing.verticalValue(context, 0.012),
+                          ),
+                          child: ObTaskCard(
+                            task: task,
+                            displayStatus: controller.displayStatusFor(task),
+                            willSync: controller.hasQueuedSyncWork(task),
+                            syncNeedsReview: controller.needsSyncReview(task),
+                            isCheckingIn:
+                                controller.checkingInTaskId.value == task.id,
+                            onCheckIn:
+                                controller.displayStatusFor(task) ==
+                                    TaskStatus.pending
+                                ? () => controller.openCheckIn(task)
+                                : null,
+                            onResume: controller.isResumableTask(task)
+                                ? controller.resumeActiveVisit
+                                : null,
+                            onNotes: () => controller.openTaskNotes(task),
+                            onTap: controller.isResumableTask(task)
+                                ? controller.resumeActiveVisit
+                                : null,
+                          ),
+                        ),
+                    ],
+                  );
+                }),
+              ],
+            ),
+            if (controller.isRefreshing.value)
+              const Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: LinearProgressIndicator(minHeight: 2),
               ),
-            ),
-            AppSpacing.vertical(context, 0.016),
-            Text(
-              AppTexts.obTasksSection,
-              style: AppTextStyles.sectionTitle(context),
-            ),
-            AppSpacing.vertical(context, 0.012),
-            Obx(() {
-              if (Get.isRegistered<SyncOutboxService>()) {
-                // Rebuild chips when outbox pending set changes.
-                Get.find<SyncOutboxService>().pendingSyncByTaskId.length;
-                Get.find<SyncOutboxService>().needsReviewByTaskId.length;
-                Get.find<SyncOutboxService>().queuedActionsByTaskId.length;
-              }
-              final tasks = controller.filteredSortedTasks;
-              if (tasks.isEmpty) {
-                return AppEmptyState(
-                  title: AppTexts.emptyNoTasksTitle,
-                  subtitle: controller.searchQuery.value.trim().isEmpty
-                      ? AppTexts.obNoTasksToday
-                      : AppTexts.obNoTasksMatchSearch,
-                  image: AppImages.emptyNoTasks,
-                );
-              }
-              return Column(
-                children: [
-                  for (final task in tasks)
-                    Padding(
-                      padding: EdgeInsets.only(
-                        bottom: AppSpacing.verticalValue(context, 0.012),
-                      ),
-                      child: ObTaskCard(
-                        task: task,
-                        displayStatus: controller.displayStatusFor(task),
-                        willSync: controller.hasQueuedSyncWork(task),
-                        syncNeedsReview: controller.needsSyncReview(task),
-                        isCheckingIn:
-                            controller.checkingInTaskId.value == task.id,
-                        onCheckIn:
-                            controller.displayStatusFor(task) ==
-                                TaskStatus.pending
-                            ? () => controller.openCheckIn(task)
-                            : null,
-                        onResume: controller.isResumableTask(task)
-                            ? controller.resumeActiveVisit
-                            : null,
-                        onNotes: () => controller.openTaskNotes(task),
-                        onTap: controller.isResumableTask(task)
-                            ? controller.resumeActiveVisit
-                            : null,
-                      ),
-                    ),
-                ],
-              );
-            }),
           ],
         ),
       );

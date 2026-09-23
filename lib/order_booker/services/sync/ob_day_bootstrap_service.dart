@@ -11,8 +11,8 @@ import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/connectivity_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
-import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/dashboard/ob_dashboard_service.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/shops/ob_shop_service.dart';
 
 /// Catalog scopes. Prices are uniform across shops, so one global catalog is
 /// correct for every visit; the scope key keeps per-shop catalogs possible.
@@ -27,6 +27,9 @@ abstract class ObDocKeys {
   static String visitDetail(int visitId) => 'ob_visit_detail_$visitId';
 
   static String orderDetail(int visitId) => 'ob_order_detail_$visitId';
+
+  /// Stored as order_number until the server assigns a real SO number.
+  static const pendingSyncOrderMarker = 'PENDING_SYNC';
 }
 
 /// Pulls a full day of data into local storage so the rest of the day needs no
@@ -47,8 +50,8 @@ class ObDayBootstrapService extends GetxService {
   final RxnString statusMessage = RxnString();
   final RxBool catalogReady = false.obs;
 
-  /// History depth kept for offline browsing.
-  static const historyWindow = Duration(days: 30);
+  /// Newest visit count kept for offline History (list + detail prefetch).
+  static const historyVisitLimit = 10;
   static const _minInterval = Duration(minutes: 10);
 
   DateTime? _lastAttemptAt;
@@ -153,18 +156,74 @@ class ObDayBootstrapService extends GetxService {
     final data = await _api.postData(ApiEndpoints.obShopsMine);
     await _cache.saveMap(OfflineCacheKeys.shopsMine, data);
 
+    // Prefer the shop service so photos land in MediaFiles for offline.
+    if (Get.isRegistered<ObShopService>()) {
+      final shopService = Get.find<ObShopService>();
+      for (final shop in ApiMap.listOf(data, 'shops')) {
+        final id = ApiMap.asInt(shop['shop_id']) ?? ApiMap.asInt(shop['id']);
+        if (id == null) continue;
+        try {
+          await shopService.fetchShop('$id', includePhotos: true, force: true);
+        } catch (_) {
+          // Keep going; the list entry still covers the basics.
+        }
+      }
+      return;
+    }
+
     for (final shop in ApiMap.listOf(data, 'shops')) {
       final id = ApiMap.asInt(shop['shop_id']) ?? ApiMap.asInt(shop['id']);
       if (id == null) continue;
       try {
         final detail = await _api.postData(
           ApiEndpoints.obShopsGet,
-          data: {'shop_id': id, 'include_photos': false},
+          data: {'shop_id': id, 'include_photos': true},
         );
         final shopJson = ApiMap.asMap(detail['shop']) ?? detail;
         await _cache.saveMap(OfflineCacheKeys.shopDetail('$id'), shopJson);
       } catch (_) {
         // Keep going; the list entry still covers the basics.
+      }
+    }
+  }
+
+  Future<void> _loadVisitHistory() async {
+    // Keep offline History light: only the newest N list rows + details.
+    final recent = await _api.postData(
+      ApiEndpoints.obVisitsMine,
+      data: {'limit': historyVisitLimit, 'offset': 0},
+    );
+    await _cache.saveMap(OfflineCacheKeys.visitsMine, recent);
+    await _db.saveDoc(ObDocKeys.visitHistoryWindow, jsonEncode(recent));
+
+    // Prefetch visit details so History opens offline without "not found".
+    final visits = ApiMap.listOf(recent, 'visits');
+    var fetched = 0;
+    for (final row in visits) {
+      final id = ApiMap.asInt(row['visit_id']) ?? ApiMap.asInt(row['id']);
+      if (id == null || id <= 0) continue;
+
+      // Always keep at least the list payload as a stub detail.
+      final existing = await _db.readDoc(ObDocKeys.visitDetail(id));
+      if (existing == null) {
+        await _db.saveDoc(ObDocKeys.visitDetail(id), jsonEncode(row));
+        await _db.saveDoc(ObDocKeys.orderDetail(id), jsonEncode(row));
+      }
+
+      // Full visits/get for each of the newest N (lines + approval).
+      if (fetched >= historyVisitLimit) continue;
+      try {
+        final data = await _api.postData(
+          ApiEndpoints.obVisitsGet,
+          data: {'visit_id': id},
+        );
+        final visitJson = ApiMap.asMap(data['visit']) ?? data;
+        final encoded = jsonEncode(visitJson);
+        await _db.saveDoc(ObDocKeys.visitDetail(id), encoded);
+        await _db.saveDoc(ObDocKeys.orderDetail(id), encoded);
+        fetched++;
+      } catch (_) {
+        // Stub from list row remains.
       }
     }
   }
@@ -199,27 +258,6 @@ class ObDayBootstrapService extends GetxService {
   Future<void> _loadTargets() async {
     final data = await _api.postData(ApiEndpoints.obTargetsMine);
     await _cache.saveMap(OfflineCacheKeys.targetsMine, data);
-  }
-
-  Future<void> _loadVisitHistory() async {
-    final recent = await _api.postData(
-      ApiEndpoints.obVisitsMine,
-      data: {'limit': 50, 'offset': 0},
-    );
-    await _cache.saveMap(OfflineCacheKeys.visitsMine, recent);
-
-    final now = DateTime.now();
-    final from = now.subtract(historyWindow);
-    final window = await _api.postData(
-      ApiEndpoints.obVisitsMine,
-      data: {
-        'limit': 200,
-        'offset': 0,
-        'date_from': AppFormatter.apiDate(from),
-        'date_to': AppFormatter.apiDate(now),
-      },
-    );
-    await _db.saveDoc(ObDocKeys.visitHistoryWindow, jsonEncode(window));
   }
 
   Future<void> _loadDashboard() async {

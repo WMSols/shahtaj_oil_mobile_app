@@ -22,6 +22,7 @@ class ObRouteDetailController extends GetxController {
   final ObVisitService? _visitService;
 
   final RxBool isLoading = true.obs;
+  final RxBool isRefreshing = false.obs;
   final RxnString error = RxnString();
   final Rxn<ObTodayTasksModel> todayTasks = Rxn<ObTodayTasksModel>();
   final Rxn<ObActiveVisitModel> activeVisit = Rxn<ObActiveVisitModel>();
@@ -30,6 +31,7 @@ class ObRouteDetailController extends GetxController {
   final RxString searchQuery = ''.obs;
 
   Worker? _activeVisitWorker;
+  Worker? _flushWorker;
 
   String get routeId => Get.parameters['id'] ?? '';
 
@@ -66,7 +68,12 @@ class ObRouteDetailController extends GetxController {
       session.closedTaskIds.length;
       session.activeVisitRx.value;
 
-      if (session.isLocallyClosedTask(task.id)) {
+      // Server pending + no closing outbox work wins over stale local closed.
+      if (task.status == TaskStatus.pending && !isQueuedForSync(task)) {
+        if (session.isLocallyClosedTask(task.id)) {
+          session.forgetClosedTask(task.id);
+        }
+      } else if (session.isLocallyClosedTask(task.id)) {
         return TaskStatus.completed;
       }
 
@@ -154,12 +161,14 @@ class ObRouteDetailController extends GetxController {
       }
     }
     _bindActiveVisitRx();
+    _bindFlushRefresh();
     loadTasks();
   }
 
   @override
   void onClose() {
     _activeVisitWorker?.dispose();
+    _flushWorker?.dispose();
     super.onClose();
   }
 
@@ -174,6 +183,14 @@ class ObRouteDetailController extends GetxController {
       if (visit != null) {
         _markTaskInVisitLocally(visit.taskId, visit.shopId);
       }
+    });
+  }
+
+  void _bindFlushRefresh() {
+    if (!Get.isRegistered<SyncOutboxService>()) return;
+    final outbox = Get.find<SyncOutboxService>();
+    _flushWorker = ever<DateTime?>(outbox.lastFlushAt, (_) {
+      unawaited(loadTasks(silent: true, force: true));
     });
   }
 
@@ -199,6 +216,9 @@ class ObRouteDetailController extends GetxController {
 
     if (!silent && !hasCache) {
       isLoading.value = true;
+    }
+    if (!silent && hasCache && force) {
+      isRefreshing.value = true;
     }
     try {
       final data = await _taskService.fetchTodayTasks(
@@ -239,6 +259,7 @@ class ObRouteDetailController extends GetxController {
     } finally {
       if (!silent) {
         isLoading.value = false;
+        isRefreshing.value = false;
       }
     }
   }

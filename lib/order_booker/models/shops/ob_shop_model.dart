@@ -308,7 +308,10 @@ class ObShopModel {
           _photoRef(map['image_url']) ??
           _photoRef(map['src']) ??
           _photoRef(map['path']) ??
-          _photoRef(map['data']);
+          _photoRef(map['data']) ??
+          _photoRef(map['base64']) ??
+          _photoRef(map['content']) ??
+          _photoRef(map['photo']);
     }
     return null;
   }

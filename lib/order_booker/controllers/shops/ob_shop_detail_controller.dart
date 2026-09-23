@@ -108,14 +108,14 @@ class ObShopDetailController extends GetxController {
   }
 
   Future<void> _refreshShopDetail({bool force = false}) async {
-    final needsPhotos = shop.value == null || !hasVerificationPhotos;
-    final fetchPhotos = needsPhotos || force;
-    if (fetchPhotos) isLoadingPhotos.value = true;
+    // Always request photos on detail open so MediaFiles stay warm for offline.
+    final needsPhotos = force || shop.value == null || !hasVerificationPhotos;
+    isLoadingPhotos.value = true;
     try {
       final fresh = await _shopService.fetchShop(
         shopId,
-        includePhotos: fetchPhotos,
-        force: force,
+        includePhotos: true,
+        force: force || needsPhotos,
       );
       shop.value = fresh;
     } finally {

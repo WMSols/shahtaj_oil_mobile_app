@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/responsive/app_responsive.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_shimmer.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/media/app_ref_image.dart';
 
 class ObShopDetailHero extends StatelessWidget {
@@ -19,8 +18,11 @@ class ObShopDetailHero extends StatelessWidget {
     return SizedBox(
       height: height,
       width: double.infinity,
-      child: isLoading && !AppRefImage.isLoadable(imageAsset)
-          ? AppShimmer(child: AppShimmer.box(height: height, radius: 0))
+      child: isLoading
+          ? ColoredBox(
+              color: AppColors.inputFill,
+              child: AppRefImage.loadingIndicator(),
+            )
           : AppRefImage(
               ref: imageAsset,
               fit: BoxFit.cover,

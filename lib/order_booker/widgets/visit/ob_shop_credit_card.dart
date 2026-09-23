@@ -36,9 +36,6 @@ class ObShopCreditCard extends StatelessWidget {
         : AppColors.success;
     final showOrderExceed =
         isCredit && (wouldExceedCredit || shop.creditWouldExceed);
-    final remainingAfter = remaining != null && liveOrderAmount != null
-        ? remaining - liveOrderAmount!
-        : null;
     final effectiveOverLimit =
         shop.creditLimit != null &&
         shop.effectiveOutstanding != null &&
@@ -158,29 +155,9 @@ class ObShopCreditCard extends StatelessWidget {
                   ? AppColors.warning
                   : AppColors.primary,
               valueWeight: FontWeight.w700,
-              showDivider: remainingAfter != null,
+              showDivider: false,
             ),
           ),
-          if (remainingAfter != null) ...[
-            AppSpacing.vertical(context, 0.008),
-            AppOutlineCard(
-              statusColor: remainingAfter < 0
-                  ? AppColors.warning
-                  : AppColors.success,
-              statusStripeEdge: AppStatusStripeEdge.bottom,
-              statusStripeThicknessFactor: 0.004,
-              padding: EdgeInsets.zero,
-              child: AppDetailRow(
-                label: AppTexts.obRemainingAfterOrderLabel,
-                value: AppFormatter.currencyWhole(remainingAfter),
-                valueColor: remainingAfter < 0
-                    ? AppColors.warning
-                    : AppColors.success,
-                valueWeight: FontWeight.w700,
-                showDivider: false,
-              ),
-            ),
-          ],
         ],
         if (showOrderExceed && !limitExceeded) ...[
           AppSpacing.vertical(context, 0.008),

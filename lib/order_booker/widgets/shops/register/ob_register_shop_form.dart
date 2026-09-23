@@ -57,15 +57,6 @@ class ObRegisterShopForm extends StatelessWidget {
                   textInputAction: TextInputAction.done,
                 ),
                 AppSpacing.vertical(context, 0.01),
-                AppTextField(
-                  controller: controller.licenseNumberController,
-                  label: AppTexts.obShopLicenseNumberLabel,
-                  hint: AppTexts.obShopLicenseNumberHint,
-                  prefixIcon: AppIcons.personalCard,
-                  borderless: true,
-                  textInputAction: TextInputAction.done,
-                ),
-                AppSpacing.vertical(context, 0.01),
                 AppDropdownField<ShopType>(
                   fieldKey: ValueKey(
                     'shop-type-${controller.formEpoch.value}-${controller.selectedShopType.value}',
@@ -255,6 +246,10 @@ class ObRegisterShopForm extends StatelessWidget {
                           : AppTexts.obPhotoUploaded,
                       icon: AppIcons.personalCard,
                       imageBytes: controller.cnicFront.value,
+                      isUploading:
+                          controller.isSubmitting.value ||
+                          controller.uploadingSlot.value ==
+                              ShopPhotoSlot.cnicFront.name,
                       onTap: () =>
                           controller.pickPhoto(ShopPhotoSlot.cnicFront),
                     ),
@@ -265,6 +260,10 @@ class ObRegisterShopForm extends StatelessWidget {
                           : AppTexts.obPhotoUploaded,
                       icon: AppIcons.personalCard,
                       imageBytes: controller.cnicBack.value,
+                      isUploading:
+                          controller.isSubmitting.value ||
+                          controller.uploadingSlot.value ==
+                              ShopPhotoSlot.cnicBack.name,
                       onTap: () => controller.pickPhoto(ShopPhotoSlot.cnicBack),
                     ),
                     AppPhotoUploadTile(
@@ -274,6 +273,10 @@ class ObRegisterShopForm extends StatelessWidget {
                           : AppTexts.obPhotoUploaded,
                       icon: AppIcons.person,
                       imageBytes: controller.ownerPhoto.value,
+                      isUploading:
+                          controller.isSubmitting.value ||
+                          controller.uploadingSlot.value ==
+                              ShopPhotoSlot.ownerPhoto.name,
                       onTap: () =>
                           controller.pickPhoto(ShopPhotoSlot.ownerPhoto),
                     ),
@@ -285,6 +288,10 @@ class ObRegisterShopForm extends StatelessWidget {
                           : AppTexts.obPhotoUploaded,
                       icon: AppIcons.cameraAdd,
                       imageBytes: controller.shopExteriorPhoto.value,
+                      isUploading:
+                          controller.isSubmitting.value ||
+                          controller.uploadingSlot.value ==
+                              ShopPhotoSlot.shopExterior.name,
                       onTap: () =>
                           controller.pickPhoto(ShopPhotoSlot.shopExterior),
                     ),

@@ -57,6 +57,7 @@ class ObShopOnboardingController extends GetxController {
   final isLoadingOptions = true.obs;
   final isSubmitting = false.obs;
   final isLocating = false.obs;
+  final RxnString uploadingSlot = RxnString();
   final RxnString loadError = RxnString();
 
   /// Bumped on clear so Form / dropdowns fully remount with empty state.
@@ -175,20 +176,25 @@ class ObShopOnboardingController extends GetxController {
     };
     if (source == null) return;
 
-    final file = await _picker.pickImage(source: source, imageQuality: 90);
-    if (file == null) return;
+    uploadingSlot.value = slot.name;
+    try {
+      final file = await _picker.pickImage(source: source, imageQuality: 90);
+      if (file == null) return;
 
-    final raw = await file.readAsBytes();
-    final bytes = await AppImageCompress.compress(raw);
-    switch (slot) {
-      case ShopPhotoSlot.cnicFront:
-        cnicFront.value = bytes;
-      case ShopPhotoSlot.cnicBack:
-        cnicBack.value = bytes;
-      case ShopPhotoSlot.ownerPhoto:
-        ownerPhoto.value = bytes;
-      case ShopPhotoSlot.shopExterior:
-        shopExteriorPhoto.value = bytes;
+      final raw = await file.readAsBytes();
+      final bytes = await AppImageCompress.compress(raw);
+      switch (slot) {
+        case ShopPhotoSlot.cnicFront:
+          cnicFront.value = bytes;
+        case ShopPhotoSlot.cnicBack:
+          cnicBack.value = bytes;
+        case ShopPhotoSlot.ownerPhoto:
+          ownerPhoto.value = bytes;
+        case ShopPhotoSlot.shopExterior:
+          shopExteriorPhoto.value = bytes;
+      }
+    } finally {
+      uploadingSlot.value = null;
     }
   }
 
