@@ -73,7 +73,7 @@ class ObDashboardScreen extends GetView<ObDashboardController> {
               AppSpacing.vertical(context, 0.02),
               AppSectionHeader(
                 title: AppTexts.obTodaysRoute,
-                onViewAll: controller.goToRouteDetail,
+                onViewAll: route == null ? null : controller.goToRouteDetail,
               ),
               if (route == null)
                 AppEmptyState(

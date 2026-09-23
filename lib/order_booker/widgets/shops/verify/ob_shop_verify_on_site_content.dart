@@ -133,7 +133,11 @@ class ObShopVerifyOnSiteContent extends StatelessWidget {
                           : AppTexts.obPhotoUploaded,
                       icon: controller.photoIcon(field.key),
                       imageBytes: controller.photoSlot(field.key).value,
-                      onTap: isBusy
+                      isUploading:
+                          controller.uploadingSlot.value == field.key ||
+                          (field.key == 'shop_exterior_photo' &&
+                              controller.isLocating.value),
+                      onTap: controller.isSubmitting.value
                           ? null
                           : () => controller.pickPhoto(field.key),
                     ),

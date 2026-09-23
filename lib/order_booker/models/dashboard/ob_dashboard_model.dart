@@ -30,10 +30,11 @@ class ObDashboardModel {
 
   factory ObDashboardModel.fromJson(Map<String, dynamic> json) {
     final routeJson = json['todays_route'] ?? json['route'];
+    final route = routeJson is Map<String, dynamic>
+        ? ObRouteModel.fromJson(Map<String, dynamic>.from(routeJson))
+        : null;
     return ObDashboardModel(
-      todaysRoute: routeJson is Map<String, dynamic>
-          ? ObRouteModel.fromJson(routeJson)
-          : null,
+      todaysRoute: route != null && route.id.isNotEmpty ? route : null,
       recentOrders: (json['recent_orders'] as List<dynamic>? ?? [])
           .map((e) => ObOrderSummaryModel.fromJson(e as Map<String, dynamic>))
           .toList(),

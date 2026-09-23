@@ -29,11 +29,13 @@ class ObShopVerifyOnSiteController extends GetxController {
   final RxBool isLoading = true.obs;
   final RxBool isLocating = false.obs;
   final RxBool isSubmitting = false.obs;
+  final RxnString uploadingSlot = RxnString();
   final Rxn<ObTaskModel> task = Rxn<ObTaskModel>();
   final missingFields = <ObShopMissingField>[].obs;
 
   final checkInLatitude = Rxn<double>();
   final checkInLongitude = Rxn<double>();
+  final checkInAccuracyMeters = Rxn<double>();
 
   final ownerCnicController = TextEditingController();
   final ownerNameController = TextEditingController();
@@ -309,10 +311,12 @@ class ObShopVerifyOnSiteController extends GetxController {
 
   Future<bool> _captureDeviceLocationSilently() async {
     isLocating.value = true;
+    uploadingSlot.value = 'shop_exterior_photo';
     try {
       final position = await AppHelper.requireCurrentPosition(showGuide: true);
       checkInLatitude.value = position.latitude;
       checkInLongitude.value = position.longitude;
+      checkInAccuracyMeters.value = position.accuracy;
       return true;
     } on ApiException catch (e) {
       _showMessage(e.message);
@@ -322,6 +326,9 @@ class ObShopVerifyOnSiteController extends GetxController {
       return false;
     } finally {
       isLocating.value = false;
+      if (uploadingSlot.value == 'shop_exterior_photo') {
+        uploadingSlot.value = null;
+      }
     }
   }
 
@@ -337,20 +344,25 @@ class ObShopVerifyOnSiteController extends GetxController {
         : ImageSource.camera;
     if (source == null) return;
 
-    final file = await _picker.pickImage(source: source, imageQuality: 90);
-    if (file == null) return;
-    final raw = await file.readAsBytes();
-    final bytes = await AppImageCompress.compress(raw);
+    uploadingSlot.value = key;
+    try {
+      final file = await _picker.pickImage(source: source, imageQuality: 90);
+      if (file == null) return;
+      final raw = await file.readAsBytes();
+      final bytes = await AppImageCompress.compress(raw);
 
-    switch (key) {
-      case 'shop_exterior_photo':
-        shopExteriorPhoto.value = bytes;
-      case 'owner_photo':
-        ownerPhoto.value = bytes;
-      case 'owner_cnic_front':
-        ownerCnicFront.value = bytes;
-      case 'owner_cnic_back':
-        ownerCnicBack.value = bytes;
+      switch (key) {
+        case 'shop_exterior_photo':
+          shopExteriorPhoto.value = bytes;
+        case 'owner_photo':
+          ownerPhoto.value = bytes;
+        case 'owner_cnic_front':
+          ownerCnicFront.value = bytes;
+        case 'owner_cnic_back':
+          ownerCnicBack.value = bytes;
+      }
+    } finally {
+      uploadingSlot.value = null;
     }
   }
 
@@ -442,13 +454,39 @@ class ObShopVerifyOnSiteController extends GetxController {
     isSubmitting.value = true;
     try {
       // First-time verify: shop has no pin yet — device GPS becomes the
-      // location. Range check only applies when a shop pin already exists.
+      // location. When a pin already exists, block if too far, but still
+      // attach distance so the distributor panel can show how far they were.
+      Map<String, dynamic> gpsExtras = const {};
       if (current.hasShopCoordinates) {
-        AppHelper.ensureWithinShopRange(
-          currentLat: checkInLatitude.value!,
-          currentLng: checkInLongitude.value!,
+        gpsExtras = AppHelper.checkInGpsExtras(
+          latitude: checkInLatitude.value!,
+          longitude: checkInLongitude.value!,
+          accuracyMeters: checkInAccuracyMeters.value ?? 0,
           shopLat: current.shopLatitude,
           shopLng: current.shopLongitude,
+        );
+        if (gpsExtras['out_of_range'] == true) {
+          await _taskService.reportBlockedGpsAttempt(
+            taskId: current.id,
+            shopId: current.shopId,
+            shopName: current.shopName,
+            latitude: checkInLatitude.value!,
+            longitude: checkInLongitude.value!,
+            gpsExtras: gpsExtras,
+            purpose: 'verify_on_site',
+          );
+          AppHelper.ensureWithinShopRange(
+            currentLat: checkInLatitude.value!,
+            currentLng: checkInLongitude.value!,
+            shopLat: current.shopLatitude,
+            shopLng: current.shopLongitude,
+          );
+        }
+      } else {
+        gpsExtras = AppHelper.checkInGpsExtras(
+          latitude: checkInLatitude.value!,
+          longitude: checkInLongitude.value!,
+          accuracyMeters: checkInAccuracyMeters.value ?? 0,
         );
       }
       final result = await _shopService.submitVerification(
@@ -465,6 +503,7 @@ class ObShopVerifyOnSiteController extends GetxController {
             'owner_cnic_back': ownerCnicBack.value!,
         },
         fields: _verificationFields(),
+        gpsExtras: gpsExtras,
       );
 
       if (result.hasVisit) {

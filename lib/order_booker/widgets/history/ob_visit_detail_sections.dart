@@ -11,6 +11,7 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/widgets/history/ob_visit_detail_line_tile.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/info/app_detail_row.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/history/ob_visit_detail_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/visit/ob_visit_cart_service.dart';
 
 class ObVisitDetailInfoSection extends StatelessWidget {
   const ObVisitDetailInfoSection({
@@ -72,7 +73,11 @@ class ObVisitDetailInfoSection extends StatelessWidget {
               if (visit.orderNumber != null)
                 AppDetailRow(
                   label: AppTexts.obOrderNumberLabel,
-                  value: visit.orderNumber!,
+                  value:
+                      visit.orderNumber ==
+                          ObVisitCartService.pendingSyncOrderMarker
+                      ? AppTexts.obOrderPendingSyncLabel
+                      : visit.orderNumber!,
                   showDivider:
                       visit.outcome == VisitOutcome.orderPlaced &&
                       visit.approval.state != ObOrderApprovalState.none,
@@ -81,7 +86,15 @@ class ObVisitDetailInfoSection extends StatelessWidget {
                   visit.approval.state != ObOrderApprovalState.none)
                 AppDetailRow(
                   label: AppTexts.obOrderApprovalStatusLabel,
-                  trailing: AppStatusChip.orderApprovalInfo(visit.approval),
+                  trailing:
+                      visit.orderNumber ==
+                          ObVisitCartService.pendingSyncOrderMarker
+                      ? AppStatusChip(
+                          label: AppTexts.obOrderPendingSyncLabel,
+                          color: AppColors.statPurple,
+                          soft: true,
+                        )
+                      : AppStatusChip.orderApprovalInfo(visit.approval),
                   showDivider: false,
                 ),
             ],

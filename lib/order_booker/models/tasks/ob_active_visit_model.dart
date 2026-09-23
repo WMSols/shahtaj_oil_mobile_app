@@ -54,4 +54,22 @@ class ObActiveVisitModel {
     'latitude': latitude,
     'longitude': longitude,
   };
+
+  ObActiveVisitModel copyWith({
+    int? visitId,
+    int? taskId,
+    String? shopId,
+    String? shopName,
+    DateTime? checkedInAt,
+    double? latitude,
+    double? longitude,
+  }) => ObActiveVisitModel(
+    visitId: visitId ?? this.visitId,
+    taskId: taskId ?? this.taskId,
+    shopId: shopId ?? this.shopId,
+    shopName: shopName ?? this.shopName,
+    checkedInAt: checkedInAt ?? this.checkedInAt,
+    latitude: latitude ?? this.latitude,
+    longitude: longitude ?? this.longitude,
+  );
 }

@@ -17,6 +17,7 @@ class AppPhotoUploadTile extends StatelessWidget {
     this.imageBytes,
     this.onTap,
     this.required = false,
+    this.isUploading = false,
   });
 
   final String title;
@@ -25,6 +26,7 @@ class AppPhotoUploadTile extends StatelessWidget {
   final Uint8List? imageBytes;
   final VoidCallback? onTap;
   final bool required;
+  final bool isUploading;
 
   static const double _borderWidth = 1.5;
 
@@ -36,7 +38,7 @@ class AppPhotoUploadTile extends StatelessWidget {
     final titleColor = _hasImage ? AppColors.white : AppColors.grey;
 
     return GestureDetector(
-      onTap: onTap,
+      onTap: isUploading ? null : onTap,
       child: AspectRatio(
         aspectRatio: 1,
         child: DecoratedBox(
@@ -90,7 +92,7 @@ class AppPhotoUploadTile extends StatelessWidget {
                       ),
                     ),
                   ),
-                if (_hasImage) ...[
+                if (_hasImage && !isUploading) ...[
                   const ColoredBox(color: Color(0x59000000)),
                   Center(
                     child: Padding(
@@ -135,6 +137,19 @@ class AppPhotoUploadTile extends StatelessWidget {
                         AppIcons.check,
                         color: AppColors.white,
                         size: AppResponsive.scaleSize(context, 14),
+                      ),
+                    ),
+                  ),
+                ],
+                if (isUploading) ...[
+                  const ColoredBox(color: Color(0x99000000)),
+                  const Center(
+                    child: SizedBox(
+                      width: 28,
+                      height: 28,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: AppColors.white,
                       ),
                     ),
                   ),

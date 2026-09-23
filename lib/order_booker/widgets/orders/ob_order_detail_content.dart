@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
+import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/controllers/orders/ob_order_detail_controller.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/visit/ob_visit_cart_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/widgets/orders/ob_order_approval_section.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/widgets/orders/ob_order_credit_section.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
@@ -32,7 +34,11 @@ class ObOrderDetailContent extends GetView<ObOrderDetailController> {
               children: [
                 AppDetailRow(
                   label: AppTexts.obOrderNumberLabel,
-                  value: order.orderNumber,
+                  value:
+                      order.orderNumber ==
+                          ObVisitCartService.pendingSyncOrderMarker
+                      ? AppTexts.obOrderPendingSyncLabel
+                      : order.orderNumber,
                 ),
                 AppDetailRow(
                   label: AppTexts.obShopNameLabel,
@@ -40,7 +46,15 @@ class ObOrderDetailContent extends GetView<ObOrderDetailController> {
                 ),
                 AppDetailRow(
                   label: AppTexts.obOrderApprovalStatusLabel,
-                  trailing: AppStatusChip.orderApprovalInfo(order.approval),
+                  trailing:
+                      order.orderNumber ==
+                          ObVisitCartService.pendingSyncOrderMarker
+                      ? AppStatusChip(
+                          label: AppTexts.obOrderPendingSyncLabel,
+                          color: AppColors.statPurple,
+                          soft: true,
+                        )
+                      : AppStatusChip.orderApprovalInfo(order.approval),
                   showDivider: false,
                 ),
               ],

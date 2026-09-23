@@ -246,16 +246,18 @@ class ObVisitCartService extends GetxService {
     required int productId,
     double quantity = 1,
   }) async {
-    final existing = await _findLineByProduct(visitId, productId);
+    final id = await resolveVisitId(visitId);
+    final existing = await _findLineByProduct(id, productId);
     if (existing != null) {
       return updateLine(
-        visitId: visitId,
+        visitId: id,
         lineId: existing.lineId,
+        productId: productId,
         quantity: existing.quantity + quantity,
       );
     }
 
-    final products = await _readProductsFromDb(visitId);
+    final products = await _readProductsFromDb(id);
     ObProductModel? product;
     for (final item in products) {
       if (item.id == productId) {
@@ -273,12 +275,8 @@ class ObVisitCartService extends GetxService {
     }
     if (product == null &&
         !_shouldServeCacheOnly() &&
-        !await _isLocalOnly(visitId)) {
-      final fresh = await _fetchProductsFromNetwork(
-        visitId,
-        limit: 500,
-        offset: 0,
-      );
+        !await _isLocalOnly(id)) {
+      final fresh = await _fetchProductsFromNetwork(id, limit: 500, offset: 0);
       for (final item in fresh) {
         if (item.id == productId) product = item;
       }
@@ -296,30 +294,46 @@ class ObVisitCartService extends GetxService {
       priceUnit: product.priceUnit,
       unit: product.unit,
     );
-    await _persistLine(visitId, line, localOnly: true);
+    await _persistLine(id, line, localOnly: true);
     return line;
   }
 
   Future<ObVisitCartLineModel> updateLine({
     required int visitId,
     required int lineId,
+    int? productId,
     double? quantity,
     double? priceUnit,
   }) async {
-    final current = await _findLine(visitId, lineId);
+    final id = await resolveVisitId(visitId);
+    var current = await _findLine(id, lineId);
+    // After outbox remap, UI may still hold a stale negative line id — fall
+    // back to the product so mid-sync qty/rate edits keep working.
+    current ??= productId == null
+        ? null
+        : await _findLineByProduct(id, productId);
     if (current == null) {
-      throw ApiException(message: 'Cart line not found locally.');
+      throw ApiException(message: AppTexts.obCartLineMissing);
     }
     final updated = current.copyWith(
       quantity: quantity ?? current.quantity,
       priceUnit: priceUnit ?? current.priceUnit,
     );
-    await _persistLine(visitId, updated, localOnly: lineId < 0);
+    await _persistLine(id, updated, localOnly: current.lineId < 0);
     return updated;
   }
 
-  Future<void> removeLine({required int visitId, required int lineId}) async {
-    await _db.deleteCartLine(visitId: visitId, lineId: lineId);
+  Future<void> removeLine({
+    required int visitId,
+    required int lineId,
+    int? productId,
+  }) async {
+    final id = await resolveVisitId(visitId);
+    final current =
+        await _findLine(id, lineId) ??
+        (productId == null ? null : await _findLineByProduct(id, productId));
+    if (current == null) return;
+    await _db.deleteCartLine(visitId: id, lineId: current.lineId);
   }
 
   /// Queues or immediately syncs order submit. Returns order number when synced.
@@ -330,6 +344,7 @@ class ObVisitCartService extends GetxService {
     required String shopName,
     required double latitude,
     required double longitude,
+    Map<String, dynamic> gpsExtras = const {},
   }) async {
     final cart = await fetchCart(
       visitId: visitId,
@@ -347,8 +362,20 @@ class ObVisitCartService extends GetxService {
       'shop_name': shopName,
       'latitude': latitude,
       'longitude': longitude,
+      ...gpsExtras,
       'lines': cart.lines.map((l) => l.toJson()).toList(growable: false),
     };
+
+    // Snapshot before queue/clear so History / Order detail work offline.
+    await _persistLocalOrderSnapshot(
+      visitId: visitId,
+      shopId: shopId,
+      shopName: shopName,
+      latitude: latitude,
+      longitude: longitude,
+      lines: cart.lines,
+      queued: true,
+    );
 
     if (_shouldServeCacheOnly() || await _isLocalOnly(visitId)) {
       await _enqueueVisitClosingAction(
@@ -369,6 +396,16 @@ class ObVisitCartService extends GetxService {
       final serverVisitId = await resolveVisitId(visitId);
       final orderNumber = await _readOrderNumber(serverVisitId);
       if (orderNumber != null) {
+        await _persistLocalOrderSnapshot(
+          visitId: serverVisitId,
+          shopId: shopId,
+          shopName: shopName,
+          latitude: latitude,
+          longitude: longitude,
+          lines: cart.lines,
+          queued: false,
+          orderNumber: orderNumber,
+        );
         await _db.clearVisitCart(serverVisitId);
         await _db.clearVisitCart(visitId);
         return ObOrderSubmitResult(queued: false, orderNumber: orderNumber);
@@ -378,6 +415,16 @@ class ObVisitCartService extends GetxService {
       final serverVisitId = await resolveVisitId(visitId);
       final existing = await _readOrderNumber(serverVisitId);
       if (existing != null) {
+        await _persistLocalOrderSnapshot(
+          visitId: serverVisitId,
+          shopId: shopId,
+          shopName: shopName,
+          latitude: latitude,
+          longitude: longitude,
+          lines: cart.lines,
+          queued: false,
+          orderNumber: existing,
+        );
         await _db.clearVisitCart(serverVisitId);
         await _db.clearVisitCart(visitId);
         return ObOrderSubmitResult(queued: false, orderNumber: existing);
@@ -386,6 +433,107 @@ class ObVisitCartService extends GetxService {
         return const ObOrderSubmitResult(queued: true, orderNumber: null);
       }
       rethrow;
+    }
+  }
+
+  /// Local visit/order detail JSON for offline History and Order screens.
+  static const pendingSyncOrderMarker = ObDocKeys.pendingSyncOrderMarker;
+
+  Future<void> _persistLocalOrderSnapshot({
+    required int visitId,
+    required String shopId,
+    required String shopName,
+    required double latitude,
+    required double longitude,
+    required List<ObVisitCartLineModel> lines,
+    required bool queued,
+    String? orderNumber,
+  }) async {
+    final local = await _session?.visitByAnyId(visitId);
+    final resolvedId = local?.serverVisitId ?? local?.localVisitId ?? visitId;
+    final subtotal = lines.fold<double>(
+      0,
+      (sum, line) => sum + (line.quantity * line.priceUnit),
+    );
+    final number =
+        orderNumber ?? (queued ? pendingSyncOrderMarker : 'SO-$resolvedId');
+
+    // Durable order lines in SQLite (survive cart clear + offline History).
+    Future<void> writeOrderLines(int targetVisitId) async {
+      final orderLineRows = <VisitOrderLinesCompanion>[];
+      for (var i = 0; i < lines.length; i++) {
+        final line = lines[i];
+        orderLineRows.add(
+          VisitOrderLinesCompanion.insert(
+            visitId: targetVisitId,
+            lineId: line.lineId != 0 ? line.lineId : -(i + 1),
+            productId: line.productId,
+            productName: line.productName,
+            quantity: line.quantity,
+            priceUnit: line.priceUnit,
+            unit: Value(line.unit),
+          ),
+        );
+      }
+      await _db.replaceOrderLinesForVisit(targetVisitId, orderLineRows);
+    }
+
+    await writeOrderLines(resolvedId);
+    if (local != null && local.localVisitId != resolvedId) {
+      await writeOrderLines(local.localVisitId);
+    }
+
+    if (local != null) {
+      await _db.patchLocalVisit(
+        local.localVisitId,
+        LocalVisitsCompanion(
+          status: const Value('completed'),
+          outcome: const Value('order_placed'),
+          orderNumber: Value(number),
+          subtotal: Value(subtotal),
+          pendingSync: Value(queued),
+          approvalState: Value(queued ? 'to_approve' : 'none'),
+          completedAt: Value(DateTime.now()),
+        ),
+      );
+    }
+
+    final snapshot = <String, dynamic>{
+      'visit_id': resolvedId,
+      'shop_id': shopId,
+      'shop_name': shopName,
+      'checked_in_at': (local?.checkedInAt ?? DateTime.now())
+          .toUtc()
+          .toIso8601String(),
+      'checked_out_at': DateTime.now().toUtc().toIso8601String(),
+      'outcome': 'order_placed',
+      'notes': local?.notes,
+      'latitude': latitude,
+      'longitude': longitude,
+      'order_number': number,
+      'sale_order_name': number,
+      'subtotal': subtotal,
+      'pending_sync': queued,
+      'approval_state': queued ? 'to_approve' : 'none',
+      'lines': lines.map((l) => l.toJson()).toList(growable: false),
+      'order': {
+        'name': number,
+        'approval_state': queued ? 'to_approve' : 'none',
+        'amount_total': subtotal,
+        'is_placed': !queued,
+      },
+    };
+
+    final encoded = jsonEncode(snapshot);
+    await _db.saveDoc(ObDocKeys.visitDetail(resolvedId), encoded);
+    await _db.saveDoc(ObDocKeys.orderDetail(resolvedId), encoded);
+    if (local != null && local.localVisitId != resolvedId) {
+      await _db.saveDoc(ObDocKeys.visitDetail(local.localVisitId), encoded);
+      await _db.saveDoc(ObDocKeys.orderDetail(local.localVisitId), encoded);
+    }
+    if (visitId != resolvedId) {
+      await _db.saveDoc(ObDocKeys.visitDetail(visitId), encoded);
+      await _db.saveDoc(ObDocKeys.orderDetail(visitId), encoded);
     }
   }
 

@@ -99,19 +99,35 @@ class ObShopService extends GetxService {
   }
 
   /// Shops registered offline appear immediately, ahead of the synced list.
+  ///
+  /// Local rows stay visible after bind until `shops/mine` actually returns
+  /// that server id — otherwise a successful sync looks like the shop vanished.
   Future<List<ObShopModel>> _withLocalShops(List<ObShopModel> shops) async {
     if (!Get.isRegistered<AppDatabase>()) return shops;
     final rows = await _db.allLocalShops(userId: _currentUserId ?? '');
     if (rows.isEmpty) return shops;
 
-    final pending = <ObShopModel>[];
+    final serverIds = <int>{
+      for (final shop in shops)
+        if (int.tryParse(shop.id) case final id? when id > 0) id,
+    };
+
+    final extras = <ObShopModel>[];
     for (final row in rows) {
-      // Once synced the server list is authoritative.
-      if (row.serverShopId != null) continue;
-      pending.add(localShopToModel(row));
+      final serverId = row.serverShopId;
+      if (serverId != null) {
+        if (serverIds.contains(serverId)) continue;
+        extras.add(
+          localShopToModel(
+            row,
+          ).copyWith(id: '$serverId', status: ShopStatus.pending),
+        );
+        continue;
+      }
+      extras.add(localShopToModel(row));
     }
-    if (pending.isEmpty) return shops;
-    return [...pending, ...shops];
+    if (extras.isEmpty) return shops;
+    return [...extras, ...shops];
   }
 
   ObShopModel localShopToModel(LocalShop row) => ObShopModel(
@@ -144,19 +160,26 @@ class ObShopService extends GetxService {
   Future<ObShopModel?> peekShop(String id) async {
     if (id.isEmpty) return null;
     final mem = _shopDetailMemory[id] ?? _shopDetailMemory[_altId(id)];
-    if (mem != null) return mem;
+    if (mem != null) {
+      // Always hydrate so offline MediaFiles win over stale HTTP refs.
+      final hydrated = await _hydrateShopPhotos(mem);
+      rememberShop(hydrated);
+      return hydrated;
+    }
 
     for (final key in {id, _altId(id)}) {
       if (key.isEmpty) continue;
       final detail = await _cache.readMap(OfflineCacheKeys.shopDetail(key));
       if (detail != null) {
-        final shop = ObShopModel.fromJson(detail);
+        final shop = await _hydrateShopPhotos(ObShopModel.fromJson(detail));
         rememberShop(shop);
         return shop;
       }
     }
 
-    return _shopFromMineList(id);
+    final fromList = await _shopFromMineList(id);
+    if (fromList == null) return null;
+    return _hydrateShopPhotos(fromList);
   }
 
   String _altId(String id) {
@@ -189,6 +212,23 @@ class ObShopService extends GetxService {
         AppRefImage.isLoadable(photos.shopExterior);
   }
 
+  /// True when a ref is already local bytes (safe offline / no auth URL).
+  static bool _isDiskReadyRef(String? ref) {
+    if (ref == null) return false;
+    final text = ref.trim();
+    if (text.isEmpty) return false;
+    if (text.toLowerCase().startsWith('data:image')) return true;
+    return AppRefImage.tryDecodeBase64(text) != null;
+  }
+
+  bool _hasDiskReadyPhotos(ObShopModel shop) {
+    final photos = shop.verificationPhotos;
+    return _isDiskReadyRef(photos.cnicFront) ||
+        _isDiskReadyRef(photos.cnicBack) ||
+        _isDiskReadyRef(photos.ownerPhoto) ||
+        _isDiskReadyRef(photos.shopExterior);
+  }
+
   Future<ObShopModel> fetchShop(
     String id, {
     bool includePhotos = false,
@@ -203,9 +243,23 @@ class ObShopService extends GetxService {
     }
 
     if (!force) {
-      final mem = _shopDetailMemory[id];
+      final mem = _shopDetailMemory[id] ?? _shopDetailMemory[_altId(id)];
       if (mem != null && (!includePhotos || _hasLoadablePhotos(mem))) {
-        return mem;
+        // Prefer MediaFiles over HTTP so offline / authed URLs still render.
+        if (includePhotos &&
+            _hasLoadablePhotos(mem) &&
+            !_hasDiskReadyPhotos(mem) &&
+            _canReachServer) {
+          await _persistShopPhotosToDisk(mem);
+        }
+        final hydrated = await _hydrateShopPhotos(mem);
+        rememberShop(hydrated);
+        if (!includePhotos ||
+            _hasDiskReadyPhotos(hydrated) ||
+            !_canReachServer) {
+          return hydrated;
+        }
+        // Online, photos requested, still only remote refs — fall through.
       }
     }
 
@@ -234,7 +288,8 @@ class ObShopService extends GetxService {
     final shop = ObShopModel.fromJson(shopJson).mergeCreditFrom(prior);
     _shopDetailMemory[id] = shop;
     _shopDetailMemory[shop.id] = shop;
-    // Persist metadata for offline reopen; strip huge base64 photo payloads.
+
+    // Metadata in JSON cache; photo bytes in MediaFiles + ShopMedia.
     await _cache.saveMap(
       OfflineCacheKeys.shopDetail(id),
       shop.toJson(includePhotos: false),
@@ -245,7 +300,127 @@ class ObShopService extends GetxService {
         shop.toJson(includePhotos: false),
       );
     }
-    return shop;
+
+    if (includePhotos && _hasLoadablePhotos(shop)) {
+      await _persistShopPhotosToDisk(shop);
+    }
+
+    final withLocalPhotos = await _hydrateShopPhotos(shop);
+    _shopDetailMemory[id] = withLocalPhotos;
+    _shopDetailMemory[shop.id] = withLocalPhotos;
+    return withLocalPhotos;
+  }
+
+  Future<void> _persistShopPhotosToDisk(ObShopModel shop) async {
+    final photos = shop.verificationPhotos;
+    await _persistPhotoSlot(shop.id, 'cnic_front', photos.cnicFront);
+    await _persistPhotoSlot(shop.id, 'cnic_back', photos.cnicBack);
+    await _persistPhotoSlot(shop.id, 'owner_photo', photos.ownerPhoto);
+    await _persistPhotoSlot(shop.id, 'shop_exterior', photos.shopExterior);
+  }
+
+  Future<void> _persistPhotoSlot(
+    String shopId,
+    String slot,
+    String? ref,
+  ) async {
+    if (!AppRefImage.isLoadable(ref)) return;
+    final value = ref!.trim();
+    // Already a local media id we stored earlier.
+    if (value.startsWith('media:')) return;
+    // Already hydrated from MediaFiles — do not re-encode.
+    if (value.toLowerCase().startsWith('data:image')) return;
+
+    Uint8List? bytes;
+    if (value.startsWith('http://') || value.startsWith('https://')) {
+      try {
+        bytes = await _api.getBytes(value);
+      } catch (_) {
+        return;
+      }
+    } else {
+      bytes = AppRefImage.tryDecodeBase64(value);
+    }
+    if (bytes == null || bytes.isEmpty) return;
+
+    final mediaId = await _media.save(
+      bytes,
+      purpose: 'shop_photo_${shopId}_$slot',
+    );
+    await _upsertShopMediaKeys(shopId, slot, mediaId);
+  }
+
+  Future<void> _upsertShopMediaKeys(
+    String shopId,
+    String slot,
+    String mediaId,
+  ) async {
+    final keys = <String>{shopId, _altId(shopId)}.where((e) => e.isNotEmpty);
+    for (final key in keys) {
+      await _db.upsertShopMedia(shopId: key, slot: slot, mediaId: mediaId);
+    }
+  }
+
+  /// Overlay MediaFiles onto the shop. Local bytes always win over HTTP URLs
+  /// so shop detail works offline and when remote URLs need auth.
+  Future<ObShopModel> _hydrateShopPhotos(ObShopModel shop) async {
+    try {
+      List<ShopMediaRow> rows = const [];
+      for (final key in {shop.id, _altId(shop.id)}) {
+        if (key.isEmpty) continue;
+        rows = await _db.shopMediaFor(key);
+        if (rows.isNotEmpty) break;
+      }
+      if (rows.isEmpty) return shop;
+
+      String? front = shop.verificationPhotos.cnicFront;
+      String? back = shop.verificationPhotos.cnicBack;
+      String? owner = shop.verificationPhotos.ownerPhoto;
+      String? exterior = shop.verificationPhotos.shopExterior;
+      var changed = false;
+
+      for (final row in rows) {
+        final b64 = await _media.readBase64(row.mediaId);
+        if (b64 == null || b64.isEmpty) continue;
+        final dataUri = 'data:image/jpeg;base64,$b64';
+        switch (row.slot) {
+          case 'cnic_front':
+            if (front != dataUri) {
+              front = dataUri;
+              changed = true;
+            }
+          case 'cnic_back':
+            if (back != dataUri) {
+              back = dataUri;
+              changed = true;
+            }
+          case 'owner_photo':
+            if (owner != dataUri) {
+              owner = dataUri;
+              changed = true;
+            }
+          case 'shop_exterior':
+            if (exterior != dataUri) {
+              exterior = dataUri;
+              changed = true;
+            }
+        }
+      }
+
+      if (!changed) return shop;
+
+      return shop.copyWith(
+        heroImageAsset: exterior ?? shop.heroImageAsset,
+        verificationPhotos: ObShopVerificationPhotos(
+          cnicFront: front,
+          cnicBack: back,
+          ownerPhoto: owner,
+          shopExterior: exterior,
+        ),
+      );
+    } catch (_) {
+      return shop;
+    }
   }
 
   void rememberShop(ObShopModel shop) {
@@ -352,6 +527,13 @@ class ObShopService extends GetxService {
     ObShopRegisterRequest request,
     Map<String, Uint8List> photos,
   ) async {
+    final userId = _currentUserId;
+    if (userId == null || userId.isEmpty) {
+      throw ApiException(
+        message: 'Cannot save shop offline without a signed-in user.',
+      );
+    }
+
     final localShopId = await _db.nextLocalShopId();
 
     // Photo bytes go to disk; the payload only carries references.
@@ -380,7 +562,7 @@ class ObShopService extends GetxService {
         shopCategory: Value(request.shopType.name),
         payloadJson: jsonEncode(payload),
         status: const Value('pending'),
-        userId: Value(_currentUserId),
+        userId: Value(userId),
         createdAt: DateTime.now(),
       ),
     );
@@ -393,7 +575,7 @@ class ObShopService extends GetxService {
       localEntityId: localShopId,
     );
 
-    final row = await _db.localShopById(localShopId, userId: _currentUserId);
+    final row = await _db.localShopById(localShopId, userId: userId);
     return localShopToModel(row!);
   }
 
@@ -416,6 +598,7 @@ class ObShopService extends GetxService {
     required double longitude,
     required Map<String, Uint8List> photos,
     Map<String, dynamic> fields = const {},
+    Map<String, dynamic> gpsExtras = const {},
   }) async {
     if (_canReachServer) {
       try {
@@ -427,6 +610,7 @@ class ObShopService extends GetxService {
             'latitude': latitude,
             'longitude': longitude,
             ...fields,
+            ...gpsExtras,
             for (final photo in photos.entries)
               photo.key: base64Encode(photo.value),
           },
@@ -465,6 +649,7 @@ class ObShopService extends GetxService {
       shopId: shopId,
       photos: photos,
       fields: fields,
+      gpsExtras: gpsExtras,
     );
     return ObVerifySubmitResult(queued: true, visit: visit);
   }

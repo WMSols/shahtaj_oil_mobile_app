@@ -9,6 +9,7 @@ import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/sync_outbox_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/history/ob_visit_detail_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/history/ob_visit_summary_model.dart';
@@ -95,8 +96,8 @@ class ObVisitService extends GetxService {
 
   /// Puts visits captured offline at the top of the first page.
   ///
-  /// Only visits the server has never seen are added, so nothing is listed
-  /// twice once the check-in syncs.
+  /// Includes remapped visits that are still pending sync, and completed
+  /// local visits missing from the server list cache.
   Future<ObVisitListResult> _withLocalVisits(
     ObVisitListResult result,
     int offset,
@@ -106,10 +107,31 @@ class ObVisitService extends GetxService {
     final db = _db;
     if (db == null || offset != 0) return result;
 
+    final serverIds = result.visits.map((v) => v.visitId).toSet();
     final rows = await db.allLocalVisits(userId: _currentUserId ?? '');
     final pending = <ObVisitSummaryModel>[];
+    final outbox = Get.isRegistered<SyncOutboxService>()
+        ? Get.find<SyncOutboxService>()
+        : null;
+
     for (final row in rows) {
-      if (row.serverVisitId != null) continue;
+      if (row.status != 'completed') continue;
+
+      // Cleared Sync Center items leave no outbox — hide them from History.
+      if (row.pendingSync && outbox != null) {
+        final taskQueued =
+            row.taskId != 0 && outbox.hasQueuedWorkForTask(row.taskId);
+        if (!taskQueued) continue;
+      }
+
+      final displayId = row.serverVisitId ?? row.localVisitId;
+      // Fully synced and already on the server list — avoid duplicates.
+      if (row.serverVisitId != null &&
+          !row.pendingSync &&
+          serverIds.contains(row.serverVisitId)) {
+        continue;
+      }
+
       if (dateFrom != null &&
           row.checkedInAt.isBefore(
             DateTime(dateFrom.year, dateFrom.month, dateFrom.day),
@@ -122,9 +144,31 @@ class ObVisitService extends GetxService {
           )) {
         continue;
       }
+
+      final orderLines = await db.orderLinesForVisit(displayId);
+      final altLines = orderLines.isEmpty
+          ? await db.orderLinesForVisit(row.localVisitId)
+          : orderLines;
+      final cartFallback = altLines.isEmpty
+          ? await db.linesForVisit(row.localVisitId)
+          : const <VisitCartLine>[];
+      final subtotal =
+          row.subtotal ??
+          (altLines.isNotEmpty
+              ? altLines.fold<double>(
+                  0,
+                  (sum, line) => sum + (line.quantity * line.priceUnit),
+                )
+              : cartFallback.isEmpty
+              ? null
+              : cartFallback.fold<double>(
+                  0,
+                  (sum, line) => sum + (line.quantity * line.priceUnit),
+                ));
+
       pending.add(
         ObVisitSummaryModel(
-          visitId: row.localVisitId,
+          visitId: displayId,
           shopId: row.shopId,
           taskId: row.taskId,
           shopName: row.shopName,
@@ -134,7 +178,7 @@ class ObVisitService extends GetxService {
               ? VisitOutcome.orderPlaced
               : VisitOutcome.endedWithoutOrder,
           orderNumber: row.orderNumber,
-          subtotal: await _localVisitSubtotal(row.localVisitId),
+          subtotal: subtotal,
         ),
       );
     }
@@ -143,17 +187,6 @@ class ObVisitService extends GetxService {
     return ObVisitListResult(
       visits: [...pending, ...result.visits],
       total: result.total + pending.length,
-    );
-  }
-
-  Future<double?> _localVisitSubtotal(int localVisitId) async {
-    final db = _db;
-    if (db == null) return null;
-    final lines = await db.linesForVisit(localVisitId);
-    if (lines.isEmpty) return null;
-    return lines.fold<double>(
-      0,
-      (sum, line) => sum + (line.quantity * line.priceUnit),
     );
   }
 
@@ -208,14 +241,18 @@ class ObVisitService extends GetxService {
   Future<ObVisitDetailModel> fetchVisitDetail({required int visitId}) async {
     final db = _db;
 
-    if (visitId < 0) {
-      final local = await _localVisitDetail(visitId);
-      if (local != null) return local;
+    // Prefer a local snapshot (works for local and remapped server ids).
+    final local = await _localVisitDetail(visitId);
+    if (local != null && (visitId < 0 || _cache.shouldServeCacheFirst())) {
+      return local;
     }
 
     if (_cache.shouldServeCacheFirst()) {
       final cached = await _readVisitDetailDoc(visitId);
       if (cached != null) return cached;
+      if (local != null) return local;
+      final fromWindow = await _visitDetailFromHistoryWindow(visitId);
+      if (fromWindow != null) return fromWindow;
     }
 
     try {
@@ -225,24 +262,117 @@ class ObVisitService extends GetxService {
       );
       final visitJson = ApiMap.asMap(data['visit']) ?? data;
       await db?.saveDoc(ObDocKeys.visitDetail(visitId), jsonEncode(visitJson));
+      await db?.saveDoc(ObDocKeys.orderDetail(visitId), jsonEncode(visitJson));
       return ObVisitDetailModel.fromJson(visitJson);
     } catch (_) {
       final cached = await _readVisitDetailDoc(visitId);
       if (cached != null) return cached;
+      if (local != null) return local;
+      final fromWindow = await _visitDetailFromHistoryWindow(visitId);
+      if (fromWindow != null) return fromWindow;
       rethrow;
     }
   }
 
-  /// Builds detail for a visit that exists only on this device.
-  Future<ObVisitDetailModel?> _localVisitDetail(int localVisitId) async {
+  /// Last-resort detail built from the bootstrapped history list row.
+  Future<ObVisitDetailModel?> _visitDetailFromHistoryWindow(int visitId) async {
     final db = _db;
     if (db == null) return null;
-    final row = await db.localVisitById(localVisitId);
+    final doc = await db.readDoc(ObDocKeys.visitHistoryWindow);
+    if (doc == null) return null;
+    try {
+      final decoded = Map<String, dynamic>.from(
+        jsonDecode(doc.jsonPayload) as Map,
+      );
+      for (final row in ApiMap.listOf(decoded, 'visits')) {
+        final id = ApiMap.asInt(row['visit_id']) ?? ApiMap.asInt(row['id']);
+        if (id != visitId) continue;
+        await db.saveDoc(ObDocKeys.visitDetail(visitId), jsonEncode(row));
+        return ObVisitDetailModel.fromJson(row);
+      }
+    } catch (_) {
+      return null;
+    }
+    return null;
+  }
+
+  /// Builds detail for a visit that exists only on this device.
+  Future<ObVisitDetailModel?> _localVisitDetail(int visitId) async {
+    final cached = await _readVisitDetailDoc(visitId);
+    if (cached != null) return cached;
+
+    final db = _db;
+    if (db == null) return null;
+
+    // Resolve local ↔ server mapping so either id can find the row.
+    var row = await db.localVisitByAnyId(visitId);
+    if (row == null) {
+      final mapped = await db.serverIdFor('visit', visitId);
+      if (mapped != null) {
+        final mappedDoc = await _readVisitDetailDoc(mapped);
+        if (mappedDoc != null) return mappedDoc;
+        row = await db.localVisitByAnyId(mapped);
+      }
+    }
     if (row == null) return null;
 
-    final lines = await db.linesForVisit(localVisitId);
+    // Prefer snapshot keyed by the other id when present.
+    for (final id in {row.localVisitId, row.serverVisitId}.whereType<int>()) {
+      if (id == visitId) continue;
+      final alt = await _readVisitDetailDoc(id);
+      if (alt != null) return alt;
+    }
+
+    final lines = await db.orderLinesForVisit(
+      row.serverVisitId ?? row.localVisitId,
+    );
+    final alsoLocal = lines.isNotEmpty
+        ? lines
+        : await db.orderLinesForVisit(row.localVisitId);
+    final cartFallback = alsoLocal.isEmpty
+        ? await db.linesForVisit(row.serverVisitId ?? row.localVisitId)
+        : const <VisitCartLine>[];
+    final alsoCart = cartFallback.isEmpty
+        ? await db.linesForVisit(row.localVisitId)
+        : cartFallback;
+
+    final mergedOrder = alsoLocal;
+    final mergedCart = alsoCart;
+
+    final orderNumber = row.orderNumber?.isNotEmpty == true
+        ? row.orderNumber
+        : (row.outcome == 'order_placed'
+              ? ObDocKeys.pendingSyncOrderMarker
+              : null);
+
+    final detailLines = mergedOrder.isNotEmpty
+        ? mergedOrder
+              .map(
+                (line) => ObVisitCartLineModel(
+                  lineId: line.lineId,
+                  productId: line.productId,
+                  productName: line.productName,
+                  quantity: line.quantity,
+                  priceUnit: line.priceUnit,
+                  unit: line.unit,
+                ),
+              )
+              .toList(growable: false)
+        : mergedCart
+              .map(
+                (line) => ObVisitCartLineModel(
+                  lineId: line.lineId,
+                  productId: line.productId,
+                  productName: line.productName,
+                  quantity: line.quantity,
+                  priceUnit: line.priceUnit,
+                  unit: line.unit,
+                ),
+              )
+              .toList(growable: false);
+
     return ObVisitDetailModel(
-      visitId: row.localVisitId,
+      visitId: row.serverVisitId ?? row.localVisitId,
       shopId: row.shopId,
       shopName: row.shopName,
       checkedInAt: row.checkedInAt,
@@ -251,25 +381,16 @@ class ObVisitService extends GetxService {
           ? VisitOutcome.orderPlaced
           : VisitOutcome.endedWithoutOrder,
       notes: row.notes,
-      orderNumber: row.orderNumber,
+      orderNumber: orderNumber,
       latitude: row.latitude,
       longitude: row.longitude,
-      lines: lines
-          .map(
-            (line) => ObVisitCartLineModel(
-              lineId: line.lineId,
-              productId: line.productId,
-              productName: line.productName,
-              quantity: line.quantity,
-              priceUnit: line.priceUnit,
-              unit: line.unit,
-            ),
-          )
-          .toList(growable: false),
-      subtotal: lines.fold<double>(
-        0,
-        (sum, line) => sum + (line.quantity * line.priceUnit),
-      ),
+      lines: detailLines,
+      subtotal:
+          row.subtotal ??
+          detailLines.fold<double>(
+            0,
+            (sum, line) => sum + (line.quantity * line.priceUnit),
+          ),
     );
   }
 

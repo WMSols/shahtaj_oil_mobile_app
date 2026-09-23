@@ -17,7 +17,6 @@ class ObMyShopsController extends GetxController with CachedLoadMixin {
   final searchController = TextEditingController();
   final RxString searchQuery = ''.obs;
   final Rxn<ShopStatus> statusFilter = Rxn<ShopStatus>();
-  final RxBool needsSetupOnly = false.obs;
   final RxList<ObShopModel> shops = <ObShopModel>[].obs;
 
   static const _filterStatuses = [
@@ -40,7 +39,6 @@ class ObMyShopsController extends GetxController with CachedLoadMixin {
       final matchesStatus =
           statusFilter.value == null || shop.status == statusFilter.value;
       if (!matchesStatus) return false;
-      if (needsSetupOnly.value && !shop.needsShopSetup) return false;
       if (query.isEmpty) return true;
       return shop.name.toLowerCase().contains(query) ||
           (shop.ownerName?.toLowerCase().contains(query) ?? false) ||
@@ -98,8 +96,6 @@ class ObMyShopsController extends GetxController with CachedLoadMixin {
   void selectFilter(ShopStatus? status) => statusFilter.value = status;
 
   bool isFilterSelected(ShopStatus? status) => statusFilter.value == status;
-
-  void toggleNeedsSetupFilter() => needsSetupOnly.value = !needsSetupOnly.value;
 
   void openShop(ObShopModel shop) {
     _shopService.rememberShop(shop);

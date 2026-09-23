@@ -4,6 +4,7 @@ import 'package:shahtaj_oil_mobile_app/core/database/app_database.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/local_media_store.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/sync_outbox_service.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/shops/ob_shop_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/sync/ob_day_bootstrap_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/tasks/ob_task_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/visit/ob_visit_cart_service.dart';
@@ -38,6 +39,12 @@ class OrderBookerServicesBinding {
           Get.find<AppDatabase>(),
           Get.find<SyncOutboxService>(),
         ),
+        permanent: true,
+      );
+    }
+    if (!Get.isRegistered<ObShopService>()) {
+      Get.put<ObShopService>(
+        ObShopService(Get.find<ApiClient>()),
         permanent: true,
       );
     }
