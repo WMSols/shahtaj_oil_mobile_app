@@ -13,6 +13,7 @@ import 'package:shahtaj_oil_mobile_app/core/services/sync_outbox_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/services/sync/dm_day_bootstrap_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/controllers/dashboard/ob_dashboard_controller.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/controllers/shops/ob_my_shops_controller.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/controllers/tasks/ob_route_detail_controller.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/sync/ob_day_bootstrap_service.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/services/visit/ob_visit_session_service.dart';
@@ -121,6 +122,9 @@ class ConnectivityService extends GetxService {
       }
       if (Get.isRegistered<ObDashboardController>()) {
         await Get.find<ObDashboardController>().loadDashboard(force: true);
+      }
+      if (Get.isRegistered<ObMyShopsController>()) {
+        await Get.find<ObMyShopsController>().loadShops(force: true);
       }
     } catch (_) {
       // Screens keep last known data; next reconnect retries.

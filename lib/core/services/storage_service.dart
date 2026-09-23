@@ -10,6 +10,7 @@ class StorageService {
   static const _localeKey = 'app_locale';
   static const _onboardingCompletedKey = 'onboarding_completed';
   static const _localDataOwnerKey = 'local_data_owner_user_id';
+  static const _obLocalDataDayKey = 'ob_local_data_day';
   static const _readTimeout = Duration(seconds: 5);
 
   final FlutterSecureStorage _storage = const FlutterSecureStorage(
@@ -53,6 +54,12 @@ class StorageService {
 
   Future<void> saveLocalDataOwner(String userId) =>
       _storage.write(key: _localDataOwnerKey, value: userId);
+
+  /// Calendar day (`yyyy-MM-dd`) of the OB local work snapshot on this device.
+  Future<String?> getObLocalDataDay() => _read(_obLocalDataDayKey);
+
+  Future<void> saveObLocalDataDay(String yyyyMmDd) =>
+      _storage.write(key: _obLocalDataDayKey, value: yyyyMmDd);
 
   Future<String?> getLocale() => _read(_localeKey);
 

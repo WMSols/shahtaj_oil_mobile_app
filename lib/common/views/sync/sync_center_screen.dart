@@ -8,6 +8,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_primary_button.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_secondary_button.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
@@ -35,8 +36,7 @@ class SyncCenterScreen extends GetView<SyncCenterController> {
 
         final groups = controller.groups;
         final otherUser = controller.otherUserPendingCount;
-        final showClear = controller.showClearLocalData;
-        final extra = (otherUser > 0 ? 1 : 0) + (showClear ? 1 : 0);
+        final extra = otherUser > 0 ? 1 : 0;
 
         return RefreshIndicator(
           onRefresh: controller.load,
@@ -49,16 +49,6 @@ class SyncCenterScreen extends GetView<SyncCenterController> {
                 return _SyncVisitGroupCard(
                   group: groups[index],
                   controller: controller,
-                );
-              }
-
-              final footerIndex = index - groups.length;
-              if (showClear && footerIndex == 0) {
-                return AppPrimaryButton(
-                  label: AppTexts.clearLocalData,
-                  backgroundColor: AppColors.error,
-                  isLoading: controller.isClearing.value,
-                  onPressed: controller.clearLocalData,
                 );
               }
 
@@ -141,6 +131,15 @@ class _SyncVisitGroupCard extends StatelessWidget {
               label: AppTexts.syncRetry,
               isLoading: controller.isRetrying.value,
               onPressed: () => controller.retryGroup(group),
+            ),
+            AppSpacing.vertical(context, 0.008),
+            AppSecondaryButton(
+              label: AppTexts.clearThisItem,
+              outlinedOnly: true,
+              textColor: AppColors.error,
+              borderColor: AppColors.error,
+              isLoading: controller.isClearing.value,
+              onPressed: () => controller.clearGroup(group),
             ),
           ],
         ],

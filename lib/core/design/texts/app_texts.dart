@@ -265,12 +265,16 @@ class AppTexts {
   static String get obLocationDisabled => 'obLocationDisabled'.tr;
   static String get obShopLocationMissing => 'obShopLocationMissing'.tr;
   static String get obGpsCriteriaMissing => 'obGpsCriteriaMissing'.tr;
+  static String get obCartLineMissing => 'obCartLineMissing'.tr;
+  static String get obYesterdayLocalDataCleared =>
+      'obYesterdayLocalDataCleared'.tr;
   static String get obTooFarFromShop => 'obTooFarFromShop'.tr;
   static String obTooFarFromShopMax(int maxMeters) =>
       'obTooFarFromShopMax'.trParams({'meters': '$maxMeters'});
   static String get obLocationPermissionDenied =>
       'obLocationPermissionDenied'.tr;
   static String get obLocationFetchFailed => 'obLocationFetchFailed'.tr;
+  static String get obGettingGpsLocation => 'obGettingGpsLocation'.tr;
   static String get obShopRegisteredSuccess => 'obShopRegisteredSuccess'.tr;
   static String get obRegisterShopHelpTitle => 'obRegisterShopHelpTitle'.tr;
   static String get obRegisterShopHelpBody => 'obRegisterShopHelpBody'.tr;
@@ -371,6 +375,7 @@ class AppTexts {
   static String get logoutPendingSyncTitle => 'logoutPendingSyncTitle'.tr;
   static String get logoutPendingSyncMessage => 'logoutPendingSyncMessage'.tr;
   static String get obOrderQueuedForSync => 'obOrderQueuedForSync'.tr;
+  static String get obOrderPendingSyncLabel => 'obOrderPendingSyncLabel'.tr;
   static String obOrderTooFarFromShop(int meters, {required int maxMeters}) =>
       'obOrderTooFarFromShop'.trParams({
         'meters': '$meters',
@@ -391,7 +396,11 @@ class AppTexts {
   static String get obSyncOtherUserPending => 'obSyncOtherUserPending'.tr;
   static String get obSyncNeedsReview => 'obSyncNeedsReview'.tr;
   static String get syncRetry => 'syncRetry'.tr;
+  static String get clearThisItem => 'clearThisItem'.tr;
+  static String get clearThisItemMessage => 'clearThisItemMessage'.tr;
+  static String get clearThisItemDone => 'clearThisItemDone'.tr;
   static String get obQueuedCheckIn => 'obQueuedCheckIn'.tr;
+  static String get obQueuedGpsAttempt => 'obQueuedGpsAttempt'.tr;
   static String get obQueuedVerification => 'obQueuedVerification'.tr;
   static String get obQueuedRegistration => 'obQueuedRegistration'.tr;
   static String get clearLocalData => 'clearLocalData'.tr;

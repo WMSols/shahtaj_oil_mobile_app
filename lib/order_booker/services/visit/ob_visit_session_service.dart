@@ -11,6 +11,7 @@ import 'package:shahtaj_oil_mobile_app/core/services/sync_outbox_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/sync/outbox_payload.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_active_visit_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_task_model.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/sync/ob_day_bootstrap_service.dart';
 
 /// Owns the local visit lifecycle so a check-in never needs the network.
 ///
@@ -81,6 +82,11 @@ class ObVisitSessionService extends GetxService {
 
   bool isLocallyClosedTask(int taskId) => closedTaskIds.contains(taskId);
 
+  void forgetClosedTask(int taskId) {
+    if (!closedTaskIds.remove(taskId)) return;
+    closedTaskIds.refresh();
+  }
+
   // ------------------------------------------------------------ read helpers
 
   Future<LocalVisit?> activeLocalVisit() =>
@@ -127,6 +133,7 @@ class ObVisitSessionService extends GetxService {
     required ObTaskModel task,
     required double latitude,
     required double longitude,
+    Map<String, dynamic> gpsExtras = const {},
   }) async {
     final existing = await _db.localVisitForTask(
       task.id,
@@ -146,6 +153,7 @@ class ObVisitSessionService extends GetxService {
         localVisitId: existing.localVisitId,
         latitude: latitude,
         longitude: longitude,
+        gpsExtras: gpsExtras,
       );
       final visit = toActiveVisit(existing);
       publishActiveVisit(visit);
@@ -163,6 +171,7 @@ class ObVisitSessionService extends GetxService {
       localVisitId: localVisitId,
       latitude: latitude,
       longitude: longitude,
+      gpsExtras: gpsExtras,
     );
 
     final row = await _db.localVisitById(localVisitId);
@@ -176,6 +185,7 @@ class ObVisitSessionService extends GetxService {
     required int localVisitId,
     required double latitude,
     required double longitude,
+    Map<String, dynamic> gpsExtras = const {},
   }) async {
     final open = await _db.openCheckInEntryForVisit(localVisitId);
     if (open != null) return;
@@ -189,6 +199,7 @@ class ObVisitSessionService extends GetxService {
         'shop_name': task.shopName,
         'latitude': latitude,
         'longitude': longitude,
+        ...gpsExtras,
       },
       entityType: 'visit',
       localEntityId: localVisitId,
@@ -295,6 +306,7 @@ class ObVisitSessionService extends GetxService {
     required int shopId,
     required Map<String, Uint8List> photos,
     Map<String, dynamic> fields = const {},
+    Map<String, dynamic> gpsExtras = const {},
   }) async {
     final existing = await _db.localVisitForTask(
       task.id,
@@ -362,6 +374,7 @@ class ObVisitSessionService extends GetxService {
         'shop_name': task.shopName,
         'latitude': latitude,
         'longitude': longitude,
+        ...gpsExtras,
       },
       entityType: 'visit',
       localEntityId: localVisitId,
@@ -423,13 +436,22 @@ class ObVisitSessionService extends GetxService {
   }) async {
     final row = await _db.localVisitByAnyId(visitId, userId: _requireUserId);
     if (row == null) return;
+    final resolvedOrderNumber = (orderNumber != null && orderNumber.isNotEmpty)
+        ? orderNumber
+        : (outcome == 'order_placed'
+              ? (row.orderNumber?.isNotEmpty == true
+                    ? row.orderNumber
+                    : ObDocKeys.pendingSyncOrderMarker)
+              : orderNumber);
+
     await _db.patchLocalVisit(
       row.localVisitId,
       LocalVisitsCompanion(
         status: const Value('completed'),
         outcome: Value(outcome),
-        orderNumber: Value(orderNumber),
+        orderNumber: Value(resolvedOrderNumber),
         notes: Value(notes ?? row.notes),
+        pendingSync: const Value(true),
         completedAt: Value(DateTime.now()),
       ),
     );

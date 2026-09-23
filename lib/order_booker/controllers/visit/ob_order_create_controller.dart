@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 
@@ -7,6 +9,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/sync_outbox_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/helper/app_helper.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_confirm_dialog.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
@@ -78,6 +81,8 @@ class ObOrderCreateController extends GetxController {
   final RxMap<int, double?> qtyPreviews = <int, double?>{}.obs;
   final RxMap<int, String> rateDrafts = <int, String>{}.obs;
   final RxMap<int, String?> rateErrors = <int, String?>{}.obs;
+
+  Worker? _visitRemapWorker;
 
   ObOrderSubmitPreview? get submitPreview {
     // Touch observables so Obx rebuilds when rates / qty / shop change.
@@ -167,13 +172,28 @@ class ObOrderCreateController extends GetxController {
         productQuery.value = value;
       }
     });
+    if (Get.isRegistered<SyncOutboxService>()) {
+      _visitRemapWorker = ever<VisitIdRemap?>(
+        Get.find<SyncOutboxService>().lastVisitRemap,
+        _onVisitRemapped,
+      );
+    }
     load();
   }
 
   @override
   void onClose() {
+    _visitRemapWorker?.dispose();
     productSearchController.dispose();
     super.onClose();
+  }
+
+  void _onVisitRemapped(VisitIdRemap? remap) {
+    if (remap == null) return;
+    final current = activeVisit.value;
+    if (current == null || current.visitId != remap.localId) return;
+    activeVisit.value = current.copyWith(visitId: remap.serverId);
+    unawaited(_refreshLocalCart());
   }
 
   Future<void> load() async {
@@ -362,8 +382,9 @@ class ObOrderCreateController extends GetxController {
   Future<void> _refreshLocalCart() async {
     final active = activeVisit.value;
     if (active == null) return;
+    final id = await _cartService.resolveVisitId(active.visitId);
     cart.value = await _cartService.fetchCart(
-      visitId: active.visitId,
+      visitId: id,
       shopName: active.shopName,
       mergeFromServer: false,
     );
@@ -655,6 +676,7 @@ class ObOrderCreateController extends GetxController {
       await _cartService.updateLine(
         visitId: active.visitId,
         lineId: lineId,
+        productId: oldLine.productId,
         quantity: quantity,
       );
       qtyDrafts.remove(lineId);
@@ -673,6 +695,7 @@ class ObOrderCreateController extends GetxController {
     final active = activeVisit.value;
     if (active == null) return;
     if (removingLineId.value != null) return;
+    final oldLine = lineById(lineId);
     removingLineId.value = lineId;
     qtyDrafts.remove(lineId);
     qtyErrors.remove(lineId);
@@ -680,7 +703,11 @@ class ObOrderCreateController extends GetxController {
     rateDrafts.remove(lineId);
     rateErrors.remove(lineId);
     try {
-      await _cartService.removeLine(visitId: active.visitId, lineId: lineId);
+      await _cartService.removeLine(
+        visitId: active.visitId,
+        lineId: lineId,
+        productId: oldLine?.productId,
+      );
       await _refreshLocalCart();
     } on ApiException catch (e) {
       AppToast.showError(e.message);
@@ -811,6 +838,25 @@ class ObOrderCreateController extends GetxController {
     try {
       final position = await AppHelper.requireCurrentPosition(showGuide: true);
       final shopCoords = await _resolveShopCoordinates(active);
+      final gpsExtras = AppHelper.checkInGpsExtras(
+        latitude: position.latitude,
+        longitude: position.longitude,
+        accuracyMeters: position.accuracy,
+        shopLat: shopCoords.$1,
+        shopLng: shopCoords.$2,
+      );
+      if (gpsExtras['out_of_range'] == true) {
+        await _taskService.reportBlockedGpsAttempt(
+          taskId: active.taskId,
+          shopId: active.shopId,
+          shopName: active.shopName,
+          latitude: position.latitude,
+          longitude: position.longitude,
+          gpsExtras: gpsExtras,
+          purpose: 'place_order',
+          visitId: active.visitId,
+        );
+      }
       AppHelper.ensureWithinShopRange(
         currentLat: position.latitude,
         currentLng: position.longitude,
@@ -826,6 +872,7 @@ class ObOrderCreateController extends GetxController {
         shopName: active.shopName,
         latitude: position.latitude,
         longitude: position.longitude,
+        gpsExtras: gpsExtras,
       );
       await _taskService.completeActiveVisit(visitId: active.visitId);
       AppToast.showSuccess(
@@ -857,6 +904,7 @@ class ObOrderCreateController extends GetxController {
       await _cartService.updateLine(
         visitId: active.visitId,
         lineId: line.lineId,
+        productId: line.productId,
         priceUnit: rate,
       );
       changed = true;
