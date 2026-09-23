@@ -94,6 +94,7 @@ class DmOrderDetailBody extends StatelessWidget {
               subtitle: AppTexts.dmProofPhotoSubtitle,
               icon: AppIcons.cameraAdd,
               imageBytes: proofPhotoBytes,
+              isUploading: isActing,
               onTap: onPickProofPhoto,
             ),
           ),

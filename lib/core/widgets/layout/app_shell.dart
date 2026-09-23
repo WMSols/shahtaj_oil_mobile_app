@@ -19,6 +19,7 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_profile_avatar.da
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/sync_outbox_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_sync_status_banner.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_version_badge.dart';
 
 class AppShell<T extends AppShellController> extends GetView<T> {
   const AppShell({super.key});
@@ -67,7 +68,7 @@ class AppShell<T extends AppShellController> extends GetView<T> {
               style: AppTextStyles.screenTitle(context),
             ),
           ),
-          leadingWidth: AppResponsive.screenWidth(context) * 0.28,
+          leadingWidth: AppResponsive.screenWidth(context) * 0.36,
           leading: Padding(
             padding: EdgeInsets.only(
               left: AppSpacing.horizontalValue(context, 0.01),
@@ -92,6 +93,7 @@ class AppShell<T extends AppShellController> extends GetView<T> {
                     onTap: () => Get.toNamed(AppRoutes.syncCenter),
                   );
                 }),
+                const AppVersionBadge(),
               ],
             ),
           ),

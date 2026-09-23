@@ -159,6 +159,7 @@ class DmJobDetailScreen extends GetView<DmJobDetailController> {
                   subtitle: AppTexts.dmProofPhotoSubtitle,
                   icon: AppIcons.cameraAdd,
                   imageBytes: controller.proofPhotoBytes.value,
+                  isUploading: controller.isActing.value,
                   onTap: controller.pickProofPhoto,
                 ),
               ),

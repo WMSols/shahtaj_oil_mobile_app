@@ -119,6 +119,7 @@ class DmRecordCollectionContent extends GetView<DmRecordCollectionController> {
                       subtitle: AppTexts.dmChequeImageSubtitle,
                       icon: AppIcons.cameraAdd,
                       imageBytes: controller.chequeImageBytes.value,
+                      isUploading: controller.isSaving.value,
                       onTap: controller.pickChequeImage,
                     ),
                   ),
