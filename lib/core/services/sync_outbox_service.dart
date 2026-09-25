@@ -594,6 +594,30 @@ class SyncOutboxService extends GetxService {
     );
     registerHandler('orderBooker', 'visit_notes', _handleObVisitNotes);
     registerHandler('orderBooker', 'task_notes', _handleObTaskNotes);
+    registerHandler('orderBooker', 'report_create', _handleReportCreate);
+    registerHandler('deliveryMan', 'report_create', _handleReportCreate);
+  }
+
+  Future<void> _handleReportCreate(
+    OutboxEntry entry,
+    Map<String, dynamic> payload,
+  ) async {
+    final path = entry.role == 'deliveryMan'
+        ? ApiEndpoints.dmReportsCreate
+        : ApiEndpoints.obReportsCreate;
+    final data = await _api.postData(path, data: payload);
+    final reportId = ApiMap.asInt(data['report_id']);
+    if (reportId != null &&
+        reportId > 0 &&
+        Get.isRegistered<OfflineCacheService>()) {
+      await Get.find<OfflineCacheService>().saveMap(
+        'offline_cache_report_detail_$reportId',
+        Map<String, dynamic>.from(data),
+      );
+      await Get.find<OfflineCacheService>().clearKeys([
+        OfflineCacheKeys.reportsList,
+      ]);
+    }
   }
 
   // ------------------------------------------------------------- shop setup

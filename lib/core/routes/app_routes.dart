@@ -6,7 +6,9 @@ class AppRoutes {
   static const selectRole = '/select-role';
   static const onboarding = '/onboarding';
   static const login = '/login';
-  static const reportProblem = '/account/report-problem';
+  static const reports = '/account/reports';
+  static const reportCreate = '/account/reports/create';
+  static const reportDetail = '/account/reports/:id';
   static const syncCenter = '/sync-center';
 
   // Main shells
