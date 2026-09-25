@@ -170,6 +170,8 @@ class SyncCenterController extends GetxController {
       'orderBooker.gps_attempt' => AppTexts.obQueuedGpsAttempt,
       'orderBooker.verify_on_site' => AppTexts.obQueuedVerification,
       'orderBooker.register_shop' => AppTexts.obQueuedRegistration,
+      'orderBooker.report_create' ||
+      'deliveryMan.report_create' => AppTexts.syncQueuedReportCreate,
       _ => '${entry.role}.${entry.action}',
     };
   }

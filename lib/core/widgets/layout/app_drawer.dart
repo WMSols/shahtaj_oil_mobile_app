@@ -139,7 +139,7 @@ class AppDrawer extends StatelessWidget {
                           ),
                           onTap: () {
                             Navigator.of(context).pop();
-                            Get.toNamed(AppRoutes.reportProblem);
+                            Get.toNamed(AppRoutes.reports);
                           },
                         ),
                       ],

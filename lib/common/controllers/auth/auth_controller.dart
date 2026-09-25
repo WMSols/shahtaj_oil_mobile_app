@@ -82,10 +82,10 @@ class AuthController extends GetxController {
     final password = passwordController.text;
 
     // DM is WIP on this branch — toast and stop before any API call.
-    if (role == UserRole.deliveryMan) {
-      AppToast.showInformation(AppTexts.moduleUnderDevelopment);
-      return;
-    }
+    // if (role == UserRole.deliveryMan) {
+    //   AppToast.showInformation(AppTexts.moduleUnderDevelopment);
+    //   return;
+    // }
 
     // Order Booker uses live API — credentials required.
     if (login.isEmpty || password.isEmpty) {

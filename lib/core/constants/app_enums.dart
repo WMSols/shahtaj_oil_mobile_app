@@ -53,6 +53,46 @@ enum ObNotesPurpose { taskNotes, endVisitWithoutOrder, visitNotes }
 
 enum SyncStatus { queued, syncing, synced, failed, blocked, needsReview }
 
+/// Field report ticket state (`new` | `in_progress` | `done` | `cancelled`).
+enum ReportState { isNew, inProgress, done, cancelled }
+
+extension ReportStateX on ReportState {
+  String get label => switch (this) {
+    ReportState.isNew => AppTexts.reportStateNew,
+    ReportState.inProgress => AppTexts.reportStateInProgress,
+    ReportState.done => AppTexts.reportStateDone,
+    ReportState.cancelled => AppTexts.reportStateCancelled,
+  };
+
+  Color get chipColor => switch (this) {
+    ReportState.isNew => AppColors.primary,
+    ReportState.inProgress => AppColors.warning,
+    ReportState.done => AppColors.success,
+    ReportState.cancelled => AppColors.grey,
+  };
+
+  String get apiValue => switch (this) {
+    ReportState.isNew => 'new',
+    ReportState.inProgress => 'in_progress',
+    ReportState.done => 'done',
+    ReportState.cancelled => 'cancelled',
+  };
+
+  static ReportState fromApi(dynamic raw) {
+    final normalized = (raw?.toString() ?? '').trim().toLowerCase().replaceAll(
+      '-',
+      '_',
+    );
+    return switch (normalized) {
+      'new' || 'is_new' || 'isnew' => ReportState.isNew,
+      'in_progress' || 'inprogress' => ReportState.inProgress,
+      'done' => ReportState.done,
+      'cancelled' || 'canceled' => ReportState.cancelled,
+      _ => ReportState.isNew,
+    };
+  }
+}
+
 extension SyncStatusX on SyncStatus {
   String get label => switch (this) {
     SyncStatus.queued => AppTexts.syncStatusQueued,

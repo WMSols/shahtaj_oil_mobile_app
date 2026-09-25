@@ -194,10 +194,104 @@ class AppShimmerSkeletons {
     );
   }
 
+  /// Report conversation thread skeleton (user right, office left, status pills).
+  static Widget reportMessages(BuildContext context) {
+    final avatar = AppResponsive.scaleSize(context, 32);
+    final gap = AppSpacing.horizontalValue(context, 0.02);
+    final bubbleW = MediaQuery.sizeOf(context).width * 0.55;
+    final radius = AppResponsive.radius(context) * 1.4;
+
+    Widget bubbleRow({required bool mine, required double height}) {
+      return Padding(
+        padding: EdgeInsets.only(
+          bottom: AppSpacing.verticalValue(context, 0.014),
+        ),
+        child: Row(
+          mainAxisAlignment: mine
+              ? MainAxisAlignment.end
+              : MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            if (!mine) ...[
+              AppShimmer.circle(size: avatar),
+              SizedBox(width: gap),
+            ],
+            AppShimmer.box(width: bubbleW, height: height, radius: radius),
+            if (mine) ...[
+              SizedBox(width: gap),
+              AppShimmer.circle(size: avatar),
+            ],
+          ],
+        ),
+      );
+    }
+
+    Widget statusPill() {
+      return Padding(
+        padding: EdgeInsets.symmetric(
+          vertical: AppSpacing.verticalValue(context, 0.01),
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                const Expanded(child: _ReportShimmerHairline()),
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: AppSpacing.horizontalValue(context, 0.025),
+                  ),
+                  child: AppShimmer.chip(width: 160, height: 28),
+                ),
+                const Expanded(child: _ReportShimmerHairline()),
+              ],
+            ),
+            SizedBox(height: AppSpacing.verticalValue(context, 0.006)),
+            AppShimmer.box(
+              width: AppResponsive.scaleSize(context, 140),
+              height: AppResponsive.scaleSize(context, 10),
+              radius: 4,
+            ),
+          ],
+        ),
+      );
+    }
+
+    return AppShimmer(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          bubbleRow(
+            mine: true,
+            height: AppSpacing.verticalValue(context, 0.08),
+          ),
+          statusPill(),
+          bubbleRow(
+            mine: false,
+            height: AppSpacing.verticalValue(context, 0.055),
+          ),
+          statusPill(),
+          bubbleRow(
+            mine: false,
+            height: AppSpacing.verticalValue(context, 0.06),
+          ),
+        ],
+      ),
+    );
+  }
+
   static Widget _solidCard(BuildContext context, {required double height}) {
     return AppShimmer.box(
       height: height,
       radius: AppResponsive.radius(context),
     );
+  }
+}
+
+class _ReportShimmerHairline extends StatelessWidget {
+  const _ReportShimmerHairline();
+
+  @override
+  Widget build(BuildContext context) {
+    return AppShimmer.box(height: 1, radius: 0);
   }
 }

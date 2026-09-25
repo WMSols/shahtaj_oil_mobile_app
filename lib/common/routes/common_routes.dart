@@ -1,16 +1,20 @@
 import 'package:get/get.dart';
 
-import 'package:shahtaj_oil_mobile_app/common/bindings/account/report_problem_binding.dart';
 import 'package:shahtaj_oil_mobile_app/common/bindings/auth/auth_binding.dart';
 import 'package:shahtaj_oil_mobile_app/common/bindings/onboarding/onboarding_binding.dart';
+import 'package:shahtaj_oil_mobile_app/common/bindings/reports/report_create_binding.dart';
+import 'package:shahtaj_oil_mobile_app/common/bindings/reports/report_detail_binding.dart';
+import 'package:shahtaj_oil_mobile_app/common/bindings/reports/reports_list_binding.dart';
 import 'package:shahtaj_oil_mobile_app/common/bindings/select_role/select_role_binding.dart';
 import 'package:shahtaj_oil_mobile_app/common/bindings/splash/splash_binding.dart';
-import 'package:shahtaj_oil_mobile_app/common/views/account/report_problem_screen.dart';
+import 'package:shahtaj_oil_mobile_app/common/bindings/sync/sync_center_binding.dart';
 import 'package:shahtaj_oil_mobile_app/common/views/auth/login_screen.dart';
 import 'package:shahtaj_oil_mobile_app/common/views/onboarding/onboarding_screen.dart';
+import 'package:shahtaj_oil_mobile_app/common/views/reports/report_create_screen.dart';
+import 'package:shahtaj_oil_mobile_app/common/views/reports/report_detail_screen.dart';
+import 'package:shahtaj_oil_mobile_app/common/views/reports/reports_list_screen.dart';
 import 'package:shahtaj_oil_mobile_app/common/views/select_role/select_role_screen.dart';
 import 'package:shahtaj_oil_mobile_app/common/views/splash/splash_screen.dart';
-import 'package:shahtaj_oil_mobile_app/common/bindings/sync/sync_center_binding.dart';
 import 'package:shahtaj_oil_mobile_app/common/views/sync/sync_center_screen.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_shell.dart';
@@ -44,9 +48,19 @@ class CommonRoutes {
       binding: AuthBinding(),
     ),
     GetPage(
-      name: AppRoutes.reportProblem,
-      page: ReportProblemScreen.new,
-      binding: ReportProblemBinding(),
+      name: AppRoutes.reports,
+      page: () => const ReportsListScreen(),
+      binding: ReportsListBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.reportCreate,
+      page: () => const ReportCreateScreen(),
+      binding: ReportCreateBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.reportDetail,
+      page: () => const ReportDetailScreen(),
+      binding: ReportDetailBinding(),
     ),
     GetPage(
       name: AppRoutes.syncCenter,

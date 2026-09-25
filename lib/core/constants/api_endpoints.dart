@@ -27,6 +27,10 @@ class ApiEndpoints {
   static const obZonesList = '/api/shahtaj/v1/zones/list';
   static const obRoutesList = '/api/shahtaj/v1/routes/list';
   static const obPresenceHeartbeat = '/api/shahtaj/v1/presence/heartbeat';
+  static const obReportsTags = '/api/shahtaj/v1/reports/tags';
+  static const obReportsCreate = '/api/shahtaj/v1/reports/create';
+  static const obReportsList = '/api/shahtaj/v1/reports/list';
+  static const obReportsGet = '/api/shahtaj/v1/reports/get';
 
   // Delivery man — Shahtaj v1 (all POST)
   static const dmAuthLogin = '/api/shahtaj/v1/dm/auth/login';
@@ -56,4 +60,8 @@ class ApiEndpoints {
   static const dmRecoveryCollect = '/api/shahtaj/v1/dm/recovery/collect';
   static const dmWalletGet = '/api/shahtaj/v1/dm/wallet/get';
   static const dmWalletCollections = '/api/shahtaj/v1/dm/wallet/collections';
+  static const dmReportsTags = '/api/shahtaj/v1/dm/reports/tags';
+  static const dmReportsCreate = '/api/shahtaj/v1/dm/reports/create';
+  static const dmReportsList = '/api/shahtaj/v1/dm/reports/list';
+  static const dmReportsGet = '/api/shahtaj/v1/dm/reports/get';
 }
