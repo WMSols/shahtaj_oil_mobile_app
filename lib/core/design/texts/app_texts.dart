@@ -102,6 +102,7 @@ class AppTexts {
       'dmStockOnHandCount'.trParams({'count': '$count'});
   static String get dmStockOnHandLabel => 'dmStockOnHandLabel'.tr;
   static String get dmStockOnHandTitle => 'dmStockOnHandTitle'.tr;
+  static String get dmStockOnVanTitle => 'dmStockOnVanTitle'.tr;
   static String get dmOrderIdLabel => 'dmOrderIdLabel'.tr;
 
   // Splash
@@ -621,6 +622,8 @@ class AppTexts {
   static String get dmQtyAssigned => 'dmQtyAssigned'.tr;
   static String get dmQtyPicked => 'dmQtyPicked'.tr;
   static String get dmQtyDeliver => 'dmQtyDeliver'.tr;
+  static String get dmQtyDelivered => 'dmQtyDelivered'.tr;
+  static String get dmQtyDeliverToShop => 'dmQtyDeliverToShop'.tr;
   static String get dmNotesLabel => 'dmNotesLabel'.tr;
   static String get dmNotesHint => 'dmNotesHint'.tr;
   static String get dmSaveNotes => 'dmSaveNotes'.tr;
@@ -642,15 +645,23 @@ class AppTexts {
   static String get dmReturnUndeliveredSuccess =>
       'dmReturnUndeliveredSuccess'.tr;
 
-  // Delivery man — free deliver
-  static String get dmFreeDeliverTitle => 'dmFreeDeliverTitle'.tr;
-  static String get dmFreeDeliverSubtitle => 'dmFreeDeliverSubtitle'.tr;
-  static String get dmFreeDeliverSearchHint => 'dmFreeDeliverSearchHint'.tr;
-  static String get dmFreeDeliverEmpty => 'dmFreeDeliverEmpty'.tr;
-  static String get dmFreeDeliverNoStock => 'dmFreeDeliverNoStock'.tr;
-  static String get dmFreeDeliverConfirmMessage =>
-      'dmFreeDeliverConfirmMessage'.tr;
-  static String get dmFreeDeliverSuccess => 'dmFreeDeliverSuccess'.tr;
+  // Delivery man — walk-in deliver
+  static String get dmWalkInTitle => 'dmWalkInTitle'.tr;
+  static String get dmWalkInChip => 'dmWalkInChip'.tr;
+  static String get dmWalkInSubtitle => 'dmWalkInSubtitle'.tr;
+  static String get dmShopSearchHint => 'dmShopSearchHint'.tr;
+  static String get dmWalkInEmpty => 'dmWalkInEmpty'.tr;
+  static String get dmWalkInNoStock => 'dmWalkInNoStock'.tr;
+  static String get dmWalkInConfirmMessage => 'dmWalkInConfirmMessage'.tr;
+  static String get dmWalkInSuccess => 'dmWalkInSuccess'.tr;
+  static String dmWalkInSuccessAmount(String amount) =>
+      'dmWalkInSuccessAmount'.trParams({'amount': amount});
+  static String get dmCustomerNameLabel => 'dmCustomerNameLabel'.tr;
+  static String get dmCustomerNameHint => 'dmCustomerNameHint'.tr;
+  static String get dmCustomerPhoneLabel => 'dmCustomerPhoneLabel'.tr;
+  static String get dmCustomerPhoneHint => 'dmCustomerPhoneHint'.tr;
+  static String get dmCustomerNameRequired => 'dmCustomerNameRequired'.tr;
+  static String get dmQtyAvailableOnVan => 'dmQtyAvailableOnVan'.tr;
   static String get dmNextDepartSubtitle => 'dmNextDepartSubtitle'.tr;
   static String get dmNextEndDaySubtitle => 'dmNextEndDaySubtitle'.tr;
 
@@ -952,6 +963,8 @@ class AppTexts {
   static String get reportDeviceInfoLabel => 'reportDeviceInfoLabel'.tr;
   static String get reportClosingRemarkLabel => 'reportClosingRemarkLabel'.tr;
   static String get reportMessagesTitle => 'reportMessagesTitle'.tr;
+  static String get reportIssuePrefix => 'reportIssuePrefix'.tr;
+  static String get reportCommentPrefix => 'reportCommentPrefix'.tr;
   static String get reportOfficeAuthor => 'reportOfficeAuthor'.tr;
   static String get reportYouAuthor => 'reportYouAuthor'.tr;
   static String get reportCreatedStatus => 'reportCreatedStatus'.tr;

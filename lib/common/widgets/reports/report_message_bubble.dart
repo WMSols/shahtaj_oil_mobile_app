@@ -45,11 +45,27 @@ class ReportMessageBubble extends StatelessWidget {
             bottomRight: Radius.circular(mine ? radius * 0.25 : radius),
           ),
         ),
-        child: Text(
-          body,
-          style: AppTextStyles.bodyText(
-            context,
-          ).copyWith(color: AppColors.white, height: 1.35),
+        child: Text.rich(
+          TextSpan(
+            children: [
+              TextSpan(
+                text: mine
+                    ? '${AppTexts.reportIssuePrefix} '
+                    : '${AppTexts.reportCommentPrefix} ',
+                style: AppTextStyles.bodyText(context).copyWith(
+                  color: AppColors.white,
+                  fontWeight: FontWeight.w700,
+                  height: 1.35,
+                ),
+              ),
+              TextSpan(
+                text: body,
+                style: AppTextStyles.bodyText(
+                  context,
+                ).copyWith(color: AppColors.white, height: 1.35),
+              ),
+            ],
+          ),
         ),
       ),
     );

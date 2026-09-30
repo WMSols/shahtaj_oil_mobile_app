@@ -193,6 +193,24 @@ class ReportsService extends GetxService {
     );
   }
 
+  /// Prefetch list + every report detail so offline opens do not require a prior visit.
+  Future<void> warmAllReportDetails({int limit = 50}) async {
+    if (!_canReachServer) return;
+    try {
+      final list = await fetchMyReports(limit: limit, forceNetwork: true);
+      for (final summary in list.reports) {
+        if (summary.reportId <= 0) continue;
+        try {
+          await fetchReport(reportId: summary.reportId);
+        } catch (_) {
+          // Keep going; list cache remains usable.
+        }
+      }
+    } catch (_) {
+      // Bootstrap should not fail the day for reports.
+    }
+  }
+
   Future<ReportSummaryModel> fetchReport({
     required int reportId,
     bool includeScreenshot = false,
