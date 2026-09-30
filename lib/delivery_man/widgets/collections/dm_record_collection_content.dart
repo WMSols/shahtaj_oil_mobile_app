@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
@@ -12,6 +12,7 @@ import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_primary_button.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_amount_summary_bar.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_filter_chip.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_shimmer_skeletons.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_photo_upload_tile.dart';
@@ -93,14 +94,15 @@ class DmRecordCollectionContent extends GetView<DmRecordCollectionController> {
                 ),
                 AppSpacing.vertical(context, 0.008),
                 Wrap(
-                  spacing: 8,
                   children: [
                     for (final option
                         in DmRecordCollectionController.collectMethods)
-                      ChoiceChip(
-                        label: Text(option.label),
+                      AppFilterChip(
+                        label: option.label,
                         selected: controller.method.value == option,
-                        onSelected: (_) => controller.setMethod(option),
+                        color: option.chipColor,
+                        uppercase: false,
+                        onTap: () => controller.setMethod(option),
                       ),
                   ],
                 ),
@@ -110,6 +112,7 @@ class DmRecordCollectionContent extends GetView<DmRecordCollectionController> {
                     controller: controller.chequeNumberController,
                     label: AppTexts.dmChequeNumber,
                     hint: AppTexts.dmChequeNumberHint,
+                    required: true,
                   ),
                   AppSpacing.vertical(context, 0.012),
                   SizedBox(
@@ -119,7 +122,10 @@ class DmRecordCollectionContent extends GetView<DmRecordCollectionController> {
                       subtitle: AppTexts.dmChequeImageSubtitle,
                       icon: AppIcons.cameraAdd,
                       imageBytes: controller.chequeImageBytes.value,
-                      isUploading: controller.isSaving.value,
+                      isUploading:
+                          controller.isPickingPhoto.value ||
+                          controller.isSaving.value,
+                      required: true,
                       onTap: controller.pickChequeImage,
                     ),
                   ),

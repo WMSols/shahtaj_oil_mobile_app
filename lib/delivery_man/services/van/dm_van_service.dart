@@ -76,7 +76,7 @@ class DmVanService extends GetxService {
     return _applyVan(data);
   }
 
-  /// Applies a van payload from load/return/free-deliver responses.
+  /// Applies a van payload from load/return/walk-in responses.
   Future<DmVanSnapshotModel> applyFromPayload(Map<String, dynamic> json) async {
     final next = DmVanSnapshotModel.fromJson(json);
     snapshot.value = next;

@@ -21,6 +21,7 @@ class DmOrderDetailBody extends StatelessWidget {
     this.editable = false,
     this.canStartDelivery = false,
     this.isActing = false,
+    this.isPickingPhoto = false,
     this.deliveredDrafts,
     this.rejectedDrafts,
     this.onDeliveredChanged,
@@ -38,6 +39,7 @@ class DmOrderDetailBody extends StatelessWidget {
   final bool editable;
   final bool canStartDelivery;
   final bool isActing;
+  final bool isPickingPhoto;
   final Map<String, String>? deliveredDrafts;
   final Map<String, String>? rejectedDrafts;
   final void Function(String lineId, String raw)? onDeliveredChanged;
@@ -94,7 +96,8 @@ class DmOrderDetailBody extends StatelessWidget {
               subtitle: AppTexts.dmProofPhotoSubtitle,
               icon: AppIcons.cameraAdd,
               imageBytes: proofPhotoBytes,
-              isUploading: isActing,
+              isUploading: isPickingPhoto || isActing,
+              required: true,
               onTap: onPickProofPhoto,
             ),
           ),

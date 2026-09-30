@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:get/get.dart';
 
+import 'package:shahtaj_oil_mobile_app/common/services/reports/reports_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/connectivity_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/services/load/dm_load_service.dart';
@@ -10,10 +12,10 @@ import 'package:shahtaj_oil_mobile_app/delivery_man/services/recovery/dm_recover
 import 'package:shahtaj_oil_mobile_app/delivery_man/services/session/dm_session_service.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/services/van/dm_van_service.dart';
 
-/// Prefetches today's DM session / load / plan / van into offline cache so
-/// leaves can render after a brief online window (OB-style day snapshot).
+/// Prefetches today's DM session / load / plan / van / wallet / collections /
+/// reports into offline cache so leaves can render after a brief online window.
 ///
-/// Field mutations (deliver / free deliver) stay online-only.
+/// Field mutations (deliver / walk-in / collect / create report) stay online-only.
 class DmDayBootstrapService extends GetxService {
   final RxBool isRunning = false.obs;
   final Rxn<DateTime> lastCompletedAt = Rxn<DateTime>();
@@ -40,6 +42,8 @@ class DmDayBootstrapService extends GetxService {
       _cache.updatedAtFor(OfflineCacheKeys.dmPlanToday),
       _cache.updatedAtFor(OfflineCacheKeys.dmVanSnapshot),
       _cache.updatedAtFor(OfflineCacheKeys.dmWallet),
+      _cache.updatedAtFor(OfflineCacheKeys.dmWalletCollections),
+      _cache.updatedAtFor(OfflineCacheKeys.reportsList),
       lastCompletedAt.value,
     ].whereType<DateTime>();
     if (stamps.isEmpty) return null;
@@ -92,6 +96,17 @@ class DmDayBootstrapService extends GetxService {
     failures += await _step(() async {
       if (!Get.isRegistered<DmRecoveryService>()) return;
       await Get.find<DmRecoveryService>().fetchWallet(forceNetwork: true);
+    });
+    failures += await _step(() async {
+      if (!Get.isRegistered<DmRecoveryService>()) return;
+      await Get.find<DmRecoveryService>().fetchCollections(forceNetwork: true);
+    });
+    failures += await _step(() async {
+      if (!Get.isRegistered<ReportsService>()) {
+        if (!Get.isRegistered<ApiClient>()) return;
+        Get.put(ReportsService(Get.find<ApiClient>()), permanent: true);
+      }
+      await Get.find<ReportsService>().warmAllReportDetails();
     });
 
     isRunning.value = false;

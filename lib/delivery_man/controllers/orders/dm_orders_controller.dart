@@ -49,7 +49,8 @@ class DmOrdersController extends GetxController {
   }
 
   Future<void> loadPlan({bool force = true}) async {
-    isLoading.value = true;
+    final hadPlan = plan.value != null;
+    if (!hadPlan) isLoading.value = true;
     try {
       plan.value = await _planService.fetchToday(forceNetwork: force);
     } on ApiException catch (e) {
@@ -84,13 +85,26 @@ class DmOrdersController extends GetxController {
         .toList(growable: false);
   }
 
-  void openJob(DmJobModel job) {
-    Get.toNamed(AppRoutes.dmJobDetail.replaceFirst(':id', '${job.jobId}'));
+  Future<void> openJob(DmJobModel job) async {
+    await Get.toNamed(
+      AppRoutes.dmJobDetail.replaceFirst(':id', '${job.jobId}'),
+    );
+    await loadPlan(force: true);
   }
 
-  void openFreeDeliver() {
+  Future<void> openRecover(DmJobModel job) async {
+    final shopId = job.shopId.trim();
+    if (shopId.isEmpty) return;
+    await Get.toNamed(
+      AppRoutes.dmShopOutstanding.replaceFirst(':id', shopId),
+      arguments: {'shopId': shopId},
+    );
+    await loadPlan(force: true);
+  }
+
+  void openWalkInDeliver() {
     if (!Get.isRegistered<DeliveryManShellController>()) return;
-    Get.find<DeliveryManShellController>().selectLeaf('dm_free_deliver');
+    Get.find<DeliveryManShellController>().selectLeaf('dm_walk_in');
   }
 
   Future<void> depart() async {

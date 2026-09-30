@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:get/get.dart';
 
@@ -7,28 +7,34 @@ import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/jobs/dm_job_model.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/models/shops/dm_free_shop_model.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/services/free_deliver/dm_free_deliver_service.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/services/plan/dm_plan_service.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/shell/dm_services_binding.dart';
 
-/// Recovery shop picker: today's plan shops + `shops/search` (no dues-list API).
+/// Recovery shop picker: today's plan shops only (local filter, no shops/search).
 class DmTodayShopsController extends GetxController {
-  DmTodayShopsController(this._planService, this._freeDeliverService);
+  DmTodayShopsController(this._planService);
 
   final DmPlanService _planService;
-  final DmFreeDeliverService _freeDeliverService;
 
   final RxBool isLoading = true.obs;
-  final RxBool isSearching = false.obs;
   final RxnString error = RxnString();
   final RxList<DmJobModel> planShops = <DmJobModel>[].obs;
-  final RxList<DmFreeShopModel> searchShops = <DmFreeShopModel>[].obs;
   final RxString query = ''.obs;
 
   Timer? _debounce;
 
-  bool get isSearchMode => query.value.trim().isNotEmpty;
+  List<DmJobModel> get visibleShops {
+    final q = query.value.trim().toLowerCase();
+    if (q.isEmpty) return planShops.toList(growable: false);
+    return planShops
+        .where((job) {
+          final name = job.shopName.toLowerCase();
+          final address = (job.shopAddress ?? '').toLowerCase();
+          final order = (job.orderName ?? '').toLowerCase();
+          return name.contains(q) || address.contains(q) || order.contains(q);
+        })
+        .toList(growable: false);
+  }
 
   @override
   void onInit() {
@@ -46,27 +52,9 @@ class DmTodayShopsController extends GetxController {
   void onSearchChanged(String value) {
     query.value = value;
     _debounce?.cancel();
-    if (value.trim().isEmpty) {
-      searchShops.clear();
-      isSearching.value = false;
-      return;
-    }
-    _debounce = Timer(const Duration(milliseconds: 350), searchNow);
-  }
-
-  Future<void> searchNow() async {
-    final q = query.value.trim();
-    if (q.isEmpty) return;
-    isSearching.value = true;
-    try {
-      searchShops.assignAll(await _freeDeliverService.searchShops(query: q));
-    } on ApiException catch (e) {
-      AppToast.showError(e.message);
-    } catch (_) {
-      AppToast.showError(AppTexts.error);
-    } finally {
-      isSearching.value = false;
-    }
+    _debounce = Timer(const Duration(milliseconds: 200), () {
+      query.refresh();
+    });
   }
 
   Future<void> loadShops({bool force = true}) async {
@@ -76,6 +64,7 @@ class DmTodayShopsController extends GetxController {
       final plan = await _planService.fetchToday(forceNetwork: force);
       final byShop = <String, DmJobModel>{};
       for (final job in plan.jobs) {
+        if (job.isWalkIn) continue;
         byShop.putIfAbsent(job.shopId, () => job);
       }
       final rows = byShop.values.toList()
@@ -96,13 +85,6 @@ class DmTodayShopsController extends GetxController {
     Get.toNamed(
       AppRoutes.dmShopOutstanding.replaceFirst(':id', job.shopId),
       arguments: {'shopId': job.shopId},
-    );
-  }
-
-  void openSearchShop(DmFreeShopModel shop) {
-    Get.toNamed(
-      AppRoutes.dmShopOutstanding.replaceFirst(':id', shop.shopId),
-      arguments: {'shopId': shop.shopId},
     );
   }
 }

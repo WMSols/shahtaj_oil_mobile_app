@@ -60,7 +60,6 @@ class _StockPreviewRow extends StatelessWidget {
           ),
           AppSpacing.vertical(context, 0.004),
           Text(AppTexts.dmStockLoadedLabel(item.quantity), style: metricStyle),
-          Text(AppTexts.dmStockOnHandCount(item.onHand), style: metricStyle),
           if (item.isLowStock) ...[
             AppSpacing.vertical(context, 0.006),
             AppStatusChip.lowStock(),

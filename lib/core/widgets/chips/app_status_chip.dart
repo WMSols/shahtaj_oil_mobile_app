@@ -89,6 +89,12 @@ class AppStatusChip extends StatelessWidget {
   factory AppStatusChip.lowStock() =>
       AppStatusChip(label: AppTexts.obLowStock, color: AppColors.warning);
 
+  factory AppStatusChip.walkIn({bool soft = false}) => AppStatusChip(
+    label: AppTexts.dmWalkInChip,
+    color: AppColors.statPurple,
+    soft: soft,
+  );
+
   factory AppStatusChip.alreadyInCart({bool fullWidth = false}) =>
       AppStatusChip(
         label: AppTexts.obAlreadyInCart,

@@ -15,7 +15,7 @@ import 'package:shahtaj_oil_mobile_app/core/services/sync_outbox_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/presence_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/storage_service.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/services/free_deliver/dm_free_deliver_service.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/services/walk_in_deliver/dm_walk_in_deliver_service.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/services/load/dm_load_service.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/services/plan/dm_plan_service.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/services/recovery/dm_recovery_service.dart';
@@ -136,8 +136,8 @@ class AuthService extends GetxService {
     if (Get.isRegistered<DmPlanService>()) {
       await Get.delete<DmPlanService>(force: true);
     }
-    if (Get.isRegistered<DmFreeDeliverService>()) {
-      await Get.delete<DmFreeDeliverService>(force: true);
+    if (Get.isRegistered<DmWalkInDeliverService>()) {
+      await Get.delete<DmWalkInDeliverService>(force: true);
     }
     if (Get.isRegistered<DmDayBootstrapService>()) {
       await Get.delete<DmDayBootstrapService>(force: true);

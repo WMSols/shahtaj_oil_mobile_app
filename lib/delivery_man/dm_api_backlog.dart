@@ -6,14 +6,16 @@
 ///
 /// Live drawer:
 /// - Dashboard
-/// - Deliveries: Today Load · Today Plan · Free deliver · Van
-/// - Collections: Recover (plan shops + shops/search) · Wallet · History
+/// - Deliveries: Today Load · Today Plan · Walk-in Delivery · Van
+/// - Collections: Recover (plan shops) · Wallet · History
 /// - Account
 ///
-/// Recovery shop entry uses **Today Plan jobs** and **`shops/search`** — there
-/// is no separate “today shops due” list API.
+/// Walk-in Delivery sells surplus van stock (`qty_free` API field) to an
+/// unregistered customer via `dm/deliver/walk-in` (creates contact, SO,
+/// invoice, wallet collection). Recover shop entry uses **Today Plan jobs**
+/// only (local filter).
 ///
-/// Field deliver / free deliver / recovery collect stay **online-only**.
+/// Field deliver / walk-in / recovery collect stay **online-only**.
 /// GPS `max_m` comes from `dm/auth/login` and `dm/plan/today` (saved offline).
 /// Deliver requires `receiver_name` + `delivery_proof_image`. Collect supports
 /// cash / cheque (+ cheque image).

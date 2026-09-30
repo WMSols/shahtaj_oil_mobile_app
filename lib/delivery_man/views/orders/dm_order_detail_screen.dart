@@ -27,6 +27,7 @@ class DmOrderDetailScreen extends GetView<DmOrderDetailController> {
           editable: controller.canEditDelivery,
           canStartDelivery: controller.canStartDelivery,
           isActing: controller.isActing.value,
+          isPickingPhoto: controller.isPickingPhoto.value,
           deliveredDrafts: controller.deliveredDrafts,
           rejectedDrafts: controller.rejectedDrafts,
           onDeliveredChanged: controller.onDeliveredChanged,

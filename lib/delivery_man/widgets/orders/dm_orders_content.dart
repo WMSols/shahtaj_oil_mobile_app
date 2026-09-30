@@ -58,8 +58,8 @@ class DmOrdersContent extends GetView<DmOrdersController> {
                 AppSpacing.vertical(context, 0.016),
             ],
             AppSecondaryButton(
-              label: AppTexts.dmFreeDeliverTitle,
-              onPressed: controller.openFreeDeliver,
+              label: AppTexts.dmWalkInTitle,
+              onPressed: controller.openWalkInDeliver,
             ),
             AppSpacing.vertical(context, 0.016),
             AppSearchField(
@@ -111,6 +111,10 @@ class DmOrdersContent extends GetView<DmOrdersController> {
                   child: DmJobCard(
                     job: job,
                     onTap: () => controller.openJob(job),
+                    onNotes: () => controller.openJob(job),
+                    onRecover: job.isWalkIn
+                        ? null
+                        : () => controller.openRecover(job),
                   ),
                 ),
               ),

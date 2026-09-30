@@ -101,6 +101,7 @@ class DmVanStockController extends GetxController {
               name: item.name,
               uom: item.uom,
               qtyOnVan: item.qty,
+              qtyAvailable: item.qtyAvailable,
               maxEditable: 0,
             ),
         ]);
@@ -117,6 +118,7 @@ class DmVanStockController extends GetxController {
                 name: p.name,
                 uom: p.uom,
                 qtyOnVan: p.qtyOnVan,
+                qtyAvailable: p.qtyAvailableOnVan,
                 qtyInWarehouse: p.qtyInWarehouse,
                 maxEditable: p.qtyInWarehouse,
               ),
@@ -135,6 +137,7 @@ class DmVanStockController extends GetxController {
                 name: item.name,
                 uom: item.uom,
                 qtyOnVan: item.qty,
+                qtyAvailable: item.qtyAvailable,
                 maxEditable: item.qty,
               ),
         ]);

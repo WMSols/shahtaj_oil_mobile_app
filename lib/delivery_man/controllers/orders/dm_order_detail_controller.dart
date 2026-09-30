@@ -25,6 +25,7 @@ class DmOrderDetailController extends GetxController {
 
   final RxBool isLoading = true.obs;
   final RxBool isActing = false.obs;
+  final RxBool isPickingPhoto = false.obs;
   final Rxn<DmDeliveryOrderModel> order = Rxn<DmDeliveryOrderModel>();
   final RxMap<String, String> deliveredDrafts = <String, String>{}.obs;
   final RxMap<String, String> rejectedDrafts = <String, String>{}.obs;
@@ -126,10 +127,18 @@ class DmOrderDetailController extends GetxController {
       backgroundColor: Colors.white,
     );
     if (source == null) return;
-    final file = await _picker.pickImage(source: source, imageQuality: 90);
-    if (file == null) return;
-    final raw = await file.readAsBytes();
-    proofPhotoBytes.value = await AppImageCompress.compress(raw);
+    isPickingPhoto.value = true;
+    try {
+      final file = await _picker.pickImage(
+        source: source,
+        imageQuality: AppImageCompress.pickerQuality,
+      );
+      if (file == null) return;
+      final raw = await file.readAsBytes();
+      proofPhotoBytes.value = await AppImageCompress.compress(raw);
+    } finally {
+      isPickingPhoto.value = false;
+    }
   }
 
   void _goToHistory() {
