@@ -78,13 +78,13 @@ class DmPickupContent extends GetView<DmPickupController> {
                   : null,
             ),
           ],
-          if (load.shops.isNotEmpty) ...[
+          if (controller.shopsWithRemaining.isNotEmpty) ...[
             AppSpacing.vertical(context, 0.02),
             AppSectionHeader(
               title: AppTexts.dmLoadShopsSection,
               bottomSpacing: true,
             ),
-            for (final shop in load.shops) ...[
+            for (final shop in controller.shopsWithRemaining) ...[
               DmPickupShopTile(job: shop, controller: controller),
               AppSpacing.vertical(context, 0.01),
             ],

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
@@ -16,10 +16,12 @@ class DmCollectionHistoryCard extends StatelessWidget {
     super.key,
     required this.collection,
     required this.timeLabel,
+    this.onTap,
   });
 
   final DmWalletCollectionModel collection;
   final String timeLabel;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +30,10 @@ class DmCollectionHistoryCard extends StatelessWidget {
     ).copyWith(color: AppColors.grey);
 
     return AppOutlineCard(
-      statusColor: collection.paymentMethod.chipColor,
+      onTap: onTap,
+      statusColor: collection.isWalkIn
+          ? AppColors.statPurple
+          : collection.paymentMethod.chipColor,
       padding: AppSpacing.symmetric(context, h: 0.035, v: 0.016),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -43,6 +48,10 @@ class DmCollectionHistoryCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
+              if (collection.isWalkIn) ...[
+                AppStatusChip.walkIn(soft: true),
+                AppSpacing.horizontal(context, 0.01),
+              ],
               AppStatusChip(
                 label: collection.paymentMethod.label,
                 color: collection.paymentMethod.chipColor,
@@ -93,6 +102,14 @@ class DmCollectionHistoryCard extends StatelessWidget {
                   context,
                 ).copyWith(color: AppColors.primary),
               ),
+              if (onTap != null) ...[
+                AppSpacing.horizontal(context, 0.01),
+                Icon(
+                  AppIcons.chevronRight,
+                  color: AppColors.black,
+                  size: AppResponsive.scaleSize(context, 20),
+                ),
+              ],
             ],
           ),
         ],

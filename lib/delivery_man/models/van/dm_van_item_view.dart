@@ -6,6 +6,7 @@ class DmVanItemView {
     required this.name,
     this.uom,
     this.qtyOnVan = 0,
+    this.qtyAvailable = 0,
     this.qtyInWarehouse = 0,
     this.maxEditable = 0,
   });
@@ -15,6 +16,7 @@ class DmVanItemView {
   final String name;
   final String? uom;
   final double qtyOnVan;
+  final double qtyAvailable;
   final double qtyInWarehouse;
   final double maxEditable;
 }

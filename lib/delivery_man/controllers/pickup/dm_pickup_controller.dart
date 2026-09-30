@@ -37,6 +37,21 @@ class DmPickupController extends GetxController {
   bool get hasRemainingToPick =>
       (load.value?.pickLines ?? const []).any((l) => l.qtyToPick > 0);
 
+  /// Shops that still have pick qty remaining (hide fully picked from Today Load).
+  List<DmJobModel> get shopsWithRemaining {
+    final shops = load.value?.shops ?? const <DmJobModel>[];
+    return shops
+        .where((shop) => shop.lines.any(_lineHasRemaining))
+        .toList(growable: false);
+  }
+
+  bool _lineHasRemaining(DmJobLineModel line) {
+    final remaining = line.qtyStill > 0
+        ? line.qtyStill
+        : (line.qtyAssigned - line.qtyPicked);
+    return remaining > 0;
+  }
+
   @override
   void onInit() {
     super.onInit();

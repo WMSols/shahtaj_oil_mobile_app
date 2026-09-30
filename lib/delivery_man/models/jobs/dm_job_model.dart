@@ -19,6 +19,7 @@ class DmJobModel {
     this.receiverName,
     this.hasDeliveryProof = false,
     this.gpsVerified = false,
+    this.isWalkIn = false,
     this.lines = const [],
   });
 
@@ -37,6 +38,7 @@ class DmJobModel {
   final String? receiverName;
   final bool hasDeliveryProof;
   final bool gpsVerified;
+  final bool isWalkIn;
   final List<DmJobLineModel> lines;
 
   bool get hasShopCoordinates =>
@@ -66,13 +68,54 @@ class DmJobModel {
       qtyOnVan: ApiMap.asDouble(json['qty_on_van']),
       notes: ApiMap.asString(json['notes']),
       receiverName: ApiMap.asString(json['receiver_name']),
-      hasDeliveryProof: json['has_delivery_proof'] == true,
-      gpsVerified: json['gps_verified'] == true,
+      hasDeliveryProof: ApiMap.asBool(json['has_delivery_proof']),
+      gpsVerified: ApiMap.asBool(json['gps_verified']),
+      isWalkIn: _parseWalkIn(json),
       lines: ApiMap.listOf(
         json,
         'lines',
       ).map(DmJobLineModel.fromJson).toList(growable: false),
     );
+  }
+
+  static bool _parseWalkIn(Map<String, dynamic> json) {
+    const keys = [
+      'is_walk_in',
+      'walk_in',
+      'is_walkin',
+      'walkin',
+      'is_walk_in_delivery',
+      'walk_in_delivery',
+      'is_cash_and_carry',
+    ];
+    for (final key in keys) {
+      if (json.containsKey(key) && ApiMap.asBool(json[key])) return true;
+    }
+
+    for (final key in [
+      'job_type',
+      'delivery_type',
+      'origin',
+      'source',
+      'sale_type',
+      'partner_type',
+    ]) {
+      final type = (ApiMap.asString(json[key]) ?? '')
+          .trim()
+          .toLowerCase()
+          .replaceAll('-', '_')
+          .replaceAll(' ', '_');
+      if (type.contains('walk_in') ||
+          type.contains('walkin') ||
+          type == 'cash_and_carry') {
+        return true;
+      }
+    }
+
+    final partner = ApiMap.asMap(json['partner']);
+    if (partner != null && _parseWalkIn(partner)) return true;
+
+    return false;
   }
 
   Map<String, dynamic> toJson() => {
@@ -104,6 +147,47 @@ class DmJobModel {
     'receiver_name': receiverName,
     'has_delivery_proof': hasDeliveryProof,
     'gps_verified': gpsVerified,
+    'is_walk_in': isWalkIn,
     'lines': lines.map((e) => e.toJson()).toList(growable: false),
   };
+
+  DmJobModel copyWith({
+    int? jobId,
+    String? shopId,
+    String? shopName,
+    String? shopAddress,
+    double? latitude,
+    double? longitude,
+    String? orderName,
+    DmJobState? state,
+    DmFieldState? fieldState,
+    DateTime? scheduledDate,
+    double? qtyOnVan,
+    String? notes,
+    String? receiverName,
+    bool? hasDeliveryProof,
+    bool? gpsVerified,
+    bool? isWalkIn,
+    List<DmJobLineModel>? lines,
+  }) {
+    return DmJobModel(
+      jobId: jobId ?? this.jobId,
+      shopId: shopId ?? this.shopId,
+      shopName: shopName ?? this.shopName,
+      shopAddress: shopAddress ?? this.shopAddress,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      orderName: orderName ?? this.orderName,
+      state: state ?? this.state,
+      fieldState: fieldState ?? this.fieldState,
+      scheduledDate: scheduledDate ?? this.scheduledDate,
+      qtyOnVan: qtyOnVan ?? this.qtyOnVan,
+      notes: notes ?? this.notes,
+      receiverName: receiverName ?? this.receiverName,
+      hasDeliveryProof: hasDeliveryProof ?? this.hasDeliveryProof,
+      gpsVerified: gpsVerified ?? this.gpsVerified,
+      isWalkIn: isWalkIn ?? this.isWalkIn,
+      lines: lines ?? this.lines,
+    );
+  }
 }

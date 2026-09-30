@@ -14,6 +14,7 @@ class DmWalletCollectionModel {
     this.paymentMethod = PaymentMethod.cash,
     this.chequeNumber,
     this.hasChequeImage = false,
+    this.isWalkIn = false,
   });
 
   final int paymentId;
@@ -27,6 +28,7 @@ class DmWalletCollectionModel {
   final PaymentMethod paymentMethod;
   final String? chequeNumber;
   final bool hasChequeImage;
+  final bool isWalkIn;
 
   factory DmWalletCollectionModel.fromJson(Map<String, dynamic> json) {
     final invoiceRaw = json['invoices'];
@@ -50,8 +52,41 @@ class DmWalletCollectionModel {
       notes: ApiMap.asString(json['notes']),
       paymentMethod: PaymentMethodX.fromApi(json['payment_method']),
       chequeNumber: ApiMap.asString(json['cheque_number']),
-      hasChequeImage: json['has_cheque_image'] == true,
+      hasChequeImage: ApiMap.asBool(json['has_cheque_image']),
+      isWalkIn: _parseWalkIn(json),
     );
+  }
+
+  static bool _parseWalkIn(Map<String, dynamic> json) {
+    const keys = [
+      'is_walk_in',
+      'walk_in',
+      'is_walkin',
+      'walkin',
+      'is_walk_in_collection',
+      'is_cash_and_carry',
+    ];
+    for (final key in keys) {
+      if (json.containsKey(key) && ApiMap.asBool(json[key])) return true;
+    }
+    for (final key in [
+      'source',
+      'origin',
+      'collection_type',
+      'payment_source',
+    ]) {
+      final type = (ApiMap.asString(json[key]) ?? '')
+          .trim()
+          .toLowerCase()
+          .replaceAll('-', '_')
+          .replaceAll(' ', '_');
+      if (type.contains('walk_in') ||
+          type.contains('walkin') ||
+          type == 'cash_and_carry') {
+        return true;
+      }
+    }
+    return false;
   }
 
   Map<String, dynamic> toJson() => {
@@ -66,7 +101,25 @@ class DmWalletCollectionModel {
     'payment_method': paymentMethod.name,
     'cheque_number': chequeNumber,
     'has_cheque_image': hasChequeImage,
+    'is_walk_in': isWalkIn,
   };
+
+  DmWalletCollectionModel copyWith({bool? isWalkIn}) {
+    return DmWalletCollectionModel(
+      paymentId: paymentId,
+      name: name,
+      date: date,
+      amount: amount,
+      shopId: shopId,
+      shopName: shopName,
+      invoices: invoices,
+      notes: notes,
+      paymentMethod: paymentMethod,
+      chequeNumber: chequeNumber,
+      hasChequeImage: hasChequeImage,
+      isWalkIn: isWalkIn ?? this.isWalkIn,
+    );
+  }
 }
 
 class DmWalletCollectionsPage {

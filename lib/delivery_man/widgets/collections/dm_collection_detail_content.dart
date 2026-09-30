@@ -1,5 +1,3 @@
-﻿import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -16,10 +14,9 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_shimmer_skeletons.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_form_section_header.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_photo_upload_tile.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/info/app_detail_row.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/collections/dm_collection_detail_controller.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/models/collections/dm_collection_summary_model.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/models/recovery/dm_wallet_collection_model.dart';
 
 class DmCollectionDetailContent extends GetView<DmCollectionDetailController> {
   const DmCollectionDetailContent({super.key});
@@ -63,27 +60,7 @@ class DmCollectionDetailContent extends GetView<DmCollectionDetailController> {
               title: AppTexts.dmCollectionAllocations,
             ),
             AppSpacing.vertical(context, 0.012),
-            if (collection.isUnallocatedBatch)
-              AppOutlineCard(
-                padding: AppSpacing.symmetric(context, h: 0.035, v: 0.016),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      AppTexts.dmUnallocatedBatch,
-                      style: AppTextStyles.sectionTitle(context),
-                    ),
-                    AppSpacing.vertical(context, 0.006),
-                    Text(
-                      AppTexts.dmUnallocatedBatchHint,
-                      style: AppTextStyles.bodyText(
-                        context,
-                      ).copyWith(color: AppColors.grey),
-                    ),
-                  ],
-                ),
-              )
-            else if (collection.lines.isEmpty)
+            if (collection.invoices.isEmpty)
               Text(
                 AppTexts.dmUnallocatedBatchHint,
                 style: AppTextStyles.bodyText(
@@ -96,18 +73,15 @@ class DmCollectionDetailContent extends GetView<DmCollectionDetailController> {
                 padding: EdgeInsets.zero,
                 child: Column(
                   children: [
-                    for (var i = 0; i < collection.lines.length; i++)
+                    for (var i = 0; i < collection.invoices.length; i++)
                       AppDetailRow(
-                        label: collection.lines[i].invoiceNumber,
-                        value: AppFormatter.currencyWhole(
-                          collection.lines[i].amount,
-                        ),
-                        showDivider: i < collection.lines.length - 1,
+                        label: collection.invoices[i],
+                        showDivider: i < collection.invoices.length - 1,
                       ),
                   ],
                 ),
               ),
-            if (collection.notes.trim().isNotEmpty) ...[
+            if ((collection.notes ?? '').trim().isNotEmpty) ...[
               AppSpacing.vertical(context, 0.02),
               AppFormSectionHeader(
                 icon: AppIcons.history,
@@ -117,26 +91,8 @@ class DmCollectionDetailContent extends GetView<DmCollectionDetailController> {
               AppOutlineCard(
                 padding: AppSpacing.symmetric(context, h: 0.035, v: 0.016),
                 child: Text(
-                  collection.notes,
+                  collection.notes!,
                   style: AppTextStyles.bodyText(context),
-                ),
-              ),
-            ],
-            if (collection.proofPhotoBase64 != null &&
-                collection.proofPhotoBase64!.isNotEmpty) ...[
-              AppSpacing.vertical(context, 0.02),
-              AppFormSectionHeader(
-                icon: AppIcons.cameraAdd,
-                title: AppTexts.dmBankScreenshotTitle,
-              ),
-              AppSpacing.vertical(context, 0.012),
-              SizedBox(
-                width: 160,
-                child: AppPhotoUploadTile(
-                  title: AppTexts.dmBankScreenshotTitle,
-                  subtitle: AppTexts.dmBankScreenshotSubtitle,
-                  icon: AppIcons.cameraAdd,
-                  imageBytes: base64Decode(collection.proofPhotoBase64!),
                 ),
               ),
             ],
@@ -150,33 +106,23 @@ class DmCollectionDetailContent extends GetView<DmCollectionDetailController> {
 class _HeaderCard extends StatelessWidget {
   const _HeaderCard({required this.collection});
 
-  final DmCollectionSummaryModel collection;
-
-  String? get _referenceLabel {
-    if (collection.reference.trim().isEmpty) return null;
-    return switch (collection.method) {
-      PaymentMethod.cheque => AppTexts.dmChequeNumber,
-      PaymentMethod.bank => AppTexts.dmBankReference,
-      PaymentMethod.cash => AppTexts.dmBankReference,
-    };
-  }
+  final DmWalletCollectionModel collection;
 
   @override
   Widget build(BuildContext context) {
     final collectedAt =
-        '${AppFormatter.shortDate(collection.collectedAt)} • ${AppFormatter.timeOfDay(collection.collectedAt)}';
-    final referenceLabel = _referenceLabel;
+        '${AppFormatter.shortDate(collection.date)} • ${AppFormatter.timeOfDay(collection.date)}';
+    final showCheque =
+        collection.paymentMethod == PaymentMethod.cheque &&
+        (collection.chequeNumber ?? '').trim().isNotEmpty;
 
     return AppOutlineCard(
-      statusColor: collection.status.chipColor,
+      statusColor: collection.paymentMethod.chipColor,
       clipBehavior: Clip.antiAlias,
       padding: EdgeInsets.zero,
       child: Column(
         children: [
-          AppDetailRow(
-            label: AppTexts.dmReceiptNumber,
-            value: collection.receiptNumber,
-          ),
+          AppDetailRow(label: AppTexts.dmReceiptNumber, value: collection.name),
           AppDetailRow(
             label: AppTexts.obShopNameLabel,
             value: collection.shopName,
@@ -189,25 +135,22 @@ class _HeaderCard extends StatelessWidget {
           ),
           AppDetailRow(
             label: AppTexts.dmPaymentMethod,
-            trailing: AppStatusChip.paymentMethod(collection.method),
+            trailing: AppStatusChip.paymentMethod(collection.paymentMethod),
           ),
-          AppDetailRow(
-            label: AppTexts.dmCollectionMode,
-            trailing: AppStatusChip.collectionMode(collection.mode),
-          ),
-          AppDetailRow(
-            label: AppTexts.dmCollectionStatus,
-            trailing: AppStatusChip.collection(collection.status),
-          ),
+          if (collection.isWalkIn)
+            AppDetailRow(
+              label: AppTexts.dmWalkInTitle,
+              trailing: AppStatusChip.walkIn(),
+            ),
           AppDetailRow(
             label: AppTexts.dmCollectedAt,
             value: collectedAt,
-            showDivider: referenceLabel != null,
+            showDivider: showCheque,
           ),
-          if (referenceLabel != null)
+          if (showCheque)
             AppDetailRow(
-              label: referenceLabel,
-              value: collection.reference,
+              label: AppTexts.dmChequeNumber,
+              value: collection.chequeNumber!,
               showDivider: false,
             ),
         ],

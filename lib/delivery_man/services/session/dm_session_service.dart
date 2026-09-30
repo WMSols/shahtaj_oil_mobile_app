@@ -45,8 +45,14 @@ class DmSessionService extends GetxService {
       }
     }
 
-    final data = await _api.postData(ApiEndpoints.dmSessionGet);
-    return _setSession(_parseSession(data));
+    try {
+      final data = await _api.postData(ApiEndpoints.dmSessionGet);
+      return _setSession(_parseSession(data));
+    } catch (_) {
+      final cached = await loadCached();
+      if (cached != null) return cached;
+      rethrow;
+    }
   }
 
   Future<DmSessionModel> depart({String? notes}) async {

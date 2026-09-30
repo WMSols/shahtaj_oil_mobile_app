@@ -26,6 +26,7 @@ class DmJobDetailController extends GetxController {
 
   final RxBool isLoading = true.obs;
   final RxBool isActing = false.obs;
+  final RxBool isPickingPhoto = false.obs;
   final Rxn<DmJobModel> job = Rxn<DmJobModel>();
   final RxMap<int, String> qtyDrafts = <int, String>{}.obs;
   final Rxn<Uint8List> proofPhotoBytes = Rxn<Uint8List>();
@@ -76,7 +77,9 @@ class DmJobDetailController extends GetxController {
       final data = await _planService.fetchJob(jobId);
       job.value = data;
       notesController.text = data.notes ?? '';
-      receiverController.text = data.receiverName ?? '';
+      // Always clear receiver/proof so each deliver action starts fresh.
+      receiverController.clear();
+      proofPhotoBytes.value = null;
       _seedQty(data.lines);
     } on ApiException catch (e) {
       AppToast.showError(e.message);
@@ -92,9 +95,7 @@ class DmJobDetailController extends GetxController {
       ..clear()
       ..addEntries(
         lines.map((line) {
-          final suggested = line.qtyStill > 0
-              ? line.qtyStill
-              : (line.qtyPicked > 0 ? line.qtyPicked : line.qtyAssigned);
+          final suggested = line.qtyRemainingToDeliver;
           final text = suggested == suggested.roundToDouble()
               ? suggested.toInt().toString()
               : suggested.toStringAsFixed(1);
@@ -130,10 +131,18 @@ class DmJobDetailController extends GetxController {
       backgroundColor: Colors.white,
     );
     if (source == null) return;
-    final file = await _picker.pickImage(source: source, imageQuality: 90);
-    if (file == null) return;
-    final raw = await file.readAsBytes();
-    proofPhotoBytes.value = await AppImageCompress.compress(raw);
+    isPickingPhoto.value = true;
+    try {
+      final file = await _picker.pickImage(
+        source: source,
+        imageQuality: AppImageCompress.pickerQuality,
+      );
+      if (file == null) return;
+      final raw = await file.readAsBytes();
+      proofPhotoBytes.value = await AppImageCompress.compress(raw);
+    } finally {
+      isPickingPhoto.value = false;
+    }
   }
 
   void clearProofPhoto() => proofPhotoBytes.value = null;
@@ -184,6 +193,7 @@ class DmJobDetailController extends GetxController {
 
     isActing.value = true;
     try {
+      final notes = notesController.text.trim();
       final position = await AppHelper.requireCurrentPosition(showGuide: true);
       AppHelper.ensureWithinShopRange(
         currentLat: position.latitude,
@@ -191,6 +201,8 @@ class DmJobDetailController extends GetxController {
         shopLat: current.latitude,
         shopLng: current.longitude,
       );
+      // Deliver first; notes go in the deliver payload. Then persist via
+      // job/notes so plan list/cards still see them if deliver omits notes.
       job.value = await _planService.deliver(
         jobId: current.jobId,
         latitude: position.latitude,
@@ -198,7 +210,18 @@ class DmJobDetailController extends GetxController {
         lines: lines,
         receiverName: receiver,
         deliveryProofImageBase64: base64Encode(photo),
+        notes: notes.isEmpty ? null : notes,
       );
+      if (notes.isNotEmpty) {
+        try {
+          job.value = await _planService.saveNotes(
+            jobId: current.jobId,
+            notes: notes,
+          );
+        } catch (_) {
+          // Deliver already succeeded; local plan merge keeps notes.
+        }
+      }
       AppToast.showSuccess(AppTexts.dmDeliverSuccess);
       Get.back();
     } on ApiException catch (e) {
@@ -283,6 +306,7 @@ class DmJobDetailController extends GetxController {
         jobId: current.jobId,
         notes: notes,
       );
+      notesController.text = job.value?.notes ?? notes;
       AppToast.showSuccess(AppTexts.dmNotesSaved);
     } on ApiException catch (e) {
       AppToast.showError(e.message);

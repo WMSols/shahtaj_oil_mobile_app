@@ -6,6 +6,7 @@ class DmVanProductModel {
     required this.name,
     this.qtyInWarehouse = 0,
     this.qtyOnVan = 0,
+    this.qtyAvailableOnVan = 0,
     this.uom,
   });
 
@@ -13,6 +14,9 @@ class DmVanProductModel {
   final String name;
   final double qtyInWarehouse;
   final double qtyOnVan;
+
+  /// Surplus on van for walk-in (`qty_free_on_van` from API).
+  final double qtyAvailableOnVan;
   final String? uom;
 
   factory DmVanProductModel.fromJson(Map<String, dynamic> json) {
@@ -21,6 +25,7 @@ class DmVanProductModel {
       name: ApiMap.asString(json['name']) ?? '',
       qtyInWarehouse: ApiMap.asDouble(json['qty_in_warehouse']) ?? 0,
       qtyOnVan: ApiMap.asDouble(json['qty_on_van']) ?? 0,
+      qtyAvailableOnVan: ApiMap.asDouble(json['qty_free_on_van']) ?? 0,
       uom: ApiMap.asString(json['uom']),
     );
   }
@@ -30,6 +35,7 @@ class DmVanProductModel {
     'name': name,
     'qty_in_warehouse': qtyInWarehouse,
     'qty_on_van': qtyOnVan,
+    'qty_free_on_van': qtyAvailableOnVan,
     'uom': uom,
   };
 }

@@ -10,28 +10,28 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_drawer_entry.dart
 import 'package:shahtaj_oil_mobile_app/delivery_man/bindings/collections/dm_collection_history_binding.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/bindings/collections/dm_today_shops_binding.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/bindings/dashboard/dm_dashboard_binding.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/bindings/free_deliver/dm_free_deliver_search_binding.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/bindings/orders/dm_orders_binding.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/bindings/pickup/dm_pickup_binding.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/bindings/van_stock/dm_van_stock_binding.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/bindings/walk_in_deliver/dm_walk_in_deliver_binding.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/bindings/wallet/dm_wallet_binding.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/collections/dm_collection_history_controller.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/collections/dm_today_shops_controller.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/dashboard/dm_dashboard_controller.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/free_deliver/dm_free_deliver_search_controller.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/orders/dm_orders_controller.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/pickup/dm_pickup_controller.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/van_stock/dm_van_stock_controller.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/walk_in_deliver/dm_walk_in_deliver_controller.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/wallet/dm_wallet_controller.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/services/sync/dm_day_bootstrap_service.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/shell/dm_services_binding.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/views/collections/dm_collection_history_screen.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/views/collections/dm_today_shops_screen.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/views/dashboard/dm_dashboard_screen.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/views/free_deliver/dm_free_deliver_search_screen.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/views/orders/dm_orders_screen.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/views/pickup/dm_pickup_screen.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/views/van_stock/dm_van_stock_screen.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/views/walk_in_deliver/dm_walk_in_deliver_screen.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/views/wallet/dm_wallet_screen.dart';
 
 class DeliveryManShellController extends AppShellController {
@@ -73,9 +73,9 @@ class DeliveryManShellController extends AppShellController {
           Get.find<DmOrdersController>().loadPlan(force: forceNetwork);
         }
         break;
-      case 'dm_free_deliver':
-        if (Get.isRegistered<DmFreeDeliverSearchController>() && forceNetwork) {
-          Get.find<DmFreeDeliverSearchController>().search();
+      case 'dm_walk_in':
+        if (Get.isRegistered<DmWalkInDeliverController>()) {
+          Get.find<DmWalkInDeliverController>().load(force: forceNetwork);
         }
         break;
       case 'dm_van_stock':
@@ -133,11 +133,11 @@ class DeliveryManShellController extends AppShellController {
             initBinding: () => DmOrdersBinding().dependencies(),
           ),
           (
-            id: 'dm_free_deliver',
+            id: 'dm_walk_in',
             icon: AppIcons.addshop,
-            label: AppTexts.dmFreeDeliverTitle,
-            screen: const DmFreeDeliverSearchScreen(),
-            initBinding: () => DmFreeDeliverSearchBinding().dependencies(),
+            label: AppTexts.dmWalkInTitle,
+            screen: const DmWalkInDeliverScreen(),
+            initBinding: () => DmWalkInDeliverBinding().dependencies(),
           ),
           (
             id: 'dm_van_stock',

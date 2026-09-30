@@ -8,7 +8,6 @@ import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
-import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_primary_button.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_secondary_button.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
@@ -45,7 +44,9 @@ class DmJobDetailScreen extends GetView<DmJobDetailController> {
           padding: AppSpacing.symmetric(context, h: 0.04, v: 0.02),
           children: [
             AppOutlineCard(
-              statusColor: job.fieldState.chipColor,
+              statusColor: job.isWalkIn
+                  ? AppColors.statPurple
+                  : job.fieldState.chipColor,
               padding: EdgeInsets.zero,
               child: Column(
                 children: [
@@ -54,6 +55,11 @@ class DmJobDetailScreen extends GetView<DmJobDetailController> {
                     value: job.shopName,
                     showDivider: true,
                   ),
+                  if (job.isWalkIn)
+                    AppDetailRow(
+                      label: AppTexts.dmWalkInTitle,
+                      trailing: AppStatusChip.walkIn(),
+                    ),
                   if (job.orderName != null)
                     AppDetailRow(
                       label: AppTexts.dmOrderIdLabel,
@@ -116,7 +122,8 @@ class DmJobDetailScreen extends GetView<DmJobDetailController> {
                         Text(
                           '${AppTexts.dmQtyAssigned}: ${_fmt(line.qtyAssigned)}'
                           ' · ${AppTexts.dmQtyPicked}: ${_fmt(line.qtyPicked)}'
-                          ' · ${AppTexts.dmQtyStill}: ${_fmt(line.qtyStill)}',
+                          ' · ${AppTexts.dmQtyDelivered}: ${_fmt(line.qtyDelivered)}'
+                          ' · ${AppTexts.dmQtyStill}: ${_fmt(line.qtyRemainingToDeliver)}',
                           style: AppTextStyles.caption(
                             context,
                           ).copyWith(color: AppColors.grey),
@@ -150,6 +157,7 @@ class DmJobDetailScreen extends GetView<DmJobDetailController> {
                 controller: controller.receiverController,
                 label: AppTexts.dmReceiverNameLabel,
                 hint: AppTexts.dmReceiverNameHint,
+                required: true,
               ),
               AppSpacing.vertical(context, 0.012),
               SizedBox(
@@ -159,7 +167,10 @@ class DmJobDetailScreen extends GetView<DmJobDetailController> {
                   subtitle: AppTexts.dmProofPhotoSubtitle,
                   icon: AppIcons.cameraAdd,
                   imageBytes: controller.proofPhotoBytes.value,
-                  isUploading: controller.isActing.value,
+                  isUploading:
+                      controller.isPickingPhoto.value ||
+                      controller.isActing.value,
+                  required: true,
                   onTap: controller.pickProofPhoto,
                 ),
               ),
@@ -205,25 +216,7 @@ class DmJobDetailScreen extends GetView<DmJobDetailController> {
                 isLoading: controller.isActing.value,
                 onPressed: controller.submitFailed,
               ),
-              AppSpacing.vertical(context, 0.01),
-              AppSecondaryButton(
-                label: AppTexts.dmReturnUndeliveredTitle,
-                isLoading: controller.isActing.value,
-                onPressed: controller.submitReturnUndelivered,
-              ),
             ],
-            AppSpacing.vertical(context, 0.01),
-            AppSecondaryButton(
-              label: AppTexts.dmRecoverAtShop,
-              onPressed: () {
-                final shopId = job.shopId;
-                if (shopId.isEmpty) return;
-                Get.toNamed(
-                  AppRoutes.dmShopOutstanding.replaceFirst(':id', shopId),
-                  arguments: {'shopId': shopId},
-                );
-              },
-            ),
             AppSpacing.vertical(context, 0.01),
             AppSecondaryButton(
               label: AppTexts.dmSaveNotes,

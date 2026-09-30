@@ -5,12 +5,16 @@ class DmVanItemModel {
     required this.productId,
     required this.name,
     this.qty = 0,
+    this.qtyAvailable = 0,
     this.uom,
   });
 
   final int productId;
   final String name;
   final double qty;
+
+  /// Surplus qty available for walk-in (`qty_free` from API).
+  final double qtyAvailable;
   final String? uom;
 
   factory DmVanItemModel.fromJson(Map<String, dynamic> json) {
@@ -18,6 +22,7 @@ class DmVanItemModel {
       productId: ApiMap.asInt(json['product_id']) ?? 0,
       name: ApiMap.asString(json['name']) ?? '',
       qty: ApiMap.asDouble(json['qty']) ?? 0,
+      qtyAvailable: ApiMap.asDouble(json['qty_free']) ?? 0,
       uom: ApiMap.asString(json['uom']),
     );
   }
@@ -26,6 +31,7 @@ class DmVanItemModel {
     'product_id': productId,
     'name': name,
     'qty': qty,
+    'qty_free': qtyAvailable,
     'uom': uom,
   };
 }
@@ -35,11 +41,13 @@ class DmVanSnapshotModel {
     this.vanLocationId,
     this.items = const [],
     this.qtyTotal = 0,
+    this.qtyAvailableTotal = 0,
   });
 
   final int? vanLocationId;
   final List<DmVanItemModel> items;
   final double qtyTotal;
+  final double qtyAvailableTotal;
 
   factory DmVanSnapshotModel.fromJson(Map<String, dynamic> json) {
     return DmVanSnapshotModel(
@@ -49,6 +57,7 @@ class DmVanSnapshotModel {
         'items',
       ).map(DmVanItemModel.fromJson).toList(growable: false),
       qtyTotal: ApiMap.asDouble(json['qty_total']) ?? 0,
+      qtyAvailableTotal: ApiMap.asDouble(json['qty_free_total']) ?? 0,
     );
   }
 
@@ -56,5 +65,6 @@ class DmVanSnapshotModel {
     'van_location_id': vanLocationId,
     'items': items.map((e) => e.toJson()).toList(growable: false),
     'qty_total': qtyTotal,
+    'qty_free_total': qtyAvailableTotal,
   };
 }

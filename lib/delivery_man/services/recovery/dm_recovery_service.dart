@@ -9,6 +9,7 @@ import 'package:shahtaj_oil_mobile_app/delivery_man/models/recovery/dm_recovery_
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/recovery/dm_recovery_shop_model.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/recovery/dm_wallet_collection_model.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/recovery/dm_wallet_model.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/services/walk_in_deliver/dm_walk_in_registry.dart';
 
 /// Live recovery + wallet APIs (`recovery/*`, `wallet/*`).
 class DmRecoveryService extends GetxService {
@@ -105,6 +106,9 @@ class DmRecoveryService extends GetxService {
     int limit = 50,
     bool forceNetwork = false,
   }) async {
+    if (Get.isRegistered<DmWalkInRegistry>()) {
+      await Get.find<DmWalkInRegistry>().hydrate();
+    }
     final result = await _cache.readThrough(
       key: OfflineCacheKeys.dmWalletCollections,
       fetch: () => _api.postData(
@@ -122,13 +126,14 @@ class DmRecoveryService extends GetxService {
         forceNetwork: forceNetwork,
       ),
     );
-    collectionsPage.value = result;
+    final tagged = _tagWalkInCollections(result);
+    collectionsPage.value = tagged;
     if (wallet.value != null) {
       wallet.value = DmWalletModel(
         deliveryManId: wallet.value!.deliveryManId,
         currency: wallet.value!.currency,
-        balance: result.walletBalance > 0
-            ? result.walletBalance
+        balance: tagged.walletBalance > 0
+            ? tagged.walletBalance
             : wallet.value!.balance,
         collectedToday: wallet.value!.collectedToday,
         collectedTotal: wallet.value!.collectedTotal,
@@ -136,6 +141,24 @@ class DmRecoveryService extends GetxService {
         asOf: wallet.value!.asOf,
       );
     }
-    return result;
+    return tagged;
+  }
+
+  DmWalletCollectionsPage _tagWalkInCollections(DmWalletCollectionsPage page) {
+    if (!Get.isRegistered<DmWalkInRegistry>()) return page;
+    final registry = Get.find<DmWalkInRegistry>();
+    final rows = [
+      for (final row in page.collections)
+        row.isWalkIn ||
+                registry.isWalkInPayment(row.paymentId) ||
+                registry.isWalkInShop(row.shopId)
+            ? row.copyWith(isWalkIn: true)
+            : row,
+    ];
+    return DmWalletCollectionsPage(
+      count: page.count,
+      walletBalance: page.walletBalance,
+      collections: rows,
+    );
   }
 }

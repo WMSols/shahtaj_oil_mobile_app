@@ -23,6 +23,14 @@ class DmJobLineModel {
   final double qtyDelivered;
   final double? qtyOnVan;
 
+  /// Remaining to deliver at the shop (picked − delivered).
+  /// [qtyStill] is pick-remaining from load, not delivery remaining.
+  double get qtyRemainingToDeliver {
+    final base = qtyPicked > 0 ? qtyPicked : qtyAssigned;
+    final left = base - qtyDelivered;
+    return left > 0 ? left : 0;
+  }
+
   factory DmJobLineModel.fromJson(Map<String, dynamic> json) {
     return DmJobLineModel(
       lineId: ApiMap.asInt(json['line_id'] ?? json['id']) ?? 0,

@@ -30,6 +30,7 @@ class DmRecordCollectionController extends GetxController {
 
   final RxBool isLoading = true.obs;
   final RxBool isSaving = false.obs;
+  final RxBool isPickingPhoto = false.obs;
   final RxnString error = RxnString();
   final Rxn<DmRecoveryShopModel> shop = Rxn<DmRecoveryShopModel>();
   final RxList<DmRecoveryInvoiceModel> invoices =
@@ -176,10 +177,18 @@ class DmRecordCollectionController extends GetxController {
       backgroundColor: Colors.white,
     );
     if (source == null) return;
-    final file = await _picker.pickImage(source: source, imageQuality: 90);
-    if (file == null) return;
-    final raw = await file.readAsBytes();
-    chequeImageBytes.value = await AppImageCompress.compress(raw);
+    isPickingPhoto.value = true;
+    try {
+      final file = await _picker.pickImage(
+        source: source,
+        imageQuality: AppImageCompress.pickerQuality,
+      );
+      if (file == null) return;
+      final raw = await file.readAsBytes();
+      chequeImageBytes.value = await AppImageCompress.compress(raw);
+    } finally {
+      isPickingPhoto.value = false;
+    }
   }
 
   Future<void> submit() async {

@@ -127,6 +127,7 @@ class DmCollectionHistoryContent
                     child: DmCollectionHistoryCard(
                       collection: collection,
                       timeLabel: controller.timeLabel(collection),
+                      onTap: () => controller.openCollection(collection),
                     ),
                   );
                 },

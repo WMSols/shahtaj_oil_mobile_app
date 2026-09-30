@@ -38,6 +38,22 @@ class ApiMap {
     return text.isEmpty ? null : text;
   }
 
+  /// True for `true`, `1`, `"1"`, `"true"`, `"yes"` (Odoo-friendly).
+  static bool asBool(dynamic value, {bool fallback = false}) {
+    if (value == null) return fallback;
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+    final text = value.toString().trim().toLowerCase();
+    if (text.isEmpty) return fallback;
+    if (text == 'true' || text == '1' || text == 'yes' || text == 'y') {
+      return true;
+    }
+    if (text == 'false' || text == '0' || text == 'no' || text == 'n') {
+      return false;
+    }
+    return fallback;
+  }
+
   static DateTime? asDateTime(dynamic value) {
     final text = asString(value);
     if (text == null) return null;

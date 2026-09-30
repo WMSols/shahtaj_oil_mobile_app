@@ -2,9 +2,13 @@ import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
+import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_confirm_dialog.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/dashboard/dm_dashboard_activity_model.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/dashboard/dm_stock_item_model.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/jobs/dm_job_model.dart';
@@ -61,9 +65,6 @@ class DmDashboardController extends GetxController {
       walletBalance.value > 0 ||
       collectedToday.value > 0;
 
-  bool get showNextDeliveryStop =>
-      nextJob.value != null && nextAction?.kind != DmNextActionKind.deliver;
-
   String get greeting => AppFormatter.timeOfDayGreeting();
   String get userName =>
       _session.user.value?.displayName('Delivery Man') ?? 'Delivery Man';
@@ -91,7 +92,9 @@ class DmDashboardController extends GetxController {
     if (job != null) {
       return DmNextActionModel(
         kind: DmNextActionKind.deliver,
-        message: job.shopName,
+        message: job.isWalkIn
+            ? '${AppTexts.dmWalkInChip}: ${job.shopName}'
+            : job.shopName,
         buttonLabel: AppTexts.dmContinueDeliveries,
       );
     }
@@ -127,7 +130,21 @@ class DmDashboardController extends GetxController {
     load();
   }
 
+  bool get _preferCache {
+    if (!Get.isRegistered<OfflineCacheService>()) return false;
+    return Get.find<OfflineCacheService>().shouldServeCacheFirst();
+  }
+
+  Future<T?> _safeFetch<T>(Future<T> Function() run) async {
+    try {
+      return await run();
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> load({bool force = true}) async {
+    final forceNetwork = force && !_preferCache;
     final showFullLoader = !hasContent;
     if (showFullLoader) {
       isLoading.value = true;
@@ -136,81 +153,98 @@ class DmDashboardController extends GetxController {
     }
 
     try {
-      late final DmSessionModel session;
-      late final DmLoadTodayModel load;
-      late final DmPlanTodayModel plan;
-      late final DmVanSnapshotModel van;
-      late final DmWalletModel wallet;
-
-      await Future.wait([
-        _sessionService
-            .fetchSession(forceNetwork: force)
-            .then((v) => session = v),
-        _loadService.fetchToday(forceNetwork: force).then((v) => load = v),
-        _planService.fetchToday(forceNetwork: force).then((v) => plan = v),
-        _vanService.fetchSnapshot(forceNetwork: force).then((v) => van = v),
-        _recoveryService
-            .fetchWallet(forceNetwork: force)
-            .then((v) => wallet = v),
+      final results = await Future.wait([
+        _safeFetch(
+          () => _sessionService.fetchSession(forceNetwork: forceNetwork),
+        ),
+        _safeFetch(() => _loadService.fetchToday(forceNetwork: forceNetwork)),
+        _safeFetch(() => _planService.fetchToday(forceNetwork: forceNetwork)),
+        _safeFetch(() => _vanService.fetchSnapshot(forceNetwork: forceNetwork)),
+        _safeFetch(
+          () => _recoveryService.fetchWallet(forceNetwork: forceNetwork),
+        ),
       ]);
 
-      sessionState.value = session.state;
+      final session = results[0] as DmSessionModel?;
+      final load = results[1] as DmLoadTodayModel?;
+      final plan = results[2] as DmPlanTodayModel?;
+      final van = results[3] as DmVanSnapshotModel?;
+      final wallet = results[4] as DmWalletModel?;
 
-      final jobs = plan.jobs;
-      pendingCount.value = jobs
-          .where((j) => j.fieldState == DmFieldState.pending)
-          .length;
-      inTransitCount.value = jobs
-          .where((j) => j.fieldState == DmFieldState.inTransit)
-          .length;
-      deliveredCount.value = jobs
-          .where(
-            (j) =>
-                j.fieldState == DmFieldState.done ||
-                j.state == DmJobState.delivered,
-          )
-          .length;
+      if (session != null) sessionState.value = session.state;
 
-      hasRemainingPick.value = load.pickLines.any(
-        (line) => line.qtyStill > 0 || line.qtyToPick > 0,
-      );
+      final jobs = plan?.jobs ?? const <DmJobModel>[];
+      if (plan != null) {
+        pendingCount.value = jobs
+            .where((j) => j.fieldState == DmFieldState.pending)
+            .length;
+        inTransitCount.value = jobs
+            .where((j) => j.fieldState == DmFieldState.inTransit)
+            .length;
+        deliveredCount.value = jobs
+            .where(
+              (j) =>
+                  j.fieldState == DmFieldState.done ||
+                  j.state == DmJobState.delivered,
+            )
+            .length;
 
-      vanOnHandTotal.value = van.qtyTotal;
-      collectedToday.value = wallet.collectedToday;
-      walletBalance.value = wallet.balance;
-      settledTotal.value = wallet.settledTotal;
+        final open = jobs
+            .where(
+              (j) =>
+                  j.fieldState == DmFieldState.pending ||
+                  j.fieldState == DmFieldState.inTransit,
+            )
+            .toList(growable: false);
+        open.sort((a, b) {
+          final rank = _fieldRank(
+            a.fieldState,
+          ).compareTo(_fieldRank(b.fieldState));
+          if (rank != 0) return rank;
+          final aAt = a.scheduledDate ?? DateTime.fromMillisecondsSinceEpoch(0);
+          final bAt = b.scheduledDate ?? DateTime.fromMillisecondsSinceEpoch(0);
+          return aAt.compareTo(bAt);
+        });
+        nextJob.value = open.isEmpty ? null : open.first;
+      }
 
-      final mapped = [
-        for (final item in van.items)
-          DmStockItemModel(
-            id: '${item.productId}',
-            name: item.name,
-            quantity: item.qty.round(),
-            onHandQuantity: item.qty.round(),
-            unit: item.uom ?? '',
-            isLowStock: item.qty <= 0,
-          ),
-      ]..sort((a, b) => a.name.compareTo(b.name));
-      stockItems.assignAll(mapped);
+      if (load != null) {
+        hasRemainingPick.value = load.pickLines.any(
+          (line) => line.qtyStill > 0 || line.qtyToPick > 0,
+        );
+      }
 
-      final open = jobs
-          .where(
-            (j) =>
-                j.fieldState == DmFieldState.pending ||
-                j.fieldState == DmFieldState.inTransit,
-          )
-          .toList(growable: false);
-      open.sort((a, b) {
-        final rank = _fieldRank(
-          a.fieldState,
-        ).compareTo(_fieldRank(b.fieldState));
-        if (rank != 0) return rank;
-        final aAt = a.scheduledDate ?? DateTime.fromMillisecondsSinceEpoch(0);
-        final bAt = b.scheduledDate ?? DateTime.fromMillisecondsSinceEpoch(0);
-        return aAt.compareTo(bAt);
-      });
-      nextJob.value = open.isEmpty ? null : open.first;
-      error.value = null;
+      if (van != null) {
+        vanOnHandTotal.value = van.qtyTotal;
+        final mapped = [
+          for (final item in van.items)
+            DmStockItemModel(
+              id: '${item.productId}',
+              name: item.name,
+              quantity: item.qty.round(),
+              onHandQuantity: item.qty.round(),
+              unit: item.uom ?? '',
+              isLowStock: item.qty <= 0,
+            ),
+        ]..sort((a, b) => a.name.compareTo(b.name));
+        stockItems.assignAll(mapped);
+      }
+
+      if (wallet != null) {
+        collectedToday.value = wallet.collectedToday;
+        walletBalance.value = wallet.balance;
+        settledTotal.value = wallet.settledTotal;
+      }
+
+      if (session != null ||
+          plan != null ||
+          load != null ||
+          van != null ||
+          wallet != null) {
+        error.value = null;
+      } else if (!hasContent) {
+        error.value = AppTexts.emptyLoadFailedSubtitle;
+      }
     } catch (_) {
       if (!hasContent) {
         error.value = AppTexts.emptyLoadFailedSubtitle;
@@ -232,6 +266,7 @@ class DmDashboardController extends GetxController {
       case DmNextActionKind.pickup:
         goToPickup();
       case DmNextActionKind.depart:
+        departFromDashboard();
       case DmNextActionKind.endDay:
         goToOrders();
       case DmNextActionKind.deliver:
@@ -246,13 +281,39 @@ class DmDashboardController extends GetxController {
     }
   }
 
+  /// Confirm + depart from dashboard, then open Today Plan with fresh session.
+  Future<void> departFromDashboard() async {
+    if (sessionState.value != DmSessionState.office) {
+      goToOrders();
+      return;
+    }
+
+    final confirmed = await AppConfirmSheet.show(
+      title: AppTexts.dmDepartTitle,
+      message: AppTexts.dmDepartConfirmMessage,
+      confirmLabel: AppTexts.dmDepartTitle,
+    );
+    if (confirmed != true) return;
+
+    try {
+      await _sessionService.depart();
+      AppToast.showSuccess(AppTexts.dmDepartSuccess);
+      await load(force: true);
+      goToOrders();
+    } on ApiException catch (e) {
+      AppToast.showError(e.message);
+    } catch (_) {
+      AppToast.showError(AppTexts.error);
+    }
+  }
+
   void goToPickup() => _selectLeaf('dm_pickup');
 
   void goToVanStock() => _selectLeaf('dm_van_stock');
 
   void goToOrders() => _selectLeaf('dm_orders');
 
-  void goToFreeDeliver() => _selectLeaf('dm_free_deliver');
+  void goToWalkInDeliver() => _selectLeaf('dm_walk_in');
 
   void goToWallet() => _selectLeaf('dm_wallet');
 

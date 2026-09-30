@@ -2,7 +2,8 @@ import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/services/collections/dm_collection_store.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/services/free_deliver/dm_free_deliver_service.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/services/walk_in_deliver/dm_walk_in_deliver_service.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/services/walk_in_deliver/dm_walk_in_registry.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/services/load/dm_load_service.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/services/plan/dm_plan_service.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/services/recovery/dm_recovery_service.dart';
@@ -28,9 +29,13 @@ class DmServicesBinding {
     if (!Get.isRegistered<DmPlanService>()) {
       Get.put(DmPlanService(Get.find<ApiClient>()), permanent: true);
     }
-    if (!Get.isRegistered<DmFreeDeliverService>()) {
+    if (!Get.isRegistered<DmWalkInRegistry>()) {
+      final registry = Get.put(DmWalkInRegistry(), permanent: true);
+      registry.hydrate();
+    }
+    if (!Get.isRegistered<DmWalkInDeliverService>()) {
       Get.put(
-        DmFreeDeliverService(Get.find<ApiClient>(), Get.find<DmVanService>()),
+        DmWalkInDeliverService(Get.find<ApiClient>(), Get.find<DmVanService>()),
         permanent: true,
       );
     }

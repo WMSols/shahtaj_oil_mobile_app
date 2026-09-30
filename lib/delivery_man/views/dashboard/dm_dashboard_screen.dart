@@ -14,7 +14,6 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_section_header.da
 import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/dashboard/dm_dashboard_controller.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/widgets/dashboard/dm_dashboard_greeting.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/widgets/dashboard/dm_next_action_card.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/widgets/dashboard/dm_next_stop_card.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/widgets/dashboard/dm_stock_items_section.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/widgets/dashboard/dm_today_snapshot_strip.dart';
 
@@ -39,7 +38,6 @@ class DmDashboardScreen extends GetView<DmDashboardController> {
         }
 
         final action = controller.nextAction;
-        final nextJob = controller.nextJob.value;
         final session = controller.sessionState.value;
 
         final content = RefreshIndicator(
@@ -83,23 +81,9 @@ class DmDashboardScreen extends GetView<DmDashboardController> {
                 onWalletTap: controller.goToWallet,
                 onSettledTap: controller.goToWallet,
               ),
-              if (controller.showNextDeliveryStop && nextJob != null) ...[
-                AppSpacing.vertical(context, 0.02),
-                AppSectionHeader(
-                  title: AppTexts.dmNextStopDelivery,
-                  bottomSpacing: true,
-                ),
-                DmNextStopCard(
-                  title: nextJob.shopName,
-                  amount: nextJob.shopAddress?.isNotEmpty == true
-                      ? nextJob.shopAddress!
-                      : nextJob.fieldState.label,
-                  onOpen: controller.openNextJob,
-                ),
-              ],
               AppSpacing.vertical(context, 0.02),
               AppSectionHeader(
-                title: AppTexts.dmStockOnHandTitle,
+                title: AppTexts.dmStockOnVanTitle,
                 onViewAll: controller.goToVanStock,
                 bottomSpacing: true,
               ),

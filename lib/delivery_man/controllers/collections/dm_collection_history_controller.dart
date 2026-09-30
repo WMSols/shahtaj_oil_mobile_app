@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
+import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_datetime_picker.dart';
@@ -121,5 +122,15 @@ class DmCollectionHistoryController extends GetxController {
 
   String timeLabel(DmWalletCollectionModel collection) {
     return '${AppFormatter.shortDate(collection.date)} • ${AppFormatter.timeOfDay(collection.date)}';
+  }
+
+  void openCollection(DmWalletCollectionModel collection) {
+    Get.toNamed(
+      AppRoutes.dmCollectionDetail.replaceFirst(
+        ':id',
+        '${collection.paymentId}',
+      ),
+      arguments: collection,
+    );
   }
 }
