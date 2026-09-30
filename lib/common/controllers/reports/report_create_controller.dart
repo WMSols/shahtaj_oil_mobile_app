@@ -10,6 +10,7 @@ import 'package:shahtaj_oil_mobile_app/common/services/reports/reports_service.d
 import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
+import 'package:shahtaj_oil_mobile_app/core/utils/media/app_image_compress.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 
 class ReportCreateController extends GetxController {
@@ -20,6 +21,7 @@ class ReportCreateController extends GetxController {
 
   final RxBool isLoadingTags = true.obs;
   final RxBool isSubmitting = false.obs;
+  final RxBool isPickingPhoto = false.obs;
   final RxList<ReportTagModel> tags = <ReportTagModel>[].obs;
   final RxSet<String> selectedCodes = <String>{}.obs;
   final Rxn<Uint8List> screenshotBytes = Rxn<Uint8List>();
@@ -77,9 +79,18 @@ class ReportCreateController extends GetxController {
       backgroundColor: Colors.white,
     );
     if (source == null) return;
-    final file = await _picker.pickImage(source: source, imageQuality: 85);
-    if (file == null) return;
-    screenshotBytes.value = await file.readAsBytes();
+    isPickingPhoto.value = true;
+    try {
+      final file = await _picker.pickImage(
+        source: source,
+        imageQuality: AppImageCompress.pickerQuality,
+      );
+      if (file == null) return;
+      final raw = await file.readAsBytes();
+      screenshotBytes.value = await AppImageCompress.compress(raw);
+    } finally {
+      isPickingPhoto.value = false;
+    }
   }
 
   Future<void> submit() async {

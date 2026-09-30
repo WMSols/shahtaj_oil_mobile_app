@@ -178,7 +178,10 @@ class ObShopOnboardingController extends GetxController {
 
     uploadingSlot.value = slot.name;
     try {
-      final file = await _picker.pickImage(source: source, imageQuality: 90);
+      final file = await _picker.pickImage(
+        source: source,
+        imageQuality: AppImageCompress.pickerQuality,
+      );
       if (file == null) return;
 
       final raw = await file.readAsBytes();

@@ -1,13 +1,19 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 
-/// Compresses camera/gallery bytes for reliable uploads.
+/// Compresses camera/gallery bytes for reliable, storage-light uploads.
 class AppImageCompress {
   AppImageCompress._();
 
-  static const int maxEdge = 1600;
-  static const int defaultQuality = 72;
-  static const int minBytesToCompress = 180 * 1024;
+  /// Prefer this for [ImagePicker.pickImage] `imageQuality`.
+  static const int pickerQuality = 70;
+
+  static const int maxEdge = 1024;
+  static const int defaultQuality = 58;
+  static const int minBytesToCompress = 40 * 1024;
+  static const int maxOutputBytes = 180 * 1024;
+  static const int strictEdge = 800;
+  static const int strictQuality = 45;
 
   /// Returns compressed JPEG bytes, or [bytes] if compression is unnecessary/fails.
   static Future<Uint8List> compress(
@@ -19,14 +25,26 @@ class AppImageCompress {
     if (bytes.lengthInBytes < minBytesToCompress) return bytes;
 
     try {
-      final out = await FlutterImageCompress.compressWithList(
+      var out = await _run(
         bytes,
-        minWidth: maxWidth,
-        minHeight: maxHeight,
+        maxWidth: maxWidth,
+        maxHeight: maxHeight,
         quality: quality,
-        format: CompressFormat.jpeg,
       );
-      if (out.isEmpty) return bytes;
+      if (out == null || out.isEmpty) return bytes;
+
+      if (out.length > maxOutputBytes) {
+        final stricter = await _run(
+          Uint8List.fromList(out),
+          maxWidth: strictEdge,
+          maxHeight: strictEdge,
+          quality: strictQuality,
+        );
+        if (stricter != null && stricter.isNotEmpty) {
+          out = stricter;
+        }
+      }
+
       if (kDebugMode) {
         debugPrint(
           'AppImageCompress: ${bytes.lengthInBytes} → ${out.length} bytes',
@@ -39,5 +57,20 @@ class AppImageCompress {
       }
       return bytes;
     }
+  }
+
+  static Future<List<int>?> _run(
+    Uint8List bytes, {
+    required int maxWidth,
+    required int maxHeight,
+    required int quality,
+  }) {
+    return FlutterImageCompress.compressWithList(
+      bytes,
+      minWidth: maxWidth,
+      minHeight: maxHeight,
+      quality: quality,
+      format: CompressFormat.jpeg,
+    );
   }
 }
