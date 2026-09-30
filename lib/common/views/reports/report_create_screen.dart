@@ -83,7 +83,9 @@ class ReportCreateScreen extends GetView<ReportCreateController> {
                       : AppTexts.obPhotoUploaded,
                   icon: AppIcons.cameraOutlined,
                   imageBytes: controller.screenshotBytes.value,
-                  isUploading: controller.isSubmitting.value,
+                  isUploading:
+                      controller.isPickingPhoto.value ||
+                      controller.isSubmitting.value,
                   onTap: controller.pickScreenshot,
                 ),
               ],

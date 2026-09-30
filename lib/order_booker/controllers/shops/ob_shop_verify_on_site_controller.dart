@@ -346,7 +346,10 @@ class ObShopVerifyOnSiteController extends GetxController {
 
     uploadingSlot.value = key;
     try {
-      final file = await _picker.pickImage(source: source, imageQuality: 90);
+      final file = await _picker.pickImage(
+        source: source,
+        imageQuality: AppImageCompress.pickerQuality,
+      );
       if (file == null) return;
       final raw = await file.readAsBytes();
       final bytes = await AppImageCompress.compress(raw);
