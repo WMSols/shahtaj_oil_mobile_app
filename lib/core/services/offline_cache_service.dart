@@ -58,6 +58,9 @@ abstract class OfflineCacheKeys {
   static const dmWalletCollections = 'offline_cache_dm_wallet_collections_v1';
   static const dmRecoveryShopPrefix = 'offline_cache_dm_recovery_shop_';
 
+  /// Local tags for walk-in job / payment / shop ids (API may omit flags).
+  static const dmWalkInIds = 'offline_cache_dm_walk_in_ids_v1';
+
   // Delivery Man — legacy mock collections / handover (parked)
   static const dmShops = 'offline_cache_dm_shops_v1';
   static const dmInvoices = 'offline_cache_dm_invoices_v1';
@@ -73,6 +76,7 @@ abstract class OfflineCacheKeys {
     dmVanSnapshot,
     dmWallet,
     dmWalletCollections,
+    dmWalkInIds,
     dmOrders,
     dmPickup,
     dmReturn,
