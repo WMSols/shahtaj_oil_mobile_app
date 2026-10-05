@@ -3,8 +3,8 @@ class AppImages {
 
   // Logos
   static const String appLogoEnglish =
-      'assets/images/logos/app_logo_english.png';
-  static const String appLogoUrdu = 'assets/images/logos/app_logo_urdu.png';
+      'assets/images/logos/app_logo_english.jpg';
+  static const String appLogoUrdu = 'assets/images/logos/app_logo_urdu.jpg';
 
   // Onboarding
   static const String onboardingIntro =
