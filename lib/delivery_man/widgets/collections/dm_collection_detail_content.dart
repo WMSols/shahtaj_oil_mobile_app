@@ -5,6 +5,7 @@ import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/images/app_images.dart';
+import 'package:shahtaj_oil_mobile_app/core/design/responsive/app_responsive.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
@@ -16,6 +17,7 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_shimmer_skeleto
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_form_section_header.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/info/app_detail_row.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/collections/dm_collection_detail_controller.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/models/recovery/dm_wallet_collection_invoice_model.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/recovery/dm_wallet_collection_model.dart';
 
 class DmCollectionDetailContent extends GetView<DmCollectionDetailController> {
@@ -48,6 +50,10 @@ class DmCollectionDetailContent extends GetView<DmCollectionDetailController> {
         );
       }
 
+      final detailRows = collection.invoiceDetails.isNotEmpty
+          ? collection.invoiceDetails
+          : null;
+
       return RefreshIndicator(
         onRefresh: () => controller.loadDetail(force: true),
         child: ListView(
@@ -60,7 +66,17 @@ class DmCollectionDetailContent extends GetView<DmCollectionDetailController> {
               title: AppTexts.dmCollectionAllocations,
             ),
             AppSpacing.vertical(context, 0.012),
-            if (collection.invoices.isEmpty)
+            if (detailRows != null) ...[
+              for (var i = 0; i < detailRows.length; i++)
+                Padding(
+                  padding: EdgeInsets.only(
+                    bottom: i < detailRows.length - 1
+                        ? AppSpacing.verticalValue(context, 0.01)
+                        : 0,
+                  ),
+                  child: _InvoiceDetailCard(invoice: detailRows[i]),
+                ),
+            ] else if (collection.invoices.isEmpty)
               Text(
                 AppTexts.dmUnallocatedBatchHint,
                 style: AppTextStyles.bodyText(
@@ -115,9 +131,11 @@ class _HeaderCard extends StatelessWidget {
     final showCheque =
         collection.paymentMethod == PaymentMethod.cheque &&
         (collection.chequeNumber ?? '').trim().isNotEmpty;
+    final status = collection.collectionStatus;
+    final hasTotals = collection.hasInvoiceTotals;
 
     return AppOutlineCard(
-      statusColor: collection.paymentMethod.chipColor,
+      statusColor: status?.chipColor ?? collection.paymentMethod.chipColor,
       clipBehavior: Clip.antiAlias,
       padding: EdgeInsets.zero,
       child: Column(
@@ -126,6 +144,7 @@ class _HeaderCard extends StatelessWidget {
           AppDetailRow(
             label: AppTexts.obShopNameLabel,
             value: collection.shopName,
+            titleCaseValue: true,
           ),
           AppDetailRow(
             label: AppTexts.dmCollectAmount,
@@ -133,10 +152,32 @@ class _HeaderCard extends StatelessWidget {
             valueColor: AppColors.primary,
             valueWeight: FontWeight.w700,
           ),
+          if (hasTotals) ...[
+            AppDetailRow(
+              label: AppTexts.dmInvoiceTotal,
+              value: AppFormatter.currencyWhole(collection.invoiceAmountTotal),
+            ),
+            AppDetailRow(
+              label: AppTexts.dmInvoicePaid,
+              value: AppFormatter.currencyWhole(collection.invoiceAmountPaid),
+            ),
+            if (collection.invoiceAmountResidual > 0)
+              AppDetailRow(
+                label: AppTexts.dmInvoiceRemaining,
+                value: AppFormatter.currencyWhole(
+                  collection.invoiceAmountResidual,
+                ),
+              ),
+          ],
           AppDetailRow(
             label: AppTexts.dmPaymentMethod,
             trailing: AppStatusChip.paymentMethod(collection.paymentMethod),
           ),
+          if (status != null)
+            AppDetailRow(
+              label: AppTexts.dmCollectionStatus,
+              trailing: AppStatusChip.walletCollectionPay(status),
+            ),
           if (collection.isWalkIn)
             AppDetailRow(
               label: AppTexts.dmWalkInTitle,
@@ -153,6 +194,53 @@ class _HeaderCard extends StatelessWidget {
               value: collection.chequeNumber!,
               showDivider: false,
             ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InvoiceDetailCard extends StatelessWidget {
+  const _InvoiceDetailCard({required this.invoice});
+
+  final DmWalletCollectionInvoiceModel invoice;
+
+  @override
+  Widget build(BuildContext context) {
+    final mutedStyle = AppTextStyles.bodyText(
+      context,
+    ).copyWith(color: AppColors.grey);
+    final state = invoice.resolvedPaymentState;
+
+    return AppOutlineCard(
+      statusColor: state?.chipColor ?? AppColors.primary,
+      padding: AppSpacing.symmetric(context, h: 0.03, v: 0.014),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  invoice.name,
+                  style: AppTextStyles.sectionTitle(context),
+                ),
+              ),
+              if (state != null) AppStatusChip.invoicePayment(state),
+            ],
+          ),
+          AppSpacing.vertical(context, 0.006),
+          Text(
+            '${AppTexts.dmInvoiceTotal}: '
+            '${AppFormatter.currency(invoice.amountTotal, symbol: 'Rs. ')}'
+            ' · ${AppTexts.dmInvoicePaid}: '
+            '${AppFormatter.currency(invoice.amountPaid, symbol: 'Rs. ')}'
+            ' · ${AppTexts.dmInvoiceRemaining}: '
+            '${AppFormatter.currency(invoice.amountResidual, symbol: 'Rs. ')}',
+            style: mutedStyle.copyWith(
+              fontSize: AppResponsive.scaleSize(context, 12),
+            ),
+          ),
         ],
       ),
     );

@@ -27,6 +27,12 @@ enum DmFieldState { pending, inTransit, notAttended, failed, done }
 
 enum CollectionStatus { pending, collected, handedOver }
 
+/// Invoice `payment_state` from `/dm/recovery/shop`.
+enum DmInvoicePaymentState { notPaid, partial, inPayment, paid }
+
+/// Wallet collection row `collection_status` from `/dm/wallet/collections`.
+enum DmWalletCollectionPayStatus { paid, partial, notPaid, collected, canceled }
+
 enum PaymentMethod { cash, cheque, bank }
 
 enum CollectionMode { invoiceWise, batch }
@@ -356,6 +362,68 @@ extension CollectionStatusX on CollectionStatus {
       (status) => status.name == raw,
       orElse: () => CollectionStatus.pending,
     );
+  }
+}
+
+extension DmInvoicePaymentStateX on DmInvoicePaymentState {
+  String get label => switch (this) {
+    DmInvoicePaymentState.notPaid => AppTexts.dmInvoicePaymentNotPaid,
+    DmInvoicePaymentState.partial => AppTexts.dmInvoicePaymentPartial,
+    DmInvoicePaymentState.inPayment => AppTexts.dmInvoicePaymentInPayment,
+    DmInvoicePaymentState.paid => AppTexts.dmInvoicePaymentPaid,
+  };
+
+  Color get chipColor => switch (this) {
+    DmInvoicePaymentState.paid => AppColors.success,
+    DmInvoicePaymentState.partial ||
+    DmInvoicePaymentState.inPayment => AppColors.warning,
+    DmInvoicePaymentState.notPaid => AppColors.error,
+  };
+
+  static DmInvoicePaymentState? tryParse(String? raw) {
+    if (raw == null || raw.trim().isEmpty) return null;
+    final normalized = raw.trim().toLowerCase().replaceAll('-', '_');
+    return switch (normalized) {
+      'not_paid' || 'notpaid' || 'unpaid' => DmInvoicePaymentState.notPaid,
+      'partial' => DmInvoicePaymentState.partial,
+      'in_payment' || 'inpayment' => DmInvoicePaymentState.inPayment,
+      'paid' => DmInvoicePaymentState.paid,
+      _ => null,
+    };
+  }
+}
+
+extension DmWalletCollectionPayStatusX on DmWalletCollectionPayStatus {
+  String get label => switch (this) {
+    DmWalletCollectionPayStatus.paid => AppTexts.dmWalletCollectionPaid,
+    DmWalletCollectionPayStatus.partial => AppTexts.dmWalletCollectionPartial,
+    DmWalletCollectionPayStatus.notPaid => AppTexts.dmWalletCollectionNotPaid,
+    DmWalletCollectionPayStatus.collected =>
+      AppTexts.dmWalletCollectionCollected,
+    DmWalletCollectionPayStatus.canceled => AppTexts.dmWalletCollectionCanceled,
+  };
+
+  Color get chipColor => switch (this) {
+    DmWalletCollectionPayStatus.paid ||
+    DmWalletCollectionPayStatus.collected => AppColors.success,
+    DmWalletCollectionPayStatus.partial => AppColors.warning,
+    DmWalletCollectionPayStatus.notPaid => AppColors.error,
+    DmWalletCollectionPayStatus.canceled => AppColors.grey,
+  };
+
+  static DmWalletCollectionPayStatus? tryParse(String? raw) {
+    if (raw == null || raw.trim().isEmpty) return null;
+    final normalized = raw.trim().toLowerCase().replaceAll('-', '_');
+    return switch (normalized) {
+      'paid' => DmWalletCollectionPayStatus.paid,
+      'partial' => DmWalletCollectionPayStatus.partial,
+      'not_paid' ||
+      'notpaid' ||
+      'unpaid' => DmWalletCollectionPayStatus.notPaid,
+      'collected' => DmWalletCollectionPayStatus.collected,
+      'canceled' || 'cancelled' => DmWalletCollectionPayStatus.canceled,
+      _ => null,
+    };
   }
 }
 

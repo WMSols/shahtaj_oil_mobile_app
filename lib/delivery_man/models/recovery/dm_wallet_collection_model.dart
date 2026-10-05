@@ -1,5 +1,6 @@
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/models/recovery/dm_wallet_collection_invoice_model.dart';
 
 class DmWalletCollectionModel {
   const DmWalletCollectionModel({
@@ -15,6 +16,11 @@ class DmWalletCollectionModel {
     this.chequeNumber,
     this.hasChequeImage = false,
     this.isWalkIn = false,
+    this.collectionStatus,
+    this.invoiceAmountTotal = 0,
+    this.invoiceAmountPaid = 0,
+    this.invoiceAmountResidual = 0,
+    this.invoiceDetails = const [],
   });
 
   final int paymentId;
@@ -29,6 +35,17 @@ class DmWalletCollectionModel {
   final String? chequeNumber;
   final bool hasChequeImage;
   final bool isWalkIn;
+  final DmWalletCollectionPayStatus? collectionStatus;
+  final double invoiceAmountTotal;
+  final double invoiceAmountPaid;
+  final double invoiceAmountResidual;
+  final List<DmWalletCollectionInvoiceModel> invoiceDetails;
+
+  bool get hasInvoiceTotals =>
+      invoiceAmountTotal > 0 ||
+      invoiceAmountPaid > 0 ||
+      invoiceAmountResidual > 0 ||
+      invoiceDetails.isNotEmpty;
 
   factory DmWalletCollectionModel.fromJson(Map<String, dynamic> json) {
     final invoiceRaw = json['invoices'];
@@ -39,6 +56,27 @@ class DmWalletCollectionModel {
         invoiceNames.add(item.toString());
       }
     }
+
+    final details = ApiMap.listOf(
+      json,
+      'invoice_details',
+    ).map(DmWalletCollectionInvoiceModel.fromJson).toList(growable: false);
+
+    final total =
+        ApiMap.asDouble(json['invoice_amount_total']) ??
+        (details.isEmpty
+            ? 0
+            : details.fold<double>(0, (sum, d) => sum + d.amountTotal));
+    final paid =
+        ApiMap.asDouble(json['invoice_amount_paid']) ??
+        (details.isEmpty
+            ? 0
+            : details.fold<double>(0, (sum, d) => sum + d.amountPaid));
+    final residual =
+        ApiMap.asDouble(json['invoice_amount_residual']) ??
+        (details.isEmpty
+            ? 0
+            : details.fold<double>(0, (sum, d) => sum + d.amountResidual));
 
     return DmWalletCollectionModel(
       paymentId: ApiMap.asInt(json['payment_id'] ?? json['id']) ?? 0,
@@ -54,6 +92,13 @@ class DmWalletCollectionModel {
       chequeNumber: ApiMap.asString(json['cheque_number']),
       hasChequeImage: ApiMap.asBool(json['has_cheque_image']),
       isWalkIn: _parseWalkIn(json),
+      collectionStatus: DmWalletCollectionPayStatusX.tryParse(
+        ApiMap.asString(json['collection_status']),
+      ),
+      invoiceAmountTotal: total,
+      invoiceAmountPaid: paid,
+      invoiceAmountResidual: residual,
+      invoiceDetails: details,
     );
   }
 
@@ -102,6 +147,20 @@ class DmWalletCollectionModel {
     'cheque_number': chequeNumber,
     'has_cheque_image': hasChequeImage,
     'is_walk_in': isWalkIn,
+    if (collectionStatus != null)
+      'collection_status': switch (collectionStatus!) {
+        DmWalletCollectionPayStatus.paid => 'paid',
+        DmWalletCollectionPayStatus.partial => 'partial',
+        DmWalletCollectionPayStatus.notPaid => 'not_paid',
+        DmWalletCollectionPayStatus.collected => 'collected',
+        DmWalletCollectionPayStatus.canceled => 'canceled',
+      },
+    'invoice_amount_total': invoiceAmountTotal,
+    'invoice_amount_paid': invoiceAmountPaid,
+    'invoice_amount_residual': invoiceAmountResidual,
+    'invoice_details': invoiceDetails
+        .map((e) => e.toJson())
+        .toList(growable: false),
   };
 
   DmWalletCollectionModel copyWith({bool? isWalkIn}) {
@@ -118,6 +177,11 @@ class DmWalletCollectionModel {
       chequeNumber: chequeNumber,
       hasChequeImage: hasChequeImage,
       isWalkIn: isWalkIn ?? this.isWalkIn,
+      collectionStatus: collectionStatus,
+      invoiceAmountTotal: invoiceAmountTotal,
+      invoiceAmountPaid: invoiceAmountPaid,
+      invoiceAmountResidual: invoiceAmountResidual,
+      invoiceDetails: invoiceDetails,
     );
   }
 }

@@ -54,14 +54,17 @@ class DmPaidInvoiceTile extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  AppStatusChip(
-                    label: AppTexts.dmPaidInvoiceChip,
-                    color: AppColors.success,
-                    soft: true,
-                  ),
+                  if (invoice.resolvedPaymentState != null)
+                    AppStatusChip.invoicePayment(invoice.resolvedPaymentState!)
+                  else
+                    AppStatusChip(
+                      label: AppTexts.dmPaidInvoiceChip,
+                      color: AppColors.success,
+                      soft: true,
+                    ),
                   AppSpacing.vertical(context, 0.006),
                   Text(
-                    AppFormatter.currency(invoice.amountTotal, symbol: 'Rs. '),
+                    AppFormatter.currency(invoice.amountPaid, symbol: 'Rs. '),
                     style: AppTextStyles.sectionTitle(
                       context,
                     ).copyWith(color: AppColors.success),
@@ -70,8 +73,18 @@ class DmPaidInvoiceTile extends StatelessWidget {
               ),
             ],
           ),
+          AppSpacing.vertical(context, 0.008),
+          Text(
+            '${AppTexts.dmInvoiceTotal}: '
+            '${AppFormatter.currency(invoice.amountTotal, symbol: 'Rs. ')}'
+            ' · ${AppTexts.dmInvoicePaid}: '
+            '${AppFormatter.currency(invoice.amountPaid, symbol: 'Rs. ')}',
+            style: mutedStyle.copyWith(
+              fontSize: AppResponsive.scaleSize(context, 12),
+            ),
+          ),
           if (paidOn != null) ...[
-            AppSpacing.vertical(context, 0.008),
+            AppSpacing.vertical(context, 0.006),
             Text(
               '${AppTexts.dmPaidOn}: ${AppFormatter.shortDate(paidOn)}',
               style: mutedStyle.copyWith(

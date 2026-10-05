@@ -11,7 +11,7 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_async_body.dart
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_shimmer_skeletons.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_search_field.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/collections/dm_today_shops_controller.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/widgets/orders/dm_job_card.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/widgets/collections/dm_recover_shop_card.dart';
 
 class DmTodayShopsContent extends GetView<DmTodayShopsController> {
   const DmTodayShopsContent({super.key});
@@ -45,15 +45,13 @@ class DmTodayShopsContent extends GetView<DmTodayShopsController> {
         ),
         Expanded(
           child: Obx(() {
-            final shops = controller.visibleShops;
+            final rows = controller.visibleShops;
             final hasQuery = controller.query.value.trim().isNotEmpty;
             return AppAsyncBody(
-              isLoading:
-                  controller.isLoading.value && controller.planShops.isEmpty,
+              isLoading: controller.isLoading.value && controller.shops.isEmpty,
               hasError:
-                  controller.error.value != null &&
-                  controller.planShops.isEmpty,
-              isEmpty: shops.isEmpty,
+                  controller.error.value != null && controller.shops.isEmpty,
+              isEmpty: rows.isEmpty,
               errorMessage: controller.error.value,
               emptyTitle: hasQuery
                   ? AppTexts.dmNoShopsMatchSearch
@@ -64,16 +62,16 @@ class DmTodayShopsContent extends GetView<DmTodayShopsController> {
               loading: AppShimmerSkeletons.shopList(context),
               child: ListView.builder(
                 padding: AppSpacing.screenPadding(context),
-                itemCount: shops.length,
+                itemCount: rows.length,
                 itemBuilder: (context, index) {
-                  final job = shops[index];
+                  final shop = rows[index];
                   return Padding(
                     padding: EdgeInsets.only(
                       bottom: AppSpacing.verticalValue(context, 0.01),
                     ),
-                    child: DmJobCard(
-                      job: job,
-                      onTap: () => controller.openPlanShop(job),
+                    child: DmRecoverShopCard(
+                      shop: shop,
+                      onTap: () => controller.openShop(shop),
                     ),
                   );
                 },

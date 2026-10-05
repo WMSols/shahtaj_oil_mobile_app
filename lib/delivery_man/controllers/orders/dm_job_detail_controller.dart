@@ -6,7 +6,6 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
-import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/helper/app_helper.dart';
@@ -17,6 +16,7 @@ import 'package:shahtaj_oil_mobile_app/delivery_man/models/jobs/dm_job_line_mode
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/jobs/dm_job_model.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/services/plan/dm_plan_service.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/shell/dm_services_binding.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/shell/dm_shell_controller.dart';
 
 class DmJobDetailController extends GetxController {
   DmJobDetailController(this._planService);
@@ -111,30 +111,10 @@ class DmJobDetailController extends GetxController {
   }
 
   Future<void> pickProofPhoto() async {
-    final source = await Get.bottomSheet<ImageSource>(
-      SafeArea(
-        child: Wrap(
-          children: [
-            ListTile(
-              leading: const Icon(AppIcons.cameraOutlined),
-              title: Text(AppTexts.obPickFromCamera),
-              onTap: () => Get.back(result: ImageSource.camera),
-            ),
-            ListTile(
-              leading: const Icon(AppIcons.photoLibraryOutlined),
-              title: Text(AppTexts.obPickFromGallery),
-              onTap: () => Get.back(result: ImageSource.gallery),
-            ),
-          ],
-        ),
-      ),
-      backgroundColor: Colors.white,
-    );
-    if (source == null) return;
     isPickingPhoto.value = true;
     try {
       final file = await _picker.pickImage(
-        source: source,
+        source: ImageSource.camera,
         imageQuality: AppImageCompress.pickerQuality,
       );
       if (file == null) return;
@@ -146,6 +126,14 @@ class DmJobDetailController extends GetxController {
   }
 
   void clearProofPhoto() => proofPhotoBytes.value = null;
+
+  /// Pop job detail and land on Today Plan in the shell.
+  void returnToTodayPlan() {
+    if (Get.isRegistered<DeliveryManShellController>()) {
+      Get.find<DeliveryManShellController>().selectLeaf('dm_orders');
+    }
+    Get.back();
+  }
 
   List<({int lineId, double qty})> _parsedLines({
     required bool requirePositive,
@@ -223,7 +211,7 @@ class DmJobDetailController extends GetxController {
         }
       }
       AppToast.showSuccess(AppTexts.dmDeliverSuccess);
-      Get.back();
+      returnToTodayPlan();
     } on ApiException catch (e) {
       AppToast.showError(e.message);
     } catch (_) {
@@ -250,7 +238,7 @@ class DmJobDetailController extends GetxController {
         notes: notesController.text,
       );
       AppToast.showSuccess(AppTexts.dmShopClosedSuccess);
-      Get.back();
+      returnToTodayPlan();
     } on ApiException catch (e) {
       AppToast.showError(e.message);
     } catch (_) {
@@ -282,7 +270,7 @@ class DmJobDetailController extends GetxController {
         notes: notes,
       );
       AppToast.showSuccess(AppTexts.dmFailedSuccess);
-      Get.back();
+      returnToTodayPlan();
     } on ApiException catch (e) {
       AppToast.showError(e.message);
     } catch (_) {
@@ -339,7 +327,7 @@ class DmJobDetailController extends GetxController {
         lines: lines,
       );
       AppToast.showSuccess(AppTexts.dmReturnUndeliveredSuccess);
-      Get.back();
+      returnToTodayPlan();
     } on ApiException catch (e) {
       AppToast.showError(e.message);
     } catch (_) {

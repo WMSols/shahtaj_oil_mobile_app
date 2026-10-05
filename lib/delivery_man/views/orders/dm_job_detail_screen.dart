@@ -18,6 +18,7 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_photo_upload_tile.d
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_text_field.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/info/app_detail_row.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_sub_screen_scaffold.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/text/app_text.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/orders/dm_job_detail_controller.dart';
 
 String _fmt(double value) => value == value.roundToDouble()
@@ -29,203 +30,217 @@ class DmJobDetailScreen extends GetView<DmJobDetailController> {
 
   @override
   Widget build(BuildContext context) {
-    return AppSubScreenScaffold(
-      title: AppTexts.dmJobDetailTitle,
-      body: Obx(() {
-        if (controller.isLoading.value) {
-          return AppShimmerSkeletons.genericList(context);
-        }
-        final job = controller.job.value;
-        if (job == null) {
-          return AppEmptyState(title: AppTexts.dmJobNotFound);
-        }
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        controller.returnToTodayPlan();
+      },
+      child: AppSubScreenScaffold(
+        title: AppTexts.dmJobDetailTitle,
+        body: Obx(() {
+          if (controller.isLoading.value) {
+            return AppShimmerSkeletons.genericList(context);
+          }
+          final job = controller.job.value;
+          if (job == null) {
+            return AppEmptyState(title: AppTexts.dmJobNotFound);
+          }
 
-        return ListView(
-          padding: AppSpacing.symmetric(context, h: 0.04, v: 0.02),
-          children: [
-            AppOutlineCard(
-              statusColor: job.isWalkIn
-                  ? AppColors.statPurple
-                  : job.fieldState.chipColor,
-              padding: EdgeInsets.zero,
-              child: Column(
-                children: [
-                  AppDetailRow(
-                    label: AppTexts.dmShopNameLabel,
-                    value: job.shopName,
-                    showDivider: true,
-                  ),
-                  if (job.isWalkIn)
+          return ListView(
+            padding: AppSpacing.symmetric(context, h: 0.04, v: 0.02),
+            children: [
+              AppOutlineCard(
+                statusColor: job.isWalkIn
+                    ? AppColors.statPurple
+                    : job.fieldState.chipColor,
+                padding: EdgeInsets.zero,
+                child: Column(
+                  children: [
                     AppDetailRow(
-                      label: AppTexts.dmWalkInTitle,
-                      trailing: AppStatusChip.walkIn(),
+                      label: AppTexts.dmShopNameLabel,
+                      value: job.shopName,
+                      titleCaseValue: true,
+                      showDivider: true,
                     ),
-                  if (job.orderName != null)
+                    if (job.isWalkIn)
+                      AppDetailRow(
+                        label: AppTexts.dmWalkInTitle,
+                        trailing: AppStatusChip.walkIn(),
+                      ),
+                    if (job.orderName != null)
+                      AppDetailRow(
+                        label: AppTexts.dmOrderIdLabel,
+                        value: job.orderName!,
+                      ),
                     AppDetailRow(
-                      label: AppTexts.dmOrderIdLabel,
-                      value: job.orderName!,
+                      label: AppTexts.dmJobIdLabel,
+                      value: '${job.jobId}',
                     ),
-                  AppDetailRow(
-                    label: AppTexts.dmJobIdLabel,
-                    value: '${job.jobId}',
-                  ),
-                  AppDetailRow(
-                    label: AppTexts.dmFieldStateLabel,
-                    trailing: AppStatusChip(
-                      label: job.fieldState.label,
-                      color: job.fieldState.chipColor,
-                    ),
-                  ),
-                  AppDetailRow(
-                    label: AppTexts.dmJobStateLabel,
-                    trailing: AppStatusChip(
-                      label: job.state.label,
-                      color: job.state.chipColor,
-                      soft: true,
-                    ),
-                    showDivider: job.shopAddress != null,
-                  ),
-                  if (job.shopAddress != null)
                     AppDetailRow(
-                      label: AppTexts.dmAddressLabel,
-                      value: job.shopAddress!,
+                      label: AppTexts.dmFieldStateLabel,
+                      trailing: AppStatusChip(
+                        label: job.fieldState.label,
+                        color: job.fieldState.chipColor,
+                      ),
+                    ),
+                    AppDetailRow(
+                      label: AppTexts.dmJobStateLabel,
+                      trailing: AppStatusChip(
+                        label: job.state.label,
+                        color: job.state.chipColor,
+                        soft: true,
+                      ),
                       showDivider: false,
                     ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            AppSpacing.vertical(context, 0.016),
-            Text(
-              AppTexts.dmLinesLabel,
-              style: AppTextStyles.sectionTitle(context),
-            ),
-            AppSpacing.vertical(context, 0.01),
-            if (job.lines.isEmpty)
-              AppEmptyState(title: AppTexts.dmNoJobLines)
-            else
-              ...job.lines.map((line) {
-                final draft = controller.qtyDrafts[line.lineId] ?? '';
-                return Padding(
-                  padding: EdgeInsets.only(
-                    bottom: AppSpacing.verticalValue(context, 0.01),
-                  ),
-                  child: AppOutlineCard(
-                    padding: AppSpacing.all(context, factor: 1.5),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          line.name,
-                          style: AppTextStyles.sectionTitle(context),
-                        ),
-                        AppSpacing.vertical(context, 0.006),
-                        Text(
-                          '${AppTexts.dmQtyAssigned}: ${_fmt(line.qtyAssigned)}'
-                          ' · ${AppTexts.dmQtyPicked}: ${_fmt(line.qtyPicked)}'
-                          ' · ${AppTexts.dmQtyDelivered}: ${_fmt(line.qtyDelivered)}'
-                          ' · ${AppTexts.dmQtyStill}: ${_fmt(line.qtyRemainingToDeliver)}',
-                          style: AppTextStyles.caption(
-                            context,
-                          ).copyWith(color: AppColors.grey),
-                        ),
-                        if (controller.canActOnField) ...[
-                          AppSpacing.vertical(context, 0.01),
-                          AppTextField(
-                            label: AppTexts.dmQtyDeliver,
-                            hint: '0',
-                            initialValue: draft,
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            inputFormatters: [
-                              FilteringTextInputFormatter.allow(
-                                RegExp(r'[0-9.]'),
-                              ),
-                            ],
-                            onChanged: (v) =>
-                                controller.onQtyChanged(line.lineId, v),
-                          ),
-                        ],
-                      ],
+              AppSpacing.vertical(context, 0.016),
+              Text(
+                AppTexts.dmLinesLabel,
+                style: AppTextStyles.sectionTitle(context),
+              ),
+              AppSpacing.vertical(context, 0.01),
+              if (job.lines.isEmpty)
+                AppEmptyState(title: AppTexts.dmNoJobLines)
+              else
+                ...job.lines.map((line) {
+                  final draft = controller.qtyDrafts[line.lineId] ?? '';
+                  return Padding(
+                    padding: EdgeInsets.only(
+                      bottom: AppSpacing.verticalValue(context, 0.01),
                     ),
-                  ),
-                );
-              }),
-            AppSpacing.vertical(context, 0.016),
-            if (controller.canDeliver) ...[
-              AppTextField(
-                controller: controller.receiverController,
-                label: AppTexts.dmReceiverNameLabel,
-                hint: AppTexts.dmReceiverNameHint,
-                required: true,
-              ),
-              AppSpacing.vertical(context, 0.012),
-              SizedBox(
-                width: 160,
-                child: AppPhotoUploadTile(
-                  title: AppTexts.dmProofPhotoTitle,
-                  subtitle: AppTexts.dmProofPhotoSubtitle,
-                  icon: AppIcons.cameraAdd,
-                  imageBytes: controller.proofPhotoBytes.value,
-                  isUploading:
-                      controller.isPickingPhoto.value ||
-                      controller.isActing.value,
+                    child: AppOutlineCard(
+                      padding: AppSpacing.all(context, factor: 1.5),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          AppText.label(
+                            line.name,
+                            style: AppTextStyles.sectionTitle(context),
+                          ),
+                          AppSpacing.vertical(context, 0.006),
+                          Text(
+                            '${AppTexts.dmQtyAssigned}: ${_fmt(line.qtyAssigned)}'
+                            ' · ${AppTexts.dmQtyPicked}: ${_fmt(line.qtyPicked)}'
+                            ' · ${AppTexts.dmQtyDelivered}: ${_fmt(line.qtyDelivered)}'
+                            ' · ${AppTexts.dmQtyStill}: ${_fmt(line.qtyRemainingToDeliver)}',
+                            style: AppTextStyles.caption(
+                              context,
+                            ).copyWith(color: AppColors.grey),
+                          ),
+                          if (controller.canActOnField) ...[
+                            AppSpacing.vertical(context, 0.01),
+                            AppTextField(
+                              label: AppTexts.dmQtyDeliver,
+                              hint: '0',
+                              initialValue: draft,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(
+                                  RegExp(r'[0-9.]'),
+                                ),
+                              ],
+                              onChanged: (v) =>
+                                  controller.onQtyChanged(line.lineId, v),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+              AppSpacing.vertical(context, 0.016),
+              if (controller.canDeliver) ...[
+                AppTextField(
+                  controller: controller.receiverController,
+                  label: AppTexts.dmReceiverNameLabel,
+                  hint: AppTexts.dmReceiverNameHint,
                   required: true,
-                  onTap: controller.pickProofPhoto,
                 ),
+                AppSpacing.vertical(context, 0.012),
+                SizedBox(
+                  width: 160,
+                  child: AppPhotoUploadTile(
+                    title: AppTexts.dmProofPhotoTitle,
+                    subtitle: AppTexts.dmProofPhotoSubtitle,
+                    icon: AppIcons.cameraAdd,
+                    imageBytes: controller.proofPhotoBytes.value,
+                    isUploading:
+                        controller.isPickingPhoto.value ||
+                        controller.isActing.value,
+                    required: true,
+                    onTap: controller.pickProofPhoto,
+                  ),
+                ),
+                AppSpacing.vertical(context, 0.016),
+              ],
+              AppTextField(
+                controller: controller.notesController,
+                label: AppTexts.dmNotesLabel,
+                hint: AppTexts.dmNotesHint,
+                maxLines: 3,
               ),
               AppSpacing.vertical(context, 0.016),
-            ],
-            AppTextField(
-              controller: controller.notesController,
-              label: AppTexts.dmNotesLabel,
-              hint: AppTexts.dmNotesHint,
-              maxLines: 3,
-            ),
-            AppSpacing.vertical(context, 0.016),
-            if (controller.canDeliver)
-              AppPrimaryButton(
-                label: AppTexts.dmConfirmDelivery,
-                isLoading: controller.isActing.value,
-                onPressed: controller.submitDeliver,
-              ),
-            if (!controller.canDeliver &&
-                (job.receiverName ?? '').isNotEmpty) ...[
-              AppDetailRow(
-                label: AppTexts.dmReceiverNameLabel,
-                value: job.receiverName!,
-              ),
-              if (job.hasDeliveryProof)
+              if (controller.canDeliver)
+                AppPrimaryButton(
+                  label: AppTexts.dmConfirmDelivery,
+                  isLoading: controller.isActing.value,
+                  onPressed: controller.submitDeliver,
+                ),
+              if (!controller.canDeliver &&
+                  (job.receiverName ?? '').isNotEmpty) ...[
                 AppDetailRow(
-                  label: AppTexts.dmProofPhotoTitle,
-                  value: AppTexts.dmDeliveryProofCaptured,
-                  showDivider: false,
+                  label: AppTexts.dmReceiverNameLabel,
+                  value: job.receiverName!,
                 ),
-              AppSpacing.vertical(context, 0.016),
-            ],
-            if (controller.canActOnField) ...[
+                if (job.hasDeliveryProof)
+                  AppDetailRow(
+                    label: AppTexts.dmProofPhotoTitle,
+                    value: AppTexts.dmDeliveryProofCaptured,
+                    showDivider: false,
+                  ),
+                AppSpacing.vertical(context, 0.016),
+              ],
+              if (controller.canActOnField) ...[
+                AppSpacing.vertical(context, 0.01),
+                Row(
+                  children: [
+                    Expanded(
+                      child: AppPrimaryButton(
+                        label: AppTexts.dmShopClosedTitle,
+                        isLoading: controller.isActing.value,
+                        onPressed: controller.submitShopClosed,
+                        backgroundColor: AppColors.error,
+                      ),
+                    ),
+                    AppSpacing.horizontal(context, 0.02),
+                    Expanded(
+                      child: AppSecondaryButton(
+                        label: AppTexts.dmFailedTitle,
+                        isLoading: controller.isActing.value,
+                        onPressed: controller.submitFailed,
+                        borderColor: AppColors.error,
+                        textColor: AppColors.error,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
               AppSpacing.vertical(context, 0.01),
               AppSecondaryButton(
-                label: AppTexts.dmShopClosedTitle,
+                label: AppTexts.dmSaveNotes,
                 isLoading: controller.isActing.value,
-                onPressed: controller.submitShopClosed,
-              ),
-              AppSpacing.vertical(context, 0.01),
-              AppSecondaryButton(
-                label: AppTexts.dmFailedTitle,
-                isLoading: controller.isActing.value,
-                onPressed: controller.submitFailed,
+                onPressed: controller.saveNotes,
               ),
             ],
-            AppSpacing.vertical(context, 0.01),
-            AppSecondaryButton(
-              label: AppTexts.dmSaveNotes,
-              isLoading: controller.isActing.value,
-              onPressed: controller.saveNotes,
-            ),
-          ],
-        );
-      }),
+          );
+        }),
+      ),
     );
   }
 }

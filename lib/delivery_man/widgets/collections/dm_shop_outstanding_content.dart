@@ -19,6 +19,7 @@ import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/collections/dm_s
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/recovery/dm_recovery_shop_model.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/widgets/collections/dm_invoice_tile.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/widgets/collections/dm_paid_invoice_tile.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/text/app_text.dart';
 
 class DmShopOutstandingContent extends GetView<DmShopInvoicesController> {
   const DmShopOutstandingContent({super.key});
@@ -182,7 +183,10 @@ class _ShopCreditSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(shop.shopName, style: AppTextStyles.sectionTitle(context)),
+        AppText.label(
+          shop.shopName,
+          style: AppTextStyles.sectionTitle(context),
+        ),
         if ((shop.shopCategory ?? '').isNotEmpty) ...[
           AppSpacing.vertical(context, 0.006),
           AppStatusChip(

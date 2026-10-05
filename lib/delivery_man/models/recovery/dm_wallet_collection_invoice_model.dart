@@ -1,38 +1,23 @@
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/models/recovery/dm_recovery_payment_model.dart';
 
-class DmRecoveryInvoiceModel {
-  const DmRecoveryInvoiceModel({
+/// Per-invoice breakdown on a wallet collection (`invoice_details`).
+class DmWalletCollectionInvoiceModel {
+  const DmWalletCollectionInvoiceModel({
     required this.invoiceId,
     required this.name,
-    this.invoiceDate,
     this.amountTotal = 0,
     this.amountPaid = 0,
     this.amountResidual = 0,
     this.paymentState,
-    this.isLegacyBalance = false,
-    this.paidDate,
-    this.payments = const [],
   });
 
   final int invoiceId;
   final String name;
-  final DateTime? invoiceDate;
   final double amountTotal;
   final double amountPaid;
   final double amountResidual;
   final String? paymentState;
-  final bool isLegacyBalance;
-  final DateTime? paidDate;
-  final List<DmRecoveryPaymentModel> payments;
-
-  bool get isOpen => amountResidual > 0;
-
-  bool get isPaid =>
-      !isOpen ||
-      resolvedPaymentState == DmInvoicePaymentState.paid ||
-      paidDate != null;
 
   DmInvoicePaymentState? get resolvedPaymentState {
     final parsed = DmInvoicePaymentStateX.tryParse(paymentState);
@@ -49,39 +34,28 @@ class DmRecoveryInvoiceModel {
     return null;
   }
 
-  factory DmRecoveryInvoiceModel.fromJson(Map<String, dynamic> json) {
+  factory DmWalletCollectionInvoiceModel.fromJson(Map<String, dynamic> json) {
     final total = ApiMap.asDouble(json['amount_total']) ?? 0;
     final residual = ApiMap.asDouble(json['amount_residual']) ?? 0;
     final paid =
         ApiMap.asDouble(json['amount_paid']) ??
         ((total > residual && residual >= 0) ? (total - residual) : 0);
-    return DmRecoveryInvoiceModel(
+    return DmWalletCollectionInvoiceModel(
       invoiceId: ApiMap.asInt(json['invoice_id'] ?? json['id']) ?? 0,
       name: ApiMap.asString(json['name']) ?? '',
-      invoiceDate: ApiMap.asDateTime(json['invoice_date']),
       amountTotal: total,
       amountPaid: paid,
       amountResidual: residual,
       paymentState: ApiMap.asString(json['payment_state']),
-      isLegacyBalance: json['is_legacy_balance'] == true,
-      paidDate: ApiMap.asDateTime(json['paid_date']),
-      payments: ApiMap.listOf(
-        json,
-        'payments',
-      ).map(DmRecoveryPaymentModel.fromJson).toList(growable: false),
     );
   }
 
   Map<String, dynamic> toJson() => {
     'invoice_id': invoiceId,
     'name': name,
-    'invoice_date': invoiceDate?.toIso8601String(),
     'amount_total': amountTotal,
     'amount_paid': amountPaid,
     'amount_residual': amountResidual,
     'payment_state': paymentState,
-    'is_legacy_balance': isLegacyBalance,
-    'paid_date': paidDate?.toIso8601String(),
-    'payments': payments.map((e) => e.toJson()).toList(growable: false),
   };
 }

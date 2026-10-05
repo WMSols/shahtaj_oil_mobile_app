@@ -12,12 +12,14 @@ import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/helper/app_helper.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/media/app_image_compress.dart';
+import 'package:shahtaj_oil_mobile_app/core/utils/validator/app_validator.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_confirm_dialog.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/van/dm_van_item_view.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/services/van/dm_van_service.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/services/walk_in_deliver/dm_walk_in_deliver_service.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/shell/dm_services_binding.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/shell/dm_shell_controller.dart';
 
 class DmWalkInDeliverController extends GetxController {
   DmWalkInDeliverController(this._walkInService, this._vanService);
@@ -25,6 +27,7 @@ class DmWalkInDeliverController extends GetxController {
   final DmWalkInDeliverService _walkInService;
   final DmVanService _vanService;
   final ImagePicker _picker = ImagePicker();
+  final formKey = GlobalKey<FormState>();
 
   static const paymentMethods = [PaymentMethod.cash, PaymentMethod.cheque];
 
@@ -34,6 +37,9 @@ class DmWalkInDeliverController extends GetxController {
   final RxBool isPickingCheque = false.obs;
   final RxList<DmVanItemView> vanItems = <DmVanItemView>[].obs;
   final RxMap<int, String> qtyDrafts = <int, String>{}.obs;
+  final RxMap<int, String?> qtyErrors = <int, String?>{}.obs;
+  final RxnString proofError = RxnString();
+  final RxnString chequeImageError = RxnString();
   final Rxn<Uint8List> proofPhotoBytes = Rxn<Uint8List>();
   final Rxn<Uint8List> chequeImageBytes = Rxn<Uint8List>();
   final Rx<PaymentMethod> method = PaymentMethod.cash.obs;
@@ -81,7 +87,11 @@ class DmWalkInDeliverController extends GetxController {
       qtyDrafts
         ..clear()
         ..addEntries(vanItems.map((item) => MapEntry(item.productId, '')));
+      qtyErrors
+        ..clear()
+        ..addEntries(vanItems.map((item) => MapEntry(item.productId, null)));
       qtyDrafts.refresh();
+      qtyErrors.refresh();
     } on ApiException catch (e) {
       AppToast.showError(e.message);
     } catch (_) {
@@ -91,25 +101,70 @@ class DmWalkInDeliverController extends GetxController {
     }
   }
 
+  String? validateCustomerName(String? value) =>
+      AppValidator.validateRequired(value);
+
+  String? validatePhone(String? value) =>
+      AppValidator.validatePakistanLocalPhone(value);
+
+  String? validateReceiver(String? value) =>
+      AppValidator.validateRequired(value);
+
+  String? validateChequeNumber(String? value) {
+    if (method.value != PaymentMethod.cheque) return null;
+    return AppValidator.validateRequired(value);
+  }
+
   void onQtyChanged(int productId, String raw) {
     qtyDrafts[productId] = raw;
+    qtyErrors[productId] = _qtyErrorFor(productId, raw);
     qtyDrafts.refresh();
+    qtyErrors.refresh();
+  }
+
+  String? qtyError(int productId) => qtyErrors[productId];
+
+  String? _qtyErrorFor(int productId, String raw) {
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) return null;
+    final qty = double.tryParse(trimmed);
+    if (qty == null || qty < 0) return AppTexts.amountInvalid;
+    if (qty == 0) return null;
+    final item = _itemById(productId);
+    if (item == null) return null;
+    if (qty > item.qtyAvailable) {
+      return AppTexts.dmQtyExceedsAvailable(
+        AppFormatter.targetAmount(item.qtyAvailable),
+      );
+    }
+    return null;
+  }
+
+  DmVanItemView? _itemById(int productId) {
+    for (final item in vanItems) {
+      if (item.productId == productId) return item;
+    }
+    return null;
   }
 
   void setMethod(PaymentMethod next) {
     method.value = next;
     if (next != PaymentMethod.cheque) {
       chequeImageBytes.value = null;
+      chequeImageError.value = null;
+      chequeNumberController.clear();
     }
   }
 
   Future<void> pickProofPhoto() async {
-    final source = await _pickImageSource();
-    if (source == null) return;
+    // Delivery proof is camera-only (no gallery).
     isPickingPhoto.value = true;
     try {
-      final bytes = await _pickCompressed(source);
-      if (bytes != null) proofPhotoBytes.value = bytes;
+      final bytes = await _pickCompressed(ImageSource.camera);
+      if (bytes != null) {
+        proofPhotoBytes.value = bytes;
+        proofError.value = null;
+      }
     } finally {
       isPickingPhoto.value = false;
     }
@@ -121,7 +176,10 @@ class DmWalkInDeliverController extends GetxController {
     isPickingCheque.value = true;
     try {
       final bytes = await _pickCompressed(source);
-      if (bytes != null) chequeImageBytes.value = bytes;
+      if (bytes != null) {
+        chequeImageBytes.value = bytes;
+        chequeImageError.value = null;
+      }
     } finally {
       isPickingCheque.value = false;
     }
@@ -130,22 +188,27 @@ class DmWalkInDeliverController extends GetxController {
   Future<ImageSource?> _pickImageSource() {
     return Get.bottomSheet<ImageSource>(
       SafeArea(
-        child: Wrap(
-          children: [
-            ListTile(
-              leading: const Icon(AppIcons.cameraOutlined),
-              title: Text(AppTexts.obPickFromCamera),
-              onTap: () => Get.back(result: ImageSource.camera),
-            ),
-            ListTile(
-              leading: const Icon(AppIcons.photoLibraryOutlined),
-              title: Text(AppTexts.obPickFromGallery),
-              onTap: () => Get.back(result: ImageSource.gallery),
-            ),
-          ],
+        child: Material(
+          color: Colors.white,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(AppIcons.cameraOutlined),
+                title: Text(AppTexts.obPickFromCamera),
+                onTap: () => Get.back(result: ImageSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(AppIcons.image5),
+                title: Text(AppTexts.obPickFromGallery),
+                onTap: () => Get.back(result: ImageSource.gallery),
+              ),
+            ],
+          ),
         ),
       ),
       backgroundColor: Colors.white,
+      isScrollControlled: true,
     );
   }
 
@@ -171,35 +234,54 @@ class DmWalkInDeliverController extends GetxController {
     return out;
   }
 
-  String? _validate() {
-    if (customerNameController.text.trim().isEmpty) {
-      return AppTexts.dmCustomerNameRequired;
+  bool _validateQtyFields() {
+    var ok = true;
+    var hasPositive = false;
+    for (final item in vanItems) {
+      final raw = qtyDrafts[item.productId] ?? '';
+      final error = _qtyErrorFor(item.productId, raw);
+      qtyErrors[item.productId] = error;
+      if (error != null) ok = false;
+      final qty = double.tryParse(raw.trim()) ?? 0;
+      if (qty > 0 && error == null) hasPositive = true;
     }
-    if (_parsedLines().isEmpty) return AppTexts.dmDeliverQtyRequired;
-    if (receiverController.text.trim().isEmpty) {
-      return AppTexts.dmReceiverRequired;
+    qtyErrors.refresh();
+    if (!hasPositive) {
+      AppToast.showError(AppTexts.dmDeliverQtyRequired);
+      return false;
     }
+    return ok;
+  }
+
+  bool _validateMedia() {
+    var ok = true;
     final photo = proofPhotoBytes.value;
-    if (photo == null || photo.isEmpty) return AppTexts.dmProofPhotoRequired;
+    if (photo == null || photo.isEmpty) {
+      proofError.value = AppTexts.dmProofPhotoRequired;
+      ok = false;
+    } else {
+      proofError.value = null;
+    }
     if (method.value == PaymentMethod.cheque) {
-      if (chequeNumberController.text.trim().isEmpty) {
-        return AppTexts.dmChequeNumberRequired;
-      }
       final cheque = chequeImageBytes.value;
       if (cheque == null || cheque.isEmpty) {
-        return AppTexts.dmChequeImageRequired;
+        chequeImageError.value = AppTexts.dmChequeImageRequired;
+        ok = false;
+      } else {
+        chequeImageError.value = null;
       }
+    } else {
+      chequeImageError.value = null;
     }
-    return null;
+    return ok;
   }
 
   Future<void> submit() async {
     if (isActing.value) return;
-    final error = _validate();
-    if (error != null) {
-      AppToast.showError(error);
-      return;
-    }
+    final formOk = formKey.currentState?.validate() ?? false;
+    final qtyOk = _validateQtyFields();
+    final mediaOk = _validateMedia();
+    if (!formOk || !qtyOk || !mediaOk) return;
 
     final confirmed = await AppConfirmSheet.show(
       title: AppTexts.dmWalkInTitle,
@@ -246,8 +328,16 @@ class DmWalkInDeliverController extends GetxController {
       chequeNumberController.clear();
       proofPhotoBytes.value = null;
       chequeImageBytes.value = null;
+      proofError.value = null;
+      chequeImageError.value = null;
       method.value = PaymentMethod.cash;
-      await load(force: true);
+      formKey.currentState?.reset();
+
+      if (Get.isRegistered<DeliveryManShellController>()) {
+        Get.find<DeliveryManShellController>().selectLeaf('dm_dashboard');
+      } else {
+        await load(force: true);
+      }
     } on ApiException catch (e) {
       AppToast.showError(e.message);
     } catch (_) {

@@ -18,7 +18,7 @@ class DmPickupSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final session = load.session;
-    final remaining = load.pickLines.where((l) => l.qtyToPick > 0).length;
+    final remaining = load.pickLines.where((l) => l.needsWarehousePick).length;
     final statusColor = session == null
         ? AppColors.grey
         : session.state.chipColor;
@@ -45,10 +45,11 @@ class DmPickupSummaryCard extends StatelessWidget {
             label: AppTexts.dmLoadShopsCount,
             value: '${load.shops.length}',
           ),
-          AppDetailRow(
-            label: AppTexts.dmLoadPickRemaining,
-            value: '$remaining / ${load.pickLines.length}',
-          ),
+          if (remaining > 0)
+            AppDetailRow(
+              label: AppTexts.dmLoadPickRemaining,
+              value: '$remaining',
+            ),
           AppDetailRow(
             label: AppTexts.dmQtyOnVan,
             value: AppFormatter.targetAmount(load.vanQtyTotal),

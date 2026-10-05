@@ -26,8 +26,6 @@ class DmOrdersController extends GetxController {
   final RxString query = ''.obs;
 
   static const _filters = [
-    DmFieldState.pending,
-    DmFieldState.inTransit,
     DmFieldState.notAttended,
     DmFieldState.failed,
     DmFieldState.done,
@@ -38,7 +36,6 @@ class DmOrdersController extends GetxController {
   DmSessionState? get sessionState =>
       plan.value?.session?.state ?? _sessionService.current?.state;
 
-  bool get canDepart => sessionState == DmSessionState.office;
   bool get canEndDay => sessionState == DmSessionState.onTheWay;
 
   @override
@@ -105,29 +102,6 @@ class DmOrdersController extends GetxController {
   void openWalkInDeliver() {
     if (!Get.isRegistered<DeliveryManShellController>()) return;
     Get.find<DeliveryManShellController>().selectLeaf('dm_walk_in');
-  }
-
-  Future<void> depart() async {
-    if (!canDepart || isActing.value) return;
-    final confirmed = await AppConfirmSheet.show(
-      title: AppTexts.dmDepartTitle,
-      message: AppTexts.dmDepartConfirmMessage,
-      confirmLabel: AppTexts.dmDepartTitle,
-    );
-    if (confirmed != true) return;
-
-    isActing.value = true;
-    try {
-      await _sessionService.depart();
-      await loadPlan(force: true);
-      AppToast.showSuccess(AppTexts.dmDepartSuccess);
-    } on ApiException catch (e) {
-      AppToast.showError(e.message);
-    } catch (_) {
-      AppToast.showError(AppTexts.error);
-    } finally {
-      isActing.value = false;
-    }
   }
 
   Future<void> endDay() async {

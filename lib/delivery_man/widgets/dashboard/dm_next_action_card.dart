@@ -30,6 +30,7 @@ class DmNextActionCard extends StatelessWidget {
       DmNextActionKind.endDay => AppIcons.account,
       DmNextActionKind.collect => AppIcons.wallet,
       DmNextActionKind.handover => AppIcons.handover,
+      DmNextActionKind.viewPlan => AppIcons.orders,
     };
 
     return Container(

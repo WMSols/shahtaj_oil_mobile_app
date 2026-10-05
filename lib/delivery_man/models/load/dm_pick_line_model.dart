@@ -24,6 +24,19 @@ class DmPickLineModel {
   final double qtyInWarehouse;
   final double qtyToPick;
 
+  /// Qty still needed from the warehouse (hide when already loaded).
+  double get remainingToPick {
+    if (qtyAssigned > 0 &&
+        (qtyPicked >= qtyAssigned || qtyOnVan >= qtyAssigned)) {
+      return 0;
+    }
+    // qty_to_pick is the live remaining; 0 means stock is already loaded.
+    if (qtyToPick > 0) return qtyToPick;
+    return 0;
+  }
+
+  bool get needsWarehousePick => remainingToPick > 0;
+
   factory DmPickLineModel.fromJson(Map<String, dynamic> json) {
     return DmPickLineModel(
       productId: ApiMap.asInt(json['product_id']) ?? 0,

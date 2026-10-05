@@ -24,6 +24,7 @@ enum DmNextActionKind {
   endDay,
   collect,
   handover,
+  viewPlan,
 }
 
 class DmNextActionModel {
