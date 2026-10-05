@@ -5,7 +5,8 @@ class AppColors {
 
   // Light theme — Shahtaj Oil
   static const Color scaffoldBackground = Color(0xFFFFFFFF);
-  static const Color primary = Color(0xFF3832F3);
+  // static const Color primaryOld = Color(0xFF3832F3);
+  static const Color primary = Color(0xFF594e9a);
   static const Color accentBlue = Color(0xFF036CF7);
   static const Color white = Color(0xFFFFFFFF);
   static const Color black = Color(0xFF000000);
