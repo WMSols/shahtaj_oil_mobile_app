@@ -47,10 +47,16 @@ class ReportCreateScreen extends GetView<ReportCreateController> {
                 padding: EdgeInsets.symmetric(vertical: 12),
                 child: Center(child: CircularProgressIndicator()),
               )
-            else if (controller.tags.isEmpty)
-              Text(
-                AppTexts.emptyLoadFailedSubtitle,
-                style: AppTextStyles.hintText(context),
+            else if (controller.tagsFailed.value || controller.tags.isEmpty)
+              InkWell(
+                onTap: () => controller.loadTags(force: true),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Text(
+                    AppTexts.emptyLoadFailedSubtitle,
+                    style: AppTextStyles.hintText(context),
+                  ),
+                ),
               )
             else
               Wrap(

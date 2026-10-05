@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/common/controllers/account/account_controller.dart';
+import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/images/app_images.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
@@ -78,15 +79,18 @@ class AccountScreen extends GetView<AccountController> {
                 title: AppTexts.accountSettings,
                 bottomSpacing: true,
               ),
-              AppSecondaryButton(
+              AppPrimaryButton(
                 label: AppTexts.reportsTitle,
                 icon: AppIcons.reportProblem,
+                backgroundColor: AppColors.warning,
                 onPressed: () => Get.toNamed(AppRoutes.reports),
               ),
               AppSpacing.vertical(context, 0.015),
               AppSecondaryButton(
                 label: AppTexts.syncCenterTitle,
                 icon: AppIcons.cloudUpload,
+                borderColor: AppColors.warning,
+                textColor: AppColors.warning,
                 onPressed: () => Get.toNamed(AppRoutes.syncCenter),
               ),
               AppSpacing.vertical(context, 0.015),

@@ -31,7 +31,7 @@ class AccountDetailsCard extends StatelessWidget {
             value: user.displayName(AppTexts.notAvailable),
           ),
           AppDetailRow(
-            label: AppTexts.email,
+            label: AppTexts.username,
             value: _orNotAvailable(user.email),
           ),
           AppDetailRow(

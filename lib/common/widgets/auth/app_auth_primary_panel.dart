@@ -44,10 +44,10 @@ class AppAuthPrimaryPanel extends GetView<AuthController> {
                     children: [
                       AppTextField(
                         controller: controller.emailController,
-                        prefixIcon: AppIcons.email,
-                        label: AppTexts.email,
-                        hint: AppTexts.emailHint,
-                        keyboardType: TextInputType.emailAddress,
+                        prefixIcon: AppIcons.person,
+                        label: AppTexts.username,
+                        hint: AppTexts.usernameHint,
+                        keyboardType: TextInputType.text,
                         textInputAction: TextInputAction.next,
                         labelColor: AppColors.white,
                         textColor: AppColors.textPrimary,

@@ -1,6 +1,7 @@
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/orders/ob_order_approval_info.dart';
+import 'package:shahtaj_oil_mobile_app/order_booker/services/sync/ob_day_bootstrap_service.dart';
 
 class ObVisitSummaryModel {
   const ObVisitSummaryModel({
@@ -30,6 +31,64 @@ class ObVisitSummaryModel {
   final String? orderNumber;
   final double? subtotal;
   final ObOrderApprovalInfo approval;
+
+  /// Stable key for one sale order. Null when the visit has no real order
+  /// (no-order visits and pending-sync placeholders stay unique).
+  String? get orderDedupeKey {
+    if (orderId != null && orderId! > 0) return 'id:$orderId';
+    final number = orderNumber?.trim();
+    if (number == null || number.isEmpty) return null;
+    if (number == ObDocKeys.pendingSyncOrderMarker) return null;
+    return 'no:${number.toLowerCase()}';
+  }
+
+  /// Keeps one card per sale order when several visits share the same order.
+  static List<ObVisitSummaryModel> dedupeByOrder(
+    List<ObVisitSummaryModel> visits,
+  ) {
+    final seen = <String, int>{};
+    final result = <ObVisitSummaryModel>[];
+
+    for (final visit in visits) {
+      final key = visit.orderDedupeKey;
+      if (key == null) {
+        result.add(visit);
+        continue;
+      }
+      final existingIndex = seen[key];
+      if (existingIndex == null) {
+        seen[key] = result.length;
+        result.add(visit);
+        continue;
+      }
+      if (_isPreferredOver(visit, result[existingIndex])) {
+        result[existingIndex] = visit;
+      }
+    }
+    return result;
+  }
+
+  /// Prefer the real placement visit over a thin duplicate (e.g. instant close).
+  static bool _isPreferredOver(
+    ObVisitSummaryModel candidate,
+    ObVisitSummaryModel existing,
+  ) {
+    final candidateDuration = _durationSeconds(candidate);
+    final existingDuration = _durationSeconds(existing);
+    if (candidateDuration != existingDuration) {
+      return candidateDuration > existingDuration;
+    }
+    final byTime = candidate.checkedInAt.compareTo(existing.checkedInAt);
+    if (byTime != 0) return byTime < 0;
+    return candidate.visitId < existing.visitId;
+  }
+
+  static int _durationSeconds(ObVisitSummaryModel visit) {
+    final out = visit.checkedOutAt;
+    if (out == null) return 0;
+    final seconds = out.difference(visit.checkedInAt).inSeconds;
+    return seconds < 0 ? 0 : seconds;
+  }
 
   factory ObVisitSummaryModel.fromJson(Map<String, dynamic> json) {
     final shop = ApiMap.asMap(json['shop']) ?? const <String, dynamic>{};

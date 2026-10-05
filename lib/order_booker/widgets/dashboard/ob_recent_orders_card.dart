@@ -8,6 +8,7 @@ import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/orders/ob_order_summary_model.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/text/app_text.dart';
 
 class ObRecentOrdersCard extends StatelessWidget {
   const ObRecentOrdersCard({super.key, required this.orders, this.onOrderTap});
@@ -53,7 +54,7 @@ class _RecentOrderRow extends StatelessWidget {
                   order.orderNumber,
                   style: AppTextStyles.sectionTitle(context),
                 ),
-                Text(
+                AppText.label(
                   order.shopName,
                   style: AppTextStyles.bodyText(
                     context,

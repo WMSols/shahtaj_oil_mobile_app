@@ -11,6 +11,7 @@ import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/history/ob_visit_summary_model.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/text/app_text.dart';
 
 class ObVisitHistoryCard extends StatelessWidget {
   const ObVisitHistoryCard({
@@ -47,14 +48,16 @@ class ObVisitHistoryCard extends StatelessWidget {
                 Row(
                   children: [
                     Expanded(
-                      child: Text(
+                      child: AppText.label(
                         visit.shopName,
                         style: AppTextStyles.sectionTitle(context),
                       ),
                     ),
-                    // One chip only: approval when not standard, else visit outcome.
-                    if (visit.outcome == VisitOutcome.orderPlaced &&
-                        visit.approval.state != ObOrderApprovalState.none)
+                    // Prefer cancelled/rejected over visit outcome / approved.
+                    if (visit.approval.isRejected ||
+                        visit.approval.isCancelled ||
+                        (visit.outcome == VisitOutcome.orderPlaced &&
+                            visit.approval.state != ObOrderApprovalState.none))
                       AppStatusChip.orderApprovalInfo(visit.approval)
                     else
                       AppStatusChip.visitOutcome(visit.outcome),

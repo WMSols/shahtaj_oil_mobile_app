@@ -79,11 +79,15 @@ class ObVisitDetailInfoSection extends StatelessWidget {
                       ? AppTexts.obOrderPendingSyncLabel
                       : visit.orderNumber!,
                   showDivider:
-                      visit.outcome == VisitOutcome.orderPlaced &&
-                      visit.approval.state != ObOrderApprovalState.none,
+                      visit.approval.isRejected ||
+                      visit.approval.isCancelled ||
+                      (visit.outcome == VisitOutcome.orderPlaced &&
+                          visit.approval.state != ObOrderApprovalState.none),
                 ),
-              if (visit.outcome == VisitOutcome.orderPlaced &&
-                  visit.approval.state != ObOrderApprovalState.none)
+              if (visit.approval.isRejected ||
+                  visit.approval.isCancelled ||
+                  (visit.outcome == VisitOutcome.orderPlaced &&
+                      visit.approval.state != ObOrderApprovalState.none))
                 AppDetailRow(
                   label: AppTexts.obOrderApprovalStatusLabel,
                   trailing:

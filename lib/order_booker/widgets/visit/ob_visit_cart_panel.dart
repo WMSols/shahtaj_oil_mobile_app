@@ -58,10 +58,15 @@ class ObVisitCartPanel extends StatelessWidget {
           else ...[
             ...cart.lines.map((line) {
               return Padding(
+                key: ValueKey('cart-line-${line.lineId}'),
                 padding: EdgeInsets.only(
                   bottom: AppSpacing.verticalValue(context, 0.01),
                 ),
-                child: ObCartLineTile(controller: controller, line: line),
+                child: ObCartLineTile(
+                  key: ValueKey(line.lineId),
+                  controller: controller,
+                  line: line,
+                ),
               );
             }),
           ],

@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/common/models/reports/report_summary_model.dart';
+import 'package:shahtaj_oil_mobile_app/common/models/reports/report_tag_model.dart';
 import 'package:shahtaj_oil_mobile_app/common/services/reports/reports_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
@@ -52,6 +55,12 @@ class ReportsListController extends GetxController {
       () => searchQuery.value = searchController.text,
     );
     load(reset: true, force: true);
+    // Warm tag cache so New Report opens with tags ready.
+    unawaited(
+      _service.fetchTags(force: true).catchError((_) {
+        return <ReportTagModel>[];
+      }),
+    );
     if (Get.isRegistered<SyncOutboxService>()) {
       _pendingWorker = ever(
         Get.find<SyncOutboxService>().pendingCount,
