@@ -50,6 +50,12 @@ class ReportsService extends GetxService {
     return connectivity.quality.value != NetworkQuality.weak;
   }
 
+  /// Tags are tiny payloads — try any connected network, including weak.
+  bool get _canFetchTags {
+    if (!Get.isRegistered<ConnectivityService>()) return true;
+    return Get.find<ConnectivityService>().isOnline.value;
+  }
+
   UserRole get _role =>
       _session.role.value ?? _session.user.value?.role ?? UserRole.orderBooker;
 
@@ -102,14 +108,19 @@ class ReportsService extends GetxService {
       return _tagsMemory!;
     }
 
-    if (!_canReachServer) {
+    if (!_canFetchTags) {
       final cached = await _cache.readMap(OfflineCacheKeys.reportTags);
       if (cached != null) {
         final tags = _parseTags(cached);
-        _tagsMemory = tags;
-        return tags;
+        if (tags.isNotEmpty) {
+          _tagsMemory = tags;
+          return tags;
+        }
       }
-      return _tagsMemory ?? const [];
+      if (_tagsMemory != null && _tagsMemory!.isNotEmpty) {
+        return _tagsMemory!;
+      }
+      throw ApiException(message: AppTexts.emptyLoadFailedSubtitle);
     }
 
     try {
@@ -122,8 +133,13 @@ class ReportsService extends GetxService {
       final cached = await _cache.readMap(OfflineCacheKeys.reportTags);
       if (cached != null) {
         final tags = _parseTags(cached);
-        _tagsMemory = tags;
-        return tags;
+        if (tags.isNotEmpty) {
+          _tagsMemory = tags;
+          return tags;
+        }
+      }
+      if (!force && _tagsMemory != null && _tagsMemory!.isNotEmpty) {
+        return _tagsMemory!;
       }
       rethrow;
     }

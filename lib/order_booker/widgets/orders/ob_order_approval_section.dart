@@ -11,6 +11,7 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/info/app_detail_row.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/orders/ob_order_detail_model.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/orders/ob_order_line_model.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/text/app_text.dart';
 
 /// Extra approval details only (status chip lives once on the order header).
 class ObOrderApprovalSection extends StatelessWidget {
@@ -145,7 +146,10 @@ class _LineRateCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(line.productName, style: AppTextStyles.sectionTitle(context)),
+          AppText.label(
+            line.productName,
+            style: AppTextStyles.sectionTitle(context),
+          ),
           AppSpacing.vertical(context, 0.004),
           Text(
             '${AppTexts.obAppRateLabel}: ${AppFormatter.currencyWhole(line.appRate)}',

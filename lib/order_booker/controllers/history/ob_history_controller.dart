@@ -52,7 +52,7 @@ class ObHistoryController extends GetxController {
     final filter = outcomeFilter.value;
     final approval = approvalFilter.value;
     final query = searchQuery.value.trim().toLowerCase();
-    return visits.where((visit) {
+    final matched = visits.where((visit) {
       if (filter != null && visit.outcome != filter) return false;
       if (approval != null &&
           visit.outcome == VisitOutcome.orderPlaced &&
@@ -64,6 +64,8 @@ class ObHistoryController extends GetxController {
           (visit.ownerName?.toLowerCase().contains(query) ?? false) ||
           (visit.orderNumber?.toLowerCase().contains(query) ?? false);
     }).toList();
+    // One sale order can be linked to multiple visits on the server; show once.
+    return ObVisitSummaryModel.dedupeByOrder(matched);
   }
 
   int get filteredCount => filteredVisits.length;

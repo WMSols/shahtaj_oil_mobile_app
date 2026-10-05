@@ -22,6 +22,7 @@ class ReportCreateController extends GetxController {
   final RxBool isLoadingTags = true.obs;
   final RxBool isSubmitting = false.obs;
   final RxBool isPickingPhoto = false.obs;
+  final RxBool tagsFailed = false.obs;
   final RxList<ReportTagModel> tags = <ReportTagModel>[].obs;
   final RxSet<String> selectedCodes = <String>{}.obs;
   final Rxn<Uint8List> screenshotBytes = Rxn<Uint8List>();
@@ -32,15 +33,20 @@ class ReportCreateController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _loadTags();
+    // Always fetch tags when New Report opens (not only from stale memory).
+    loadTags(force: true);
   }
 
-  Future<void> _loadTags() async {
+  Future<void> loadTags({bool force = true}) async {
     isLoadingTags.value = true;
+    tagsFailed.value = false;
     try {
-      tags.assignAll(await _service.fetchTags());
+      final loaded = await _service.fetchTags(force: force);
+      tags.assignAll(loaded);
+      if (loaded.isEmpty) tagsFailed.value = true;
     } catch (_) {
-      AppToast.showError(AppTexts.error);
+      tags.clear();
+      tagsFailed.value = true;
     } finally {
       isLoadingTags.value = false;
     }

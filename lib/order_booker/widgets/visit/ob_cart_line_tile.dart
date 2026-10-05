@@ -15,6 +15,7 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart'
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_text_field.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/controllers/visit/ob_order_create_controller.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/visit/ob_visit_cart_line_model.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/text/app_text.dart';
 
 class ObCartLineTile extends StatefulWidget {
   const ObCartLineTile({
@@ -54,6 +55,12 @@ class _ObCartLineTileState extends State<ObCartLineTile> {
   @override
   void didUpdateWidget(covariant ObCartLineTile oldWidget) {
     super.didUpdateWidget(oldWidget);
+    // New line identity (or Flutter reuse without a key) must reset field text.
+    if (oldWidget.line.lineId != widget.line.lineId) {
+      _qtyController.text = _c.quantityFieldText(widget.line);
+      _rateController.text = _c.rateFieldText(widget.line);
+      return;
+    }
     if (!_qtyFocusNode.hasFocus) {
       final nextQty = _c.quantityFieldText(widget.line);
       if (_qtyController.text != nextQty) _qtyController.text = nextQty;
@@ -124,7 +131,7 @@ class _ObCartLineTileState extends State<ObCartLineTile> {
             Row(
               children: [
                 Expanded(
-                  child: Text(
+                  child: AppText.label(
                     line.productName,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,

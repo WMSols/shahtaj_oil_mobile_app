@@ -43,6 +43,7 @@ class ObOrderDetailContent extends GetView<ObOrderDetailController> {
                 AppDetailRow(
                   label: AppTexts.obShopNameLabel,
                   value: order.shopName,
+                  titleCaseValue: true,
                 ),
                 AppDetailRow(
                   label: AppTexts.obOrderApprovalStatusLabel,

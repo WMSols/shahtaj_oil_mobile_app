@@ -62,9 +62,11 @@ class ObDashboardService extends GetxService {
     ).map(ObTargetItemModel.fromJson).toList(growable: false);
     final visits = ObVisitListResult.fromJson(visitsJson);
 
-    final orderVisits = visits.visits
-        .where((visit) => visit.outcome == VisitOutcome.orderPlaced)
-        .toList(growable: false);
+    final orderVisits = ObVisitSummaryModel.dedupeByOrder(
+      visits.visits
+          .where((visit) => visit.outcome == VisitOutcome.orderPlaced)
+          .toList(growable: false),
+    );
     final todayStart = DateTime(
       DateTime.now().year,
       DateTime.now().month,

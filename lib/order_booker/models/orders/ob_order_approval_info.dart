@@ -1,4 +1,5 @@
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
+import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_map.dart';
 
 /// Approval payload from visit / visit.order responses (OB_API_Changes).
@@ -43,8 +44,13 @@ class ObOrderApprovalInfo {
 
   bool get isVerified => state == ObOrderApprovalState.approved;
 
+  bool get isCancelled {
+    final raw = (orderState ?? '').trim().toLowerCase().replaceAll('-', '_');
+    return raw == 'cancel' || raw == 'cancelled' || raw == 'canceled';
+  }
+
   bool get isStandard =>
-      state == ObOrderApprovalState.none && !needsVerification;
+      state == ObOrderApprovalState.none && !needsVerification && !isCancelled;
 
   bool get hasDiscountReason =>
       requiresDiscountApproval ||
@@ -53,9 +59,10 @@ class ObOrderApprovalInfo {
   bool get hasCreditReason =>
       requiresCreditApproval || reasons.contains(ObOrderApprovalReason.credit);
 
+  /// Prefer terminal order outcomes over stale approval labels.
   String get displayLabel {
-    // Prefer localized labels so API "Pending verification" does not collide
-    // with visit/task "Pending".
+    if (isRejected) return AppTexts.obOrderApprovalRejected;
+    if (isCancelled) return AppTexts.orderStatusCancelled;
     return state.label;
   }
 
@@ -107,7 +114,10 @@ class ObOrderApprovalInfo {
       verifiedAt: ApiMap.asDateTime(o['verified_at']),
       hasDiscount: o['has_discount'] == true || requiresDiscount,
       discountAmount: ApiMap.asDouble(o['discount_amount']),
-      orderState: ApiMap.asString(o['state']),
+      orderState:
+          ApiMap.asString(o['state']) ??
+          ApiMap.asString(v['order_state']) ??
+          ApiMap.asString(v['sale_order_state']),
       isPlaced: o['is_placed'] == true,
       amountTotal:
           ApiMap.asDouble(o['amount_total']) ??
