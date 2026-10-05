@@ -4,6 +4,7 @@ import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/text/app_text.dart';
 
 class AppFilterChip extends StatelessWidget {
   const AppFilterChip({
@@ -19,6 +20,8 @@ class AppFilterChip extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
   final Color color;
+
+  /// When true (default), chip text is ALL CAPS. When false, Title Case.
   final bool uppercase;
 
   factory AppFilterChip.shopStatus({
@@ -75,14 +78,23 @@ class AppFilterChip extends StatelessWidget {
               horizontal: AppSpacing.horizontalValue(context, 0.04),
               vertical: AppSpacing.verticalValue(context, 0.008),
             ),
-            child: Text(
-              uppercase ? label.toUpperCase() : label,
-              style: AppTextStyles.caption(context).copyWith(
-                color: textColor,
-                fontWeight: FontWeight.w600,
-                height: 1.1,
-              ),
-            ),
+            child: uppercase
+                ? AppText.upper(
+                    label,
+                    style: AppTextStyles.caption(context).copyWith(
+                      color: textColor,
+                      fontWeight: FontWeight.w600,
+                      height: 1.1,
+                    ),
+                  )
+                : AppText.label(
+                    label,
+                    style: AppTextStyles.caption(context).copyWith(
+                      color: textColor,
+                      fontWeight: FontWeight.w600,
+                      height: 1.1,
+                    ),
+                  ),
           ),
         ),
       ),

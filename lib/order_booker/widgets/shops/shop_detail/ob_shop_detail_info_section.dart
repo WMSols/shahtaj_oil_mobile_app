@@ -30,11 +30,16 @@ class ObShopDetailInfoSection extends StatelessWidget {
           padding: EdgeInsets.zero,
           child: Column(
             children: [
-              AppDetailRow(label: AppTexts.obShopNameLabel, value: shop.name),
+              AppDetailRow(
+                label: AppTexts.obShopNameLabel,
+                value: shop.name,
+                titleCaseValue: true,
+              ),
               if (shop.ownerName != null)
                 AppDetailRow(
                   label: AppTexts.obOwnerNameLabel,
                   value: shop.ownerName!,
+                  titleCaseValue: true,
                 ),
               if (shop.ownerCnicNumber != null &&
                   shop.ownerCnicNumber!.trim().isNotEmpty)

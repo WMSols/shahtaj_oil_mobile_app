@@ -4,6 +4,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/text/app_text.dart';
 
 /// Shared section title row used across account, dashboard, and forms.
 class AppSectionHeader extends StatelessWidget {
@@ -23,12 +24,15 @@ class AppSectionHeader extends StatelessWidget {
     final row = Row(
       children: [
         Expanded(
-          child: Text(title, style: AppTextStyles.sectionTitle(context)),
+          child: AppText.label(
+            title,
+            style: AppTextStyles.sectionTitle(context),
+          ),
         ),
         if (onViewAll != null)
           TextButton(
             onPressed: onViewAll,
-            child: Text(
+            child: AppText.label(
               AppTexts.viewAll,
               style: AppTextStyles.bodyText(
                 context,

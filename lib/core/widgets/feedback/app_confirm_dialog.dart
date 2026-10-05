@@ -8,6 +8,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.d
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_primary_button.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_secondary_button.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/text/app_text.dart';
 
 class AppConfirmDialog extends StatelessWidget {
   const AppConfirmDialog({
@@ -39,7 +40,7 @@ class AppConfirmDialog extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
+            AppText.label(
               title,
               style: AppTextStyles.heading(context),
               textAlign: TextAlign.center,
@@ -118,7 +119,7 @@ class AppConfirmSheet extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
+            AppText.label(
               title,
               style: AppTextStyles.heading(context),
               textAlign: TextAlign.center,

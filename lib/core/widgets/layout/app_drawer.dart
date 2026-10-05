@@ -17,6 +17,7 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_icon_button.dart
 import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_drawer_entry.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_profile_avatar.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/text/app_text.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({
@@ -220,7 +221,7 @@ class _DrawerGroupTile extends StatelessWidget {
               ),
               color: headerActive ? AppColors.white : AppColors.black,
             ),
-            title: Text(
+            title: AppText.label(
               entry.label,
               style: AppTextStyles.bodyText(context).copyWith(
                 fontWeight: headerActive ? FontWeight.w600 : FontWeight.w500,
@@ -296,7 +297,7 @@ class _DrawerLeafTile extends StatelessWidget {
                   AppIcons.filled(leaf.icon!, active: isSelected),
                   color: isSelected ? AppColors.white : AppColors.black,
                 ),
-          title: Text(
+          title: AppText.label(
             leaf.label,
             style: AppTextStyles.bodyText(context).copyWith(
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,

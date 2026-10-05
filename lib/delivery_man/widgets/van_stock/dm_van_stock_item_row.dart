@@ -12,6 +12,7 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart'
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_text_field.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/van_stock/dm_van_stock_controller.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/van/dm_van_item_view.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/text/app_text.dart';
 
 class DmVanStockItemRow extends StatelessWidget {
   const DmVanStockItemRow({
@@ -42,7 +43,7 @@ class DmVanStockItemRow extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            AppText.label(
               item.name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

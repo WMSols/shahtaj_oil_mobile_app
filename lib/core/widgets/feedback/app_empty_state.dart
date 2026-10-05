@@ -5,6 +5,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/images/app_images.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/responsive/app_responsive.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/text/app_text.dart';
 
 class AppEmptyState extends StatelessWidget {
   const AppEmptyState({
@@ -41,7 +42,7 @@ class AppEmptyState extends StatelessWidget {
               fit: BoxFit.contain,
             ),
             AppSpacing.vertical(context, 0.01),
-            Text(
+            AppText.label(
               title,
               style: AppTextStyles.heading(context),
               textAlign: TextAlign.center,
@@ -58,7 +59,7 @@ class AppEmptyState extends StatelessWidget {
               AppSpacing.vertical(context, 0.01),
               TextButton(
                 onPressed: onAction,
-                child: Text(
+                child: AppText.label(
                   actionLabel!,
                   style: AppTextStyles.bodyText(
                     context,

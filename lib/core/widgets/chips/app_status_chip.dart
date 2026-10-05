@@ -6,6 +6,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/responsive/app_responsive.dar
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/text/app_text.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/orders/ob_order_approval_info.dart';
 
 class AppStatusChip extends StatelessWidget {
@@ -33,8 +34,12 @@ class AppStatusChip extends StatelessWidget {
   factory AppStatusChip.orderApproval(ObOrderApprovalState status) =>
       AppStatusChip(label: status.label, color: status.chipColor);
 
-  factory AppStatusChip.orderApprovalInfo(ObOrderApprovalInfo info) =>
-      AppStatusChip(label: info.displayLabel, color: info.state.chipColor);
+  factory AppStatusChip.orderApprovalInfo(ObOrderApprovalInfo info) {
+    final color = info.isRejected || info.isCancelled
+        ? AppColors.error
+        : info.state.chipColor;
+    return AppStatusChip(label: info.displayLabel, color: color);
+  }
 
   factory AppStatusChip.sync(SyncStatus status) =>
       AppStatusChip(label: status.label, color: status.chipColor, soft: true);
@@ -47,6 +52,13 @@ class AppStatusChip extends StatelessWidget {
 
   factory AppStatusChip.collection(CollectionStatus status) =>
       AppStatusChip(label: status.label, color: status.chipColor, soft: true);
+
+  factory AppStatusChip.invoicePayment(DmInvoicePaymentState status) =>
+      AppStatusChip(label: status.label, color: status.chipColor, soft: true);
+
+  factory AppStatusChip.walletCollectionPay(
+    DmWalletCollectionPayStatus status,
+  ) => AppStatusChip(label: status.label, color: status.chipColor, soft: true);
 
   factory AppStatusChip.paymentMethod(PaymentMethod method) =>
       AppStatusChip(label: method.label, color: method.chipColor);
@@ -129,8 +141,8 @@ class AppStatusChip extends StatelessWidget {
         color: background,
         borderRadius: BorderRadius.circular(AppResponsive.radius(context)),
       ),
-      child: Text(
-        label.toUpperCase(),
+      child: AppText.upper(
+        label,
         textAlign: fullWidth ? TextAlign.center : TextAlign.start,
         style: AppTextStyles.hintText(
           context,

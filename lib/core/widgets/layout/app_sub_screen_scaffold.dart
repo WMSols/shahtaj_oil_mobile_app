@@ -7,6 +7,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_sync_status_banner.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_version_badge.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/text/app_text.dart';
 
 class AppSubScreenScaffold extends StatelessWidget {
   const AppSubScreenScaffold({
@@ -51,7 +52,7 @@ class AppSubScreenScaffold extends StatelessWidget {
             ],
           ),
         ),
-        title: Text(title, style: AppTextStyles.screenTitle(context)),
+        title: AppText.label(title, style: AppTextStyles.screenTitle(context)),
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
           child: Divider(height: 1, color: AppColors.cardBorder),

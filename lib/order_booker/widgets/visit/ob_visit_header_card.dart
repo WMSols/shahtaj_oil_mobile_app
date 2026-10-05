@@ -7,6 +7,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/text/app_text.dart';
 
 class ObVisitHeaderCard extends StatelessWidget {
   const ObVisitHeaderCard({
@@ -46,7 +47,7 @@ class ObVisitHeaderCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                AppText.label(
                   shopName,
                   style: AppTextStyles.sectionTitle(context).copyWith(
                     color: AppColors.white,

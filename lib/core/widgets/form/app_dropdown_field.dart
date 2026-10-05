@@ -7,6 +7,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_form_field_label.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_input_decoration.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/text/app_text.dart';
 
 class AppDropdownField<T> extends StatelessWidget {
   const AppDropdownField({
@@ -57,7 +58,7 @@ class AppDropdownField<T> extends StatelessWidget {
               .map(
                 (e) => DropdownMenuItem<T>(
                   value: e,
-                  child: Text(
+                  child: AppText.label(
                     getLabel != null ? getLabel!(e) : e.toString(),
                     style: AppTextStyles.bodyText(context),
                   ),

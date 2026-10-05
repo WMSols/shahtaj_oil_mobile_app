@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/responsive/app_responsive.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/text/app_text.dart';
 
 class AppSecondaryButton extends StatelessWidget {
   const AppSecondaryButton({
@@ -65,7 +66,7 @@ class AppSecondaryButton extends StatelessWidget {
                     SizedBox(width: AppResponsive.scaleSize(context, 8)),
                   ],
                   Flexible(
-                    child: Text(
+                    child: AppText.label(
                       label,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

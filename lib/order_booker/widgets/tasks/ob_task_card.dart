@@ -12,6 +12,7 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_primary_button.d
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_task_model.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/text/app_text.dart';
 
 class ObTaskCard extends StatelessWidget {
   const ObTaskCard({
@@ -96,7 +97,7 @@ class ObTaskCard extends StatelessWidget {
                     Row(
                       children: [
                         Expanded(
-                          child: Text(
+                          child: AppText.label(
                             task.shopName,
                             style: AppTextStyles.sectionTitle(context),
                           ),

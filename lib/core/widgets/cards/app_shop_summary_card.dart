@@ -7,6 +7,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_outline_icon_button.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/text/app_text.dart';
 
 class AppShopSummaryCard extends StatelessWidget {
   const AppShopSummaryCard({
@@ -48,7 +49,10 @@ class AppShopSummaryCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: Text(name, style: AppTextStyles.sectionTitle(context)),
+                child: AppText.label(
+                  name,
+                  style: AppTextStyles.sectionTitle(context),
+                ),
               ),
               if (trailing != null) ...[
                 AppSpacing.horizontal(context, 0.02),
@@ -128,7 +132,7 @@ class _IconLabel extends StatelessWidget {
           color: AppColors.primary,
         ),
         AppSpacing.horizontal(context, 0.008),
-        Text(label, style: style),
+        AppText.label(label, style: style),
       ],
     );
   }

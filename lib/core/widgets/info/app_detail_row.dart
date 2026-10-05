@@ -4,6 +4,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/responsive/app_responsive.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/text/app_text.dart';
 
 class AppDetailRow extends StatelessWidget {
   const AppDetailRow({
@@ -15,6 +16,7 @@ class AppDetailRow extends StatelessWidget {
     this.valueWeight = FontWeight.w500,
     this.trailing,
     this.showDivider = true,
+    this.titleCaseValue = false,
   });
 
   final String label;
@@ -24,6 +26,10 @@ class AppDetailRow extends StatelessWidget {
   final FontWeight valueWeight;
   final Widget? trailing;
   final bool showDivider;
+
+  /// When true, Title Cases [value] (shop / person names). Leave false for
+  /// codes, amounts, and dates.
+  final bool titleCaseValue;
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +52,7 @@ class AppDetailRow extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(label, style: labelStyle),
+                    AppText.label(label, style: labelStyle),
                     if (subtitle != null) ...[
                       AppSpacing.vertical(context, 0.004),
                       Text(
@@ -63,11 +69,17 @@ class AppDetailRow extends StatelessWidget {
                 trailing!
               else if (value != null)
                 Flexible(
-                  child: Text(
-                    value!,
-                    style: valueStyle,
-                    textAlign: TextAlign.start,
-                  ),
+                  child: titleCaseValue
+                      ? AppText.label(
+                          value!,
+                          style: valueStyle,
+                          textAlign: TextAlign.start,
+                        )
+                      : Text(
+                          value!,
+                          style: valueStyle,
+                          textAlign: TextAlign.start,
+                        ),
                 ),
             ],
           ),

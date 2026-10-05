@@ -9,6 +9,7 @@ import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_text_field.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/orders/dm_order_line_model.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/text/app_text.dart';
 
 class DmOrderLinesSection extends StatelessWidget {
   const DmOrderLinesSection({
@@ -84,7 +85,10 @@ class _LineCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(line.productName, style: AppTextStyles.sectionTitle(context)),
+          AppText.label(
+            line.productName,
+            style: AppTextStyles.sectionTitle(context),
+          ),
           AppSpacing.vertical(context, 0.006),
           Text(
             '${AppTexts.dmOrderedQty}: ${_fmt(line.orderedQty)} · '

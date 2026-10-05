@@ -4,6 +4,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/responsive/app_responsive.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/text/app_text.dart';
 
 class AppOutlineIconButton extends StatelessWidget {
   const AppOutlineIconButton({
@@ -59,7 +60,7 @@ class AppOutlineIconButton extends StatelessWidget {
                     color: foregroundColor,
                     size: AppResponsive.iconSize(context, factor: 0.95),
                   ),
-                Text(
+                AppText.label(
                   label,
                   textAlign: TextAlign.center,
                   maxLines: 2,

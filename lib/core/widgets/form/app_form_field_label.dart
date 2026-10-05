@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/text/app_text.dart';
 
 class AppFormFieldLabel extends StatelessWidget {
   const AppFormFieldLabel({
@@ -26,7 +27,7 @@ class AppFormFieldLabel extends StatelessWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            AppText.label(
               label!,
               style: AppTextStyles.labelText(context).copyWith(
                 color: color ?? AppColors.black,
