@@ -6,10 +6,12 @@ import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/responsive/app_responsive.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
+import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/recovery/dm_wallet_collection_model.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/text/app_text.dart';
 
 class DmCollectionHistoryCard extends StatelessWidget {
   const DmCollectionHistoryCard({
@@ -28,12 +30,14 @@ class DmCollectionHistoryCard extends StatelessWidget {
     final mutedStyle = AppTextStyles.bodyText(
       context,
     ).copyWith(color: AppColors.grey);
+    final status = collection.collectionStatus;
+    final stripeColor = collection.isWalkIn
+        ? AppColors.statPurple
+        : (status?.chipColor ?? collection.paymentMethod.chipColor);
 
     return AppOutlineCard(
       onTap: onTap,
-      statusColor: collection.isWalkIn
-          ? AppColors.statPurple
-          : collection.paymentMethod.chipColor,
+      statusColor: stripeColor,
       padding: AppSpacing.symmetric(context, h: 0.035, v: 0.016),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -52,15 +56,18 @@ class DmCollectionHistoryCard extends StatelessWidget {
                 AppStatusChip.walkIn(soft: true),
                 AppSpacing.horizontal(context, 0.01),
               ],
-              AppStatusChip(
-                label: collection.paymentMethod.label,
-                color: collection.paymentMethod.chipColor,
-                soft: true,
-              ),
+              if (status != null)
+                AppStatusChip.walletCollectionPay(status)
+              else
+                AppStatusChip(
+                  label: collection.paymentMethod.label,
+                  color: collection.paymentMethod.chipColor,
+                  soft: true,
+                ),
             ],
           ),
           AppSpacing.vertical(context, 0.004),
-          Text(collection.shopName, style: mutedStyle),
+          AppText.label(collection.shopName, style: mutedStyle),
           if (collection.invoices.isNotEmpty) ...[
             AppSpacing.vertical(context, 0.004),
             Text(
@@ -68,6 +75,18 @@ class DmCollectionHistoryCard extends StatelessWidget {
               style: mutedStyle,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
+            ),
+          ],
+          if (collection.hasInvoiceTotals) ...[
+            AppSpacing.vertical(context, 0.004),
+            Text(
+              '${AppTexts.dmInvoiceTotal}: '
+              '${AppFormatter.currency(collection.invoiceAmountTotal, symbol: 'Rs. ')}'
+              ' · ${AppTexts.dmInvoicePaid}: '
+              '${AppFormatter.currency(collection.invoiceAmountPaid, symbol: 'Rs. ')}',
+              style: mutedStyle.copyWith(
+                fontSize: AppResponsive.scaleSize(context, 12),
+              ),
             ),
           ],
           if (collection.paymentMethod == PaymentMethod.cheque &&

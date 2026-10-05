@@ -19,6 +19,7 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_photo_upload_tile.d
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_text_field.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/collections/dm_record_collection_controller.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/widgets/collections/dm_collect_invoice_row.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/text/app_text.dart';
 
 class DmRecordCollectionContent extends GetView<DmRecordCollectionController> {
   const DmRecordCollectionContent({super.key});
@@ -66,7 +67,7 @@ class DmRecordCollectionContent extends GetView<DmRecordCollectionController> {
               children: [
                 AppOutlineCard(
                   padding: AppSpacing.symmetric(context, h: 0.035, v: 0.016),
-                  child: Text(
+                  child: AppText.label(
                     shop.shopName,
                     style: AppTextStyles.sectionTitle(context),
                   ),

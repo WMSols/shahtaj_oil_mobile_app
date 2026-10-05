@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
+import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_primary_button.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_secondary_button.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_filter_chip.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
@@ -42,26 +42,15 @@ class DmOrdersContent extends GetView<DmOrdersController> {
                 ],
               ),
               AppSpacing.vertical(context, 0.012),
-              if (controller.canDepart)
-                AppPrimaryButton(
-                  label: AppTexts.dmDepartTitle,
-                  isLoading: controller.isActing.value,
-                  onPressed: controller.depart,
-                ),
               if (controller.canEndDay)
-                AppSecondaryButton(
+                AppPrimaryButton(
                   label: AppTexts.dmEndDayTitle,
                   isLoading: controller.isActing.value,
                   onPressed: controller.endDay,
+                  backgroundColor: AppColors.error,
                 ),
-              if (controller.canDepart || controller.canEndDay)
-                AppSpacing.vertical(context, 0.016),
+              if (controller.canEndDay) AppSpacing.vertical(context, 0.016),
             ],
-            AppSecondaryButton(
-              label: AppTexts.dmWalkInTitle,
-              onPressed: controller.openWalkInDeliver,
-            ),
-            AppSpacing.vertical(context, 0.016),
             AppSearchField(
               hint: AppTexts.dmSearchJobsHint,
               onChanged: controller.onQueryChanged,

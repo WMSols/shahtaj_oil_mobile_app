@@ -50,12 +50,11 @@ class DmOrderSummaryCard extends StatelessWidget {
               ],
             ),
           ),
-          AppDetailRow(label: AppTexts.dmShopLabel, value: order.shopName),
-          if (order.shopAddress != null)
-            AppDetailRow(
-              label: AppTexts.dmAddressLabel,
-              value: order.shopAddress!,
-            ),
+          AppDetailRow(
+            label: AppTexts.dmShopLabel,
+            value: order.shopName,
+            titleCaseValue: true,
+          ),
           AppDetailRow(
             label: AppTexts.dmItemsLabel,
             value: AppTexts.dmItemsCount(order.resolvedItemCount),

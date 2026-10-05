@@ -11,6 +11,7 @@ import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/orders/dm_delivery_order_model.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/text/app_text.dart';
 
 class DmOrderCard extends StatelessWidget {
   const DmOrderCard({super.key, required this.order, this.onTap});
@@ -58,28 +59,7 @@ class DmOrderCard extends StatelessWidget {
                   ],
                 ),
                 AppSpacing.vertical(context, 0.005),
-                Text(order.shopName, style: mutedStyle),
-                if (order.shopAddress != null) ...[
-                  AppSpacing.vertical(context, 0.005),
-                  Row(
-                    children: [
-                      Icon(
-                        AppIcons.location5,
-                        size: AppResponsive.iconSize(context, factor: 0.8),
-                        color: AppColors.primary,
-                      ),
-                      AppSpacing.horizontal(context, 0.01),
-                      Flexible(
-                        child: Text(
-                          order.shopAddress!,
-                          style: mutedStyle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                AppText.label(order.shopName, style: mutedStyle),
                 AppSpacing.vertical(context, 0.005),
                 Row(
                   children: [

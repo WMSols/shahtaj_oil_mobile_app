@@ -10,6 +10,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_text_field.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/text/app_text.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/pickup/dm_pickup_controller.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/load/dm_pick_line_model.dart';
 
@@ -28,7 +29,6 @@ class DmPickupItemCard extends StatelessWidget {
     return Obx(() {
       final key = '${line.productId}';
       final error = controller.qtyErrors[key];
-      final readOnly = line.qtyToPick <= 0;
       final metricStyle = AppTextStyles.caption(
         context,
       ).copyWith(color: AppColors.grey);
@@ -47,7 +47,7 @@ class DmPickupItemCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      AppText.label(
                         line.name,
                         style: AppTextStyles.sectionTitle(context),
                       ),
@@ -60,7 +60,7 @@ class DmPickupItemCard extends StatelessWidget {
             ),
             AppSpacing.vertical(context, 0.006),
             Text(
-              '${AppTexts.dmQtyToPick}: ${AppFormatter.targetAmount(line.qtyToPick)}',
+              '${AppTexts.dmQtyToPick}: ${AppFormatter.targetAmount(line.remainingToPick)}',
               style: metricStyle,
             ),
             Text(
@@ -73,7 +73,6 @@ class DmPickupItemCard extends StatelessWidget {
               label: AppTexts.dmLoadedQty,
               hint: AppTexts.dmLoadedQtyHint,
               prefixIcon: AppIcons.myshops,
-              readOnly: readOnly,
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
@@ -81,9 +80,7 @@ class DmPickupItemCard extends StatelessWidget {
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
               ],
               textInputAction: TextInputAction.done,
-              onChanged: readOnly
-                  ? null
-                  : (raw) => controller.onQtyChanged(line, raw),
+              onChanged: (raw) => controller.onQtyChanged(line, raw),
               errorText: error,
             ),
           ],

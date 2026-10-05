@@ -11,6 +11,7 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_primary_button.d
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/jobs/dm_job_model.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/text/app_text.dart';
 
 class DmJobCard extends StatelessWidget {
   const DmJobCard({
@@ -19,12 +20,16 @@ class DmJobCard extends StatelessWidget {
     this.onTap,
     this.onRecover,
     this.onNotes,
+    this.showDeliveryStatus = true,
   });
 
   final DmJobModel job;
   final VoidCallback? onTap;
   final VoidCallback? onRecover;
   final VoidCallback? onNotes;
+
+  /// When false (e.g. Recover shop picker), hide field/job status chips.
+  final bool showDeliveryStatus;
 
   bool get _hasNotes => (job.notes ?? '').trim().isNotEmpty;
 
@@ -34,12 +39,13 @@ class DmJobCard extends StatelessWidget {
       color: AppColors.grey,
       fontSize: AppResponsive.scaleSize(context, 13),
     );
+    final hasOrderName = job.orderName != null && job.orderName!.isNotEmpty;
 
     return AppOutlineCard(
       onTap: onTap,
       statusColor: job.isWalkIn
           ? AppColors.statPurple
-          : job.fieldState.chipColor,
+          : (showDeliveryStatus ? job.fieldState.chipColor : AppColors.primary),
       padding: AppSpacing.symmetric(context, h: 0.035, v: 0.016),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -47,70 +53,54 @@ class DmJobCard extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Text(
+                child: AppText.label(
                   job.shopName,
                   style: AppTextStyles.sectionTitle(context),
                 ),
               ),
               if (job.isWalkIn) ...[
                 AppStatusChip.walkIn(),
-                AppSpacing.horizontal(context, 0.01),
+                if (showDeliveryStatus) AppSpacing.horizontal(context, 0.01),
               ],
-              AppStatusChip(
-                label: job.fieldState.label,
-                color: job.fieldState.chipColor,
-              ),
-            ],
-          ),
-          AppSpacing.vertical(context, 0.006),
-          Row(
-            children: [
-              AppStatusChip(
-                label: job.state.label,
-                color: job.state.chipColor,
-                soft: true,
-              ),
-              if (job.orderName != null && job.orderName!.isNotEmpty) ...[
-                AppSpacing.horizontal(context, 0.015),
-                Flexible(
-                  child: Text(
-                    job.orderName!,
-                    style: muted,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+              if (showDeliveryStatus)
+                AppStatusChip(
+                  label: job.fieldState.label,
+                  color: job.fieldState.chipColor,
                 ),
-              ],
             ],
           ),
-          if (job.shopAddress != null &&
-              job.shopAddress!.trim().isNotEmpty) ...[
-            AppSpacing.vertical(context, 0.008),
+          if (showDeliveryStatus || hasOrderName) ...[
+            AppSpacing.vertical(context, 0.006),
             Row(
               children: [
-                Icon(
-                  AppIcons.location5,
-                  size: AppResponsive.iconSize(context, factor: 0.8),
-                  color: AppColors.primary,
-                ),
-                AppSpacing.horizontal(context, 0.01),
-                Flexible(
-                  child: Text(
-                    job.shopAddress!,
-                    style: muted.copyWith(color: AppColors.black),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                if (showDeliveryStatus)
+                  AppStatusChip(
+                    label: job.state.label,
+                    color: job.state.chipColor,
+                    soft: true,
                   ),
-                ),
+                if (showDeliveryStatus && hasOrderName)
+                  AppSpacing.horizontal(context, 0.015),
+                if (hasOrderName)
+                  Flexible(
+                    child: Text(
+                      job.orderName!,
+                      style: muted,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
               ],
             ),
           ],
-          AppSpacing.vertical(context, 0.006),
-          Text(
-            '${AppTexts.dmJobIdLabel}: ${job.jobId}'
-            '${job.lines.isEmpty ? '' : ' · ${job.lines.length} ${AppTexts.dmLinesLabel}'}',
-            style: muted,
-          ),
+          if (showDeliveryStatus) ...[
+            AppSpacing.vertical(context, 0.006),
+            Text(
+              '${AppTexts.dmJobIdLabel}: ${job.jobId}'
+              '${job.lines.isEmpty ? '' : ' · ${job.lines.length} ${AppTexts.dmLinesLabel}'}',
+              style: muted,
+            ),
+          ],
           if (_hasNotes) ...[
             AppSpacing.vertical(context, 0.012),
             Material(

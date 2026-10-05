@@ -9,7 +9,6 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dar
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_section_header.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/pickup/dm_pickup_controller.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/widgets/pickup/dm_pickup_item_card.dart';
-import 'package:shahtaj_oil_mobile_app/delivery_man/widgets/pickup/dm_pickup_shop_tile.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/widgets/pickup/dm_pickup_summary_card.dart';
 
 class DmPickupContent extends GetView<DmPickupController> {
@@ -21,24 +20,34 @@ class DmPickupContent extends GetView<DmPickupController> {
       final load = controller.load.value;
       if (load == null) {
         return AppEmptyState(
-          title: AppTexts.emptyNotFoundTitle,
-          subtitle: controller.error.value,
+          title: AppTexts.emptyLoadFailedTitle,
+          subtitle: controller.error.value ?? AppTexts.emptyLoadFailedSubtitle,
           onRefresh: () => controller.loadToday(force: true),
         );
       }
 
-      if (load.pickLines.isEmpty && load.shops.isEmpty) {
+      final remaining = controller.remainingPickLines;
+      final hasAnyLines = load.pickLines.isNotEmpty;
+
+      if (!hasAnyLines) {
         return ListView(
           padding: AppSpacing.screenPadding(context),
           children: [
             DmPickupSummaryCard(load: load),
             AppSpacing.vertical(context, 0.016),
-            // Parent RefreshIndicator handles pull-to-refresh.
             AppEmptyState(
-              title: AppTexts.emptyNotFoundTitle,
+              title: AppTexts.dmPickupDone,
               subtitle: AppTexts.dmLoadEmptySubtitle,
               image: AppImages.emptyNoPickup,
             ),
+            if (controller.canDepart) ...[
+              AppSpacing.vertical(context, 0.016),
+              AppPrimaryButton(
+                label: AppTexts.dmDepartTitle,
+                isLoading: controller.isSubmitting.value,
+                onPressed: controller.departToTodayPlan,
+              ),
+            ],
           ],
         );
       }
@@ -47,14 +56,14 @@ class DmPickupContent extends GetView<DmPickupController> {
         padding: AppSpacing.screenPadding(context),
         children: [
           DmPickupSummaryCard(load: load),
-          if (load.pickLines.isNotEmpty) ...[
-            AppSpacing.vertical(context, 0.016),
+          AppSpacing.vertical(context, 0.016),
+          if (remaining.isNotEmpty) ...[
             AppSectionHeader(
               title: AppTexts.dmPickupItems,
               bottomSpacing: true,
             ),
-            ...load.pickLines.map(
-              (line) => Padding(
+            for (final line in remaining)
+              Padding(
                 padding: EdgeInsets.only(
                   bottom: AppSpacing.verticalValue(context, 0.01),
                 ),
@@ -64,29 +73,25 @@ class DmPickupContent extends GetView<DmPickupController> {
                   controller: controller,
                 ),
               ),
-            ),
             AppSpacing.vertical(context, 0.01),
             AppPrimaryButton(
-              label: controller.hasRemainingToPick
-                  ? AppTexts.dmConfirmPickup
-                  : AppTexts.dmPickupDone,
-              isLoading:
-                  controller.isSubmitting.value &&
-                  controller.submittingJobId.value == null,
-              onPressed: controller.hasRemainingToPick
-                  ? controller.confirmCollectivePick
-                  : null,
+              label: AppTexts.dmConfirmPickup,
+              isLoading: controller.isSubmitting.value,
+              onPressed: controller.confirmCollectivePick,
             ),
-          ],
-          if (controller.shopsWithRemaining.isNotEmpty) ...[
-            AppSpacing.vertical(context, 0.02),
-            AppSectionHeader(
-              title: AppTexts.dmLoadShopsSection,
-              bottomSpacing: true,
+          ] else ...[
+            AppEmptyState(
+              title: AppTexts.dmPickupDone,
+              subtitle: AppTexts.dmNextDepartSubtitle,
+              image: AppImages.emptyNoPickup,
             ),
-            for (final shop in controller.shopsWithRemaining) ...[
-              DmPickupShopTile(job: shop, controller: controller),
-              AppSpacing.vertical(context, 0.01),
+            if (controller.canDepart) ...[
+              AppSpacing.vertical(context, 0.016),
+              AppPrimaryButton(
+                label: AppTexts.dmDepartTitle,
+                isLoading: controller.isSubmitting.value,
+                onPressed: controller.departToTodayPlan,
+              ),
             ],
           ],
         ],

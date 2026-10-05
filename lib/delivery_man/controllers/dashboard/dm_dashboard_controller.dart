@@ -49,6 +49,8 @@ class DmDashboardController extends GetxController {
   final RxInt inTransitCount = 0.obs;
   final RxInt deliveredCount = 0.obs;
   final RxBool hasRemainingPick = false.obs;
+  final RxBool hasTodayLoad = false.obs;
+  final RxBool hasPickedStock = false.obs;
   final RxDouble vanOnHandTotal = 0.0.obs;
   final RxDouble collectedToday = 0.0.obs;
   final RxDouble walletBalance = 0.0.obs;
@@ -74,6 +76,7 @@ class DmDashboardController extends GetxController {
     if (state == null || state == DmSessionState.ended) return null;
 
     if (state == DmSessionState.office) {
+      // Still need warehouse pick → Today Load.
       if (hasRemainingPick.value) {
         return DmNextActionModel(
           kind: DmNextActionKind.pickup,
@@ -81,10 +84,27 @@ class DmDashboardController extends GetxController {
           buttonLabel: AppTexts.dmPickupTitle,
         );
       }
+      // Depart only after stock is on the van.
+      if (hasPickedStock.value) {
+        return DmNextActionModel(
+          kind: DmNextActionKind.depart,
+          message: AppTexts.dmNextDepartSubtitle,
+          buttonLabel: AppTexts.dmDepartTitle,
+        );
+      }
+      // Load exists but nothing picked yet → open Today Load.
+      if (hasTodayLoad.value) {
+        return DmNextActionModel(
+          kind: DmNextActionKind.pickup,
+          message: AppTexts.dmNextPickupSubtitle,
+          buttonLabel: AppTexts.dmPickupTitle,
+        );
+      }
+      // No schedule / no today load — don't offer Depart.
       return DmNextActionModel(
-        kind: DmNextActionKind.depart,
-        message: AppTexts.dmNextDepartSubtitle,
-        buttonLabel: AppTexts.dmDepartTitle,
+        kind: DmNextActionKind.viewPlan,
+        message: AppTexts.dmNoJobsToday,
+        buttonLabel: AppTexts.dmTodayPlanTitle,
       );
     }
 
@@ -210,12 +230,23 @@ class DmDashboardController extends GetxController {
 
       if (load != null) {
         hasRemainingPick.value = load.pickLines.any(
-          (line) => line.qtyStill > 0 || line.qtyToPick > 0,
+          (line) => line.needsWarehousePick,
         );
+        hasTodayLoad.value = load.pickLines.isNotEmpty || load.shops.isNotEmpty;
+        hasPickedStock.value =
+            load.vanQtyTotal > 0 ||
+            load.pickLines.any(
+              (line) => line.qtyPicked > 0 || line.qtyOnVan > 0,
+            );
+      } else {
+        hasRemainingPick.value = false;
+        hasTodayLoad.value = false;
+        hasPickedStock.value = false;
       }
 
       if (van != null) {
         vanOnHandTotal.value = van.qtyTotal;
+        if (van.qtyTotal > 0) hasPickedStock.value = true;
         final mapped = [
           for (final item in van.items)
             DmStockItemModel(
@@ -267,6 +298,7 @@ class DmDashboardController extends GetxController {
         goToPickup();
       case DmNextActionKind.depart:
         departFromDashboard();
+      case DmNextActionKind.viewPlan:
       case DmNextActionKind.endDay:
         goToOrders();
       case DmNextActionKind.deliver:

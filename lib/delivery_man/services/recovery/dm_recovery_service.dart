@@ -30,6 +30,7 @@ class DmRecoveryService extends GetxService {
   Future<DmRecoveryShopModel> fetchShop(
     int shopId, {
     bool forceNetwork = false,
+    bool trackActive = true,
   }) async {
     final result = await _cache.readThrough(
       key: shopCacheKey('$shopId'),
@@ -42,7 +43,7 @@ class DmRecoveryService extends GetxService {
         forceNetwork: forceNetwork,
       ),
     );
-    activeShop.value = result;
+    if (trackActive) activeShop.value = result;
     return result;
   }
 
