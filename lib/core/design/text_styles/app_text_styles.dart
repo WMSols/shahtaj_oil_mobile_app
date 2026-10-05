@@ -4,6 +4,9 @@ import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/fonts/app_fonts.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/responsive/app_responsive.dart';
 
+/// Typography tokens only. String casing (Title Case / ALL CAPS) belongs on
+/// [AppText] (`lib/core/widgets/text/app_text.dart`), not here — [TextStyle]
+/// cannot transform content.
 class AppTextStyles {
   static TextStyle screenTitle(BuildContext context) => TextStyle(
     fontSize: AppResponsive.screenWidth(context) * 0.042,

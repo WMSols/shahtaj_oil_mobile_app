@@ -145,6 +145,24 @@ class AppFormatter {
     return trimmed[0].toUpperCase() + trimmed.substring(1);
   }
 
+  /// Title Case for short UI labels and API display names.
+  ///
+  /// Each whitespace-separated word gets a capital first letter and
+  /// lowercased remainder (so `WALK-IN` → `Walk-in`, `continue deliveries`
+  /// → `Continue Deliveries`). GetX `@param` tokens are left untouched.
+  static String titleCase(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return trimmed;
+    return trimmed.split(RegExp(r'\s+')).map(_titleCaseWord).join(' ');
+  }
+
+  static String _titleCaseWord(String word) {
+    if (word.isEmpty) return word;
+    if (word.startsWith('@')) return word;
+    if (word.length == 1) return word.toUpperCase();
+    return word[0].toUpperCase() + word.substring(1).toLowerCase();
+  }
+
   static String currency(double amount, {String symbol = '₹'}) {
     final formatter = NumberFormat('#,##0.00');
     return '$symbol${formatter.format(amount)}';
@@ -236,19 +254,8 @@ class AppFormatter {
     };
   }
 
-  /// Title-case only when the whole string is lowercase (keeps API mixed-case names).
-  static String displayLabel(String value) {
-    final trimmed = value.trim();
-    if (trimmed.isEmpty) return trimmed;
-    if (trimmed != trimmed.toLowerCase()) return trimmed;
-    return trimmed
-        .split(RegExp(r'\s+'))
-        .map((word) {
-          if (word.isEmpty) return word;
-          return word[0].toUpperCase() + word.substring(1);
-        })
-        .join(' ');
-  }
+  /// Display helper for API-driven names (shops, products, tags).
+  static String displayLabel(String value) => titleCase(value);
 
   static String invoiceNumber(String id) => 'INV-${id.padLeft(6, '0')}';
 

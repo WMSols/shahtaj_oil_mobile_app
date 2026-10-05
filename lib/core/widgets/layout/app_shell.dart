@@ -20,6 +20,7 @@ import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/sync_outbox_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_sync_status_banner.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_version_badge.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/text/app_text.dart';
 
 class AppShell<T extends AppShellController> extends GetView<T> {
   const AppShell({super.key});
@@ -63,7 +64,7 @@ class AppShell<T extends AppShellController> extends GetView<T> {
           scrolledUnderElevation: 0,
           centerTitle: true,
           title: Obx(
-            () => Text(
+            () => AppText.label(
               controller.currentLeaf.label,
               style: AppTextStyles.screenTitle(context),
             ),

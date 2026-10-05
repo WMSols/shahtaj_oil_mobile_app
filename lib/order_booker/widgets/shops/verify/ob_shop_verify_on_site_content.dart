@@ -13,6 +13,7 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_dropdown_field.dart
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_form_section_header.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_photo_upload_tile.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_text_field.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/text/app_text.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/controllers/shops/ob_shop_verify_on_site_controller.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/shops/ob_shop_missing_field.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/tasks/ob_task_model.dart';
@@ -68,7 +69,7 @@ class ObShopVerifyOnSiteContent extends StatelessWidget {
         child: ListView(
           padding: AppSpacing.screenPadding(context),
           children: [
-            Text(
+            AppText.label(
               task.shopName,
               style: AppTextStyles.sectionTitle(
                 context,

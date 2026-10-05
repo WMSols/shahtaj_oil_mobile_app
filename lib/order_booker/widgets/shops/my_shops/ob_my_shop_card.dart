@@ -10,6 +10,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/models/shops/ob_shop_model.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/text/app_text.dart';
 
 class ObMyShopCard extends StatelessWidget {
   const ObMyShopCard({super.key, required this.shop, this.onTap});
@@ -47,7 +48,7 @@ class ObMyShopCard extends StatelessWidget {
                 Row(
                   children: [
                     Expanded(
-                      child: Text(
+                      child: AppText.label(
                         shop.name,
                         style: AppTextStyles.sectionTitle(context).copyWith(),
                       ),

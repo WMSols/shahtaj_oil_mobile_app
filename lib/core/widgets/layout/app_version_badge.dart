@@ -18,7 +18,7 @@ class AppVersionBadge extends StatelessWidget {
         vertical: AppSpacing.verticalValue(context, 0.004),
       ),
       decoration: BoxDecoration(
-        color: AppColors.primary,
+        color: AppColors.success,
         borderRadius: BorderRadius.circular(
           AppResponsive.radius(context, factor: 0.5),
         ),

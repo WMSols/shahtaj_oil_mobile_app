@@ -10,6 +10,7 @@ import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/collections/dm_collection_summary_model.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/text/app_text.dart';
 
 /// Mock bag-collection row for parked handover UI (no live handover API yet).
 class DmBagCollectionCard extends StatelessWidget {
@@ -60,7 +61,7 @@ class DmBagCollectionCard extends StatelessWidget {
             ],
           ),
           AppSpacing.vertical(context, 0.004),
-          Text(collection.shopName, style: mutedStyle),
+          AppText.label(collection.shopName, style: mutedStyle),
           AppSpacing.vertical(context, 0.006),
           Row(
             children: [

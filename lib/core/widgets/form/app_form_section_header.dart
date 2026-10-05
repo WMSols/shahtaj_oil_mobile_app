@@ -4,6 +4,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/responsive/app_responsive.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/text/app_text.dart';
 
 class AppFormSectionHeader extends StatelessWidget {
   const AppFormSectionHeader({
@@ -31,8 +32,8 @@ class AppFormSectionHeader extends StatelessWidget {
           child: Row(
             children: [
               Flexible(
-                child: Text(
-                  title.toUpperCase(),
+                child: AppText.label(
+                  title,
                   style: AppTextStyles.sectionTitleAccent(context).copyWith(
                     color: AppColors.primary,
                     fontWeight: FontWeight.w700,

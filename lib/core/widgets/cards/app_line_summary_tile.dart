@@ -5,6 +5,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/text/app_text.dart';
 
 /// Compact product line summary used by order and visit detail screens.
 class AppLineSummaryTile extends StatelessWidget {
@@ -43,7 +44,7 @@ class AppLineSummaryTile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
+          AppText.label(
             title,
             style: AppTextStyles.bodyText(context).copyWith(
               fontWeight: emphasized ? FontWeight.w700 : FontWeight.w600,
@@ -100,7 +101,7 @@ class _LabeledRow extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: Text(
+          child: AppText.label(
             label,
             style: AppTextStyles.caption(
               context,

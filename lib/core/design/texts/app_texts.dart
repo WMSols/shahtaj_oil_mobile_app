@@ -3,6 +3,20 @@ import 'package:get/get.dart';
 class AppTexts {
   AppTexts._();
 
+  /// Local Title Case for API name params (avoids circular import with AppFormatter).
+  static String _titleCaseName(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return trimmed;
+    return trimmed
+        .split(RegExp(r'\s+'))
+        .map((word) {
+          if (word.isEmpty || word.startsWith('@')) return word;
+          if (word.length == 1) return word.toUpperCase();
+          return word[0].toUpperCase() + word.substring(1).toLowerCase();
+        })
+        .join(' ');
+  }
+
   // App
   static String get appName => 'appName'.tr;
 
@@ -26,10 +40,12 @@ class AppTexts {
   static String get switchRole => 'switchRole'.tr;
   static String get phone => 'phone'.tr;
   static String get email => 'email'.tr;
+  static String get username => 'username'.tr;
   static String get password => 'password'.tr;
   static String get passwordHint => 'passwordHint'.tr;
   static String get fullName => 'fullName'.tr;
   static String get emailHint => 'emailHint'.tr;
+  static String get usernameHint => 'usernameHint'.tr;
   static String get rememberMe => 'rememberMe'.tr;
   static String get authWelcomeSubtitle => 'authWelcomeSubtitle'.tr;
   static String get signingInAs => 'signingInAs'.tr;
@@ -313,7 +329,7 @@ class AppTexts {
   static String get obTargetSortDateEnd => 'obTargetSortDateEnd'.tr;
   static String get obTargetSortType => 'obTargetSortType'.tr;
   static String obShopOwner(String name) =>
-      'obShopOwner'.trParams({'name': name});
+      'obShopOwner'.trParams({'name': _titleCaseName(name)});
   static String get obNoShopsFound => 'obNoShopsFound'.tr;
   static String get obShopDetailTitle => 'obShopDetailTitle'.tr;
   static String get obShopDetailsSection => 'obShopDetailsSection'.tr;
@@ -441,7 +457,7 @@ class AppTexts {
       .trParams({'completed': '$completed', 'total': '$total'});
 
   static String obActiveVisitAt(String shopName) =>
-      'obActiveVisitAt'.trParams({'shop': shopName});
+      'obActiveVisitAt'.trParams({'shop': _titleCaseName(shopName)});
 
   static String obTaskSequence(int sequence) =>
       'obTaskSequence'.trParams({'sequence': '$sequence'});
@@ -662,6 +678,8 @@ class AppTexts {
   static String get dmCustomerPhoneHint => 'dmCustomerPhoneHint'.tr;
   static String get dmCustomerNameRequired => 'dmCustomerNameRequired'.tr;
   static String get dmQtyAvailableOnVan => 'dmQtyAvailableOnVan'.tr;
+  static String dmQtyExceedsAvailable(String available) =>
+      'dmQtyExceedsAvailable'.trParams({'available': available});
   static String get dmNextDepartSubtitle => 'dmNextDepartSubtitle'.tr;
   static String get dmNextEndDaySubtitle => 'dmNextEndDaySubtitle'.tr;
 
@@ -800,6 +818,7 @@ class AppTexts {
   static String get dmHandoverDetailTitle => 'dmHandoverDetailTitle'.tr;
   static String get dmTotalOutstanding => 'dmTotalOutstanding'.tr;
   static String get dmOpenInvoices => 'dmOpenInvoices'.tr;
+  static String get dmUnpaidInvoices => 'dmUnpaidInvoices'.tr;
   static String get dmNoOpenInvoices => 'dmNoOpenInvoices'.tr;
   static String get dmNoOpenInvoicesSubtitle => 'dmNoOpenInvoicesSubtitle'.tr;
   static String get dmPaidInvoices => 'dmPaidInvoices'.tr;
@@ -817,6 +836,19 @@ class AppTexts {
       'dmSelectedCount'.trParams({'count': '$count'});
   static String get dmInvoiceRemaining => 'dmInvoiceRemaining'.tr;
   static String get dmInvoiceOriginal => 'dmInvoiceOriginal'.tr;
+  static String get dmInvoiceTotal => 'dmInvoiceTotal'.tr;
+  static String get dmInvoicePaid => 'dmInvoicePaid'.tr;
+  static String get dmInvoicePaymentNotPaid => 'dmInvoicePaymentNotPaid'.tr;
+  static String get dmInvoicePaymentPartial => 'dmInvoicePaymentPartial'.tr;
+  static String get dmInvoicePaymentInPayment => 'dmInvoicePaymentInPayment'.tr;
+  static String get dmInvoicePaymentPaid => 'dmInvoicePaymentPaid'.tr;
+  static String get dmWalletCollectionPaid => 'dmWalletCollectionPaid'.tr;
+  static String get dmWalletCollectionPartial => 'dmWalletCollectionPartial'.tr;
+  static String get dmWalletCollectionNotPaid => 'dmWalletCollectionNotPaid'.tr;
+  static String get dmWalletCollectionCollected =>
+      'dmWalletCollectionCollected'.tr;
+  static String get dmWalletCollectionCanceled =>
+      'dmWalletCollectionCanceled'.tr;
   static String get dmCallShop => 'dmCallShop'.tr;
   static String get dmDirections => 'dmDirections'.tr;
   static String get dmNoPhoneToCall => 'dmNoPhoneToCall'.tr;

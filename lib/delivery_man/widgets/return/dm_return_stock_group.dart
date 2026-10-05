@@ -7,6 +7,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.d
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_section_header.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/return/dm_return_model.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/text/app_text.dart';
 
 class DmReturnStockGroup extends StatelessWidget {
   const DmReturnStockGroup({
@@ -48,7 +49,7 @@ class DmReturnStockGroup extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            AppText.label(
                               lines[i].productName,
                               style: AppTextStyles.bodyText(context),
                             ),
