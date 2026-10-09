@@ -206,6 +206,14 @@ class DmJobDetailScreen extends GetView<DmJobDetailController> {
                   ),
                 AppSpacing.vertical(context, 0.016),
               ],
+              if (!controller.canActOnField && job.hasShopClosedPhoto) ...[
+                AppDetailRow(
+                  label: AppTexts.dmShopClosedPhotoTitle,
+                  value: AppTexts.dmShopClosedPhotoCaptured,
+                  showDivider: false,
+                ),
+                AppSpacing.vertical(context, 0.016),
+              ],
               if (controller.canActOnField) ...[
                 AppSpacing.vertical(context, 0.01),
                 Row(
@@ -214,7 +222,7 @@ class DmJobDetailScreen extends GetView<DmJobDetailController> {
                       child: AppPrimaryButton(
                         label: AppTexts.dmShopClosedTitle,
                         isLoading: controller.isActing.value,
-                        onPressed: controller.submitShopClosed,
+                        onPressed: controller.openShopClosed,
                         backgroundColor: AppColors.error,
                       ),
                     ),

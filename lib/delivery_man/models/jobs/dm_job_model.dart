@@ -18,6 +18,7 @@ class DmJobModel {
     this.notes,
     this.receiverName,
     this.hasDeliveryProof = false,
+    this.hasShopClosedPhoto = false,
     this.gpsVerified = false,
     this.isWalkIn = false,
     this.lines = const [],
@@ -37,6 +38,7 @@ class DmJobModel {
   final String? notes;
   final String? receiverName;
   final bool hasDeliveryProof;
+  final bool hasShopClosedPhoto;
   final bool gpsVerified;
   final bool isWalkIn;
   final List<DmJobLineModel> lines;
@@ -69,6 +71,7 @@ class DmJobModel {
       notes: ApiMap.asString(json['notes']),
       receiverName: ApiMap.asString(json['receiver_name']),
       hasDeliveryProof: ApiMap.asBool(json['has_delivery_proof']),
+      hasShopClosedPhoto: ApiMap.asBool(json['has_shop_closed_photo']),
       gpsVerified: ApiMap.asBool(json['gps_verified']),
       isWalkIn: _parseWalkIn(json),
       lines: ApiMap.listOf(
@@ -146,6 +149,7 @@ class DmJobModel {
     'notes': notes,
     'receiver_name': receiverName,
     'has_delivery_proof': hasDeliveryProof,
+    'has_shop_closed_photo': hasShopClosedPhoto,
     'gps_verified': gpsVerified,
     'is_walk_in': isWalkIn,
     'lines': lines.map((e) => e.toJson()).toList(growable: false),
@@ -166,6 +170,7 @@ class DmJobModel {
     String? notes,
     String? receiverName,
     bool? hasDeliveryProof,
+    bool? hasShopClosedPhoto,
     bool? gpsVerified,
     bool? isWalkIn,
     List<DmJobLineModel>? lines,
@@ -185,6 +190,7 @@ class DmJobModel {
       notes: notes ?? this.notes,
       receiverName: receiverName ?? this.receiverName,
       hasDeliveryProof: hasDeliveryProof ?? this.hasDeliveryProof,
+      hasShopClosedPhoto: hasShopClosedPhoto ?? this.hasShopClosedPhoto,
       gpsVerified: gpsVerified ?? this.gpsVerified,
       isWalkIn: isWalkIn ?? this.isWalkIn,
       lines: lines ?? this.lines,

@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
+import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/helper/app_helper.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/media/app_image_compress.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_confirm_dialog.dart';
@@ -221,31 +222,13 @@ class DmJobDetailController extends GetxController {
     }
   }
 
-  Future<void> submitShopClosed() async {
+  void openShopClosed() {
     final current = job.value;
-    if (current == null || !canActOnField || isActing.value) return;
-    final confirmed = await AppConfirmSheet.show(
-      title: AppTexts.dmShopClosedTitle,
-      message: AppTexts.dmShopClosedConfirmMessage,
-      confirmLabel: AppTexts.dmShopClosedTitle,
+    if (current == null || !canActOnField) return;
+    Get.toNamed(
+      AppRoutes.dmJobShopClosed.replaceFirst(':id', '${current.jobId}'),
+      arguments: {'jobId': current.jobId, 'shopName': current.shopName},
     );
-    if (confirmed != true) return;
-
-    isActing.value = true;
-    try {
-      job.value = await _planService.markShopClosed(
-        jobId: current.jobId,
-        notes: notesController.text,
-      );
-      AppToast.showSuccess(AppTexts.dmShopClosedSuccess);
-      returnToTodayPlan();
-    } on ApiException catch (e) {
-      AppToast.showError(e.message);
-    } catch (_) {
-      AppToast.showError(AppTexts.error);
-    } finally {
-      isActing.value = false;
-    }
   }
 
   Future<void> submitFailed() async {
