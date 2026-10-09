@@ -6,7 +6,7 @@ abstract class AppBuildInfo {
   AppBuildInfo._();
 
   /// Change this integer when cutting a build for QA / field.
-  static const int buildNumber = 9;
+  static const int buildNumber = 10;
 
   static String get versionLabel => 'V$buildNumber';
 }

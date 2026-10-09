@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:io' show Platform;
+
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
@@ -9,6 +12,18 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 
 class AppHelper {
   AppHelper._();
+
+  /// Prefer a true GPS lock; reject coarse fused / network snaps.
+  static const _targetAccuracyMeters = 50.0;
+
+  /// Soft ceiling if we never hit the target during the sample window.
+  static const _maxAcceptableAccuracyMeters = 80.0;
+
+  /// How long to sample for a good high-accuracy fix.
+  static const _sampleWindow = Duration(seconds: 25);
+
+  /// Only accept last-known if it is essentially "just now" and accurate.
+  static const _lastKnownMaxAge = Duration(seconds: 8);
 
   static DateTime? parseDateTimeOrNull(String? value) {
     if (value == null || value.trim().isEmpty) return null;
@@ -67,13 +82,6 @@ class AppHelper {
     if (text.length <= maxLength) return text;
     return '${text.substring(0, maxLength)}…';
   }
-
-  /// Prefer a fresh fix after location was just toggled on.
-  static const _positionTimeout = Duration(seconds: 8);
-  static const _positionAttempts = 3;
-
-  /// Only accept last-known if it is essentially "just now" (not minutes old).
-  static const _lastKnownMaxAge = Duration(seconds: 30);
 
   /// Live max from session (`gps_criteria.max_m` saved at login / plan / today).
   /// Throws when criteria was never received (cannot invent a distance).
@@ -181,10 +189,11 @@ class AppHelper {
     return payload;
   }
 
-  /// Ensures location service + permission, then returns a fresh position.
+  /// Ensures location service + permission, then returns a fresh high-accuracy
+  /// position. Samples until accuracy is good enough (or the window ends).
   ///
-  /// Retries briefly after location was just toggled on. Does not use a
-  /// long-lived last-known fix — place-order / check-in need the spot now.
+  /// Does not prefer a medium/network fix — that caused urban check-ins to
+  /// report points hundreds of meters away while Google Maps stayed on shop.
   ///
   /// When [showGuide] is true, opens a bottom sheet to enable location /
   /// permission on the device instead of only throwing.
@@ -218,41 +227,127 @@ class AppHelper {
       duration: const Duration(seconds: 45),
     );
     try {
-      Object? lastError;
-      for (var attempt = 0; attempt < _positionAttempts; attempt++) {
-        if (attempt > 0) {
-          await Future<void>.delayed(Duration(milliseconds: 400 * attempt));
-        }
-        try {
-          return await Geolocator.getCurrentPosition(
-            locationSettings: LocationSettings(
-              accuracy: attempt == 0
-                  ? LocationAccuracy.medium
-                  : LocationAccuracy.high,
-              timeLimit: _positionTimeout,
-            ),
-          );
-        } catch (e) {
-          lastError = e;
-        }
+      try {
+        return await _bestHighAccuracyPosition();
+      } on ApiException {
+        rethrow;
+      } catch (e) {
+        assert(() {
+          // ignore: avoid_print
+          print('requireCurrentPosition stream/oneshot failed: $e');
+          return true;
+        }());
       }
 
       final last = await Geolocator.getLastKnownPosition();
-      if (last != null) {
-        final age = DateTime.now().difference(last.timestamp);
-        if (!age.isNegative && age <= _lastKnownMaxAge) {
-          return last;
-        }
+      if (last != null && _isFreshAccurate(last)) {
+        return last;
       }
 
-      assert(() {
-        // ignore: avoid_print
-        print('requireCurrentPosition failed after retries: $lastError');
-        return true;
-      }());
       throw ApiException(message: AppTexts.obLocationFetchFailed);
     } finally {
       AppToast.close();
+    }
+  }
+
+  static bool _isFreshAccurate(Position position) {
+    final age = DateTime.now().difference(position.timestamp);
+    if (age.isNegative || age > _lastKnownMaxAge) return false;
+    return _accuracyOk(position, _maxAcceptableAccuracyMeters);
+  }
+
+  static bool _accuracyOk(Position position, double maxMeters) {
+    final accuracy = position.accuracy;
+    // Some platforms report 0 for unknown; treat as not proven accurate.
+    if (accuracy <= 0) return false;
+    return accuracy <= maxMeters;
+  }
+
+  static LocationSettings _highAccuracySettings({Duration? timeLimit}) {
+    if (Platform.isAndroid) {
+      return AndroidSettings(
+        accuracy: LocationAccuracy.best,
+        distanceFilter: 0,
+        forceLocationManager: false,
+        intervalDuration: const Duration(seconds: 1),
+        timeLimit: timeLimit,
+      );
+    }
+    if (Platform.isIOS) {
+      return AppleSettings(
+        accuracy: LocationAccuracy.best,
+        activityType: ActivityType.other,
+        distanceFilter: 0,
+        pauseLocationUpdatesAutomatically: false,
+        timeLimit: timeLimit,
+      );
+    }
+    return LocationSettings(
+      accuracy: LocationAccuracy.best,
+      distanceFilter: 0,
+      timeLimit: timeLimit,
+    );
+  }
+
+  /// Sample high-accuracy fixes and return as soon as accuracy is good.
+  static Future<Position> _bestHighAccuracyPosition() async {
+    Position? best;
+    final done = Completer<Position>();
+    StreamSubscription<Position>? subscription;
+    Timer? timer;
+
+    void consider(Position position) {
+      if (best == null ||
+          (position.accuracy > 0 &&
+              (best!.accuracy <= 0 || position.accuracy < best!.accuracy))) {
+        best = position;
+      }
+      if (!done.isCompleted && _accuracyOk(position, _targetAccuracyMeters)) {
+        done.complete(position);
+      }
+    }
+
+    timer = Timer(_sampleWindow, () {
+      if (done.isCompleted) return;
+      final candidate = best;
+      if (candidate != null &&
+          _accuracyOk(candidate, _maxAcceptableAccuracyMeters)) {
+        done.complete(candidate);
+        return;
+      }
+      done.completeError(ApiException(message: AppTexts.obLocationFetchFailed));
+    });
+
+    try {
+      subscription =
+          Geolocator.getPositionStream(
+            locationSettings: _highAccuracySettings(),
+          ).listen(
+            consider,
+            onError: (Object e) {
+              if (!done.isCompleted && best == null) {
+                done.completeError(e);
+              }
+            },
+            cancelOnError: false,
+          );
+
+      // Kick a one-shot in parallel — some devices are slow to start the stream.
+      unawaited(() async {
+        try {
+          final oneShot = await Geolocator.getCurrentPosition(
+            locationSettings: _highAccuracySettings(timeLimit: _sampleWindow),
+          );
+          consider(oneShot);
+        } catch (_) {
+          // Stream / timer still drive completion.
+        }
+      }());
+
+      return await done.future;
+    } finally {
+      timer.cancel();
+      await subscription?.cancel();
     }
   }
 }

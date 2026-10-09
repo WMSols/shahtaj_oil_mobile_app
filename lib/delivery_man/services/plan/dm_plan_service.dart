@@ -115,12 +115,17 @@ class DmPlanService extends GetxService {
     return job;
   }
 
-  Future<DmJobModel> markShopClosed({required int jobId, String? notes}) async {
+  Future<DmJobModel> markShopClosed({
+    required int jobId,
+    required String notes,
+    required String shopClosedImageBase64,
+  }) async {
     final data = await _api.postData(
       ApiEndpoints.dmJobShopClosed,
       data: {
         'job_id': jobId,
-        if (notes != null && notes.trim().isNotEmpty) 'notes': notes.trim(),
+        'notes': notes.trim(),
+        'shop_closed_image': shopClosedImageBase64,
       },
     );
     return _applyJobResponse(data, fallbackNotes: notes);

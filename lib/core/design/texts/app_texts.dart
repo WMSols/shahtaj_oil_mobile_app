@@ -648,9 +648,17 @@ class AppTexts {
   static String get dmDeliverSuccess => 'dmDeliverSuccess'.tr;
   static String get dmDeliverQtyRequired => 'dmDeliverQtyRequired'.tr;
   static String get dmShopClosedTitle => 'dmShopClosedTitle'.tr;
+  static String get dmShopClosedSubtitle => 'dmShopClosedSubtitle'.tr;
   static String get dmShopClosedConfirmMessage =>
       'dmShopClosedConfirmMessage'.tr;
   static String get dmShopClosedSuccess => 'dmShopClosedSuccess'.tr;
+  static String get dmShopClosedNotesLabel => 'dmShopClosedNotesLabel'.tr;
+  static String get dmShopClosedNotesHint => 'dmShopClosedNotesHint'.tr;
+  static String get dmShopClosedNotesRequired => 'dmShopClosedNotesRequired'.tr;
+  static String get dmShopClosedPhotoTitle => 'dmShopClosedPhotoTitle'.tr;
+  static String get dmShopClosedPhotoSubtitle => 'dmShopClosedPhotoSubtitle'.tr;
+  static String get dmShopClosedPhotoRequired => 'dmShopClosedPhotoRequired'.tr;
+  static String get dmShopClosedPhotoCaptured => 'dmShopClosedPhotoCaptured'.tr;
   static String get dmFailedTitle => 'dmFailedTitle'.tr;
   static String get dmFailedConfirmMessage => 'dmFailedConfirmMessage'.tr;
   static String get dmFailedNotesRequired => 'dmFailedNotesRequired'.tr;

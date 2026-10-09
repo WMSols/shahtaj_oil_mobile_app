@@ -9,6 +9,7 @@ import 'package:shahtaj_oil_mobile_app/delivery_man/bindings/handover/dm_handove
 import 'package:shahtaj_oil_mobile_app/delivery_man/bindings/handover/dm_handover_detail_binding.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/bindings/orders/dm_job_detail_binding.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/bindings/orders/dm_order_detail_binding.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/bindings/orders/dm_shop_closed_binding.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/views/collections/dm_collection_detail_screen.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/views/collections/dm_record_collection_screen.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/views/collections/dm_shop_invoices_screen.dart';
@@ -17,6 +18,7 @@ import 'package:shahtaj_oil_mobile_app/delivery_man/views/handover/dm_handover_c
 import 'package:shahtaj_oil_mobile_app/delivery_man/views/handover/dm_handover_detail_screen.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/views/orders/dm_job_detail_screen.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/views/orders/dm_order_detail_screen.dart';
+import 'package:shahtaj_oil_mobile_app/delivery_man/views/orders/dm_shop_closed_screen.dart';
 
 class DeliveryManRoutes {
   DeliveryManRoutes._();
@@ -25,6 +27,11 @@ class DeliveryManRoutes {
   /// and are not registered here.
   /// Static paths (confirm/record) must appear before `:id` routes.
   static final pages = <GetPage>[
+    GetPage(
+      name: AppRoutes.dmJobShopClosed,
+      page: () => const DmShopClosedScreen(),
+      binding: DmShopClosedBinding(),
+    ),
     GetPage(
       name: AppRoutes.dmJobDetail,
       page: () => const DmJobDetailScreen(),
