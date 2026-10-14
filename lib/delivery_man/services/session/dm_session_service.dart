@@ -47,7 +47,7 @@ class DmSessionService extends GetxService {
 
     try {
       final data = await _api.postData(ApiEndpoints.dmSessionGet);
-      return _setSession(_parseSession(data));
+      return await _setSession(_parseSession(data));
     } catch (_) {
       final cached = await loadCached();
       if (cached != null) return cached;
