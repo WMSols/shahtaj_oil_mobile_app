@@ -4,12 +4,15 @@ import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart' hide Response;
 
+import 'package:shahtaj_oil_mobile_app/common/services/auth/auth_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_logger.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/connectivity_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/storage_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 
 class ApiClient extends GetxService {
   ApiClient(this._storage, this._session) {
@@ -19,6 +22,9 @@ class ApiClient extends GetxService {
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 15),
         sendTimeout: const Duration(seconds: 15),
+        // Session expiry is returned as 302; do not follow redirects or we
+        // never see that status in the interceptor.
+        followRedirects: false,
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
@@ -41,12 +47,27 @@ class ApiClient extends GetxService {
           handler.next(options);
         },
         onError: (error, handler) async {
-          if (error.response?.statusCode == 401) {
-            await _session.clearSession();
-            if (Get.currentRoute != AppRoutes.login &&
-                Get.currentRoute != AppRoutes.selectRole) {
-              Get.offAllNamed(AppRoutes.selectRole);
+          final status = error.response?.statusCode;
+          if (status == 302 || status == 401) {
+            final onAuthScreen = _isOnAuthScreen;
+            if (!onAuthScreen) {
+              await _handleSessionExpired();
             }
+            // On login/select-role, 401 is usually bad credentials — keep
+            // that message. Elsewhere never parse the body for session codes.
+            final message = onAuthScreen
+                ? (_extractMessage(error.response?.data) ??
+                      AppTexts.loginFailed)
+                : AppTexts.sessionExpiredPleaseLogin;
+            handler.reject(
+              DioException(
+                requestOptions: error.requestOptions,
+                response: error.response,
+                type: error.type,
+                error: ApiException(message: message, statusCode: status),
+              ),
+            );
+            return;
           }
           handler.next(error);
         },
@@ -59,7 +80,48 @@ class ApiClient extends GetxService {
   final SessionService _session;
   late final Dio _dio;
 
+  bool _handlingSessionExpiry = false;
+
   String get odooDatabase => dotenv.env['ODOO_DATABASE'] ?? '';
+
+  bool get _isOnAuthScreen {
+    final route = Get.currentRoute;
+    return route == AppRoutes.login ||
+        route == AppRoutes.selectRole ||
+        route == AppRoutes.onboarding ||
+        route == AppRoutes.splash;
+  }
+
+  Future<void> _handleSessionExpired() async {
+    if (_handlingSessionExpiry) return;
+    _handlingSessionExpiry = true;
+    try {
+      final role = _session.role.value;
+      if (Get.isRegistered<AuthService>()) {
+        await Get.find<AuthService>().logout();
+      } else {
+        await _session.clearSession();
+      }
+
+      // Keep role so login can open with the correct OB/DM context.
+      if (role != null) {
+        await _storage.saveRole(role.name);
+        _session.role.value = role;
+      }
+
+      AppToast.showError(AppTexts.sessionExpiredPleaseLogin);
+
+      if (!_isOnAuthScreen) {
+        if (role != null) {
+          Get.offAllNamed(AppRoutes.login, arguments: role);
+        } else {
+          Get.offAllNamed(AppRoutes.selectRole);
+        }
+      }
+    } finally {
+      _handlingSessionExpiry = false;
+    }
+  }
 
   Future<Response<T>> get<T>(
     String path, {
@@ -177,16 +239,40 @@ class ApiClient extends GetxService {
   }
 
   ApiException _mapException(DioException e) {
+    if (e.error is ApiException) {
+      return e.error as ApiException;
+    }
+
     final status = e.response?.statusCode;
-    final data = e.response?.data;
-    final message = switch (e.type) {
-      DioExceptionType.connectionTimeout ||
-      DioExceptionType.receiveTimeout ||
-      DioExceptionType.sendTimeout => 'Connection timed out',
-      DioExceptionType.connectionError => 'No internet connection',
-      _ => _extractMessage(data) ?? e.message ?? 'Request failed',
+
+    // 302 / 401 away from auth: fixed copy, do not parse body JSON.
+    if (status == 302 || status == 401) {
+      final onAuthScreen = _isOnAuthScreen;
+      return ApiException(
+        message: onAuthScreen
+            ? (_extractMessage(e.response?.data) ?? AppTexts.loginFailed)
+            : AppTexts.sessionExpiredPleaseLogin,
+        statusCode: status,
+      );
+    }
+
+    final message = switch (status) {
+      403 => AppTexts.forbiddenAccess,
+      404 => AppTexts.recordNotFound,
+      500 => AppTexts.serverErrorTryAgain,
+      _ => switch (e.type) {
+        DioExceptionType.connectionTimeout ||
+        DioExceptionType.receiveTimeout ||
+        DioExceptionType.sendTimeout => AppTexts.connectionTimedOut,
+        DioExceptionType.connectionError => AppTexts.noInternetConnection,
+        _ =>
+          _extractMessage(e.response?.data) ??
+              e.message ??
+              AppTexts.requestFailed,
+      },
     };
-    return ApiException(message: message, statusCode: status, data: data);
+
+    return ApiException(message: message, statusCode: status);
   }
 
   String? _extractMessage(dynamic data) {

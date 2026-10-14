@@ -65,7 +65,7 @@ class ObVisitService extends GetxService {
       }
       try {
         final data = await _api.postData(ApiEndpoints.obVisitsMine, data: body);
-        return _withLocalVisits(
+        return await _withLocalVisits(
           ObVisitListResult.fromJson(data),
           offset,
           dateFrom,

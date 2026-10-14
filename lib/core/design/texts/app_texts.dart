@@ -57,6 +57,13 @@ class AppTexts {
   static String get pressBackAgainToExit => 'pressBackAgainToExit'.tr;
   static String get loginCredentialsRequired => 'loginCredentialsRequired'.tr;
   static String get loginFailed => 'loginFailed'.tr;
+  static String get sessionExpiredPleaseLogin => 'sessionExpiredPleaseLogin'.tr;
+  static String get forbiddenAccess => 'forbiddenAccess'.tr;
+  static String get recordNotFound => 'recordNotFound'.tr;
+  static String get serverErrorTryAgain => 'serverErrorTryAgain'.tr;
+  static String get connectionTimedOut => 'connectionTimedOut'.tr;
+  static String get noInternetConnection => 'noInternetConnection'.tr;
+  static String get requestFailed => 'requestFailed'.tr;
   static String get moduleUiCompleted => 'moduleUiCompleted'.tr;
   static String get moduleUnderDevelopment => 'moduleUnderDevelopment'.tr;
   static String get selectYourRole => 'selectYourRole'.tr;
