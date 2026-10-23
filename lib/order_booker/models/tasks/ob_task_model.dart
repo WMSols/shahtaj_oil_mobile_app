@@ -54,6 +54,9 @@ class ObTaskModel {
       shopLongitude!.abs() <= 180 &&
       !(shopLatitude == 0 && shopLongitude == 0);
 
+  static const Object _unset = Object();
+
+  /// Pass [notes] as `null` to clear; omit the arg to leave unchanged.
   ObTaskModel copyWith({
     int? id,
     String? shopId,
@@ -64,7 +67,7 @@ class ObTaskModel {
     String? locationLabel,
     int? sequence,
     TaskStatus? status,
-    String? notes,
+    Object? notes = _unset,
     double? shopLatitude,
     double? shopLongitude,
     bool? fieldVerified,
@@ -83,7 +86,7 @@ class ObTaskModel {
     locationLabel: locationLabel ?? this.locationLabel,
     sequence: sequence ?? this.sequence,
     status: status ?? this.status,
-    notes: notes ?? this.notes,
+    notes: identical(notes, _unset) ? this.notes : notes as String?,
     shopLatitude: shopLatitude ?? this.shopLatitude,
     shopLongitude: shopLongitude ?? this.shopLongitude,
     fieldVerified: fieldVerified ?? this.fieldVerified,
@@ -136,7 +139,7 @@ class ObTaskModel {
       locationLabel: ApiMap.asString(json['location_label']),
       sequence: ApiMap.asInt(json['sequence']) ?? 0,
       status: _parseStatus(json['status'] ?? json['state']),
-      notes: ApiMap.asString(json['notes']),
+      notes: ApiMap.asString(json['notes']) ?? ApiMap.asString(visit?['notes']),
       shopLatitude:
           ApiMap.asDouble(json['shop_latitude']) ??
           ApiMap.asDouble(shop['latitude']),

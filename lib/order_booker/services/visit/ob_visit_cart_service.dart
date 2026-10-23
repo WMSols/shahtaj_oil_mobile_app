@@ -666,6 +666,17 @@ class ObVisitCartService extends GetxService {
       'shop_id': ?shopId,
       'shop_name': ?shopName,
     });
+    final local = await _session?.visitByAnyId(visitId);
+    if (local != null) {
+      await _db.patchLocalVisit(
+        local.localVisitId,
+        LocalVisitsCompanion(notes: Value(notes)),
+      );
+    }
+    final resolvedTaskId = taskId ?? local?.taskId;
+    if (resolvedTaskId != null && notes.trim().isNotEmpty) {
+      await _session?.setTaskNotes(resolvedTaskId, notes.trim());
+    }
   }
 
   Future<String?> _readOrderNumber(int visitId) async {

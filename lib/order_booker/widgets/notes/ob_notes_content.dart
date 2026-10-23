@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import 'package:shahtaj_oil_mobile_app/core/constants/notes_tag_catalog.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_primary_button.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_secondary_button.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_notes_tag_chips.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_text_field.dart';
 
 class ObNotesContent extends StatelessWidget {
@@ -15,6 +17,9 @@ class ObNotesContent extends StatelessWidget {
     required this.isSaving,
     required this.onSave,
     required this.onCancel,
+    required this.notesTagContext,
+    required this.selectedTagLabel,
+    required this.onTagSelected,
   });
 
   final TextEditingController notesController;
@@ -23,6 +28,9 @@ class ObNotesContent extends StatelessWidget {
   final bool isSaving;
   final VoidCallback onSave;
   final VoidCallback onCancel;
+  final NotesTagContext notesTagContext;
+  final String? selectedTagLabel;
+  final ValueChanged<String> onTagSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -36,11 +44,22 @@ class ObNotesContent extends StatelessWidget {
         children: [
           Expanded(
             child: SingleChildScrollView(
-              child: AppTextField(
-                controller: notesController,
-                hint: hint,
-                maxLines: 8,
-                borderless: true,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  AppNotesTagChips(
+                    contextType: notesTagContext,
+                    selectedLabel: selectedTagLabel,
+                    onSelected: onTagSelected,
+                  ),
+                  AppSpacing.vertical(context, 0.012),
+                  AppTextField(
+                    controller: notesController,
+                    hint: hint,
+                    maxLines: 8,
+                    borderless: true,
+                  ),
+                ],
               ),
             ),
           ),

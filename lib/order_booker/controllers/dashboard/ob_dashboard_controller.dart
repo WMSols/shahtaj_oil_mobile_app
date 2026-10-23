@@ -212,10 +212,14 @@ class ObDashboardController extends GetxController with CachedLoadMixin {
   }
 
   Future<void> _refreshActiveVisit() async {
-    activeVisit.value = await _taskService.fetchActiveVisit();
-    if (Get.isRegistered<ObVisitSessionService>() &&
-        activeVisit.value != null) {
-      Get.find<ObVisitSessionService>().publishActiveVisit(activeVisit.value!);
+    final visit = await _taskService.fetchActiveVisit();
+    activeVisit.value = visit;
+    if (!Get.isRegistered<ObVisitSessionService>()) return;
+    final session = Get.find<ObVisitSessionService>();
+    if (visit != null) {
+      session.publishActiveVisit(visit);
+    } else {
+      session.clearActiveVisitRx();
     }
   }
 
