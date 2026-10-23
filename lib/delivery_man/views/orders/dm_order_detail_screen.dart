@@ -34,6 +34,8 @@ class DmOrderDetailScreen extends GetView<DmOrderDetailController> {
           onRejectedChanged: controller.onRejectedChanged,
           receiverController: controller.receiverController,
           notesController: controller.notesController,
+          notesTagSelectedLabel: controller.notesTags.selectedLabel.value,
+          onNotesTagSelected: controller.onQuickTagSelected,
           proofPhotoBytes: controller.proofPhotoBytes.value,
           onPickProofPhoto: controller.pickProofPhoto,
           onStartDelivery: controller.startDelivery,

@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/routes/app_routes.dart';
+import 'package:shahtaj_oil_mobile_app/core/utils/helper/app_helper.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/media/app_image_compress.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_confirm_dialog.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
@@ -20,11 +21,15 @@ class DmShopClosedController extends GetxController {
 
   final DmPlanService _planService;
   final ImagePicker _picker = ImagePicker();
+  final notesTags = NotesTagHelper();
 
   final RxBool isActing = false.obs;
   final RxBool isPickingPhoto = false.obs;
   final Rxn<Uint8List> photoBytes = Rxn<Uint8List>();
   final notesController = TextEditingController();
+
+  void onQuickTagSelected(String label) =>
+      notesTags.selectTag(label, notesController);
 
   int get jobId {
     final fromParams = Get.parameters['id'];
@@ -55,6 +60,7 @@ class DmShopClosedController extends GetxController {
   @override
   void onClose() {
     notesController.dispose();
+    notesTags.clear();
     super.onClose();
   }
 

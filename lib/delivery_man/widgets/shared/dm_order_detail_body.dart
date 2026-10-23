@@ -2,10 +2,12 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
+import 'package:shahtaj_oil_mobile_app/core/constants/notes_tag_catalog.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_primary_button.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_notes_tag_chips.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_photo_upload_tile.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_text_field.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/orders/dm_delivery_order_model.dart';
@@ -28,6 +30,8 @@ class DmOrderDetailBody extends StatelessWidget {
     this.onRejectedChanged,
     this.receiverController,
     this.notesController,
+    this.notesTagSelectedLabel,
+    this.onNotesTagSelected,
     this.proofPhotoBytes,
     this.onPickProofPhoto,
     this.onStartDelivery,
@@ -46,6 +50,8 @@ class DmOrderDetailBody extends StatelessWidget {
   final void Function(String lineId, String raw)? onRejectedChanged;
   final TextEditingController? receiverController;
   final TextEditingController? notesController;
+  final String? notesTagSelectedLabel;
+  final ValueChanged<String>? onNotesTagSelected;
   final Uint8List? proofPhotoBytes;
   final VoidCallback? onPickProofPhoto;
   final VoidCallback? onStartDelivery;
@@ -79,6 +85,14 @@ class DmOrderDetailBody extends StatelessWidget {
             textInputAction: TextInputAction.next,
           ),
           AppSpacing.vertical(context, 0.012),
+          if (onNotesTagSelected != null) ...[
+            AppNotesTagChips(
+              contextType: NotesTagContext.dmOrderDeliveryNotes,
+              selectedLabel: notesTagSelectedLabel,
+              onSelected: onNotesTagSelected!,
+            ),
+            AppSpacing.vertical(context, 0.012),
+          ],
           AppTextField(
             controller: notesController!,
             label: AppTexts.dmNotesHint,

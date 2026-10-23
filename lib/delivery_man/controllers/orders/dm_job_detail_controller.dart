@@ -24,6 +24,7 @@ class DmJobDetailController extends GetxController {
 
   final DmPlanService _planService;
   final ImagePicker _picker = ImagePicker();
+  final notesTags = NotesTagHelper();
 
   final RxBool isLoading = true.obs;
   final RxBool isActing = false.obs;
@@ -33,6 +34,9 @@ class DmJobDetailController extends GetxController {
   final Rxn<Uint8List> proofPhotoBytes = Rxn<Uint8List>();
   final notesController = TextEditingController();
   final receiverController = TextEditingController();
+
+  void onQuickTagSelected(String label) =>
+      notesTags.selectTag(label, notesController);
 
   int get jobId {
     final raw = Get.parameters['id'] ?? Get.arguments?.toString() ?? '';
@@ -65,6 +69,7 @@ class DmJobDetailController extends GetxController {
   void onClose() {
     notesController.dispose();
     receiverController.dispose();
+    notesTags.clear();
     super.onClose();
   }
 

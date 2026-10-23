@@ -48,6 +48,10 @@ class DmWalkInDeliverController extends GetxController {
   final phoneController = TextEditingController();
   final receiverController = TextEditingController();
   final notesController = TextEditingController();
+  final notesTags = NotesTagHelper();
+
+  void onQuickTagSelected(String label) =>
+      notesTags.selectTag(label, notesController);
   final chequeNumberController = TextEditingController();
 
   @override
@@ -64,6 +68,7 @@ class DmWalkInDeliverController extends GetxController {
     receiverController.dispose();
     notesController.dispose();
     chequeNumberController.dispose();
+    notesTags.clear();
     super.onClose();
   }
 

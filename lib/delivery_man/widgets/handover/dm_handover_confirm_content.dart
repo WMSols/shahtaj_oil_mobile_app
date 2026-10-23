@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
@@ -11,6 +11,8 @@ import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_primary_button.d
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_amount_summary_bar.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_shimmer_skeletons.dart';
+import 'package:shahtaj_oil_mobile_app/core/constants/notes_tag_catalog.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_notes_tag_chips.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_dropdown_field.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_form_section_header.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_text_field.dart';
@@ -96,6 +98,12 @@ class DmHandoverConfirmContent extends GetView<DmHandoverConfirmController> {
                 AppFormSectionHeader(
                   icon: AppIcons.history,
                   title: AppTexts.dmHandoverNotes,
+                ),
+                AppSpacing.vertical(context, 0.012),
+                AppNotesTagChips(
+                  contextType: NotesTagContext.dmHandover,
+                  selectedLabel: controller.notesTags.selectedLabel.value,
+                  onSelected: controller.onQuickTagSelected,
                 ),
                 AppSpacing.vertical(context, 0.012),
                 AppTextField(

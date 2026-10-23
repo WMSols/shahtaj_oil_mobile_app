@@ -5,7 +5,9 @@ import 'package:shahtaj_oil_mobile_app/core/design/colors/app_colors.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
+import 'package:shahtaj_oil_mobile_app/core/constants/notes_tag_catalog.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_primary_button.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_notes_tag_chips.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/widgets/return/dm_return_stock_group.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_text_field.dart';
@@ -57,7 +59,19 @@ class DmReturnContent extends GetView<DmReturnController> {
             editable: !controller.isSubmitted,
             onQtyChanged: controller.updateLeftoverQty,
           ),
+          if (!controller.isSubmitted) ...[
+            AppNotesTagChips(
+              contextType: NotesTagContext.dmReturn,
+              selectedLabel: controller.notesTags.selectedLabel.value,
+              onSelected: controller.onQuickTagSelected,
+            ),
+            AppSpacing.vertical(context, 0.012),
+          ],
           AppTextField(
+            key: ValueKey(
+              'dm-return-notes-${controller.notes.value}-'
+              '${controller.notesTags.selectedLabel.value}',
+            ),
             hint: AppTexts.dmNotesHint,
             initialValue: controller.notes.value,
             minLines: 2,
