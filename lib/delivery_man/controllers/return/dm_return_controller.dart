@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/delivery_man/shell/dm_shell_controller.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
+import 'package:shahtaj_oil_mobile_app/core/utils/helper/app_helper.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/return/dm_return_model.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/services/return/dm_return_service.dart';
@@ -10,12 +11,16 @@ class DmReturnController extends GetxController {
   DmReturnController(this._returnService);
 
   final DmReturnService _returnService;
+  final notesTags = NotesTagHelper();
 
   final RxBool isLoading = true.obs;
   final RxBool isSubmitting = false.obs;
   final Rxn<DmReturnModel> template = Rxn<DmReturnModel>();
   final Rxn<DmReturnModel> submittedReturn = Rxn<DmReturnModel>();
   final RxString notes = ''.obs;
+
+  void onQuickTagSelected(String label) =>
+      notesTags.selectTagOntoRx(label, notes);
 
   bool get isSubmitted => template.value?.submitted ?? false;
 

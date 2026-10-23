@@ -9,6 +9,7 @@ import 'package:shahtaj_oil_mobile_app/delivery_man/shell/dm_shell_controller.da
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
+import 'package:shahtaj_oil_mobile_app/core/utils/helper/app_helper.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/media/app_image_compress.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/models/orders/dm_delivery_order_model.dart';
@@ -22,6 +23,7 @@ class DmOrderDetailController extends GetxController {
   final DmDeliveryService _deliveryService;
   final DmPickupService _pickupService;
   final ImagePicker _picker = ImagePicker();
+  final notesTags = NotesTagHelper();
 
   final RxBool isLoading = true.obs;
   final RxBool isActing = false.obs;
@@ -32,6 +34,9 @@ class DmOrderDetailController extends GetxController {
   final Rxn<Uint8List> proofPhotoBytes = Rxn<Uint8List>();
   final TextEditingController receiverController = TextEditingController();
   final TextEditingController notesController = TextEditingController();
+
+  void onQuickTagSelected(String label) =>
+      notesTags.selectTag(label, notesController);
 
   String get orderId => Get.parameters['id'] ?? '';
 
@@ -59,6 +64,7 @@ class DmOrderDetailController extends GetxController {
   void onClose() {
     receiverController.dispose();
     notesController.dispose();
+    notesTags.clear();
     super.onClose();
   }
 

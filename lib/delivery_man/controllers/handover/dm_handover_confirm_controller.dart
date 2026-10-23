@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
@@ -7,6 +7,7 @@ import 'package:shahtaj_oil_mobile_app/core/services/cached_load_mixin.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_confirm_dialog.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
+import 'package:shahtaj_oil_mobile_app/core/utils/helper/app_helper.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/collections/dm_today_shops_controller.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/dashboard/dm_dashboard_controller.dart';
 import 'package:shahtaj_oil_mobile_app/delivery_man/controllers/handover/dm_handover_controller.dart';
@@ -18,6 +19,7 @@ class DmHandoverConfirmController extends GetxController with CachedLoadMixin {
   DmHandoverConfirmController(this._store);
 
   final DmCollectionStore _store;
+  final notesTags = NotesTagHelper();
 
   final RxInt receiptCount = 0.obs;
   final RxDouble cashInBag = 0.0.obs;
@@ -29,6 +31,9 @@ class DmHandoverConfirmController extends GetxController with CachedLoadMixin {
 
   final countedCashController = TextEditingController();
   final notesController = TextEditingController();
+
+  void onQuickTagSelected(String label) =>
+      notesTags.selectTag(label, notesController);
 
   @override
   bool get hasCachedData => receiptCount.value > 0;
@@ -47,6 +52,7 @@ class DmHandoverConfirmController extends GetxController with CachedLoadMixin {
   void onClose() {
     countedCashController.dispose();
     notesController.dispose();
+    notesTags.clear();
     super.onClose();
   }
 

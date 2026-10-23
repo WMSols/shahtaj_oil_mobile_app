@@ -6,7 +6,9 @@ import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
+import 'package:shahtaj_oil_mobile_app/core/constants/notes_tag_catalog.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_primary_button.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_notes_tag_chips.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_photo_upload_tile.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_text_field.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_sub_screen_scaffold.dart';
@@ -37,6 +39,12 @@ class DmShopClosedScreen extends GetView<DmShopClosedController> {
               ).copyWith(color: AppColors.grey),
             ),
             AppSpacing.vertical(context, 0.02),
+            AppNotesTagChips(
+              contextType: NotesTagContext.dmShopClosed,
+              selectedLabel: controller.notesTags.selectedLabel.value,
+              onSelected: controller.onQuickTagSelected,
+            ),
+            AppSpacing.vertical(context, 0.012),
             AppTextField(
               controller: controller.notesController,
               label: AppTexts.dmShopClosedNotesLabel,

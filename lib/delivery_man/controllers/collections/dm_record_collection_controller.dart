@@ -10,6 +10,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/icons/app_icons.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/formatter/app_formatter.dart';
+import 'package:shahtaj_oil_mobile_app/core/utils/helper/app_helper.dart';
 import 'package:shahtaj_oil_mobile_app/core/utils/media/app_image_compress.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_confirm_dialog.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
@@ -27,6 +28,7 @@ class DmRecordCollectionController extends GetxController {
 
   final DmRecoveryService _recovery;
   final ImagePicker _picker = ImagePicker();
+  final notesTags = NotesTagHelper();
 
   final RxBool isLoading = true.obs;
   final RxBool isSaving = false.obs;
@@ -41,6 +43,9 @@ class DmRecordCollectionController extends GetxController {
   final notesController = TextEditingController();
   final chequeNumberController = TextEditingController();
   final invoiceAmountControllers = <int, TextEditingController>{};
+
+  void onQuickTagSelected(String label) =>
+      notesTags.selectTag(label, notesController);
 
   late final List<int> invoiceIds;
 
@@ -90,6 +95,7 @@ class DmRecordCollectionController extends GetxController {
     for (final controller in invoiceAmountControllers.values) {
       controller.dispose();
     }
+    notesTags.clear();
     super.onClose();
   }
 

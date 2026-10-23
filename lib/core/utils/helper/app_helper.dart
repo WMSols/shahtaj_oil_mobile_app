@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io' show Platform;
 
+import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
@@ -363,4 +364,47 @@ class ShopRangeEvaluation {
   final double meters;
   final double limit;
   final bool outOfRange;
+}
+
+/// Single-select quick tag that writes its label into a notes field live.
+class NotesTagHelper {
+  NotesTagHelper();
+
+  final RxnString selectedLabel = RxnString();
+
+  /// Select [label] (or deselect if already selected).
+  ///
+  /// On select: replaces [notes] text with the tag label.
+  /// On deselect: clears selection; clears [notes] only when the field still
+  /// equals the previous tag label (so user edits are kept).
+  void selectTag(String label, TextEditingController notes) {
+    final current = selectedLabel.value;
+    if (current == label) {
+      selectedLabel.value = null;
+      if (notes.text.trim() == label.trim()) {
+        notes.clear();
+      }
+      return;
+    }
+    selectedLabel.value = label;
+    notes
+      ..text = label
+      ..selection = TextSelection.collapsed(offset: label.length);
+  }
+
+  /// Same as [selectTag] but for RxString-backed notes fields.
+  void selectTagOntoRx(String label, RxString notes) {
+    final current = selectedLabel.value;
+    if (current == label) {
+      selectedLabel.value = null;
+      if (notes.value.trim() == label.trim()) {
+        notes.value = '';
+      }
+      return;
+    }
+    selectedLabel.value = label;
+    notes.value = label;
+  }
+
+  void clear() => selectedLabel.value = null;
 }

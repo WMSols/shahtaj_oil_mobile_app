@@ -11,6 +11,8 @@ import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_primary_button.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_secondary_button.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
+import 'package:shahtaj_oil_mobile_app/core/constants/notes_tag_catalog.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_notes_tag_chips.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_empty_state.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_shimmer_skeletons.dart';
@@ -179,6 +181,12 @@ class DmJobDetailScreen extends GetView<DmJobDetailController> {
                 ),
                 AppSpacing.vertical(context, 0.016),
               ],
+              AppNotesTagChips(
+                contextType: NotesTagContext.dmJobNotes,
+                selectedLabel: controller.notesTags.selectedLabel.value,
+                onSelected: controller.onQuickTagSelected,
+              ),
+              AppSpacing.vertical(context, 0.012),
               AppTextField(
                 controller: controller.notesController,
                 label: AppTexts.dmNotesLabel,
