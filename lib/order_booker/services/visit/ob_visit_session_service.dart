@@ -443,6 +443,7 @@ class ObVisitSessionService extends GetxService {
                     ? row.orderNumber
                     : ObDocKeys.pendingSyncOrderMarker)
               : orderNumber);
+    final resolvedNotes = (notes ?? row.notes)?.trim();
 
     await _db.patchLocalVisit(
       row.localVisitId,
@@ -450,12 +451,16 @@ class ObVisitSessionService extends GetxService {
         status: const Value('completed'),
         outcome: Value(outcome),
         orderNumber: Value(resolvedOrderNumber),
-        notes: Value(notes ?? row.notes),
+        notes: Value(resolvedNotes ?? row.notes),
         pendingSync: const Value(true),
         completedAt: Value(DateTime.now()),
       ),
     );
     await setTaskStatus(row.taskId, TaskStatus.completed);
+    // Keep notes on the task override so Today's Visits can show the preview.
+    if (resolvedNotes != null && resolvedNotes.isNotEmpty) {
+      await setTaskNotes(row.taskId, resolvedNotes);
+    }
     closedTaskIds.add(row.taskId);
     closedTaskIds.refresh();
     clearActiveVisitRx();
@@ -481,13 +486,40 @@ class ObVisitSessionService extends GetxService {
   }
 
   Future<void> setTaskNotes(int taskId, String notes) async {
+    final trimmed = notes.trim();
     await _db.upsertTaskOverride(
       LocalTaskOverridesCompanion.insert(
         taskId: Value(taskId),
-        notes: Value(notes),
+        // Empty string = user cleared notes (must not fall back to visit notes).
+        notes: Value(trimmed),
         updatedAt: DateTime.now(),
       ),
     );
+    if (trimmed.isEmpty) {
+      await clearVisitNotesForTask(taskId);
+    }
+  }
+
+  /// Drop local visit notes for [taskId] so a cleared task note stays cleared.
+  Future<void> clearVisitNotesForTask(int taskId) async {
+    final rows = await _db.allLocalVisits(userId: _requireUserId);
+    for (final row in rows) {
+      if (row.taskId != taskId) continue;
+      if ((row.notes ?? '').trim().isEmpty) continue;
+      await _db.patchLocalVisit(
+        row.localVisitId,
+        const LocalVisitsCompanion(notes: Value(null)),
+      );
+    }
+  }
+
+  /// Task ids where the user explicitly cleared notes (`notes == ''`).
+  Future<Set<int>> taskIdsWithClearedNotes() async {
+    final rows = await _db.taskOverrides();
+    return {
+      for (final row in rows)
+        if (row.notes != null && row.notes!.trim().isEmpty) row.taskId,
+    };
   }
 
   /// Local shop setup is done, so the task stops asking for verification.
@@ -506,5 +538,17 @@ class ObVisitSessionService extends GetxService {
   Future<Map<int, LocalTaskOverride>> overridesByTaskId() async {
     final rows = await _db.taskOverrides();
     return {for (final row in rows) row.taskId: row};
+  }
+
+  /// Latest non-empty visit notes per task (end-visit / visit notes).
+  Future<Map<int, String>> visitNotesByTaskId() async {
+    final rows = await _db.allLocalVisits(userId: _requireUserId);
+    final byTask = <int, String>{};
+    for (final row in rows) {
+      final notes = row.notes?.trim();
+      if (notes == null || notes.isEmpty) continue;
+      byTask[row.taskId] = notes;
+    }
+    return byTask;
   }
 }

@@ -213,6 +213,9 @@ class ObRouteDetailController extends GetxController {
 
   Future<void> loadTasks({bool silent = false, bool force = false}) async {
     final hasCache = todayTasks.value != null;
+    // Keep notes already on screen — force network / flush refresh often omits them.
+    // Skip ids the user cleared so empty saves stay empty.
+    final preservedNotes = _notesByTaskId(todayTasks.value);
 
     if (!silent && !hasCache) {
       isLoading.value = true;
@@ -225,16 +228,18 @@ class ObRouteDetailController extends GetxController {
         allowStaleFallback: !force,
         forceNetwork: force,
       );
-      todayTasks.value = data;
-      activeVisit.value = await _taskService.fetchActiveVisit();
+      final clearedNoteIds = await _taskService.clearedNoteTaskIds();
+      todayTasks.value = _mergePreservedNotes(
+        data,
+        preservedNotes,
+        clearedNoteIds: clearedNoteIds,
+      );
+      final visit = await _taskService.fetchActiveVisit();
+      activeVisit.value = visit;
       if (Get.isRegistered<ObVisitSessionService>()) {
         final session = Get.find<ObVisitSessionService>();
-        // Keep shared Rx in sync with local-first read.
-        if (activeVisit.value != null) {
-          session.publishActiveVisit(activeVisit.value!);
-        } else if (session.activeVisitRx.value != null) {
-          // Network said none but local still has one — prefer local UI.
-          activeVisit.value = session.activeVisitRx.value;
+        if (visit != null) {
+          session.publishActiveVisit(visit);
         } else {
           session.clearActiveVisitRx();
         }
@@ -245,9 +250,14 @@ class ObRouteDetailController extends GetxController {
           data.route.status == RouteStatus.notStarted &&
           data.route.id == routeId) {
         await _taskService.startRoute(routeId);
-        todayTasks.value = await _taskService.fetchTodayTasks(
+        final again = await _taskService.fetchTodayTasks(
           allowStaleFallback: !force,
           forceNetwork: force,
+        );
+        todayTasks.value = _mergePreservedNotes(
+          again,
+          preservedNotes,
+          clearedNoteIds: await _taskService.clearedNoteTaskIds(),
         );
         await _enrichTasksWithOrderApproval();
       }
@@ -262,6 +272,38 @@ class ObRouteDetailController extends GetxController {
         isRefreshing.value = false;
       }
     }
+  }
+
+  Map<int, String> _notesByTaskId(ObTodayTasksModel? today) {
+    if (today == null) return const {};
+    return {
+      for (final task in today.tasks)
+        if ((task.notes ?? '').trim().isNotEmpty) task.id: task.notes!.trim(),
+    };
+  }
+
+  ObTodayTasksModel _mergePreservedNotes(
+    ObTodayTasksModel next,
+    Map<int, String> preserved, {
+    Set<int> clearedNoteIds = const {},
+  }) {
+    if (preserved.isEmpty && clearedNoteIds.isEmpty) return next;
+    var changed = false;
+    final tasks = next.tasks
+        .map((task) {
+          if (clearedNoteIds.contains(task.id)) {
+            if ((task.notes ?? '').trim().isEmpty) return task;
+            changed = true;
+            return task.copyWith(notes: null);
+          }
+          if ((task.notes ?? '').trim().isNotEmpty) return task;
+          final notes = preserved[task.id];
+          if (notes == null || notes.isEmpty) return task;
+          changed = true;
+          return task.copyWith(notes: notes);
+        })
+        .toList(growable: false);
+    return changed ? next.copyWith(tasks: tasks) : next;
   }
 
   /// After check-in / return from visit: local overlay first, network later.

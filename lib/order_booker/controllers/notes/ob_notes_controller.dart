@@ -3,8 +3,10 @@ import 'package:get/get.dart';
 
 import 'package:shahtaj_oil_mobile_app/order_booker/shell/ob_shell_controller.dart';
 import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
+import 'package:shahtaj_oil_mobile_app/core/constants/notes_tag_catalog.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_exception.dart';
+import 'package:shahtaj_oil_mobile_app/core/utils/helper/app_helper.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_confirm_dialog.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/feedback/app_toast.dart';
 import 'package:shahtaj_oil_mobile_app/order_booker/controllers/tasks/ob_route_detail_controller.dart';
@@ -16,6 +18,7 @@ class ObNotesController extends GetxController {
 
   final ObTaskService _taskService;
   final ObVisitCartService _cartService;
+  final notesTags = NotesTagHelper();
 
   final isSaving = false.obs;
   late final TextEditingController notesController;
@@ -52,6 +55,13 @@ class ObNotesController extends GetxController {
   bool get hasUnsavedNotes =>
       notesController.text.trim() != _initialNotes.trim();
 
+  NotesTagContext get notesTagContext => switch (purpose) {
+    ObNotesPurpose.taskNotes => NotesTagContext.obTaskNotes,
+    ObNotesPurpose.visitNotes => NotesTagContext.obVisitNotes,
+    ObNotesPurpose.endVisitWithoutOrder =>
+      NotesTagContext.obEndVisitWithoutOrder,
+  };
+
   @override
   void onInit() {
     super.onInit();
@@ -67,8 +77,12 @@ class ObNotesController extends GetxController {
   @override
   void onClose() {
     notesController.dispose();
+    notesTags.clear();
     super.onClose();
   }
+
+  void onQuickTagSelected(String label) =>
+      notesTags.selectTag(label, notesController);
 
   /// Returns true when the screen may pop.
   Future<bool> confirmLeave() async {
@@ -123,24 +137,13 @@ class ObNotesController extends GetxController {
   Future<void> _saveTaskNotes(String notes) async {
     final id = taskId;
     if (id == null) return;
+    // Patch UI first so a flush-triggered reload cannot resurrect old notes.
+    _patchTodayTaskNotes(id, notes);
     final queued = await _taskService.saveTaskNotes(taskId: id, notes: notes);
     AppToast.showSuccess(
       queued ? AppTexts.obNotesQueuedForSync : AppTexts.save,
     );
-    if (!Get.isRegistered<ObRouteDetailController>()) return;
-    final route = Get.find<ObRouteDetailController>();
-    if (queued) {
-      final current = route.todayTasks.value;
-      if (current != null) {
-        route.todayTasks.value = current.copyWith(
-          tasks: current.tasks
-              .map((task) => task.id == id ? task.copyWith(notes: notes) : task)
-              .toList(growable: false),
-        );
-      }
-      return;
-    }
-    await route.loadTasks(silent: true, force: true);
+    _patchTodayTaskNotes(id, notes);
   }
 
   Future<void> _endVisitWithoutOrder(String notes) async {
@@ -156,6 +159,12 @@ class ObNotesController extends GetxController {
       AppToast.showError(AppTexts.error);
       return;
     }
+    // Mirror onto the task so Today's Visits shows the note preview.
+    await _taskService.saveTaskNotesLocalOnly(
+      taskId: resolvedTaskId,
+      notes: notes,
+    );
+    _patchTodayTaskNotes(resolvedTaskId, notes);
     final result = await _cartService.endWithoutOrder(
       visitId: id,
       taskId: resolvedTaskId,
@@ -163,7 +172,7 @@ class ObNotesController extends GetxController {
       shopName: active?.shopName,
       notes: notes,
     );
-    await _taskService.clearActiveVisit(visitId: id);
+    await _taskService.clearActiveVisit(visitId: id, notes: notes);
     AppToast.showSuccess(
       result.queued
           ? AppTexts.obVisitQueuedForSync
@@ -176,15 +185,40 @@ class ObNotesController extends GetxController {
     final id = visitId;
     if (id == null) return;
     final active = _taskService.activeVisitSync;
+    final resolvedTaskId = taskId ?? active?.taskId;
     final queued = await _cartService.saveVisitNotes(
       visitId: id,
       notes: notes,
-      taskId: taskId ?? active?.taskId,
+      taskId: resolvedTaskId,
       shopId: shopId ?? active?.shopId,
       shopName: active?.shopName,
     );
+    if (resolvedTaskId != null) {
+      await _taskService.saveTaskNotesLocalOnly(
+        taskId: resolvedTaskId,
+        notes: notes,
+      );
+      _patchTodayTaskNotes(resolvedTaskId, notes);
+    }
     AppToast.showSuccess(
       queued ? AppTexts.obNotesQueuedForSync : AppTexts.save,
+    );
+  }
+
+  void _patchTodayTaskNotes(int id, String notes) {
+    if (!Get.isRegistered<ObRouteDetailController>()) return;
+    final route = Get.find<ObRouteDetailController>();
+    final current = route.todayTasks.value;
+    if (current == null) return;
+    final trimmed = notes.trim();
+    route.todayTasks.value = current.copyWith(
+      tasks: current.tasks
+          .map(
+            (task) => task.id == id
+                ? task.copyWith(notes: trimmed.isEmpty ? null : trimmed)
+                : task,
+          )
+          .toList(growable: false),
     );
   }
 }
