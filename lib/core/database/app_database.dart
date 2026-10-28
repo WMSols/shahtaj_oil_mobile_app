@@ -278,6 +278,15 @@ class AppDatabase extends _$AppDatabase {
             ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
           .get();
 
+  /// Rows left in `syncing` after a killed flush — make them flushable again.
+  Future<int> requeueStuckSyncingOutbox() =>
+      (update(outboxEntries)..where((t) => t.status.equals('syncing'))).write(
+        const OutboxEntriesCompanion(
+          status: Value('queued'),
+          lastError: Value(null),
+        ),
+      );
+
   Future<int> pendingOutboxCount() async {
     final rows = await (select(
       outboxEntries,

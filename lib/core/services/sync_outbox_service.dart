@@ -275,6 +275,9 @@ class SyncOutboxService extends GetxService {
 
     isFlushing.value = true;
     try {
+      // Recover rows stuck mid-flight after an app kill / crash.
+      await _db.requeueStuckSyncingOutbox();
+
       final pending = await _db.pendingOutbox();
       // Statuses reached during this pass, so a child sees its parent's result
       // without re-reading the database.
@@ -504,6 +507,80 @@ class SyncOutboxService extends GetxService {
       ),
     );
     await flush(force: true);
+  }
+
+  /// Walks [dependsOn] across open outbox rows to the earliest blocking step.
+  Future<OutboxEntry?> resolveTrueRoot(String entryId) async {
+    final open = await _db.openOutbox();
+    final byId = {for (final e in open) e.id: e};
+    var current = byId[entryId];
+    if (current == null) return null;
+
+    final seen = <String>{};
+    while (seen.add(current!.id)) {
+      final dep = current.dependsOn;
+      if (dep == null || dep.isEmpty) return current;
+      final parent = byId[dep];
+      if (parent == null) return current;
+      if (parent.status == OutboxStatus.synced) return current;
+      current = parent;
+    }
+    return current;
+  }
+
+  /// Manual Sync Center retry: reset the true root (and failed ancestors),
+  /// then [flush] with [force] so weak-signal auto-gating is bypassed.
+  ///
+  /// Returns whether the root cleared, is still open, or could not run.
+  Future<SyncRetryOutcome> retryFromRoot(String entryId) async {
+    final root = await resolveTrueRoot(entryId);
+    if (root == null) {
+      await flush(force: true);
+      return SyncRetryOutcome.cleared;
+    }
+
+    final open = await _db.openOutbox();
+    final byId = {for (final e in open) e.id: e};
+    final toReset = <String>{root.id};
+
+    // Also re-queue failed / needsReview / syncing ancestors between entry and root.
+    var cursor = byId[entryId];
+    final seen = <String>{};
+    while (cursor != null && seen.add(cursor.id)) {
+      if (cursor.status == OutboxStatus.failed ||
+          cursor.status == OutboxStatus.needsReview ||
+          cursor.status == OutboxStatus.syncing) {
+        toReset.add(cursor.id);
+      }
+      if (cursor.id == root.id) break;
+      final dep = cursor.dependsOn;
+      if (dep == null || dep.isEmpty) break;
+      cursor = byId[dep];
+    }
+
+    for (final id in toReset) {
+      await (_db.update(
+        _db.outboxEntries,
+      )..where((t) => t.id.equals(id))).write(
+        const OutboxEntriesCompanion(
+          status: Value(OutboxStatus.queued),
+          lastError: Value(null),
+          attempts: Value(0),
+        ),
+      );
+    }
+
+    await flush(force: true);
+
+    final after = await _db.outboxById(root.id);
+    if (after == null || after.status == OutboxStatus.synced) {
+      return SyncRetryOutcome.cleared;
+    }
+    if (after.status == OutboxStatus.failed ||
+        after.status == OutboxStatus.needsReview) {
+      return SyncRetryOutcome.failed;
+    }
+    return SyncRetryOutcome.stillPending;
   }
 
   /// Removes a Sync Center item (and its media) without wiping other local work.
@@ -1512,3 +1589,6 @@ class VisitIdRemap {
   final int localId;
   final int serverId;
 }
+
+/// Result of a user-driven Sync Center retry.
+enum SyncRetryOutcome { cleared, stillPending, failed }

@@ -37,6 +37,7 @@ class SyncCenterScreen extends GetView<SyncCenterController> {
         final groups = controller.groups;
         final otherUser = controller.otherUserPendingCount;
         final extra = otherUser > 0 ? 1 : 0;
+        final busy = controller.isRetrying.value;
 
         return RefreshIndicator(
           onRefresh: controller.load,
@@ -49,6 +50,7 @@ class SyncCenterScreen extends GetView<SyncCenterController> {
                 return _SyncVisitGroupCard(
                   group: groups[index],
                   controller: controller,
+                  retryDisabled: busy,
                 );
               }
 
@@ -69,14 +71,26 @@ class SyncCenterScreen extends GetView<SyncCenterController> {
 }
 
 class _SyncVisitGroupCard extends StatelessWidget {
-  const _SyncVisitGroupCard({required this.group, required this.controller});
+  const _SyncVisitGroupCard({
+    required this.group,
+    required this.controller,
+    required this.retryDisabled,
+  });
 
   final SyncQueueGroup group;
   final SyncCenterController controller;
+  final bool retryDisabled;
 
   @override
   Widget build(BuildContext context) {
     final overall = controller.overallStatusFor(group);
+    final showRetry = controller.showRetryFor(group);
+    final blockedBy = controller.blockedByLabel(group);
+    final detailChunks = <String>[
+      for (final entry in group.entries)
+        if (controller.detailLinesFor(entry).isNotEmpty)
+          controller.detailLinesFor(entry),
+    ];
 
     return AppOutlineCard(
       child: Column(
@@ -114,32 +128,45 @@ class _SyncVisitGroupCard extends StatelessWidget {
               context,
             ).copyWith(color: AppColors.grey),
           ),
-          for (final entry in group.entries) ...[
-            if (controller.detailLinesFor(entry).isNotEmpty) ...[
-              AppSpacing.vertical(context, 0.006),
-              Text(
-                controller.detailLinesFor(entry),
-                style: AppTextStyles.bodyText(
-                  context,
-                ).copyWith(color: AppColors.grey),
-              ),
-            ],
+          if (blockedBy != null) ...[
+            AppSpacing.vertical(context, 0.006),
+            Text(
+              blockedBy,
+              style: AppTextStyles.bodyText(
+                context,
+              ).copyWith(color: AppColors.grey),
+            ),
           ],
-          if (group.canRetry) ...[
+          for (final chunk in detailChunks) ...[
+            AppSpacing.vertical(context, 0.006),
+            Text(
+              chunk,
+              style: AppTextStyles.bodyText(
+                context,
+              ).copyWith(color: AppColors.grey),
+            ),
+          ],
+          if (showRetry) ...[
             AppSpacing.vertical(context, 0.012),
             AppPrimaryButton(
-              label: AppTexts.syncRetry,
+              label: controller.retryLabelFor(group),
               isLoading: controller.isRetrying.value,
-              onPressed: () => controller.retryGroup(group),
+              onPressed: retryDisabled
+                  ? null
+                  : () => controller.retryGroup(group),
             ),
-            AppSpacing.vertical(context, 0.008),
+          ],
+          if (group.hasFailedOrNeedsReview) ...[
+            AppSpacing.vertical(context, showRetry ? 0.008 : 0.012),
             AppSecondaryButton(
               label: AppTexts.clearThisItem,
               outlinedOnly: true,
               textColor: AppColors.error,
               borderColor: AppColors.error,
               isLoading: controller.isClearing.value,
-              onPressed: () => controller.clearGroup(group),
+              onPressed: retryDisabled
+                  ? null
+                  : () => controller.clearGroup(group),
             ),
           ],
         ],
