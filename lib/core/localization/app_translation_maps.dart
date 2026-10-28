@@ -553,6 +553,12 @@ abstract final class AppTranslationMaps {
     'obSyncOtherUserPending': 'Pending work from another user on this device',
     'obSyncNeedsReview': 'Sync failed — open Sync Center to retry',
     'syncRetry': 'Retry Sync',
+    'syncRetryAction': 'Retry @action',
+    'syncBlockedBy': 'Blocked by: @shop · @step',
+    'syncBlockedByStep': 'Blocked by: @step',
+    'syncRetryStillWaiting':
+        'Still waiting on an earlier step — check signal and try again',
+    'syncRetryFailed': 'Sync failed — check the error and retry',
     'clearThisItem': 'Clear This Item',
     'clearThisItemMessage':
         'Remove this failed sync item from the queue? It will not be sent to the server.',
@@ -1628,6 +1634,12 @@ abstract final class AppTranslationMaps {
     'obSyncOtherUserPending': 'اس ڈیوائس پر دوسرے صارف کا کام باقی ہے',
     'obSyncNeedsReview': 'سینک ناکام — دوبارہ کوشش کے لیے سنک سینٹر کھولیں',
     'syncRetry': 'دوبارہ سینک کریں',
+    'syncRetryAction': '@action دوبارہ کوشش',
+    'syncBlockedBy': 'رکاوٹ: @shop · @step',
+    'syncBlockedByStep': 'رکاوٹ: @step',
+    'syncRetryStillWaiting':
+        'ابھی پہلے مرحلے کا انتظار ہے — سگنل چیک کر کے دوبارہ کوشش کریں',
+    'syncRetryFailed': 'سینک ناکام — خرابی دیکھ کر دوبارہ کوشش کریں',
     'clearThisItem': 'یہ آئٹم صاف کریں',
     'clearThisItemMessage':
         'اس ناکام سینک آئٹم کو قطار سے ہٹائیں؟ یہ سرور پر نہیں بھیجا جائے گا۔',

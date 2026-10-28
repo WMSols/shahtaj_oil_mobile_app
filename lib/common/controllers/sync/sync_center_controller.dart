@@ -100,13 +100,76 @@ class SyncCenterController extends GetxController {
 
   int get otherUserPendingCount => _outbox.otherUserPendingCount.value;
 
+  Map<String, OutboxEntry> get _entriesById => {for (final e in items) e.id: e};
+
+  /// Earliest open ancestor for this card (may live on another card).
+  OutboxEntry? trueRootFor(SyncQueueGroup group) {
+    if (group.entries.isEmpty) return null;
+    final byId = _entriesById;
+    var current = _inCardRoot(group);
+    final seen = <String>{};
+    while (seen.add(current.id)) {
+      final dep = current.dependsOn;
+      if (dep == null || dep.isEmpty) return current;
+      final parent = byId[dep];
+      if (parent == null) return current;
+      if (parent.status == OutboxStatus.synced) return current;
+      current = parent;
+    }
+    return current;
+  }
+
+  /// First step inside this card (no in-card parent, else oldest).
+  OutboxEntry _inCardRoot(SyncQueueGroup group) {
+    final ids = {for (final e in group.entries) e.id};
+    for (final entry in group.entries) {
+      final dep = entry.dependsOn;
+      if (dep == null || dep.isEmpty || !ids.contains(dep)) {
+        return entry;
+      }
+    }
+    return group.entries.reduce(
+      (a, b) => a.createdAt.isBefore(b.createdAt) ? a : b,
+    );
+  }
+
+  /// Retry only on the card that owns the true root (less confusion).
+  bool showRetryFor(SyncQueueGroup group) {
+    final root = trueRootFor(group);
+    if (root == null) return false;
+    return group.entries.any((e) => e.id == root.id);
+  }
+
+  String retryLabelFor(SyncQueueGroup group) {
+    final root = trueRootFor(group);
+    if (root == null) return AppTexts.syncRetry;
+    return AppTexts.syncRetryAction(labelFor(root));
+  }
+
+  /// One-line “Blocked by” when something on this card waits on a root step.
+  /// Dependency wait text is otherwise omitted from the card body (chip only).
+  String? blockedByLabel(SyncQueueGroup group) {
+    final hasBlocked = group.entries.any(
+      (e) => e.status == OutboxStatus.blocked,
+    );
+    if (!hasBlocked) return null;
+    final root = trueRootFor(group);
+    if (root == null) return null;
+    final shop = shopLabelFor(root);
+    final step = labelFor(root);
+    if (shop != null && shop.isNotEmpty) {
+      return AppTexts.syncBlockedBy(shop, step);
+    }
+    return AppTexts.syncBlockedByStep(step);
+  }
+
   Future<void> retry(String id) async {
     if (isRetrying.value) return;
     isRetrying.value = true;
     try {
-      await _outbox.retryEntry(id);
+      final outcome = await _outbox.retryFromRoot(id);
       await load();
-      AppToast.showSuccess(AppTexts.syncRetry);
+      _toastRetryOutcome(outcome);
     } catch (_) {
       AppToast.showError(AppTexts.error);
       await load();
@@ -116,19 +179,29 @@ class SyncCenterController extends GetxController {
   }
 
   Future<void> retryGroup(SyncQueueGroup group) async {
-    if (isRetrying.value || !group.canRetry) return;
+    if (isRetrying.value || !showRetryFor(group)) return;
     isRetrying.value = true;
     try {
-      for (final entry in group.retryableEntries) {
-        await _outbox.retryEntry(entry.id);
-      }
+      final root = trueRootFor(group) ?? group.entries.first;
+      final outcome = await _outbox.retryFromRoot(root.id);
       await load();
-      AppToast.showSuccess(AppTexts.syncRetry);
+      _toastRetryOutcome(outcome);
     } catch (_) {
       AppToast.showError(AppTexts.error);
       await load();
     } finally {
       isRetrying.value = false;
+    }
+  }
+
+  void _toastRetryOutcome(SyncRetryOutcome outcome) {
+    switch (outcome) {
+      case SyncRetryOutcome.cleared:
+        AppToast.showSuccess(AppTexts.syncSuccessful);
+      case SyncRetryOutcome.stillPending:
+        AppToast.showInformation(AppTexts.syncRetryStillWaiting);
+      case SyncRetryOutcome.failed:
+        AppToast.showError(AppTexts.syncRetryFailed);
     }
   }
 
@@ -215,11 +288,20 @@ class SyncCenterController extends GetxController {
     }
 
     final error = entry.lastError?.trim();
-    if (error != null && error.isNotEmpty) {
+    // Dependency waits are shown only via the top-right chip — not as body text.
+    if (error != null && error.isNotEmpty && !_isDependencyWaitMessage(error)) {
       lines.add(error);
     }
 
     return lines.join('\n');
+  }
+
+  bool _isDependencyWaitMessage(String? error) {
+    if (error == null || error.trim().isEmpty) return false;
+    final e = error.toLowerCase();
+    return e.contains('earlier step') ||
+        e.contains('waiting for an earlier') ||
+        e.contains('waiting on an earlier');
   }
 
   String groupMetaLine(SyncQueueGroup group) {

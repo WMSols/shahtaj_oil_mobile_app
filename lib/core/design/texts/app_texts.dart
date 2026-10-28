@@ -420,6 +420,14 @@ class AppTexts {
   static String get obSyncOtherUserPending => 'obSyncOtherUserPending'.tr;
   static String get obSyncNeedsReview => 'obSyncNeedsReview'.tr;
   static String get syncRetry => 'syncRetry'.tr;
+  static String syncRetryAction(String action) =>
+      'syncRetryAction'.trParams({'action': action});
+  static String syncBlockedBy(String shop, String step) =>
+      'syncBlockedBy'.trParams({'shop': shop, 'step': step});
+  static String syncBlockedByStep(String step) =>
+      'syncBlockedByStep'.trParams({'step': step});
+  static String get syncRetryStillWaiting => 'syncRetryStillWaiting'.tr;
+  static String get syncRetryFailed => 'syncRetryFailed'.tr;
   static String get clearThisItem => 'clearThisItem'.tr;
   static String get clearThisItemMessage => 'clearThisItemMessage'.tr;
   static String get clearThisItemDone => 'clearThisItemDone'.tr;
