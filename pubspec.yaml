@@ -95,7 +95,9 @@ flutter:
     - assets/images/onboarding/
     - assets/images/icons/
     - assets/images/logos/
-    - .env
+    - .env.isb
+    - .env.mre
+
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

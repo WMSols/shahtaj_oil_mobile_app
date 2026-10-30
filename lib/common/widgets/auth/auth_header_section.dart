@@ -10,6 +10,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/text_styles/app_text_styles.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/locale_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_region_label.dart';
 
 class AuthHeaderSection extends GetView<AuthController> {
   const AuthHeaderSection({super.key});
@@ -35,7 +36,9 @@ class AuthHeaderSection extends GetView<AuthController> {
               ),
             ),
           ),
-          AppSpacing.vertical(context, 0.04),
+          AppSpacing.vertical(context, 0.015),
+          const AppRegionLabel(centered: true),
+          AppSpacing.vertical(context, 0.03),
           RichText(
             text: TextSpan(
               style: AppTextStyles.heading(context),
@@ -46,8 +49,8 @@ class AuthHeaderSection extends GetView<AuthController> {
                   style: AppTextStyles.bodyText(context),
                 ),
                 TextSpan(
-                  text: '“${controller.role.label}”',
-                  style: AppTextStyles.headline(context),
+                  text: controller.role.label,
+                  style: AppTextStyles.heading(context),
                 ),
               ],
             ),
@@ -55,7 +58,7 @@ class AuthHeaderSection extends GetView<AuthController> {
           AppSpacing.vertical(context, 0.005),
           Text(
             AppTexts.authWelcomeSubtitle,
-            style: AppTextStyles.bodyText(
+            style: AppTextStyles.caption(
               context,
             ).copyWith(color: AppColors.textMuted),
           ),

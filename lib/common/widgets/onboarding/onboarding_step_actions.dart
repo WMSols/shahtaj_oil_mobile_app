@@ -6,7 +6,6 @@ import 'package:shahtaj_oil_mobile_app/core/constants/app_enums.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_primary_button.dart';
-import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_secondary_button.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/form/app_language_toggle.dart';
 
 class OnboardingStepActions extends GetView<OnboardingController> {
@@ -35,7 +34,7 @@ class OnboardingStepActions extends GetView<OnboardingController> {
           padding: EdgeInsets.only(
             bottom: isLast ? 0 : AppSpacing.verticalValue(context, 0.01),
           ),
-          child: AppSecondaryButton(
+          child: AppPrimaryButton(
             label: role.label,
             onPressed: () => controller.selectRole(role),
           ),

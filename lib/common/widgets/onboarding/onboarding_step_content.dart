@@ -18,7 +18,7 @@ class OnboardingStepContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final imageSize = AppResponsive.screenWidth(context) * 0.72;
+    final imageSize = AppResponsive.screenWidth(context) * 0.9;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

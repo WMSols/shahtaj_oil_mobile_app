@@ -48,6 +48,9 @@ class AppTexts {
   static String get usernameHint => 'usernameHint'.tr;
   static String get rememberMe => 'rememberMe'.tr;
   static String get authWelcomeSubtitle => 'authWelcomeSubtitle'.tr;
+  static String get regionIsb => 'regionIsb'.tr;
+  static String get regionMurree => 'regionMurree'.tr;
+  static String get regionLabel => 'regionLabel'.tr;
   static String get signingInAs => 'signingInAs'.tr;
   static String get broughtByPrefix => 'broughtByPrefix'.tr;
   static String get developerName => 'developerName'.tr;

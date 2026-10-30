@@ -7,6 +7,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/spacing/app_spacing.dart';
 import 'package:shahtaj_oil_mobile_app/common/widgets/onboarding/onboarding_progress_bar.dart';
 import 'package:shahtaj_oil_mobile_app/common/widgets/onboarding/onboarding_step_actions.dart';
 import 'package:shahtaj_oil_mobile_app/common/widgets/onboarding/onboarding_step_content.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_region_label.dart';
 
 class OnboardingScreen extends GetView<OnboardingController> {
   const OnboardingScreen({super.key});
@@ -27,7 +28,9 @@ class OnboardingScreen extends GetView<OnboardingController> {
                   currentPage: controller.currentPage.value,
                 ),
               ),
-              AppSpacing.vertical(context, 0.04),
+              AppSpacing.vertical(context, 0.02),
+              const AppRegionLabel(),
+              AppSpacing.vertical(context, 0.025),
               Expanded(
                 child: PageView.builder(
                   controller: controller.pageController,

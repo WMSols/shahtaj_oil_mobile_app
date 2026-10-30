@@ -6,6 +6,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/cards/app_outline_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/chips/app_status_chip.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/info/app_detail_row.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_region_label.dart';
 
 class AccountDetailsCard extends StatelessWidget {
   const AccountDetailsCard({super.key, required this.user, required this.role});
@@ -37,6 +38,10 @@ class AccountDetailsCard extends StatelessWidget {
           AppDetailRow(
             label: AppTexts.phone,
             value: _orNotAvailable(user.phone),
+          ),
+          AppDetailRow(
+            label: AppTexts.regionLabel,
+            trailing: const AppRegionLabel(),
           ),
           AppDetailRow(
             label: AppTexts.role,

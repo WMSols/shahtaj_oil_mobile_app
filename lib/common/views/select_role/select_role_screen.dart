@@ -10,6 +10,7 @@ import 'package:shahtaj_oil_mobile_app/core/design/texts/app_texts.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/buttons/app_primary_button.dart';
 import 'package:shahtaj_oil_mobile_app/common/widgets/select_role/select_role_option_card.dart';
 import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_brought_by_footer.dart';
+import 'package:shahtaj_oil_mobile_app/core/widgets/layout/app_region_label.dart';
 
 class SelectRoleScreen extends GetView<SelectRoleController> {
   const SelectRoleScreen({super.key});
@@ -24,11 +25,13 @@ class SelectRoleScreen extends GetView<SelectRoleController> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const AppRegionLabel(),
+              AppSpacing.vertical(context, 0.01),
               Text(
                 AppTexts.selectYourRole,
                 style: AppTextStyles.headline(context),
               ),
-              AppSpacing.vertical(context, 0.015),
+              AppSpacing.vertical(context, 0.01),
               Text(
                 AppTexts.selectRoleBody,
                 style: AppTextStyles.bodyText(context),

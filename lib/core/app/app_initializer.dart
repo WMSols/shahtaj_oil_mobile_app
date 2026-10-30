@@ -13,6 +13,7 @@ import 'package:shahtaj_oil_mobile_app/core/services/offline_cache_service.dart'
 import 'package:shahtaj_oil_mobile_app/core/services/session_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/storage_service.dart';
 import 'package:shahtaj_oil_mobile_app/core/services/sync_outbox_service.dart';
+import 'package:shahtaj_oil_mobile_app/core/config/app_region_config.dart';
 import 'package:shahtaj_oil_mobile_app/core/network/api_client.dart';
 
 class AppInitializer {
@@ -67,10 +68,15 @@ class AppInitializer {
   }
 
   static Future<void> _loadEnv() async {
+    final fileName = AppRegionConfig.envFileName;
     try {
-      await dotenv.load(fileName: '.env');
+      await dotenv.load(fileName: fileName);
+      debugPrint(
+        'Loaded $fileName (FLAVOR=${AppRegionConfig.flavor}, '
+        'REGION_CODE=${AppRegionConfig.regionCode})',
+      );
     } catch (error, stackTrace) {
-      debugPrint('Env load skipped: $error\n$stackTrace');
+      debugPrint('Env load failed for $fileName: $error\n$stackTrace');
     }
   }
 }

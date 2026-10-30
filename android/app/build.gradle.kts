@@ -25,6 +25,20 @@ android {
         versionName = flutter.versionName
     }
 
+    flavorDimensions += "region"
+    productFlavors {
+        create("isb") {
+            dimension = "region"
+            applicationId = "com.shahtaj.app.isb"
+            resValue("string", "app_name", "Shahtaj ISB")
+        }
+        create("mre") {
+            dimension = "region"
+            applicationId = "com.shahtaj.app.murree"
+            resValue("string", "app_name", "Shahtaj MRE")
+        }
+    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.

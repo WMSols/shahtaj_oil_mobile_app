@@ -32,6 +32,7 @@ migrate_working_dir/
 .pub/
 /build/
 /coverage/
+/test/widget_test.dart
 
 # Symbolication related
 app.*.symbols
@@ -46,8 +47,12 @@ app.*.map.json
 /android/app/release
 /android/build/
 
-# Environment
+# Environment (region templates .env.isb / .env.mre are tracked)
 .env
+.env.example
+.env.isb
+.env.mre
+.env.local
 
 # Documentation
 /documentation/
